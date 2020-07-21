@@ -1,0 +1,22 @@
+subprojects {
+		apply plugin: 'java'
+
+	// java编译的时候缺省状态下会因为中文字符而失败
+	// [compileJava,compileTestJava,javadoc]*.options*.encoding = 'UTF-8'
+
+	repositories {
+		jcenter()//mavenCentral()
+	}
+
+	dependencies {
+		// Use JUnit Jupiter API for testing.
+	    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+
+	    // Use JUnit Jupiter Engine for testing.
+	    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+	}
+
+	test {
+		useJUnitPlatform()
+	}
+}
