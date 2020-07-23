@@ -9,4 +9,4 @@
 
 rootProject.name = 'appbox'
 
-include 'core', 'apphost'
+include 'core', 'host'

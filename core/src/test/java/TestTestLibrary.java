@@ -6,7 +6,7 @@ public class TestTestLibrary {
 
     @Test
     void testLibraryMethod() {
-        TestLibrary classUnderTest = new TestLibrary();
+        var classUnderTest = new appbox.core.TestLibrary();
         assertTrue(classUnderTest.sayHello(), "should return true");
     }
 }

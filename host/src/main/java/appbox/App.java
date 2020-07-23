@@ -1,8 +1,9 @@
+package appbox;
 
 public class App {
 
     public static void main(String[] args) {
-        TestLibrary lib = new TestLibrary();
+        var lib = new appbox.core.TestLibrary();
         lib.sayHello();
 
         System.out.println("Hello Future!");
