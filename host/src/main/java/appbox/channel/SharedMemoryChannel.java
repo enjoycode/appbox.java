@@ -2,6 +2,8 @@ package appbox.channel;
 
 import com.sun.jna.Pointer;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * 与主进程通信的共享内存通道，每个实例包含两个单向消息队列
  */
@@ -37,26 +39,33 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
             if (NativeSmq.getMsgType(rchunk) == -128) { //收到退出消息
                 break;
             }
+            var rid = NativeSmq.getMsgId(rchunk);
             var rdata = NativeSmq.getDataPtr(rchunk);
             var rshard = rdata.getShort(0); // Require Shard
-
-            var wnode = NativeSmq.SMQ_GetNodeForWriting(_sendQueue, -1);
-            var wchunk = _sendBufferPtr.share(NativeSmq.getNodeOffset(wnode));
-            // 写消息头
-            NativeSmq.setMsgFirst(wchunk, wchunk);
-            NativeSmq.setMsgNext(wchunk, Pointer.NULL);
-            NativeSmq.setMsgId(wchunk, msgNo++);
-            NativeSmq.setMsgType(wchunk, (byte) 11); // InvokeResponse
-            NativeSmq.setMsgFlag(wchunk, (byte) 12); // First | Last
-            NativeSmq.setMsgDataLen(wchunk, (short) (4 + 2 + resLen));
-            // 写消息体
-            var wdata = NativeSmq.getDataPtr(wchunk);
-            wdata.setInt(0, NativeSmq.getMsgId(rchunk));
-            wdata.setShort(4, rshard);
-            wdata.setMemory(6, resLen, (byte) 65); // 'A'
-
             NativeSmq.SMQ_ReturnNode(_receiveQueue, rnode);
-            NativeSmq.SMQ_PostNode(_sendQueue, wnode);
+
+            var wid = msgNo++;
+
+            // 同步9万/秒，异步7.2万/秒
+            CompletableFuture.runAsync(() -> {
+                var wnode = NativeSmq.SMQ_GetNodeForWriting(_sendQueue, -1);
+                var wchunk = _sendBufferPtr.share(NativeSmq.getNodeOffset(wnode));
+                // 写消息头
+                NativeSmq.setMsgFirst(wchunk, wchunk);
+                NativeSmq.setMsgNext(wchunk, Pointer.NULL);
+                NativeSmq.setMsgId(wchunk, wid);
+                NativeSmq.setMsgType(wchunk, (byte) 11); // InvokeResponse
+                NativeSmq.setMsgFlag(wchunk, (byte) 12); // First | Last
+                NativeSmq.setMsgDataLen(wchunk, (short) (4 + 2 + resLen));
+                // 写消息体
+                var wdata = NativeSmq.getDataPtr(wchunk);
+                wdata.setInt(0, rid); // 原请求标识
+                wdata.setShort(4, rshard); // 原请求Shard
+                wdata.setMemory(6, resLen, (byte) 65); // 'A'
+
+                NativeSmq.SMQ_PostNode(_sendQueue, wnode);
+            });
+
         }
     }
 
