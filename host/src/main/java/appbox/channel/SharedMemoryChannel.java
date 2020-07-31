@@ -6,10 +6,10 @@ import com.sun.jna.Pointer;
  * 与主进程通信的共享内存通道，每个实例包含两个单向消息队列
  */
 public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable {
-    private Pointer _sendQueue;
-    private Pointer _sendBufferPtr;
-    private Pointer _receiveQueue;
-    private Pointer _receiveBufferPtr;
+    private final Pointer _sendQueue;
+    private final Pointer _sendBufferPtr;
+    private final Pointer _receiveQueue;
+    private final Pointer _receiveBufferPtr;
 
     public SharedMemoryChannel(String name) {
         // 注意与主进程的名称相反
