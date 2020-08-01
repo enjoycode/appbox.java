@@ -57,6 +57,8 @@ public class NativeSmq {
         chunk.setInt(4, id);
     }
 
+    public static Pointer getMsgFirst(Pointer chunk) { return chunk.getPointer(232); }
+
     public static void setMsgFirst(Pointer chunk, Pointer first) {
         chunk.setPointer(232, first);
     }

@@ -76,25 +76,35 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
         var isFirst = (msgFlag & MessageFlag.FirstChunk) == MessageFlag.FirstChunk;
         var isLast  = (msgFlag & MessageFlag.LastChunk) == MessageFlag.LastChunk;
 
-        if (isFirst && isLast) { //单包消息直接处理
-            ProcessMessage(chunk);
-            return;
-        }
-
+        NativeSmq.setMsgNext(chunk, Pointer.NULL); //下一包始终置空
         if (isFirst) {
-            //TODO:处理已存在的
-            _pendings.put(msgId, chunk);
+            NativeSmq.setMsgFirst(chunk, chunk); //首包设为自己
+            if (isLast) { //单包直接处理
+                processMessage(chunk);
+            } else {
+                //TODO:判断已存在取消掉
+                _pendings.put(msgId, chunk);
+            }
         } else {
             var preChunk = _pendings.get(msgId);
-            if (preChunk == null) {
-                //TODO:暂直接丢弃该包消息
-                //NativeSmq.SMQ_ReturnNode();
+            if (preChunk == null) { //直接丢弃该包消息
+                NativeSmq.SMQ_ReturnChunk(_receiveQueue, chunk);
+                //TODO: log it
+            } else {
+                var first = NativeSmq.getMsgFirst(preChunk);
+                NativeSmq.setMsgFirst(chunk, first);
+                NativeSmq.setMsgNext(preChunk, chunk);
+                if (isLast) { //收到完整消息交给消息处理器
+                    _pendings.remove(msgId);
+                    processMessage(first);
+                } else {
+                    _pendings.replace(msgId, chunk); //重置消息Id的尾包
+                }
             }
         }
-
     }
 
-    private void ProcessMessage(Pointer first) {
+    private void processMessage(Pointer first) {
 
     }
 
