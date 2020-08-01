@@ -12,26 +12,19 @@ public class NativeSmq {
 
     public static native void SMQ_Close(Pointer smq);
 
-    public static native Pointer SMQ_GetBufferPtr(Pointer smq);
-
     //====读====
-    public static native Pointer SMQ_GetNodeForReading(Pointer smq, int timeout);
+    public static native Pointer SMQ_GetChunkForReading(Pointer smq, int timeout);
 
-    public static native void SMQ_ReturnNode(Pointer smq, Pointer node);
+    public static native void SMQ_ReturnChunk(Pointer smq, Pointer chunk);
+
+    public static native void SMQ_ReturnAllChunks(Pointer smq, Pointer first);
 
     //====写====
-    public static native Pointer SMQ_GetNodeForWriting(Pointer smq, int timeout);
+    public static native Pointer SMQ_GetChunkForWriting(Pointer smq, int timeout);
 
-    public static native void SMQ_PostNode(Pointer smq, Pointer node);
-
-    //====测试用====
-    public static native void SMQ_Test(String name);
+    public static native void SMQ_PostChunk(Pointer smq, Pointer chunk);
 
     //====辅助方法====
-    public static int getNodeOffset(Pointer node) {
-        return node.getInt(16);
-    }
-
     public static Pointer getDataPtr(Pointer chunk) {
         return chunk.share(16);
     }
@@ -42,6 +35,10 @@ public class NativeSmq {
 
     public static void setMsgType(Pointer chunk, byte type) {
         chunk.setByte(0, type);
+    }
+
+    public static byte getMsgFlag(Pointer chunk) {
+        return chunk.getByte(1);
     }
 
     public static void setMsgFlag(Pointer chunk, byte flag) {
