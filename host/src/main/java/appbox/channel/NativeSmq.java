@@ -7,6 +7,9 @@ public class NativeSmq {
         Native.register("smq");
     }
 
+    //====MessageChunk常量====
+    public static final int CHUNK_DATA_SIZE = 216;
+
     //====打开/关闭====
     public static native Pointer SMQ_Open(String name);
 
@@ -24,7 +27,7 @@ public class NativeSmq {
 
     public static native void SMQ_PostChunk(Pointer smq, Pointer chunk);
 
-    //====辅助方法====
+    //====辅助读写Chunk方法====
     public static Pointer getDataPtr(Pointer chunk) {
         return chunk.share(16);
     }
@@ -57,10 +60,16 @@ public class NativeSmq {
         chunk.setInt(4, id);
     }
 
-    public static Pointer getMsgFirst(Pointer chunk) { return chunk.getPointer(232); }
+    public static Pointer getMsgFirst(Pointer chunk) {
+        return chunk.getPointer(232);
+    }
 
     public static void setMsgFirst(Pointer chunk, Pointer first) {
         chunk.setPointer(232, first);
+    }
+
+    public static Pointer getMsgNext(Pointer chunk) {
+        return chunk.getPointer(240);
     }
 
     public static void setMsgNext(Pointer chunk, Pointer next) {

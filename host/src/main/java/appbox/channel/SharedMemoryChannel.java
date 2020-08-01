@@ -1,5 +1,6 @@
 package appbox.channel;
 
+import appbox.core.logging.Log;
 import com.sun.jna.Pointer;
 
 import java.util.HashMap;
@@ -9,15 +10,20 @@ import java.util.concurrent.CompletableFuture;
  * 与主进程通信的共享内存通道，每个实例包含两个单向消息队列
  */
 public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable {
-    private final Pointer                   _sendQueue;
-    private final Pointer                   _receiveQueue;
-    private final HashMap<Integer, Pointer> _pendings;
+    private final Pointer                   _sendQueue;    //发送队列
+    private final Pointer                   _receiveQueue; //接收队列
+    private final HashMap<Integer, Pointer> _pendings;     //挂起的不完整消息
 
     public SharedMemoryChannel(String name) {
         // 注意与主进程的名称相反
         _receiveQueue = NativeSmq.SMQ_Open(name + "-S");
         _sendQueue    = NativeSmq.SMQ_Open(name + "-R");
         _pendings     = new HashMap<>();
+    }
+
+    @Override
+    public void returnAllChunks(Pointer first) {
+        NativeSmq.SMQ_ReturnAllChunks(_receiveQueue, first);
     }
 
     @Override
@@ -34,7 +40,7 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
 
         while (true) {
             var rchunk = NativeSmq.SMQ_GetChunkForReading(_receiveQueue, -1);
-            if (NativeSmq.getMsgType(rchunk) == -128) { //收到退出消息
+            if (NativeSmq.getMsgType(rchunk) == MessageType.ExitReadLoop) { //收到退出消息
                 break;
             }
             var rid    = NativeSmq.getMsgId(rchunk);
@@ -89,7 +95,7 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
             var preChunk = _pendings.get(msgId);
             if (preChunk == null) { //直接丢弃该包消息
                 NativeSmq.SMQ_ReturnChunk(_receiveQueue, chunk);
-                //TODO: log it
+                Log.warn("Receive message without first.");
             } else {
                 var first = NativeSmq.getMsgFirst(preChunk);
                 NativeSmq.setMsgFirst(chunk, first);
@@ -105,8 +111,8 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
     }
 
     private void processMessage(Pointer first) {
-
+        //注意：除特殊消息(eg: CancelMessage)外交给MessageDispatcher处理
+        MessageDispatcher.processMessage(this, first);
     }
-
 
 }
