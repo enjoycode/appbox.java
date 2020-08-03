@@ -2,20 +2,13 @@ package appbox.channel;
 
 import appbox.channel.messages.IMessage;
 import appbox.core.cache.ObjectPool;
+import appbox.core.serialization.BinDeserializer;
 import com.sun.jna.Pointer;
 
 /**
- * 消息序列化器
+ * 消息序列化辅助
  */
 public final class MessageSerializer {
-
-    private static final ObjectPool<MessageSerializer> pool = new ObjectPool<>(MessageSerializer::new, null, 32);
-
-    private final MessageReadStream _stream;
-
-    private MessageSerializer() {
-        _stream = new MessageReadStream();
-    }
 
     /**
      * 反序列化至指定类型的消息
@@ -25,20 +18,16 @@ public final class MessageSerializer {
      * @param <T>
      */
     public static <T extends IMessage> void deserialize(T msg, Pointer first) throws Exception {
-        var serializer = pool.rent();
-        serializer.reset(first);
+        var stream = MessageReadStream.pool.rent();
+        stream.reset(first);
+        var reader = BinDeserializer.pool.rent();
+        reader.reset(stream);
         try {
-            msg.readFrom(serializer);
+            msg.readFrom(reader);
         } finally {
-            pool.back(serializer);
+            BinDeserializer.pool.back(reader);
+            MessageReadStream.pool.back(stream);
         }
     }
 
-    private void reset(Pointer first) {
-        _stream.reset(first);
-    }
-
-    public short readShort() throws Exception {
-        return _stream.readShort();
-    }
 }

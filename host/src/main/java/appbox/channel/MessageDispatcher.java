@@ -47,7 +47,7 @@ public final class MessageDispatcher {
         if (!isDeserializeError) {
             //异步交给运行时服务容器处理
             CompletableFuture.runAsync(() -> {
-                Log.info(req.service);
+                Log.info(req.service); //TODO:别忘了归还InvokeRequire
             });
         }
     }

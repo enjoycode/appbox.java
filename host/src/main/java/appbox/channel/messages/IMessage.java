@@ -1,9 +1,7 @@
 package appbox.channel.messages;
 
-import appbox.channel.MessageSerializer;
+import appbox.core.serialization.IBinSerializable;
 
-public interface IMessage {
-
-    public void readFrom(MessageSerializer serializer) throws Exception;
+public interface IMessage extends IBinSerializable {
 
 }
