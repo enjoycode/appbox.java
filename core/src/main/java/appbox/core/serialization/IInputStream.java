@@ -10,6 +10,10 @@ public interface IInputStream {
         return (short) (readByte() << 8 | readByte());
     }
 
+    default int readInt() throws Exception {
+        return (readByte() << 24) | (readByte() << 16) | (readByte() << 8) | readByte();
+    }
+
     default int readVariant() throws Exception {
         int data = readByte();
         if ((data & 0x80) == 0) {

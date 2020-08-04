@@ -11,6 +11,13 @@ public interface IOutputStream {
         writeByte((byte) (value & 0xFF));
     }
 
+    default void writeInt(int value) throws Exception {
+        writeByte((byte) ((value >> 24) & 0xFF));
+        writeByte((byte) ((value >> 16) & 0xFF));
+        writeByte((byte) ((value >> 8) & 0xFF));
+        writeByte((byte) (value & 0xFF));
+    }
+
     default void writeVariant(int value) {
         value = (value << 1) ^ (value >> 0x1F);
         do {

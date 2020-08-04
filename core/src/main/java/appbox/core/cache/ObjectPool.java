@@ -29,6 +29,7 @@ public final class ObjectPool<E> {
      * @param cap the maximum number of objects cached.
      */
     public ObjectPool(Supplier<E> alloc, Consumer<E> free, int cap) {
+        //TODO:注册监测指标
         this.alloc = alloc;
         this.free = free;
         this.objects = new AtomicReferenceArray<>(cap);

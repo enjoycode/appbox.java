@@ -43,8 +43,16 @@ public final class BinSerializer {
         serializer.write(this, obj);
     }
 
+    public void writeByte(byte value) throws Exception {
+        _stream.writeByte(value);
+    }
+
     public void writeShort(short value) throws Exception {
         _stream.writeShort(value);
+    }
+
+    public void writeInt(int value) throws Exception {
+        _stream.writeInt(value);
     }
 
     public void writeVariant(int value) {

@@ -47,12 +47,20 @@ public final class BinDeserializer {
         }
     }
 
-    public int readVariant() throws Exception {
-        return _stream.readVariant();
+    public byte readByte() throws Exception {
+        return _stream.readByte();
     }
 
     public short readShort() throws Exception {
         return _stream.readShort();
+    }
+
+    public int readInt() throws Exception {
+        return _stream.readInt();
+    }
+
+    public int readVariant() throws Exception {
+        return _stream.readVariant();
     }
 
     public String readString() throws Exception {
