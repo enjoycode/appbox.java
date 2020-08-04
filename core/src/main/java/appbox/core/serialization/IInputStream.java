@@ -13,30 +13,30 @@ public interface IInputStream {
     default int readVariant() throws Exception {
         int data = readByte();
         if ((data & 0x80) == 0) {
-            return -(data & 1) ^ ((data >> 1) & 0x7fffffff);
+            return -(data & 1) ^ ((data >>> 1) & 0x7fffffff);
         }
         data &= 0x7F;
         int num2 = readByte();
         data |= (num2 & 0x7F) << 7;
         if ((num2 & 0x80) == 0) {
-            return -(data & 1) ^ ((data >> 1) & 0x7fffffff);
+            return -(data & 1) ^ ((data >>> 1) & 0x7fffffff);
         }
         num2 = readByte();
         data |= (num2 & 0x7F) << 14;
         if ((num2 & 0x80) == 0) {
-            return -(data & 1) ^ ((data >> 1) & 0x7fffffff);
+            return -(data & 1) ^ ((data >>> 1) & 0x7fffffff);
         }
         num2 = readByte();
         data |= (num2 & 0x7F) << 0x15;
         if ((num2 & 0x80) == 0) {
-            return -(data & 1) ^ ((data >> 1) & 0x7fffffff);
+            return -(data & 1) ^ ((data >>> 1) & 0x7fffffff);
         }
         num2 = readByte();
         data |= num2 << 0x1C;
         if ((num2 & 240) != 0) {
             throw new Exception("out of range");
         }
-        return -(data & 1) ^ ((data >> 1) & 0x7fffffff);
+        return -(data & 1) ^ ((data >>> 1) & 0x7fffffff);
     }
 
     default String readString() throws Exception {
@@ -46,10 +46,63 @@ public interface IInputStream {
         } else if (len == 0) {
             return "";
         } else {
-            //TODO:暂简单实现，待优化
-            var utf8Bytes = new byte[len];
-            read(utf8Bytes, 0, len);
-            return new String(utf8Bytes, 0, len, "UTF-8");
+            return readUtf8(len);
         }
+    }
+
+    private String readUtf8(int chars) throws Exception {
+        var  dst = new char[chars]; //TODO:是否能优化
+        int  dp  = 0;
+        int  b1, b2, b3, b4, uc;
+        char c;
+
+        while (dp < chars) {
+            b1 = readByte();
+            if (b1 >= 0) {
+                // 1 byte, 7 bits: 0xxxxxxx
+                dst[dp++] = (char) b1;
+            } else if ((b1 >> 5) == -2 && (b1 & 0x1e) != 0) {
+                // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
+                b2 = readByte();
+                if ((b2 & 0xc0) != 0x80) // isNotContinuation(b2)
+                    throw new Exception();
+                else
+                    dst[dp++] = (char) (((b1 << 6) ^ b2) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
+            } else if ((b1 >> 4) == -2) {
+                // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
+                b2 = readByte();
+                b3 = readByte();
+                if ((b1 == (byte) 0xe0 && (b2 & 0xe0) == 0x80) //
+                        || (b2 & 0xc0) != 0x80 //
+                        || (b3 & 0xc0) != 0x80) { // isMalformed3(b1, b2, b3)
+                    throw new Exception();
+                } else {
+                    c = (char) ((b1 << 12) ^ (b2 << 6) ^ (b3 ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+                    if (c >= '\uD800' && c < ('\uDFFF' + 1))
+                        throw new Exception();
+                    else
+                        dst[dp++] = c;
+                }
+            } else if ((b1 >> 3) == -2) {
+                // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                b2 = readByte();
+                b3 = readByte();
+                b4 = readByte();
+                uc = ((b1 << 18) ^ (b2 << 12) ^ (b3 << 6) ^ (b4 ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+                if (((b2 & 0xc0) != 0x80 || (b3 & 0xc0) != 0x80 || (b4 & 0xc0) != 0x80) // isMalformed4
+                        ||
+                        // shortest form check
+                        !Character.isSupplementaryCodePoint(uc)) {
+                    throw new Exception();
+                } else {
+                    dst[dp++] = Character.highSurrogate(uc);
+                    dst[dp++] = Character.lowSurrogate(uc);
+                }
+            } else {
+                throw new Exception();
+            }
+        }
+
+        return new String(dst);
     }
 }

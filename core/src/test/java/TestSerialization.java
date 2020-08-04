@@ -73,10 +73,17 @@ public class TestSerialization {
     public void testStream() throws Exception {
         var output = new BytesOutputStream(8192);
         output.writeVariant(-1);
+        output.writeVariant(123);
+        output.writeVariant(Integer.MAX_VALUE);
+        output.writeVariant(Integer.MIN_VALUE);
         output.writeString("中A");
 
         var input = output.copyTo();
         assertEquals( -1, input.readVariant());
+        assertEquals(123, input.readVariant());
+        assertEquals(Integer.MAX_VALUE, input.readVariant());
+        assertEquals(Integer.MIN_VALUE, input.readVariant());
         assertEquals("中A", input.readString());
     }
+
 }
