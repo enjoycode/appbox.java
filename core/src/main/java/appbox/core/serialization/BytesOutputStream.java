@@ -24,8 +24,8 @@ public final class BytesOutputStream implements IOutputStream {
     }
 
     @Override
-    public void write(byte[] value) {
-        System.arraycopy(value, 0, data, index, value.length);
-        index += value.length;
+    public void write(byte[] src, int offset, int count) {
+        System.arraycopy(src, offset, data, index, count);
+        index += count;
     }
 }

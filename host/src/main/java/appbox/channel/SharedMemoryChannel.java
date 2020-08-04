@@ -1,5 +1,6 @@
 package appbox.channel;
 
+import appbox.channel.messages.IMessage;
 import appbox.core.logging.Log;
 import com.sun.jna.Pointer;
 
@@ -35,40 +36,43 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
      * 开始在当前线程接收消息
      */
     public void startReceive() {
-        int msgNo  = 0;
-        int resLen = 13;
+        //int msgNo  = 0;
+        //int resLen = 13;
 
         while (true) {
             var rchunk = NativeSmq.SMQ_GetChunkForReading(_receiveQueue, -1);
             if (NativeSmq.getMsgType(rchunk) == MessageType.ExitReadLoop) { //收到退出消息
                 break;
             }
-            var rid    = NativeSmq.getMsgId(rchunk);
-            var rdata  = NativeSmq.getDataPtr(rchunk);
-            var rshard = rdata.getShort(0); // Require Shard
-            NativeSmq.SMQ_ReturnChunk(_receiveQueue, rchunk);
 
-            var wid = msgNo++;
+            onMessageChunk(rchunk);
 
-            // Debug模式: 同步9万/秒，异步7.2万/秒; Release模式: 同步14.3万/秒，异步11.9万/秒
-            CompletableFuture.runAsync(() -> {
-                var wchunk = NativeSmq.SMQ_GetChunkForWriting(_sendQueue, -1);
-                // 写消息头
-                NativeSmq.setMsgFirst(wchunk, wchunk);
-                NativeSmq.setMsgNext(wchunk, Pointer.NULL);
-                NativeSmq.setMsgId(wchunk, wid);
-                NativeSmq.setMsgType(wchunk, (byte) 11); // InvokeResponse
-                NativeSmq.setMsgFlag(wchunk, (byte) 12); // First | Last
-                NativeSmq.setMsgDataLen(wchunk, (short) (4 + 2 + resLen));
-                // 写消息体
-                var wdata = NativeSmq.getDataPtr(wchunk);
-                wdata.setInt(0, rid); // 原请求标识
-                wdata.setShort(4, rshard); // 原请求Shard
-                wdata.setMemory(6, resLen, (byte) 65); // 'A'
-
-                NativeSmq.SMQ_PostChunk(_sendQueue, wchunk);
-            });
-
+            //====以下回传测试====
+            //var rid    = NativeSmq.getMsgId(rchunk);
+            //var rdata  = NativeSmq.getDataPtr(rchunk);
+            //var rshard = rdata.getShort(0); // Require Shard
+            //NativeSmq.SMQ_ReturnChunk(_receiveQueue, rchunk);
+            //
+            //var wid = msgNo++;
+            //
+            //// Debug模式: 同步9万/秒，异步7.2万/秒; Release模式: 同步14.3万/秒，异步11.9万/秒
+            //CompletableFuture.runAsync(() -> {
+            //    var wchunk = NativeSmq.SMQ_GetChunkForWriting(_sendQueue, -1);
+            //    // 写消息头
+            //    NativeSmq.setMsgFirst(wchunk, wchunk);
+            //    NativeSmq.setMsgNext(wchunk, Pointer.NULL);
+            //    NativeSmq.setMsgId(wchunk, wid);
+            //    NativeSmq.setMsgType(wchunk, (byte) 11); // InvokeResponse
+            //    NativeSmq.setMsgFlag(wchunk, (byte) 12); // First | Last
+            //    NativeSmq.setMsgDataLen(wchunk, (short) (4 + 2 + resLen));
+            //    // 写消息体
+            //    var wdata = NativeSmq.getDataPtr(wchunk);
+            //    wdata.setInt(0, rid); // 原请求标识
+            //    wdata.setShort(4, rshard); // 原请求Shard
+            //    wdata.setMemory(6, resLen, (byte) 65); // 'A'
+            //
+            //    NativeSmq.SMQ_PostChunk(_sendQueue, wchunk);
+            //});
         }
     }
 
@@ -113,6 +117,10 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
     private void processMessage(Pointer first) {
         //注意：除特殊消息(eg: CancelMessage)外交给MessageDispatcher处理
         MessageDispatcher.processMessage(this, first);
+    }
+
+    public <T extends IMessage> void sendMessage(T msg) {
+
     }
 
 }

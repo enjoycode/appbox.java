@@ -4,7 +4,7 @@ public interface IOutputStream {
 
     void writeByte(byte value);
 
-    void write(byte[] value);
+    void write(byte[] src, int offset, int count);
 
     default void writeShort(short value) throws Exception {
         writeByte((byte) ((value >> 8) & 0xFF));

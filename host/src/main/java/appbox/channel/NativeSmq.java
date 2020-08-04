@@ -27,7 +27,7 @@ public class NativeSmq {
 
     public static native void SMQ_PostChunk(Pointer smq, Pointer chunk);
 
-    //====辅助读写Chunk方法====
+    //====辅助读写Chunk方法(TODO:考虑移至MessageChunk类内)====
     public static Pointer getDataPtr(Pointer chunk) {
         return chunk.share(16);
     }
@@ -58,6 +58,14 @@ public class NativeSmq {
 
     public static void setMsgId(Pointer chunk, int id) {
         chunk.setInt(4, id);
+    }
+
+    public static long getMsgSource(Pointer chunk) {
+        return chunk.getLong(8);
+    }
+
+    public static void setMsgSource(Pointer chunk, long source) {
+        chunk.setLong(8, source);
     }
 
     public static Pointer getMsgFirst(Pointer chunk) {

@@ -37,7 +37,6 @@ public final class MessageDispatcher {
         try {
             MessageSerializer.deserialize(req, first);
         } catch (Exception e) {
-            //TODO: 发送反序列化失败错误给调用者
             InvokeRequire.backToPool(req); //失败归还
             isDeserializeError = true;
         } finally {
@@ -49,6 +48,8 @@ public final class MessageDispatcher {
             CompletableFuture.runAsync(() -> {
                 Log.info(req.service); //TODO:别忘了归还InvokeRequire
             });
+        } else {
+            //TODO: 发送反序列化失败错误给调用者
         }
     }
 

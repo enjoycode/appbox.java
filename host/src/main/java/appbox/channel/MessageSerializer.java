@@ -18,14 +18,13 @@ public final class MessageSerializer {
      * @param <T>
      */
     public static <T extends IMessage> void deserialize(T msg, Pointer first) throws Exception {
-        var stream = MessageReadStream.pool.rent();
-        stream.reset(first);
+        var stream = MessageReadStream.rentFromPool(first);
         var reader = BinDeserializer.rentFromPool(stream);
         try {
             msg.readFrom(reader);
         } finally {
             BinDeserializer.backToPool(reader);
-            MessageReadStream.pool.back(stream);
+            MessageReadStream.backToPool(stream);
         }
     }
 

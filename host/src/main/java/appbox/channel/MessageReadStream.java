@@ -8,18 +8,31 @@ import com.sun.jna.Pointer;
  * 消息读取流，用于从消息链中读取完整消息
  */
 public final class MessageReadStream implements IInputStream {
-    public static final ObjectPool<MessageReadStream> pool = new ObjectPool<>(MessageReadStream::new, null, 32);
+    private static final ObjectPool<MessageReadStream> pool = new ObjectPool<>(MessageReadStream::new, null, 32);
+
+    public static MessageReadStream rentFromPool(Pointer first) {
+        var obj = pool.rent();
+        obj.reset(first);
+        return obj;
+    }
+
+    public static void backToPool(MessageReadStream obj) {
+        pool.back(obj);
+    }
 
     private Pointer _curChunk;
     private Pointer _dataPtr;
     private int     _index;
 
-    public void reset(Pointer first) {
+    private void reset(Pointer first) {
         _curChunk = first;
         _dataPtr  = NativeSmq.getDataPtr(_curChunk);
         _index    = 0;
     }
 
+    /**
+     * 当前块的剩余字节数
+     */
     private int left() {
         return NativeSmq.CHUNK_DATA_SIZE - _index;
     }
