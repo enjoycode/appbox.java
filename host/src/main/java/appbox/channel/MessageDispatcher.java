@@ -31,14 +31,14 @@ public final class MessageDispatcher {
 
     private static void processInvokeRequire(IMessageChannel channel, Pointer first) {
         //根据协议类型反序列化消息
-        var req = InvokeRequire.pool.rent();
+        var req = InvokeRequire.rentFromPool();
         req.reqId = NativeSmq.getMsgId(first);
         boolean isDeserializeError = false;
         try {
             MessageSerializer.deserialize(req, first);
         } catch (Exception e) {
             //TODO: 发送反序列化失败错误给调用者
-            InvokeRequire.pool.back(req); //失败归还
+            InvokeRequire.backToPool(req); //失败归还
             isDeserializeError = true;
         } finally {
             channel.returnAllChunks(first);
