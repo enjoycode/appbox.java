@@ -3,22 +3,30 @@ package appbox.core.serialization;
 import appbox.core.cache.ObjectPool;
 
 public final class BinDeserializer {
+    private static final ObjectPool<BinDeserializer> pool = new ObjectPool<>(BinDeserializer::new, null, 32);
 
-    public static final ObjectPool<BinDeserializer> pool = new ObjectPool<>(BinDeserializer::new, null, 32);
+    public static BinDeserializer rentFromPool(IInputStream stream) {
+        var obj = pool.rent();
+        obj._stream = stream;
+        return obj;
+    }
+
+    public static void backToPool(BinDeserializer obj) {
+        obj._stream = null;
+        pool.back(obj);
+    }
 
     private BinDeserializer() {
     }
 
     private IInputStream _stream;
 
-    public void reset(IInputStream stream) {
-        _stream = stream;
-    }
-
     public Object deserialize() throws Exception {
         var payloadType = _stream.readByte();
         if (payloadType == PayloadType.Null) return null;
-        //TODO:对象引用
+        else if (payloadType == PayloadType.BooleanTrue) return Boolean.TRUE;
+        else if (payloadType == PayloadType.BooleanFalse) return Boolean.FALSE;
+        else if (payloadType == PayloadType.ObjectRef) throw new Exception("TODO");
 
         TypeSerializer serializer = null;
         if (payloadType == PayloadType.ExtKnownType)

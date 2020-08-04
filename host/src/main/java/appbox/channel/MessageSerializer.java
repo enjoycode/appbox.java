@@ -20,12 +20,11 @@ public final class MessageSerializer {
     public static <T extends IMessage> void deserialize(T msg, Pointer first) throws Exception {
         var stream = MessageReadStream.pool.rent();
         stream.reset(first);
-        var reader = BinDeserializer.pool.rent();
-        reader.reset(stream);
+        var reader = BinDeserializer.rentFromPool(stream);
         try {
             msg.readFrom(reader);
         } finally {
-            BinDeserializer.pool.back(reader);
+            BinDeserializer.backToPool(reader);
             MessageReadStream.pool.back(stream);
         }
     }

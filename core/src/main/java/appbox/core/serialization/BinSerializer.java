@@ -3,15 +3,22 @@ package appbox.core.serialization;
 import appbox.core.cache.ObjectPool;
 
 public final class BinSerializer {
-    public static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, null, 32);
+    private static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, null, 32);
+
+    public static BinSerializer rentFromPool(IOutputStream stream) {
+        var obj = pool.rent();
+        obj._stream = stream;
+        return obj;
+    }
+
+    public static void backToPool(BinSerializer obj) {
+        obj._stream = null;
+        pool.back(obj);
+    }
 
     private IOutputStream _stream;
 
     private BinSerializer() {
-    }
-
-    public void reset(IOutputStream stream) {
-        _stream = stream;
     }
 
     public void serialize(Object obj) throws Exception {
@@ -36,7 +43,15 @@ public final class BinSerializer {
         serializer.write(this, obj);
     }
 
+    public void writeShort(short value) throws Exception {
+        _stream.writeShort(value);
+    }
+
     public void writeVariant(int value) {
         _stream.writeVariant(value);
+    }
+
+    public void writeString(String value) throws Exception {
+        _stream.writeString(value);
     }
 }

@@ -6,6 +6,11 @@ public interface IOutputStream {
 
     void write(byte[] value);
 
+    default void writeShort(short value) throws Exception {
+        writeByte((byte) ((value >> 8) & 0xFF));
+        writeByte((byte) (value & 0xFF));
+    }
+
     default void writeVariant(int value) {
         value = (value << 1) ^ (value >> 0x1F);
         do {

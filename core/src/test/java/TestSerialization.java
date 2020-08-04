@@ -1,61 +1,10 @@
 import appbox.core.logging.Log;
-import appbox.core.serialization.BinDeserializer;
-import appbox.core.serialization.BinSerializer;
-import appbox.core.serialization.IInputStream;
-import appbox.core.serialization.IOutputStream;
+import appbox.core.serialization.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSerialization {
-
-    class BytesOutputStream implements IOutputStream {
-        private final byte[] data;
-        private       int    index;
-
-        BytesOutputStream(int size) {
-            data  = new byte[size];
-            index = 0;
-        }
-
-        public BytesInputStream copyTo() {
-            var input = new BytesInputStream(index);
-            System.arraycopy(data, 0, input.data, 0, index);
-            return input;
-        }
-
-        @Override
-        public void writeByte(byte value) {
-            data[index++] = value;
-        }
-
-        @Override
-        public void write(byte[] value) {
-            System.arraycopy(value, 0, data, index, value.length);
-            index += value.length;
-        }
-    }
-
-    class BytesInputStream implements IInputStream {
-        private final byte[] data;
-        private       int    index;
-
-        BytesInputStream(int size) {
-            data  = new byte[size];
-            index = 0;
-        }
-
-        @Override
-        public byte readByte() throws Exception {
-            return data[index++];
-        }
-
-        @Override
-        public void read(byte[] dest, int offset, int count) throws Exception {
-            System.arraycopy(data, index, dest, offset, count);
-            index += count;
-        }
-    }
 
     @Test
     public void testUtf8EncodeAndDecode() {
@@ -90,16 +39,14 @@ public class TestSerialization {
     @Test
     public void testSerialization() throws Exception {
         var output = new BytesOutputStream(8192);
-        var os     = BinSerializer.pool.rent();
-        os.reset(output);
+        var os     = BinSerializer.rentFromPool(output);
         os.serialize(12345);
-        BinSerializer.pool.back(os);
+        BinSerializer.backToPool(os);
 
         var input = output.copyTo();
-        var is    = BinDeserializer.pool.rent();
-        is.reset(input);
+        var is    = BinDeserializer.rentFromPool(input);
         assertEquals(12345, is.deserialize());
-        BinDeserializer.pool.back(is);
+        BinDeserializer.backToPool(is);
     }
 
 }

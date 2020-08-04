@@ -1,11 +1,12 @@
 package appbox.core.data;
 
 import appbox.core.cache.ObjectPool;
+import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 import appbox.core.serialization.PayloadType;
 
 /**
- * 调用服务的参数 TODO:暂简单实现
+ * 调用服务的参数
  */
 public final class InvokeArg {
     public static final ObjectPool<InvokeArg> pool = new ObjectPool<>(InvokeArg::new, null, 32);
@@ -26,7 +27,17 @@ public final class InvokeArg {
         value = v;
     }
 
-    public void writeTo(BinSerializer bs) throws Exception {
+    public int getInt() {
+        return (int) value;
+    }
 
+    public void writeTo(BinSerializer bs) throws Exception {
+        //TODO:暂简单实现，待优化
+        bs.serialize(value);
+    }
+
+    public void readFrom(BinDeserializer bs) throws Exception {
+        //TODO:暂简单实现，待优化
+        value = bs.deserialize();
     }
 }
