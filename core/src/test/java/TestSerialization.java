@@ -1,8 +1,9 @@
+import appbox.core.logging.Log;
+import appbox.core.serialization.BinDeserializer;
+import appbox.core.serialization.BinSerializer;
 import appbox.core.serialization.IInputStream;
 import appbox.core.serialization.IOutputStream;
 import org.junit.jupiter.api.Test;
-
-import java.lang.reflect.Array;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,10 +11,10 @@ public class TestSerialization {
 
     class BytesOutputStream implements IOutputStream {
         private final byte[] data;
-        private int index;
+        private       int    index;
 
         BytesOutputStream(int size) {
-            data = new byte[size];
+            data  = new byte[size];
             index = 0;
         }
 
@@ -37,10 +38,10 @@ public class TestSerialization {
 
     class BytesInputStream implements IInputStream {
         private final byte[] data;
-        private int index;
+        private       int    index;
 
         BytesInputStream(int size) {
-            data = new byte[size];
+            data  = new byte[size];
             index = 0;
         }
 
@@ -79,11 +80,26 @@ public class TestSerialization {
         output.writeString("中A");
 
         var input = output.copyTo();
-        assertEquals( -1, input.readVariant());
+        assertEquals(-1, input.readVariant());
         assertEquals(123, input.readVariant());
         assertEquals(Integer.MAX_VALUE, input.readVariant());
         assertEquals(Integer.MIN_VALUE, input.readVariant());
         assertEquals("中A", input.readString());
+    }
+
+    @Test
+    public void testSerialization() throws Exception {
+        var output = new BytesOutputStream(8192);
+        var os     = BinSerializer.pool.rent();
+        os.reset(output);
+        os.serialize(12345);
+        BinSerializer.pool.back(os);
+
+        var input = output.copyTo();
+        var is    = BinDeserializer.pool.rent();
+        is.reset(input);
+        assertEquals(12345, is.deserialize());
+        BinDeserializer.pool.back(is);
     }
 
 }
