@@ -42,6 +42,10 @@ public final class MessageWriteStream implements IOutputStream {
     private Supplier<Pointer> _maker;
     private Consumer<Pointer> _sender;
 
+    public Pointer getCurrentChunk() {
+        return _curChunk;
+    }
+
     private void createChunk() {
         var preChunk = _curChunk;
         _curChunk = _maker.get();

@@ -2,10 +2,12 @@ package appbox.channel;
 
 import appbox.channel.messages.IMessage;
 import appbox.core.logging.Log;
+import appbox.core.serialization.BinSerializer;
 import com.sun.jna.Pointer;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 与主进程通信的共享内存通道，每个实例包含两个单向消息队列
@@ -14,6 +16,7 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
     private final Pointer                   _sendQueue;    //发送队列
     private final Pointer                   _receiveQueue; //接收队列
     private final HashMap<Integer, Pointer> _pendings;     //挂起的不完整消息
+    private       AtomicInteger             _msgNo;        //发送消息流水号
 
     public SharedMemoryChannel(String name) {
         // 注意与主进程的名称相反
@@ -119,8 +122,40 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
         MessageDispatcher.processMessage(this, first);
     }
 
-    public <T extends IMessage> void sendMessage(T msg) {
+    /**
+     * 序列化并发送消息，如果序列化异常标记消息为错误状态仍旧发送,接收端根据消息类型是请求还是响应作不同处理
+     *
+     * @param msg
+     * @param <T>
+     */
+    public <T extends IMessage> void sendMessage(T msg) throws Exception {
+        byte flag     = MessageFlag.None;
+        int  msgId    = _msgNo.incrementAndGet();
+        long sourceId = 0; //TODO:fix
 
+        var mws = MessageWriteStream.rentFromPool(MessageType.InvokeResponse,
+                msgId, sourceId, flag,
+                () -> NativeSmq.SMQ_GetChunkForWriting(_sendQueue, -1),
+                (s) -> NativeSmq.SMQ_PostChunk(_sendQueue, s));
+        var bs = BinSerializer.rentFromPool(mws);
+        try {
+            msg.writeTo(bs);
+            mws.flush(); //必须
+        } catch (Exception e) {
+            //发生异常，则通知接收端取消挂起的消息
+            sendCancelMessage(mws.getCurrentChunk());
+            //记录日志并重新抛出异常
+            Log.warn(e.getMessage());
+            throw e;
+        } finally {
+            BinSerializer.backToPool(bs);
+            MessageWriteStream.backToPool(mws);
+        }
+    }
+
+    private void sendCancelMessage(Pointer chunk) {
+        //注意：标记当前包为取消状态，并且发送至接收端，由接收端取消本包及之前的包
+        Log.debug("Not implemented.");
     }
 
 }

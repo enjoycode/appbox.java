@@ -35,7 +35,7 @@ public final class MessageDispatcher {
         req.reqId = NativeSmq.getMsgId(first);
         boolean isDeserializeError = false;
         try {
-            MessageSerializer.deserialize(req, first);
+            IMessageChannel.deserialize(req, first);
         } catch (Exception e) {
             InvokeRequire.backToPool(req); //失败归还
             isDeserializeError = true;
