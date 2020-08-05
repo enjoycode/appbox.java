@@ -2,6 +2,7 @@ package appbox.core.serialization;
 
 import appbox.core.logging.Log;
 import appbox.core.serialization.serializers.IntSerializer;
+import appbox.core.serialization.serializers.StringSerializer;
 
 import java.util.HashMap;
 import java.util.function.Supplier;
@@ -14,13 +15,13 @@ public abstract class TypeSerializer {
     static {
         Log.debug("开始注册序列化器...");
         registerKnownType(IntSerializer.instance);
+        registerKnownType(StringSerializer.instance);
     }
 
     /**
      * 注册已知类型的序列化器
      *
      * @param serializer
-     * @throws Exception
      */
     public static void registerKnownType(TypeSerializer serializer) {
         _knownTypes.put(serializer.targetType, serializer);
@@ -32,9 +33,6 @@ public abstract class TypeSerializer {
 
     /**
      * 序列化时根据目标类型获取相应的序列化实现
-     *
-     * @param type
-     * @return
      */
     public static TypeSerializer getSerializer(Class<?> type) {
         //TODO: 范型及容器类型的处理
@@ -47,9 +45,6 @@ public abstract class TypeSerializer {
 
     /**
      * 反序列化时根据PayloadType获取相应的系统已知类型的序列化实现
-     *
-     * @param payloadType
-     * @return
      */
     public static TypeSerializer getSerializer(byte payloadType) {
         return _sysKnownTypes.get(payloadType);

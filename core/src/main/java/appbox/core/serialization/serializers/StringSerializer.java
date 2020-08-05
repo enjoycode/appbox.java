@@ -5,20 +5,20 @@ import appbox.core.serialization.BinSerializer;
 import appbox.core.serialization.PayloadType;
 import appbox.core.serialization.TypeSerializer;
 
-public final class IntSerializer extends TypeSerializer {
-    public static final IntSerializer instance = new IntSerializer();
+public final class StringSerializer extends TypeSerializer {
+    public static final StringSerializer instance = new StringSerializer();
 
-    private IntSerializer() {
-        super(PayloadType.Int32, Integer.class, null);
+    private StringSerializer() {
+        super(PayloadType.String, String.class, null);
     }
 
     @Override
     public void write(BinSerializer bs, Object value) throws Exception {
-        bs.writeVariant((int) value);
+        bs.writeString((String) value);
     }
 
     @Override
     public Object read(BinDeserializer bs) throws Exception {
-        return bs.readVariant();
+        return bs.readString();
     }
 }
