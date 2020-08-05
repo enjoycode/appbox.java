@@ -33,10 +33,10 @@ public class TestMsgSerialization {
     }
 
     /**
-     * 保存至文件方便Post测试
+     * 保存客户端请求至文件方便Post测试
      */
     @Test
-    public void saveInvokeRequire() throws Exception {
+    public void saveClientInvokeRequire() throws Exception {
         var req = InvokeRequire.rentFromPool();
         req.shard   = 0;
         req.service = "sys.OrderService.SayHello";

@@ -48,6 +48,10 @@ public class NativeSmq {
         chunk.setByte(1, flag);
     }
 
+    public static short getMsgDataLen(Pointer chunk) {
+        return chunk.getShort(2);
+    }
+
     public static void setMsgDataLen(Pointer chunk, short len) {
         chunk.setShort(2, len);
     }
@@ -82,6 +86,48 @@ public class NativeSmq {
 
     public static void setMsgNext(Pointer chunk, Pointer next) {
         chunk.setPointer(240, next);
+    }
+
+
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+    /**
+     * 获取单包的调试信息
+     */
+    public static String getDebugInfo(Pointer chunk, boolean withData) {
+        var sb = new StringBuilder();
+        sb.append("TYP=");
+        sb.append(getMsgType(chunk));
+        sb.append(" ID=");
+        sb.append(getMsgId(chunk));
+        sb.append(" FLAG=");
+        sb.append(getMsgFlag(chunk));
+        sb.append(" LEN=");
+        sb.append(getMsgDataLen(chunk));
+        sb.append(" CUR=");
+        sb.append(Long.toHexString(Pointer.nativeValue(chunk)));
+        sb.append(" FST=");
+        sb.append(Long.toHexString(Pointer.nativeValue(getMsgFirst(chunk))));
+        sb.append(" NXT=");
+        sb.append(Long.toHexString(Pointer.nativeValue(getMsgNext(chunk))));
+        sb.append("\n");
+        if (withData) {
+            var dataPtr = getDataPtr(chunk);
+            var dataLen = getMsgDataLen(chunk);
+            sb.append("--------DataStart--------\n");
+            int  v;
+            char c1, c2;
+            for (int i = 0; i < dataLen; i++) {
+                v = dataPtr.getByte(i) & 0xFF;
+                c1 = HEX_ARRAY[v >>> 4];
+                c2 = HEX_ARRAY[v & 0x0F];
+                sb.append(c1);
+                sb.append(c2);
+                if (i % 4 == 3) sb.append(" ");
+            }
+            sb.append("\n---------DataEnd---------\n");
+        }
+        return sb.toString();
     }
 }
 

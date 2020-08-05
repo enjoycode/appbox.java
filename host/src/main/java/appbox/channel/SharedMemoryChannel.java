@@ -23,6 +23,7 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
         _receiveQueue = NativeSmq.SMQ_Open(name + "-S");
         _sendQueue    = NativeSmq.SMQ_Open(name + "-R");
         _pendings     = new HashMap<>();
+        _msgNo        = new AtomicInteger();
     }
 
     @Override

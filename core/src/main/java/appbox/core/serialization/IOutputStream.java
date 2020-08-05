@@ -7,15 +7,15 @@ public interface IOutputStream {
     void write(byte[] src, int offset, int count);
 
     default void writeShort(short value) throws Exception {
-        writeByte((byte) ((value >> 8) & 0xFF));
         writeByte((byte) (value & 0xFF));
+        writeByte((byte) ((value >> 8) & 0xFF));
     }
 
     default void writeInt(int value) throws Exception {
-        writeByte((byte) ((value >> 24) & 0xFF));
-        writeByte((byte) ((value >> 16) & 0xFF));
-        writeByte((byte) ((value >> 8) & 0xFF));
         writeByte((byte) (value & 0xFF));
+        writeByte((byte) ((value >> 8) & 0xFF));
+        writeByte((byte) ((value >> 16) & 0xFF));
+        writeByte((byte) ((value >> 24) & 0xFF));
     }
 
     default void writeVariant(int value) {

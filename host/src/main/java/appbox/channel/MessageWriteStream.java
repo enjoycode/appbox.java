@@ -1,6 +1,7 @@
 package appbox.channel;
 
 import appbox.core.cache.ObjectPool;
+import appbox.core.logging.Log;
 import appbox.core.serialization.IOutputStream;
 import com.sun.jna.Pointer;
 
@@ -21,6 +22,9 @@ public final class MessageWriteStream implements IOutputStream {
         obj._msgId    = msgId;
         obj._sourceId = sourceId;
         obj._msgFlag  = msgFlag;
+
+        obj._maker  = maker;
+        obj._sender = sender;
 
         obj.createChunk();
         return obj;
@@ -66,6 +70,7 @@ public final class MessageWriteStream implements IOutputStream {
         }
         //设置数据指针
         _dataPtr = NativeSmq.getDataPtr(_curChunk);
+        _index   = 0;
         //直接发送前一包
         if (_sender != null && preChunk != Pointer.NULL) {
             _sender.accept(preChunk);

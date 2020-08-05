@@ -7,6 +7,9 @@ import appbox.core.serialization.BinSerializer;
 
 import java.util.ArrayList;
 
+/**
+ * 主进程转发的服务调用请求，包含主进程的相关信息及原始请求信息
+ */
 public final class InvokeRequire implements IMessage {
     //TODO: pool count
     private static final ObjectPool<InvokeRequire> pool = new ObjectPool<>(InvokeRequire::new, null, 32);
@@ -20,18 +23,10 @@ public final class InvokeRequire implements IMessage {
         pool.back(obj);
     }
 
-    public int reqId; // 不用序列化
-
-    /**
-     * 请求所在的主进程的shard
-     */
-    public short shard;
-
-    /**
-     * eg: sys.OrderService.Save
-     */
-    public String service;
-
+    //TODO: srcId //原客户端请求的标识，http始终为0，websocket区分
+    public        int                  reqId;    //主进程转发的消息id,用于等待子进程处理完. 不用序列化
+    public        short                shard;    //主进程的shard
+    public        String               service;  //eg: sys.OrderService.Save
     private final ArrayList<InvokeArg> args;
 
     private InvokeRequire() {
@@ -61,7 +56,7 @@ public final class InvokeRequire implements IMessage {
 
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
-        bs.writeShort(shard);
+        //注意：目前仅用于测试，不写入主进程相关信息(相当于原始客户端请求)
         bs.writeString(service);
         bs.writeVariant(args.size());
         for (int i = 0; i < args.size(); i++) {
@@ -71,7 +66,7 @@ public final class InvokeRequire implements IMessage {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-        shard = bs.readShort();
+        shard   = bs.readShort();
         service = bs.readString();
         int argsLen = bs.readVariant();
         for (int i = 0; i < argsLen; i++) {

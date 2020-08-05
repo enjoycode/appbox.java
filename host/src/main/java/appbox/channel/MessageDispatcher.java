@@ -47,7 +47,7 @@ public final class MessageDispatcher {
         if (!isDeserializeError) {
             //异步交给运行时服务容器处理
             CompletableFuture.runAsync(() -> {
-                Log.info(req.service); //TODO:别忘了归还InvokeRequire
+                //Log.info(req.service);
 
                 //测试回传
                 var res = InvokeResponse.rentFromPool();
@@ -59,6 +59,9 @@ public final class MessageDispatcher {
                     channel.sendMessage(res);
                 } catch (Exception e) {
                     Log.warn("发送响应消息失败");
+                } finally {
+                    InvokeRequire.backToPool(req);
+                    InvokeResponse.backToPool(res);
                 }
             });
         } else {

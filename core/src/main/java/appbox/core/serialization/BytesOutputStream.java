@@ -26,6 +26,7 @@ public final class BytesOutputStream implements IOutputStream {
         var os = new FileOutputStream(file);
         try {
             os.write(data, 0, index);
+            os.flush();
         } finally {
             os.close();
         }
