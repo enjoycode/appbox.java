@@ -7,11 +7,11 @@ public interface IInputStream {
     void read(byte[] dest, int offset, int count) throws Exception;
 
     default short readShort() throws Exception {
-        return (short) (readByte() << 8 | readByte());
+        return (short) (readByte() | (readByte() << 8));
     }
 
     default int readInt() throws Exception {
-        return (readByte() << 24) | (readByte() << 16) | (readByte() << 8) | readByte();
+        return readByte() | (readByte() << 8) | (readByte() << 16) | (readByte() << 24);
     }
 
     default int readVariant() throws Exception {
