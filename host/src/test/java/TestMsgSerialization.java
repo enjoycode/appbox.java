@@ -18,7 +18,7 @@ public class TestMsgSerialization {
         src.writeTo(os); //直接写
         BinSerializer.backToPool(os);
 
-        var input = output.copyTo();
+        var input = output.copyToInput();
         var is    = BinDeserializer.rentFromPool(input);
         var dst   = InvokeRequire.rentFromPool();
         dst.readFrom(is); //直接读
@@ -30,5 +30,23 @@ public class TestMsgSerialization {
 
         InvokeRequire.backToPool(src);
         InvokeRequire.backToPool(dst);
+    }
+
+    /**
+     * 保存至文件方便Post测试
+     */
+    @Test
+    public void saveInvokeRequire() throws Exception {
+        var req = InvokeRequire.rentFromPool();
+        req.shard   = 0;
+        req.service = "sys.OrderService.SayHello";
+        req.addArg(12345);
+
+        var output = new BytesOutputStream(8192);
+        var os     = BinSerializer.rentFromPool(output);
+        req.writeTo(os);
+        BinSerializer.backToPool(os);
+
+        output.saveToFile("src/test/java/InvokeRequire.bin");
     }
 }

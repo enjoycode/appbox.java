@@ -124,10 +124,8 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
 
     /**
      * 序列化并发送消息，如果序列化异常标记消息为错误状态仍旧发送,接收端根据消息类型是请求还是响应作不同处理
-     *
-     * @param msg
-     * @param <T>
      */
+    @Override
     public <T extends IMessage> void sendMessage(T msg) throws Exception {
         byte flag     = MessageFlag.None;
         int  msgId    = _msgNo.incrementAndGet();

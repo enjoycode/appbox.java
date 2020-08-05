@@ -11,13 +11,13 @@ public interface IMessageChannel {
      */
     void returnAllChunks(Pointer first);
 
+    /**
+     * 序列化并发送消息
+     */
+    <T extends IMessage> void sendMessage(T msg) throws Exception;
 
     /**
      * 反序列化至指定类型的消息，注意消息缓存块由调用者释放
-     *
-     * @param msg
-     * @param first
-     * @param <T>
      */
     static <T extends IMessage> void deserialize(T msg, Pointer first) throws Exception {
         var stream = MessageReadStream.rentFromPool(first);

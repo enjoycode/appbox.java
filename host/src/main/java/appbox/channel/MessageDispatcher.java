@@ -1,6 +1,7 @@
 package appbox.channel;
 
 import appbox.channel.messages.InvokeRequire;
+import appbox.channel.messages.InvokeResponse;
 import appbox.core.logging.Log;
 import com.sun.jna.Pointer;
 
@@ -47,6 +48,18 @@ public final class MessageDispatcher {
             //异步交给运行时服务容器处理
             CompletableFuture.runAsync(() -> {
                 Log.info(req.service); //TODO:别忘了归还InvokeRequire
+
+                //测试回传
+                var res = InvokeResponse.rentFromPool();
+                res.reqId  = req.reqId;
+                res.shard  = req.shard;
+                res.error  = InvokeResponse.ErrorCode.None;
+                res.result = "Hello Future!";
+                try {
+                    channel.sendMessage(res);
+                } catch (Exception e) {
+                    Log.warn("发送响应消息失败");
+                }
             });
         } else {
             //TODO: 发送反序列化失败错误给调用者

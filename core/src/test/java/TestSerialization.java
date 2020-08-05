@@ -1,4 +1,3 @@
-import appbox.core.logging.Log;
 import appbox.core.serialization.*;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +27,7 @@ public class TestSerialization {
         output.writeVariant(Integer.MIN_VALUE);
         output.writeString("中A");
 
-        var input = output.copyTo();
+        var input = output.copyToInput();
         assertEquals(-1, input.readVariant());
         assertEquals(123, input.readVariant());
         assertEquals(Integer.MAX_VALUE, input.readVariant());
@@ -43,7 +42,7 @@ public class TestSerialization {
         os.serialize(12345);
         BinSerializer.backToPool(os);
 
-        var input = output.copyTo();
+        var input = output.copyToInput();
         var is    = BinDeserializer.rentFromPool(input);
         assertEquals(12345, is.deserialize());
         BinDeserializer.backToPool(is);
