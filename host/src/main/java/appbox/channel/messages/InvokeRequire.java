@@ -12,7 +12,7 @@ import java.util.ArrayList;
  */
 public final class InvokeRequire implements IMessage {
     //TODO: pool count
-    private static final ObjectPool<InvokeRequire> pool = new ObjectPool<>(InvokeRequire::new, null, 32);
+    private static final ObjectPool<InvokeRequire> pool = new ObjectPool<>(InvokeRequire::new,32);
 
     public static InvokeRequire rentFromPool() {
         return pool.rent();

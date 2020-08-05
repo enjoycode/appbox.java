@@ -14,7 +14,7 @@ public final class InvokeResponse implements IMessage {
         public static final byte SerializeResponseFail  = 5;
     }
 
-    private static final ObjectPool<InvokeResponse> pool = new ObjectPool<>(InvokeResponse::new, null, 32);
+    private static final ObjectPool<InvokeResponse> pool = new ObjectPool<>(InvokeResponse::new, 32);
 
     public static InvokeResponse rentFromPool() {
         return pool.rent();

@@ -9,7 +9,7 @@ import appbox.core.serialization.PayloadType;
  * 调用服务的参数
  */
 public final class InvokeArg {
-    public static final ObjectPool<InvokeArg> pool = new ObjectPool<>(InvokeArg::new, null, 32);
+    public static final ObjectPool<InvokeArg> pool = new ObjectPool<>(InvokeArg::new, 32);
 
     private Object value;
     private byte   type; //常用类型简化

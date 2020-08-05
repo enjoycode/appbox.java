@@ -8,7 +8,7 @@ import com.sun.jna.Pointer;
  * 消息读取流，用于从消息链中读取完整消息
  */
 public final class MessageReadStream implements IInputStream {
-    private static final ObjectPool<MessageReadStream> pool = new ObjectPool<>(MessageReadStream::new, null, 32);
+    private static final ObjectPool<MessageReadStream> pool = new ObjectPool<>(MessageReadStream::new, 32);
 
     public static MessageReadStream rentFromPool(Pointer first) {
         var obj = pool.rent();

@@ -12,7 +12,7 @@ import java.util.function.Supplier;
  * 消息发送流, 注意目前实现边写边发
  */
 public final class MessageWriteStream implements IOutputStream {
-    private static final ObjectPool<MessageWriteStream> pool = new ObjectPool<>(MessageWriteStream::new, null, 32);
+    private static final ObjectPool<MessageWriteStream> pool = new ObjectPool<>(MessageWriteStream::new,32);
 
     public static MessageWriteStream rentFromPool(byte msgType, int msgId, long sourceId, byte msgFlag,
                                                   Supplier<Pointer> maker, Consumer<Pointer> sender) {

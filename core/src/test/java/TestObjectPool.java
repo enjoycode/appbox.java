@@ -11,7 +11,7 @@ public class TestObjectPool {
 
     @Test
     void TestRentAndBack() {
-        var pool = new ObjectPool<>(Person::new, null, 8);
+        var pool = new ObjectPool<>(Person::new, 8);
         var p1 = pool.rent();
         p1.Name = "Rick";
         pool.back(p1);

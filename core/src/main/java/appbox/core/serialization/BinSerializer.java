@@ -3,7 +3,7 @@ package appbox.core.serialization;
 import appbox.core.cache.ObjectPool;
 
 public final class BinSerializer {
-    private static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, null, 32);
+    private static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, 32);
 
     public static BinSerializer rentFromPool(IOutputStream stream) {
         var obj = pool.rent();
