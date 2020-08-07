@@ -1,0 +1,14 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // 依赖 core 模块
+    implementation project(':core')
+    // 依赖的第三方包
+    implementation fileTree(dir: 'lib', include:['*.jar'])
+}
+
+tasks.jar {
+    archiveFileName.set("appbox-design.jar")
+}
