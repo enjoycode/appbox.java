@@ -1,7 +1,7 @@
-package appbox.channel;
+package appbox.server.channel;
 
-import appbox.channel.messages.InvokeRequire;
-import appbox.channel.messages.InvokeResponse;
+import appbox.server.channel.messages.InvokeRequire;
+import appbox.server.channel.messages.InvokeResponse;
 import appbox.core.logging.Log;
 import com.sun.jna.Pointer;
 

@@ -1,4 +1,4 @@
-package appbox.channel;
+package appbox.server.channel;
 
 import appbox.core.cache.ObjectPool;
 import appbox.core.serialization.IInputStream;

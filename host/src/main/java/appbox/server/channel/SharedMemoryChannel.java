@@ -1,12 +1,11 @@
-package appbox.channel;
+package appbox.server.channel;
 
-import appbox.channel.messages.IMessage;
+import appbox.server.channel.messages.IMessage;
 import appbox.core.logging.Log;
 import appbox.core.serialization.BinSerializer;
 import com.sun.jna.Pointer;
 
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**

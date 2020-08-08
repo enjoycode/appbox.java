@@ -1,4 +1,4 @@
-package appbox.channel;
+package appbox.server.channel;
 
 public final class MessageFlag {
     public static final byte None = 0;

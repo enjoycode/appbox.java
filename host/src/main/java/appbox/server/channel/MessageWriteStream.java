@@ -1,7 +1,6 @@
-package appbox.channel;
+package appbox.server.channel;
 
 import appbox.core.cache.ObjectPool;
-import appbox.core.logging.Log;
 import appbox.core.serialization.IOutputStream;
 import com.sun.jna.Pointer;
 

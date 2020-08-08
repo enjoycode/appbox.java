@@ -1,4 +1,4 @@
-package appbox.channel.messages;
+package appbox.server.channel.messages;
 
 import appbox.core.cache.ObjectPool;
 import appbox.core.serialization.BinDeserializer;

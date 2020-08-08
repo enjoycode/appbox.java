@@ -1,6 +1,6 @@
 package appbox;
 
-import appbox.channel.SharedMemoryChannel;
+import appbox.server.channel.SharedMemoryChannel;
 
 public class App {
 
