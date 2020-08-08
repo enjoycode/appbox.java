@@ -1,7 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.core.cache.ObjectPool;
-import appbox.core.data.InvokeArg;
+import appbox.core.runtime.InvokeArg;
 import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 

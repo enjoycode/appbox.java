@@ -1,4 +1,4 @@
-package appbox.core.data;
+package appbox.core.runtime;
 
 import appbox.core.cache.ObjectPool;
 import appbox.core.serialization.BinDeserializer;
