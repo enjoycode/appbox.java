@@ -5,7 +5,9 @@ import appbox.core.runtime.InvokeArg;
 import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 主进程转发的服务调用请求，包含主进程的相关信息及原始请求信息
@@ -24,10 +26,10 @@ public final class InvokeRequire implements IMessage {
     }
 
     //TODO: srcId //原客户端请求的标识，http始终为0，websocket区分
-    public        int                  reqId;    //主进程转发的消息id,用于等待子进程处理完. 不用序列化
-    public        short                shard;    //主进程的shard
-    public        String               service;  //eg: sys.OrderService.Save
-    private final ArrayList<InvokeArg> args;
+    public       int                  reqId;    //主进程转发的消息id,用于等待子进程处理完. 不用序列化
+    public       short                shard;    //主进程的shard
+    public       String               service;  //eg: sys.OrderService.Save
+    public final ArrayList<InvokeArg> args;
 
     private InvokeRequire() {
         args = new ArrayList<>();
@@ -47,7 +49,7 @@ public final class InvokeRequire implements IMessage {
         args.add(arg);
     }
 
-    public void clearArgs() {
+    private void clearArgs() {
         for (int i = 0; i < args.size(); i++) {
             InvokeArg.pool.back(args.get(i));
         }

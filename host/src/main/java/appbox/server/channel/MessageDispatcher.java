@@ -1,5 +1,6 @@
 package appbox.server.channel;
 
+import appbox.core.runtime.RuntimeContext;
 import appbox.server.channel.messages.InvokeRequire;
 import appbox.server.channel.messages.InvokeResponse;
 import appbox.core.logging.Log;
@@ -47,22 +48,23 @@ public final class MessageDispatcher {
         if (!isDeserializeError) {
             //异步交给运行时服务容器处理
             CompletableFuture.runAsync(() -> {
-                //Log.info(req.service);
-
-                //测试回传
-                var res = InvokeResponse.rentFromPool();
-                res.reqId  = req.reqId;
-                res.shard  = req.shard;
-                res.error  = InvokeResponse.ErrorCode.None;
-                res.result = "Hello Future!";
-                try {
-                    channel.sendMessage(res);
-                } catch (Exception e) {
-                    Log.warn("发送响应消息失败");
-                } finally {
+                RuntimeContext.invokeAsync(req.service, req.args).thenAccept(r -> {
                     InvokeRequire.backToPool(req);
-                    InvokeResponse.backToPool(res);
-                }
+
+                    //发送请求响应
+                    var res = InvokeResponse.rentFromPool();
+                    res.reqId  = req.reqId;
+                    res.shard  = req.shard;
+                    res.error  = InvokeResponse.ErrorCode.None;
+                    res.result = r;
+                    try {
+                        channel.sendMessage(res);
+                    } catch (Exception e) {
+                        Log.warn("发送响应消息失败");
+                    } finally {
+                        InvokeResponse.backToPool(res);
+                    }
+                }); //TODO:异常处理释放相应的缓存
             });
         } else {
             //TODO: 发送反序列化失败错误给调用者
