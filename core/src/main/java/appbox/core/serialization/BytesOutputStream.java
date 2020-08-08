@@ -9,7 +9,7 @@ import java.io.IOException;
  */
 public final class BytesOutputStream implements IOutputStream {
     public final byte[] data;
-    private       int    index;
+    private      int    index;
 
     public BytesOutputStream(int size) {
         data  = new byte[size];
@@ -22,10 +22,10 @@ public final class BytesOutputStream implements IOutputStream {
         return input;
     }
 
-    public void saveToFile(String file) throws IOException {
+    public void saveToFile(int offset, String file) throws IOException {
         var os = new FileOutputStream(file);
         try {
-            os.write(data, 0, index);
+            os.write(data, offset, index);
             os.flush();
         } finally {
             os.close();

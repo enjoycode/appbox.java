@@ -47,6 +47,6 @@ public class TestMsgSerialization {
         req.writeTo(os);
         BinSerializer.backToPool(os);
 
-        output.saveToFile("src/test/java/InvokeRequire.bin");
+        output.saveToFile(2/*偏移2字节shard*/, "src/test/java/InvokeRequire.bin");
     }
 }

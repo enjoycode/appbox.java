@@ -12,7 +12,7 @@ import java.util.ArrayList;
  */
 public final class InvokeRequire implements IMessage {
     //TODO: pool count
-    private static final ObjectPool<InvokeRequire> pool = new ObjectPool<>(InvokeRequire::new,32);
+    private static final ObjectPool<InvokeRequire> pool = new ObjectPool<>(InvokeRequire::new, 32);
 
     public static InvokeRequire rentFromPool() {
         return pool.rent();
@@ -56,7 +56,7 @@ public final class InvokeRequire implements IMessage {
 
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
-        //注意：目前仅用于测试，不写入主进程相关信息(相当于原始客户端请求)
+        bs.writeShort(shard);
         bs.writeString(service);
         bs.writeVariant(args.size());
         for (int i = 0; i < args.size(); i++) {
