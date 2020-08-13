@@ -12,6 +12,10 @@ public final class ApplicationModel implements IBinSerializable {
     private byte   _storeId;        //映射至系统存储的编号，由EntityStore生成
     private int    _devModelIdSeq;  //仅用于导入导出，注意导出前需要从存储刷新
 
+    public int Id() {
+        return _id;
+    }
+
     public ApplicationModel(String owner, String name) {
         _owner = owner;
         _name  = name;
