@@ -1,0 +1,12 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // 依赖 core 模块
+    implementation project(':core')
+}
+
+tasks.jar {
+    archiveFileName.set("appbox-store.jar")
+}

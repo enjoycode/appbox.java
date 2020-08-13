@@ -55,11 +55,30 @@ public final class BinSerializer {
         _stream.writeInt(value);
     }
 
+    public void writeInt(int value, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
+        _stream.writeInt(value);
+    }
+
     public void writeVariant(int value) {
+        _stream.writeVariant(value);
+    }
+
+    public void writeVariant(int value, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
         _stream.writeVariant(value);
     }
 
     public void writeString(String value) throws Exception {
         _stream.writeString(value);
+    }
+
+    public void writeString(String value, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
+        _stream.writeString(value);
+    }
+
+    public void finishWriteFields() throws Exception {
+        _stream.writeVariant(0);
     }
 }

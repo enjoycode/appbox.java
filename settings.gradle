@@ -11,4 +11,5 @@ rootProject.name = 'appbox'
 
 include 'core', 'host'
 include 'design'
+include 'store'
 

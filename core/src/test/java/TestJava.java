@@ -16,4 +16,19 @@ public class TestJava {
         assertEquals("Hello", a);
     }
 
+    @Test
+    public void testCharSequence() {
+        //var s0 = "Hello";
+        //String.class.getConstructor()
+        var s1 = "中Hello World";
+        var s2 = "中Hello Future";
+        var sq1 = s1.subSequence(0, 5);
+        var sq2 = s2.subSequence(0, 5);
+        assertEquals(sq1, sq2);
+        assertEquals(sq1.hashCode(), sq2.hashCode());
+
+        char[] arr = {'r', 'u', 'n', 'o', 'o', 'b' };
+        var s3 = String.valueOf(arr);
+    }
+
 }
