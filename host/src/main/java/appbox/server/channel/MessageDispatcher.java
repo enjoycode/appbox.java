@@ -4,6 +4,8 @@ import appbox.core.runtime.RuntimeContext;
 import appbox.server.channel.messages.InvokeRequire;
 import appbox.server.channel.messages.InvokeResponse;
 import appbox.core.logging.Log;
+import appbox.server.channel.messages.NewAppResponse;
+import appbox.store.SysStoreApi;
 import com.sun.jna.Pointer;
 
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +25,9 @@ public final class MessageDispatcher {
         switch (NativeSmq.getMsgType(first)) {
             case MessageType.InvokeRequire:
                 processInvokeRequire(channel, first);
+                break;
+            case MessageType.NewAppResponse:
+                processNewAppResponse(channel, first);
                 break;
             default:
                 channel.returnAllChunks(first);
@@ -58,7 +63,7 @@ public final class MessageDispatcher {
                     res.error  = InvokeResponse.ErrorCode.None;
                     res.result = r;
                     try {
-                        channel.sendMessage(res);
+                        channel.sendMessage(channel.newMessageId(), res);
                     } catch (Exception e) {
                         Log.warn("发送响应消息失败");
                     } finally {
@@ -71,4 +76,23 @@ public final class MessageDispatcher {
         }
     }
 
+    private static void processNewAppResponse(IMessageChannel channel, Pointer first) {
+        var     res                = new NewAppResponse();
+        boolean isDeserializeError = false;
+        try {
+            IMessageChannel.deserialize(res, first);
+        } catch (Exception e) {
+            isDeserializeError = true;
+        } finally {
+            channel.returnAllChunks(first);
+        }
+
+        if (!isDeserializeError) {
+            CompletableFuture.runAsync(() -> {
+                SysStoreApi.onResponse(res.reqId, res);
+            });
+        } else {
+            //TODO:
+        }
+    }
 }

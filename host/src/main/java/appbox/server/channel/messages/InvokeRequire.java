@@ -4,6 +4,7 @@ import appbox.core.cache.ObjectPool;
 import appbox.core.runtime.InvokeArg;
 import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
+import appbox.server.channel.MessageType;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -35,6 +36,11 @@ public final class InvokeRequire implements IMessage {
         args = new ArrayList<>();
     }
 
+    @Override
+    public byte MessageType() {
+        return MessageType.InvokeRequire;
+    }
+
     public int getArgsCount() {
         return args.size();
     }
@@ -56,6 +62,7 @@ public final class InvokeRequire implements IMessage {
         args.clear();
     }
 
+    //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
         bs.writeShort(shard);
@@ -77,4 +84,5 @@ public final class InvokeRequire implements IMessage {
             args.add(arg);
         }
     }
+    //endregion
 }

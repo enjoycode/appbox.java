@@ -122,17 +122,21 @@ public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable
         MessageDispatcher.processMessage(this, first);
     }
 
+    @Override
+    public int newMessageId() {
+        return _msgNo.incrementAndGet();
+    }
+
     /**
      * 序列化并发送消息，如果序列化异常标记消息为错误状态仍旧发送,接收端根据消息类型是请求还是响应作不同处理
      */
     @Override
-    public <T extends IMessage> void sendMessage(T msg) throws Exception {
+    public <T extends IMessage> void sendMessage(int id, T msg) throws Exception {
         byte flag     = MessageFlag.None;
-        int  msgId    = _msgNo.incrementAndGet();
         long sourceId = 0; //TODO:fix
 
-        var mws = MessageWriteStream.rentFromPool(MessageType.InvokeResponse,
-                msgId, sourceId, flag,
+        var mws = MessageWriteStream.rentFromPool(msg.MessageType(),
+                id, sourceId, flag,
                 () -> NativeSmq.SMQ_GetChunkForWriting(_sendQueue, -1),
                 (s) -> NativeSmq.SMQ_PostChunk(_sendQueue, s));
         var bs = BinSerializer.rentFromPool(mws);

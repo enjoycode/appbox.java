@@ -18,6 +18,7 @@ public final class ApplicationModel implements IBinSerializable {
         _id    = StringUtil.getHashCode(owner) ^ StringUtil.getHashCode(name);
     }
 
+    //region ====IBinSerializable====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
         bs.writeInt(_id, 1);
@@ -52,4 +53,5 @@ public final class ApplicationModel implements IBinSerializable {
             }
         } while (fieldId != 0);
     }
+    //endregion
 }

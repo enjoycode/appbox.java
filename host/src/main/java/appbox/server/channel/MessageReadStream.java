@@ -22,11 +22,13 @@ public final class MessageReadStream implements IInputStream {
 
     private Pointer _curChunk;
     private Pointer _dataPtr;
+    private int     _dataLen;
     private int     _index;
 
     private void reset(Pointer first) {
         _curChunk = first;
         _dataPtr  = NativeSmq.getDataPtr(_curChunk);
+        _dataLen  = NativeSmq.getMsgDataLen(_curChunk);
         _index    = 0;
     }
 
@@ -34,7 +36,7 @@ public final class MessageReadStream implements IInputStream {
      * 当前块的剩余字节数
      */
     private int left() {
-        return NativeSmq.CHUNK_DATA_SIZE - _index;
+        return _dataLen - _index;
     }
 
     private void moveToNext() throws Exception {

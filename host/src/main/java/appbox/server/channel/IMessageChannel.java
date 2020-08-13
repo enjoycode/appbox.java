@@ -12,9 +12,14 @@ public interface IMessageChannel {
     void returnAllChunks(Pointer first);
 
     /**
+     * 生成新的消息标识
+     */
+    int newMessageId();
+
+    /**
      * 序列化并发送消息
      */
-    <T extends IMessage> void sendMessage(T msg) throws Exception;
+    <T extends IMessage> void sendMessage(int id, T msg) throws Exception;
 
     /**
      * 反序列化至指定类型的消息，注意消息缓存块由调用者释放

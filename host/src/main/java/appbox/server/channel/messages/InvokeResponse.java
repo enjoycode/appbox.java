@@ -3,6 +3,7 @@ package appbox.server.channel.messages;
 import appbox.core.cache.ObjectPool;
 import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
+import appbox.server.channel.MessageType;
 
 public final class InvokeResponse implements IMessage {
     public static final class ErrorCode {
@@ -30,6 +31,12 @@ public final class InvokeResponse implements IMessage {
     public Object result;
 
     @Override
+    public byte MessageType() {
+        return MessageType.InvokeResponse;
+    }
+
+    //region ====Serialization====
+    @Override
     public void writeTo(BinSerializer bs) throws Exception {
         //注意不要改变写入顺序
         bs.writeInt(reqId);
@@ -45,4 +52,5 @@ public final class InvokeResponse implements IMessage {
         error  = bs.readByte();
         result = bs.deserialize();
     }
+    //endregion
 }

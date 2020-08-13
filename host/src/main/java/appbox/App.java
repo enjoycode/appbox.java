@@ -3,6 +3,7 @@ package appbox;
 import appbox.core.runtime.RuntimeContext;
 import appbox.server.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
+import appbox.store.SysStoreApi;
 
 public class App {
 
@@ -17,6 +18,8 @@ public class App {
 
         // 新建Channel并开始阻塞接收
         var channel = new SharedMemoryChannel("AppChannel");
+        // 初始化系统存储Api
+        SysStoreApi.init(channel);
         channel.startReceive();
 
         System.out.println("Java AppHost stopped.");

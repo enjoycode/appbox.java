@@ -7,5 +7,8 @@ public final class MessageType {
     public static final byte InvokeRequire  = 10;
     public static final byte InvokeResponse = 11;
 
+    public static final byte NewAppRequire  = 20;
+    public static final byte NewAppResponse = 21;
+
     public static final byte ExitReadLoop = -128;
 }
