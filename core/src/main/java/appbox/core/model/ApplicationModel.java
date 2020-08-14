@@ -22,6 +22,10 @@ public final class ApplicationModel implements IBinSerializable {
         _id    = StringUtil.getHashCode(owner) ^ StringUtil.getHashCode(name);
     }
 
+    public void setAppStoreId(byte id) {
+        _storeId = id;
+    }
+
     //region ====IBinSerializable====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {

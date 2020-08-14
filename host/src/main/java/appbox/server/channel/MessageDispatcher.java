@@ -95,6 +95,7 @@ public final class MessageDispatcher {
                 SysStoreApi.onResponse(res.reqId, res);
             });
         } else {
+            Log.warn("反序列化NewAppResponse错误");
             //TODO:
         }
     }
