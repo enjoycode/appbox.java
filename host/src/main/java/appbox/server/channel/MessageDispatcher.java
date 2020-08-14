@@ -74,6 +74,7 @@ public final class MessageDispatcher {
                 });
             });
         } else {
+            Log.warn("反序列化InvokeRequire错误");
             //TODO: 发送反序列化失败错误给调用者
         }
     }

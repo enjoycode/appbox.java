@@ -25,6 +25,12 @@ public final class BinSerializer {
         if (obj == null) {
             _stream.writeByte(PayloadType.Null);
             return;
+        } else if (obj == Boolean.TRUE) {
+            _stream.writeByte(PayloadType.BooleanTrue);
+            return;
+        } else if (obj == Boolean.FALSE) {
+            _stream.writeByte(PayloadType.BooleanFalse);
+            return;
         }
 
         var type       = obj.getClass();

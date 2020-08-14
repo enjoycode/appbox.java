@@ -7,6 +7,9 @@ import appbox.store.StoreInitiator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * 系统内置的一些服务，如初始化存储、密码Hash等
+ */
 public final class SystemService implements IService {
 
     @Override
