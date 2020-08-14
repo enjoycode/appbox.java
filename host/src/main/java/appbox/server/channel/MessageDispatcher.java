@@ -53,15 +53,15 @@ public final class MessageDispatcher {
         if (!isDeserializeError) {
             //异步交给运行时服务容器处理
             CompletableFuture.runAsync(() -> {
-                RuntimeContext.invokeAsync(req.service, req.args).thenAccept(r -> {
+                RuntimeContext.invokeAsync(req.service, req.args).handle((r, ex) -> {
                     InvokeRequire.backToPool(req);
 
                     //发送请求响应
                     var res = InvokeResponse.rentFromPool();
                     res.reqId  = req.reqId;
                     res.shard  = req.shard;
-                    res.error  = InvokeResponse.ErrorCode.None;
-                    res.result = r;
+                    res.error  = ex == null ? InvokeResponse.ErrorCode.None : InvokeResponse.ErrorCode.ServiceInnerError;
+                    res.result = ex == null ? r : ex.getMessage();
                     try {
                         channel.sendMessage(channel.newMessageId(), res);
                     } catch (Exception e) {
@@ -69,7 +69,9 @@ public final class MessageDispatcher {
                     } finally {
                         InvokeResponse.backToPool(res);
                     }
-                }); //TODO:异常处理释放相应的缓存
+
+                    return null;
+                });
             });
         } else {
             //TODO: 发送反序列化失败错误给调用者

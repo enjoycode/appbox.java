@@ -21,7 +21,8 @@ public final class NewAppResponse implements IMessage {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-
+        reqId = bs.readInt();
+        appId = bs.readByte();
     }
     //endregion
 }

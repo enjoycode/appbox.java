@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.core.logging.Log;
 import appbox.core.model.ApplicationModel;
 import appbox.server.channel.IMessageChannel;
 import appbox.server.channel.messages.IMessage;
@@ -43,6 +44,7 @@ public final class SysStoreApi {
         try {
             _channel.sendMessage(msgId, req);
         } catch (Exception e) {
+            Log.warn("发送新建应用请求消息错误: " + e.getMessage());
             //TODO:返回异步异常
         }
 

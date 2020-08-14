@@ -8,6 +8,11 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface IRuntimeContext {
 
-    CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args);
+    /**
+     * 异步调用服务
+     *
+     * @param method eg: "sys.OrderService.Save"
+     */
+    CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args);
 
 }

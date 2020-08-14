@@ -27,7 +27,7 @@ public final class RuntimeContext {
         return _current;
     }
 
-    public static CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args) {
+    public static CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args) {
         return _current.invokeAsync(method, args);
     }
 }
