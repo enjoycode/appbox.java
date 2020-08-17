@@ -14,6 +14,10 @@ public interface IInputStream {
         return readByte() | (readByte() << 8) | (readByte() << 16) | (readByte() << 24);
     }
 
+    default long readLong() throws Exception {
+        return (long)readInt() | (long)readInt() << 32;
+    }
+
     default int readVariant() throws Exception {
         int data = readByte();
         if ((data & 0x80) == 0) {

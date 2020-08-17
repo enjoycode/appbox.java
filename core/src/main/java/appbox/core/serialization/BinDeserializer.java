@@ -59,6 +59,10 @@ public final class BinDeserializer {
         return _stream.readInt();
     }
 
+    public long readLong() throws Exception {
+        return _stream.readLong();
+    }
+
     public int readVariant() throws Exception {
         return _stream.readVariant();
     }

@@ -14,6 +14,7 @@ import java.util.List;
  * 主进程转发的服务调用请求，包含主进程的相关信息及原始请求信息
  */
 public final class InvokeRequire implements IMessage {
+    //region ====ObjectPool====
     //TODO: pool count
     private static final ObjectPool<InvokeRequire> pool = new ObjectPool<>(InvokeRequire::new, 32);
 
@@ -25,6 +26,7 @@ public final class InvokeRequire implements IMessage {
         obj.clearArgs();
         pool.back(obj);
     }
+    //endregion
 
     //TODO: srcId //原客户端请求的标识，http始终为0，websocket区分
     public       int                  reqId;    //主进程转发的消息id,用于等待子进程处理完. 不用序列化

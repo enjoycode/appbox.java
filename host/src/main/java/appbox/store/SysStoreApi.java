@@ -3,9 +3,7 @@ package appbox.store;
 import appbox.core.logging.Log;
 import appbox.core.model.ApplicationModel;
 import appbox.server.channel.IMessageChannel;
-import appbox.server.channel.messages.IMessage;
-import appbox.server.channel.messages.NewAppRequire;
-import appbox.server.channel.messages.NewAppResponse;
+import appbox.server.channel.messages.*;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -38,23 +36,56 @@ public final class SysStoreApi {
         }
     }
 
-    public static CompletableFuture<Byte> createApplicationAsync(ApplicationModel app) {
+    private static CompletableFuture<IMessage> makeTaskAndSendRequire(IMessage require) {
         var msgId = _channel.newMessageId();
         var task  = new CompletableFuture<IMessage>();
         //加入等待列表 TODO:检测已存在
         _pendings.put(msgId, task);
-        var req = new NewAppRequire(app);
         try {
-            _channel.sendMessage(msgId, req);
+            _channel.sendMessage(msgId, require);
         } catch (Exception e) {
-            Log.warn("发送新建应用请求消息错误: " + e.getMessage());
+            Log.warn("发送请求消息[" + require.getClass().getName() + "]错误: " + e.getMessage());
+            return null;
+        }
+        return task;
+    }
+
+    //region ====Transaction====
+    public static CompletableFuture<KVBeginTxnResponse> beginTxnAsync(/*TODO:isoLevel*/) {
+        var task = makeTaskAndSendRequire(new KVBeginTxnRequire());
+        if (task == null) {
             //返回异步异常
             return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));
         }
 
         //TODO:处理存储引擎异常
-        return task.thenApply(m -> {
-            return ((NewAppResponse) m).appId;
-        });
+        return task.thenApply(m -> (KVBeginTxnResponse) m);
     }
+    //endregion
+
+    //region ====Meta====
+    protected static CompletableFuture<Byte> createApplicationAsync(ApplicationModel app) {
+        var task = makeTaskAndSendRequire(new NewAppRequire(app));
+        if (task == null) {
+            //返回异步异常
+            return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));
+        }
+
+        //TODO:处理存储引擎异常
+        return task.thenApply(m -> ((NewAppResponse) m).appId);
+    }
+    //endregion
+
+    //region ====KVCommands====
+    public static CompletableFuture<KVCommandResult> execKVInsertAsync(KVInsertRequire cmd) {
+        var task = makeTaskAndSendRequire(cmd);
+        if (task == null) {
+            //返回异步异常
+            return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));
+        }
+
+        //TODO:处理存储引擎异常
+        return task.thenApply(m -> (KVCommandResult) m);
+    }
+    //endregion
 }

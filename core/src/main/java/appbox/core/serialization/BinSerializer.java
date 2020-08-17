@@ -49,6 +49,10 @@ public final class BinSerializer {
         serializer.write(this, obj);
     }
 
+    public void writeBool(boolean value) throws Exception {
+        _stream.writeBool(value);
+    }
+
     public void writeByte(byte value) throws Exception {
         _stream.writeByte(value);
     }
@@ -66,6 +70,10 @@ public final class BinSerializer {
         _stream.writeInt(value);
     }
 
+    public void writeLong(long value) throws Exception {
+        _stream.writeLong(value);
+    }
+
     public void writeVariant(int value) {
         _stream.writeVariant(value);
     }
@@ -73,6 +81,10 @@ public final class BinSerializer {
     public void writeVariant(int value, int fieldId) throws Exception {
         _stream.writeVariant(fieldId);
         _stream.writeVariant(value);
+    }
+
+    public void writeByteArray(byte[] value) throws Exception {
+        _stream.writeByteArray(value);
     }
 
     public void writeString(String value) throws Exception {

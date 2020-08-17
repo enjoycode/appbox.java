@@ -2,6 +2,10 @@ package appbox.core.serialization;
 
 public interface IOutputStream {
 
+    default void writeBool(boolean value) {
+        writeByte(value ? (byte) 1 : (byte) 0);
+    }
+
     void writeByte(byte value);
 
     void write(byte[] src, int offset, int count);
@@ -18,6 +22,17 @@ public interface IOutputStream {
         writeByte((byte) ((value >> 24) & 0xFF));
     }
 
+    default void writeLong(long value) throws Exception {
+        writeByte((byte) (value & 0xFF));
+        writeByte((byte) ((value >> 8) & 0xFF));
+        writeByte((byte) ((value >> 16) & 0xFF));
+        writeByte((byte) ((value >> 24) & 0xFF));
+        writeByte((byte) ((value >> 32) & 0xFF));
+        writeByte((byte) ((value >> 40) & 0xFF));
+        writeByte((byte) ((value >> 48) & 0xFF));
+        writeByte((byte) ((value >> 56) & 0xFF));
+    }
+
     default void writeVariant(int value) {
         value = (value << 1) ^ (value >> 0x1F);
         do {
@@ -32,6 +47,23 @@ public interface IOutputStream {
         } while (true);
     }
 
+    /**
+     * 写入带长度信息的字节数组
+     */
+    default void writeByteArray(byte[] value) throws Exception {
+        if (value == null) {
+            writeVariant(-1);
+        } else {
+            writeVariant(value.length);
+            if (value.length > 0) {
+                write(value, 0, value.length);
+            }
+        }
+    }
+
+    /**
+     * 写入带长度信息(字符数)且Utf8编码的字符串
+     */
     default void writeString(String value) throws Exception {
         if (value == null) {
             writeVariant(-1);
