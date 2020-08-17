@@ -4,10 +4,15 @@ import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
 
-public final class KVCommandResult implements IMessage {
+/**
+ * 通用的存储命令响应
+ */
+public final class KVCommandResponse extends StoreResponse {
+    public int errorCode;
+
     @Override
     public byte MessageType() {
-        return MessageType.KVCommandResult;
+        return MessageType.KVCommandResponse;
     }
 
     @Override
@@ -17,6 +22,7 @@ public final class KVCommandResult implements IMessage {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-
+        reqId     = bs.readInt();
+        errorCode = bs.readInt();
     }
 }

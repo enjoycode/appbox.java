@@ -4,13 +4,13 @@ import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
 
-public final class NewAppResponse implements IMessage {
+public final class NewAppResponse extends StoreResponse {
     @Override
     public byte MessageType() {
         return MessageType.NewAppResponse;
     }
 
-    public int  reqId;
+    public int  errorCode;
     public byte appId;
 
     //region ====Serialization====
@@ -21,8 +21,9 @@ public final class NewAppResponse implements IMessage {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-        reqId = bs.readInt();
-        appId = bs.readByte();
+        reqId     = bs.readInt();
+        errorCode = bs.readInt();
+        appId     = bs.readByte();
     }
     //endregion
 }

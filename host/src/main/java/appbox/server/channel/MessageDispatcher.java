@@ -1,10 +1,8 @@
 package appbox.server.channel;
 
 import appbox.core.runtime.RuntimeContext;
-import appbox.server.channel.messages.InvokeRequire;
-import appbox.server.channel.messages.InvokeResponse;
+import appbox.server.channel.messages.*;
 import appbox.core.logging.Log;
-import appbox.server.channel.messages.NewAppResponse;
 import appbox.store.SysStoreApi;
 import com.sun.jna.Pointer;
 
@@ -27,7 +25,13 @@ public final class MessageDispatcher {
                 processInvokeRequire(channel, first);
                 break;
             case MessageType.NewAppResponse:
-                processNewAppResponse(channel, first);
+                processStoreResponse(channel, first, new NewAppResponse());
+                break;
+            case MessageType.KVBeginTxnResponse:
+                processStoreResponse(channel, first, new KVBeginTxnResponse());
+                break;
+            case MessageType.KVCommandResponse:
+                processStoreResponse(channel, first, new KVCommandResponse());
                 break;
             default:
                 channel.returnAllChunks(first);
@@ -79,8 +83,7 @@ public final class MessageDispatcher {
         }
     }
 
-    private static void processNewAppResponse(IMessageChannel channel, Pointer first) {
-        var     res                = new NewAppResponse();
+    private static <T extends StoreResponse> void processStoreResponse(IMessageChannel channel, Pointer first, T res) {
         boolean isDeserializeError = false;
         try {
             IMessageChannel.deserialize(res, first);
@@ -95,8 +98,11 @@ public final class MessageDispatcher {
                 SysStoreApi.onResponse(res.reqId, res);
             });
         } else {
-            Log.warn("反序列化NewAppResponse错误");
-            //TODO:
+            CompletableFuture.runAsync(() -> {
+                SysStoreApi.onResponseDeserializeError(res.reqId);
+                //TODO:res back to pool, if it is pooled.
+            });
+            Log.warn("反序列化StoreResponse错误");
         }
     }
 }

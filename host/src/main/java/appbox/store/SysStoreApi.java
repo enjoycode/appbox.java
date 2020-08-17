@@ -36,6 +36,18 @@ public final class SysStoreApi {
         }
     }
 
+    /**
+     * 收到系统存储的响应，但是反序列化失败
+     */
+    public static void onResponseDeserializeError(int reqId) {
+        var task = _pendings.remove(reqId);
+        if (task == null) {
+            Log.warn("收到存储引擎响应时找不到相应的请求:" + reqId);
+        } else {
+            task.completeExceptionally(new IOException("反序列化存储响应失败"));
+        }
+    }
+
     private static CompletableFuture<IMessage> makeTaskAndSendRequire(IMessage require) {
         var msgId = _channel.newMessageId();
         var task  = new CompletableFuture<IMessage>();
@@ -77,7 +89,7 @@ public final class SysStoreApi {
     //endregion
 
     //region ====KVCommands====
-    public static CompletableFuture<KVCommandResult> execKVInsertAsync(KVInsertRequire cmd) {
+    public static CompletableFuture<KVCommandResponse> execKVInsertAsync(KVInsertRequire cmd) {
         var task = makeTaskAndSendRequire(cmd);
         if (task == null) {
             //返回异步异常
@@ -85,7 +97,7 @@ public final class SysStoreApi {
         }
 
         //TODO:处理存储引擎异常
-        return task.thenApply(m -> (KVCommandResult) m);
+        return task.thenApply(m -> (KVCommandResponse) m);
     }
     //endregion
 }
