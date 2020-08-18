@@ -81,6 +81,6 @@ public final class MessageReadStream implements IInputStream {
             _index += 2;
             return res;
         }
-        return (short) (readByte() << 8 | readByte());
+        return IInputStream.super.readShort();
     }
 }

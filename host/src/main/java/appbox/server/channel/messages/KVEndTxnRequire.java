@@ -6,9 +6,8 @@ import appbox.server.channel.MessageType;
 import appbox.store.KVTxnId;
 
 public final class KVEndTxnRequire implements IMessage {
-    public       int     reqId;
-    public       byte    action; //0=Commit,1=Rollback,2=Abort
     public final KVTxnId txnId = new KVTxnId();
+    public       byte    action; //0=Commit,1=Rollback,2=Abort
 
     @Override
     public byte MessageType() {
@@ -17,9 +16,8 @@ public final class KVEndTxnRequire implements IMessage {
 
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
-        bs.writeInt(reqId);
-        bs.writeByte(action);
         txnId.writeTo(bs);
+        bs.writeByte(action);
     }
 
     @Override

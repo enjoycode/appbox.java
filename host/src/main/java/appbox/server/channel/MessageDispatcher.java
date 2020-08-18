@@ -84,6 +84,8 @@ public final class MessageDispatcher {
     }
 
     private static <T extends StoreResponse> void processStoreResponse(IMessageChannel channel, Pointer first, T res) {
+        //Log.debug(NativeSmq.getDebugInfo(first, true));
+
         boolean isDeserializeError = false;
         try {
             IMessageChannel.deserialize(res, first);

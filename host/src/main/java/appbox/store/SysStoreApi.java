@@ -27,7 +27,7 @@ public final class SysStoreApi {
      * 收到系统存储的响应
      */
     public static void onResponse(int reqId, IMessage response) {
-        Log.debug("收到存储引擎响应消息: " + reqId);
+        //Log.debug("收到存储引擎响应消息: " + reqId);
         var task = _pendings.remove(reqId);
         if (task == null) {
             Log.warn("收到存储引擎响应时找不到相应的请求:" + reqId);
@@ -48,6 +48,10 @@ public final class SysStoreApi {
         }
     }
 
+    /**
+     * 根据请求消息新建异步任务加入挂起的字典表，并且序列化发送请求消息
+     * @return 如果序列化或发送失败返回null
+     */
     private static CompletableFuture<IMessage> makeTaskAndSendRequire(IMessage require) {
         var msgId = _channel.newMessageId();
         var task  = new CompletableFuture<IMessage>();
@@ -72,6 +76,17 @@ public final class SysStoreApi {
 
         //TODO:处理存储引擎异常
         return task.thenApply(m -> (KVBeginTxnResponse) m);
+    }
+
+    public static CompletableFuture<KVCommandResponse> endTxnAsync(KVEndTxnRequire req) {
+        var task = makeTaskAndSendRequire(req);
+        if (task == null) {
+            //返回异步异常
+            return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));
+        }
+
+        //TODO:处理存储引擎异常
+        return task.thenApply(m -> (KVCommandResponse) m);
     }
     //endregion
 

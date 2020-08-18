@@ -7,15 +7,19 @@ public interface IInputStream {
     void read(byte[] dest, int offset, int count) throws Exception;
 
     default short readShort() throws Exception {
-        return (short) (readByte() | (readByte() << 8));
+        return (short) (Byte.toUnsignedInt(readByte()) | Byte.toUnsignedInt(readByte()) << 8);
     }
 
     default int readInt() throws Exception {
-        return readByte() | (readByte() << 8) | (readByte() << 16) | (readByte() << 24);
+        return Byte.toUnsignedInt(readByte()) | Byte.toUnsignedInt(readByte()) << 8
+                | Byte.toUnsignedInt(readByte()) << 16 | Byte.toUnsignedInt(readByte()) << 24;
     }
 
     default long readLong() throws Exception {
-        return (long)readInt() | (long)readInt() << 32;
+        return Byte.toUnsignedLong(readByte()) | Byte.toUnsignedLong(readByte()) << 8
+                | Byte.toUnsignedLong(readByte()) << 16 | Byte.toUnsignedLong(readByte()) << 24
+                | Byte.toUnsignedLong(readByte()) << 32 | Byte.toUnsignedLong(readByte()) << 40
+                | Byte.toUnsignedLong(readByte()) << 48 | Byte.toUnsignedLong(readByte()) << 56;
     }
 
     default int readVariant() throws Exception {

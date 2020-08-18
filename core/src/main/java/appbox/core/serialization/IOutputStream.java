@@ -2,13 +2,13 @@ package appbox.core.serialization;
 
 public interface IOutputStream {
 
-    default void writeBool(boolean value) {
-        writeByte(value ? (byte) 1 : (byte) 0);
-    }
-
     void writeByte(byte value);
 
     void write(byte[] src, int offset, int count);
+
+    default void writeBool(boolean value) {
+        writeByte(value ? (byte) 1 : (byte) 0);
+    }
 
     default void writeShort(short value) throws Exception {
         writeByte((byte) (value & 0xFF));

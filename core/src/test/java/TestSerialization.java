@@ -38,6 +38,16 @@ public class TestSerialization {
     }
 
     @Test
+    public void testLong() throws Exception {
+        long v = 0x5AD1CCF440BA7000L;
+        var output = new BytesOutputStream(8);
+        output.writeLong(v);
+
+        var input = output.copyToInput();
+        assertEquals(v, input.readLong());
+    }
+
+    @Test
     public void testSerialization() throws Exception {
         var output = new BytesOutputStream(8192);
         var os     = BinSerializer.rentFromPool(output);

@@ -12,6 +12,13 @@ public final class KVTxnId {
     public short shardId;
     public byte  isoLevel;
 
+    public void copyFrom(KVTxnId from) {
+        startTS  = from.startTS;
+        peerId   = from.peerId;
+        shardId  = from.shardId;
+        isoLevel = from.isoLevel;
+    }
+
     public void writeTo(BinSerializer bs) throws Exception {
         bs.writeLong(startTS);
         bs.writeShort(peerId);
