@@ -4,16 +4,15 @@ import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
 
-public final class MetaNewAppResponse extends StoreResponse {
-    public int  errorCode;
-    public byte appId;
+public final class MetaGenModelIdResponse extends StoreResponse {
+    public int errorCode;
+    public int modelId;
 
     @Override
     public byte MessageType() {
-        return MessageType.MetaNewAppResponse;
+        return MessageType.MetaGenModelIdResponse;
     }
 
-    //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
 
@@ -23,7 +22,6 @@ public final class MetaNewAppResponse extends StoreResponse {
     public void readFrom(BinDeserializer bs) throws Exception {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
-        appId     = bs.readByte();
+        modelId   = bs.readInt();
     }
-    //endregion
 }

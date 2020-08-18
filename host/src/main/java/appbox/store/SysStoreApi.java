@@ -50,6 +50,7 @@ public final class SysStoreApi {
 
     /**
      * 根据请求消息新建异步任务加入挂起的字典表，并且序列化发送请求消息
+     *
      * @return 如果序列化或发送失败返回null
      */
     private static CompletableFuture<IMessage> makeTaskAndSendRequire(IMessage require) {
@@ -105,7 +106,7 @@ public final class SysStoreApi {
     //endregion
 
     //region ====Meta====
-    protected static CompletableFuture<Byte> createApplicationAsync(ApplicationModel app) {
+    protected static CompletableFuture<Byte> metaNewAppAsync(ApplicationModel app) {
         var task = makeTaskAndSendRequire(new MetaNewAppRequire(app));
         if (task == null) {
             //返回异步异常
@@ -114,6 +115,21 @@ public final class SysStoreApi {
 
         //TODO:处理存储引擎异常
         return task.thenApply(m -> ((MetaNewAppResponse) m).appId);
+    }
+
+    protected static CompletableFuture<Integer> metaGenModelIdAsync(int appId, boolean devLayer) {
+        var req = new MetaGenModelIdRequire();
+        req.appId    = appId;
+        req.devLayer = devLayer;
+
+        var task = makeTaskAndSendRequire(req);
+        if (task == null) {
+            //返回异步异常
+            return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));
+        }
+
+        //TODO:处理存储引擎异常
+        return task.thenApply(m -> ((MetaGenModelIdResponse) m).modelId);
     }
     //endregion
 
