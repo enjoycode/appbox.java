@@ -4,6 +4,7 @@ import appbox.core.cache.ObjectPool;
 import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
+import appbox.store.KVTxnId;
 
 import javax.naming.OperationNotSupportedException;
 
@@ -20,22 +21,25 @@ public final class KVInsertRequire implements IMessage {
     }
     //endregion
 
-    public long    raftGroupId;
-    public int     schemaVersion;
-    public byte    dataCF;
-    public boolean overrideIfExists;
-    public byte[]  key;
-    public byte[]  refs;
-    public byte[]  data;
+    public final KVTxnId txnId = new KVTxnId();
+    public       long    raftGroupId;
+    public       int     schemaVersion;
+    public       byte    dataCF;
+    public       boolean overrideIfExists;
+    public       byte[]  key;
+    public       byte[]  refs;
+    public       byte[]  data;
 
     @Override
     public byte MessageType() {
-        return MessageType.KVInsertCommand;
+        return MessageType.KVInsertRequire;
     }
 
     //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
+        txnId.writeTo(bs);
+
         bs.writeLong(raftGroupId);
         bs.writeInt(schemaVersion);
         bs.writeByte(dataCF);

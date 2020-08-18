@@ -40,14 +40,26 @@ public class TestSysStore {
         var cmd = new KVInsertRequire();
         cmd.raftGroupId = 0;
         cmd.dataCF      = -1;
+        cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
+        cmd.data        = new byte[]{65, 66, 67, 68};
 
-        var fut = SysStoreApi.execKVInsertAsync(cmd);
+        var fut = SysStoreApi.beginTxnAsync() //启动事务
+                .thenCompose(res -> {
+                    cmd.txnId.copyFrom(res.txnId);
+                    return SysStoreApi.execKVInsertAsync(cmd); //执行Insert命令
+                }).thenCompose(res -> {
+                    var commitTxn = new KVEndTxnRequire();
+                    commitTxn.txnId.copyFrom(cmd.txnId);
+                    commitTxn.action = 0;
+                    return SysStoreApi.endTxnAsync(commitTxn); //递交事务
+                });
+
         var res = fut.get();
+        assertEquals(0, res.errorCode);
     }
 
     @Test
     public void testTxnBeginAndEnd() throws ExecutionException, InterruptedException {
-        var req1 = new KVBeginTxnRequire();
         var fut1 = SysStoreApi.beginTxnAsync();
         var res1 = fut1.get();
         assertEquals(0, res1.errorCode);
