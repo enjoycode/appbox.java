@@ -24,8 +24,8 @@ public final class MessageDispatcher {
             case MessageType.InvokeRequire:
                 processInvokeRequire(channel, first);
                 break;
-            case MessageType.NewAppResponse:
-                processStoreResponse(channel, first, new NewAppResponse());
+            case MessageType.MetaNewAppResponse:
+                processStoreResponse(channel, first, new MetaNewAppResponse());
                 break;
             case MessageType.KVBeginTxnResponse:
                 processStoreResponse(channel, first, new KVBeginTxnResponse());

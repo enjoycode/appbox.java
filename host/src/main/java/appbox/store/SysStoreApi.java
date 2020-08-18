@@ -106,14 +106,14 @@ public final class SysStoreApi {
 
     //region ====Meta====
     protected static CompletableFuture<Byte> createApplicationAsync(ApplicationModel app) {
-        var task = makeTaskAndSendRequire(new NewAppRequire(app));
+        var task = makeTaskAndSendRequire(new MetaNewAppRequire(app));
         if (task == null) {
             //返回异步异常
             return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));
         }
 
         //TODO:处理存储引擎异常
-        return task.thenApply(m -> ((NewAppResponse) m).appId);
+        return task.thenApply(m -> ((MetaNewAppResponse) m).appId);
     }
     //endregion
 

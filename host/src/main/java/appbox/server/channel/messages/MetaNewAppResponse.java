@@ -4,10 +4,10 @@ import appbox.core.serialization.BinDeserializer;
 import appbox.core.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
 
-public final class NewAppResponse extends StoreResponse {
+public final class MetaNewAppResponse extends StoreResponse {
     @Override
     public byte MessageType() {
-        return MessageType.NewAppResponse;
+        return MessageType.MetaNewAppResponse;
     }
 
     public int  errorCode;

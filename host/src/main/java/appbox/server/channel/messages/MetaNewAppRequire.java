@@ -6,17 +6,17 @@ import appbox.core.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
 import appbox.store.KeyUtil;
 
-public final class NewAppRequire implements IMessage {
+public final class MetaNewAppRequire implements IMessage {
 
     public final ApplicationModel application;
 
-    public NewAppRequire(ApplicationModel app) {
+    public MetaNewAppRequire(ApplicationModel app) {
         application = app;
     }
 
     @Override
     public byte MessageType() {
-        return MessageType.NewAppRequire;
+        return MessageType.MetaNewAppRequire;
     }
 
     //region ====Serialization====
