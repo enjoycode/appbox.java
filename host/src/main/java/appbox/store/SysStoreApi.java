@@ -78,7 +78,21 @@ public final class SysStoreApi {
         return task.thenApply(m -> (KVBeginTxnResponse) m);
     }
 
-    public static CompletableFuture<KVCommandResponse> endTxnAsync(KVEndTxnRequire req) {
+    public static CompletableFuture<KVCommandResponse> commitTxnAsync(KVTxnId txnId) {
+        var req = new KVEndTxnRequire();
+        req.txnId.copyFrom(txnId);
+        req.action = 0;
+        return endTxnAsync(req);
+    }
+
+    public static CompletableFuture<KVCommandResponse> rollbackTxnAsync(KVTxnId txnId) {
+        var req = new KVEndTxnRequire();
+        req.txnId.copyFrom(txnId);
+        req.action = 1;
+        return endTxnAsync(req);
+    }
+
+    private static CompletableFuture<KVCommandResponse> endTxnAsync(KVEndTxnRequire req) {
         var task = makeTaskAndSendRequire(req);
         if (task == null) {
             //返回异步异常
@@ -106,6 +120,17 @@ public final class SysStoreApi {
     //region ====KVCommands====
     public static CompletableFuture<KVCommandResponse> execKVInsertAsync(KVInsertRequire cmd) {
         var task = makeTaskAndSendRequire(cmd);
+        if (task == null) {
+            //返回异步异常
+            return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));
+        }
+
+        //TODO:处理存储引擎异常
+        return task.thenApply(m -> (KVCommandResponse) m);
+    }
+
+    public static CompletableFuture<KVCommandResponse> execKVDeleteAsync(KVDeleteRequire req) {
+        var task = makeTaskAndSendRequire(req);
         if (task == null) {
             //返回异步异常
             return CompletableFuture.failedFuture(new IOException("Can't send message to channel."));

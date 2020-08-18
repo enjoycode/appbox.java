@@ -15,6 +15,8 @@ public final class MessageType {
     public static final byte KVEndTxnRequire    = 28;
     public static final byte KVCommandResponse  = 30;
     public static final byte KVInsertRequire    = 31;
+    public static final byte KVUpdateRequire    = 32;
+    public static final byte KVDeleteRequire    = 33;
 
     public static final byte ExitReadLoop = -128;
 }

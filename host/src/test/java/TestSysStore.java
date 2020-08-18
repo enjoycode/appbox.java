@@ -1,6 +1,7 @@
 import appbox.core.runtime.RuntimeContext;
 import appbox.server.channel.SharedMemoryChannel;
 import appbox.server.channel.messages.KVBeginTxnRequire;
+import appbox.server.channel.messages.KVDeleteRequire;
 import appbox.server.channel.messages.KVEndTxnRequire;
 import appbox.server.channel.messages.KVInsertRequire;
 import appbox.server.runtime.HostRuntimeContext;
@@ -47,12 +48,24 @@ public class TestSysStore {
                 .thenCompose(res -> {
                     cmd.txnId.copyFrom(res.txnId);
                     return SysStoreApi.execKVInsertAsync(cmd); //执行Insert命令
-                }).thenCompose(res -> {
-                    var commitTxn = new KVEndTxnRequire();
-                    commitTxn.txnId.copyFrom(cmd.txnId);
-                    commitTxn.action = 0;
-                    return SysStoreApi.endTxnAsync(commitTxn); //递交事务
-                });
+                }).thenCompose(res -> SysStoreApi.commitTxnAsync(cmd.txnId)); //递交事务
+
+        var res = fut.get();
+        assertEquals(0, res.errorCode);
+    }
+
+    @Test
+    public void testKVDeleteCommand() throws ExecutionException, InterruptedException {
+        var cmd = new KVDeleteRequire();
+        cmd.raftGroupId = 0;
+        cmd.dataCF      = -1;
+        cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
+
+        var fut = SysStoreApi.beginTxnAsync()
+                .thenCompose(res -> {
+                    cmd.txnId.copyFrom(res.txnId);
+                    return SysStoreApi.execKVDeleteAsync(cmd);
+                }).thenCompose(res -> SysStoreApi.commitTxnAsync(cmd.txnId));
 
         var res = fut.get();
         assertEquals(0, res.errorCode);
@@ -64,10 +77,7 @@ public class TestSysStore {
         var res1 = fut1.get();
         assertEquals(0, res1.errorCode);
 
-        var req2 = new KVEndTxnRequire();
-        req2.txnId.copyFrom(res1.txnId);
-        req2.action = 1;
-        var fut2 = SysStoreApi.endTxnAsync(req2);
+        var fut2 = SysStoreApi.rollbackTxnAsync(res1.txnId);
         var res2 = fut2.get();
         assertEquals(0, res2.errorCode);
     }
