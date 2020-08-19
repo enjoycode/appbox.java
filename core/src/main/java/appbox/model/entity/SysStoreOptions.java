@@ -25,13 +25,6 @@ public final class SysStoreOptions implements IEntityStoreOption {
     private int                      _schemaVersion;
 
     //region ====Properties====
-
-
-    @Override
-    public StoreType storeType() {
-        return StoreType.SysStore;
-    }
-
     public boolean hasPartitionKeys() {
         return _partitionKeys != null && _partitionKeys.length > 0;
     }
@@ -76,6 +69,17 @@ public final class SysStoreOptions implements IEntityStoreOption {
         _schemaVersion += 1;
     }
     //endregion
+
+    public boolean isPartitionKey(short memberId) {
+        if (hasPartitionKeys()) {
+            for (PartitionKey partitionKey : _partitionKeys) {
+                if (partitionKey.memberId == memberId) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     //region ====Serialization====
     @Override

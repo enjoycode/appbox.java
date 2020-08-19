@@ -17,6 +17,11 @@ public final class EntityModel extends ModelBase {
     public ModelType modelType() {
         return ModelType.Entity;
     }
+
+    public SysStoreOptions sysStoreOptions() {
+        return _storeOptions != null && _storeOptions instanceof SysStoreOptions ?
+                (SysStoreOptions)_storeOptions : null;
+    }
     //endregion
 
     //region ====Design Methods====
@@ -32,8 +37,7 @@ public final class EntityModel extends ModelBase {
     }
 
     public void changeSchemaVersion() {
-        if (persistentState() != PersistentState.Detached && _storeOptions != null
-                && _storeOptions.storeType() == IEntityStoreOption.StoreType.SysStore) {
+        if (persistentState() != PersistentState.Detached && sysStoreOptions() != null) {
             ((SysStoreOptions)_storeOptions).changeSchemaVersion();
         }
     }
