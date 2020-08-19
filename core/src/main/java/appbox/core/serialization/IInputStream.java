@@ -6,6 +6,10 @@ public interface IInputStream {
 
     void read(byte[] dest, int offset, int count) throws Exception;
 
+    default boolean readBool() throws Exception {
+        return readByte() == 1;
+    }
+
     default short readShort() throws Exception {
         return (short) (Byte.toUnsignedInt(readByte()) | Byte.toUnsignedInt(readByte()) << 8);
     }

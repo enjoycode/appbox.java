@@ -47,6 +47,10 @@ public final class BinDeserializer {
         }
     }
 
+    public boolean readBool() throws Exception {
+        return _stream.readBool();
+    }
+
     public byte readByte() throws Exception {
         return _stream.readByte();
     }

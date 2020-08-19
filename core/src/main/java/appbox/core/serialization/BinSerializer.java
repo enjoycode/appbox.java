@@ -53,7 +53,17 @@ public final class BinSerializer {
         _stream.writeBool(value);
     }
 
+    public void writeBool(boolean value, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
+        _stream.writeBool(value);
+    }
+
     public void writeByte(byte value) throws Exception {
+        _stream.writeByte(value);
+    }
+
+    public void writeByte(byte value, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
         _stream.writeByte(value);
     }
 
