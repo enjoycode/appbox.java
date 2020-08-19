@@ -1,7 +1,7 @@
 package appbox.server.channel;
 
-import appbox.core.cache.ObjectPool;
-import appbox.core.serialization.IOutputStream;
+import appbox.cache.ObjectPool;
+import appbox.serialization.IOutputStream;
 import com.sun.jna.Pointer;
 
 import java.util.function.Consumer;

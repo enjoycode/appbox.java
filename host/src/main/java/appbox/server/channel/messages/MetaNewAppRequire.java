@@ -1,8 +1,8 @@
 package appbox.server.channel.messages;
 
-import appbox.core.model.ApplicationModel;
-import appbox.core.serialization.BinDeserializer;
-import appbox.core.serialization.BinSerializer;
+import appbox.model.ApplicationModel;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
 import appbox.store.KeyUtil;
 

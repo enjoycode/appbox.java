@@ -1,4 +1,4 @@
-import appbox.core.cache.ObjectPool;
+import appbox.cache.ObjectPool;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

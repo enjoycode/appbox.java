@@ -1,6 +1,6 @@
 package appbox;
 
-import appbox.core.runtime.RuntimeContext;
+import appbox.runtime.RuntimeContext;
 import appbox.server.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;

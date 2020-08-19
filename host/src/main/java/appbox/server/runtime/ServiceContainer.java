@@ -1,6 +1,6 @@
 package appbox.server.runtime;
 
-import appbox.core.runtime.IService;
+import appbox.runtime.IService;
 import appbox.server.services.SystemService;
 
 import java.util.HashMap;

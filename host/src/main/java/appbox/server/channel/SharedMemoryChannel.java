@@ -1,8 +1,8 @@
 package appbox.server.channel;
 
 import appbox.server.channel.messages.IMessage;
-import appbox.core.logging.Log;
-import appbox.core.serialization.BinSerializer;
+import appbox.logging.Log;
+import appbox.serialization.BinSerializer;
 import com.sun.jna.Pointer;
 
 import java.util.HashMap;

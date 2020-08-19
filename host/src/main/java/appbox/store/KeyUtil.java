@@ -1,7 +1,5 @@
 package appbox.store;
 
-import appbox.core.serialization.BinSerializer;
-
 /**
  * 系统存储Key编码
  */

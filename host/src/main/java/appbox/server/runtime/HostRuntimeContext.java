@@ -1,8 +1,8 @@
 package appbox.server.runtime;
 
-import appbox.core.logging.Log;
-import appbox.core.runtime.IRuntimeContext;
-import appbox.core.runtime.InvokeArg;
+import appbox.logging.Log;
+import appbox.runtime.IRuntimeContext;
+import appbox.runtime.InvokeArg;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

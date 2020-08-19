@@ -1,6 +1,6 @@
 package appbox.store;
 
-import appbox.core.model.ApplicationModel;
+import appbox.model.ApplicationModel;
 
 import java.util.concurrent.CompletableFuture;
 

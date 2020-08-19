@@ -1,5 +1,5 @@
 import appbox.server.channel.messages.InvokeRequire;
-import appbox.core.serialization.*;
+import appbox.serialization.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,7 +1,7 @@
 package appbox.server.services;
 
-import appbox.core.runtime.IService;
-import appbox.core.runtime.InvokeArg;
+import appbox.runtime.IService;
+import appbox.runtime.InvokeArg;
 import appbox.store.StoreInitiator;
 
 import java.util.List;

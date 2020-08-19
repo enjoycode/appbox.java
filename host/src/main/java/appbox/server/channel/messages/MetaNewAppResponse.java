@@ -1,7 +1,7 @@
 package appbox.server.channel.messages;
 
-import appbox.core.serialization.BinDeserializer;
-import appbox.core.serialization.BinSerializer;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
 import appbox.server.channel.MessageType;
 
 public final class MetaNewAppResponse extends StoreResponse {

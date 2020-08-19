@@ -1,7 +1,7 @@
 package appbox.store;
 
-import appbox.core.serialization.BinDeserializer;
-import appbox.core.serialization.BinSerializer;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
 
 /**
  * 系统存储的事务标识号

@@ -1,7 +1,7 @@
 package appbox.server.channel;
 
 import appbox.server.channel.messages.IMessage;
-import appbox.core.serialization.BinDeserializer;
+import appbox.serialization.BinDeserializer;
 import com.sun.jna.Pointer;
 
 public interface IMessageChannel {

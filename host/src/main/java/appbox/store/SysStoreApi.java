@@ -1,7 +1,7 @@
 package appbox.store;
 
-import appbox.core.logging.Log;
-import appbox.core.model.ApplicationModel;
+import appbox.logging.Log;
+import appbox.model.ApplicationModel;
 import appbox.server.channel.IMessageChannel;
 import appbox.server.channel.messages.*;
 
