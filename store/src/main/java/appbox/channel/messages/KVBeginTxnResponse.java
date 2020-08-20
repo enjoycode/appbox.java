@@ -8,7 +8,6 @@ import appbox.store.KVTxnId;
 public final class KVBeginTxnResponse extends StoreResponse {
     //TODO:ObjectPool
 
-    public       int     errorCode;
     public final KVTxnId txnId = new KVTxnId();
 
     @Override

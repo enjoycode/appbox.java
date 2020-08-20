@@ -5,7 +5,6 @@ import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
 
 public final class MetaNewAppResponse extends StoreResponse {
-    public int  errorCode;
     public byte appId;
 
     @Override

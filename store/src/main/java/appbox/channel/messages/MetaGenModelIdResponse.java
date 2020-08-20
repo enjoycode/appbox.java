@@ -5,7 +5,6 @@ import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
 
 public final class MetaGenModelIdResponse extends StoreResponse {
-    public int errorCode;
     public int modelId;
 
     @Override

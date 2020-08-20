@@ -8,7 +8,6 @@ import appbox.channel.MessageType;
  * 通用的存储命令响应
  */
 public final class KVCommandResponse extends StoreResponse {
-    public int errorCode;
 
     @Override
     public byte MessageType() {
