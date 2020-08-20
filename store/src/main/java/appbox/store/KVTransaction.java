@@ -2,18 +2,24 @@ package appbox.store;
 
 //TODO:外键引用处理考虑在存储层实现，因为可能需要实现跨进程序列化传输事务
 
+import appbox.data.EntityId;
 import appbox.logging.Log;
 
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class KVTransaction implements AutoCloseable {
-    final class RefFromItem {
-
+    static final class RefFromItem {
+        EntityId targetEntityId;
+        long     fromRaftGroupId;
+        int      fromTableId; //注意已包含AppStoreId且按大字节序编码
+        int      diff;
     }
 
-    private final KVTxnId       _txnId  = new KVTxnId();
-    private final AtomicInteger _status = new AtomicInteger(0);
+    private final KVTxnId                _txnId  = new KVTxnId();
+    private final AtomicInteger          _status = new AtomicInteger(0);
+    private final ArrayList<RefFromItem> _refs   = new ArrayList<>();
 
     private KVTransaction() {
     }

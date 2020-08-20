@@ -49,6 +49,13 @@ public final class BinSerializer {
         serializer.write(this, obj);
     }
 
+    /**
+     * 写入原始数据
+     */
+    public void write(byte[] src, int offset, int count) {
+        _stream.write(src, offset, count);
+    }
+
     public void writeBool(boolean value) throws Exception {
         _stream.writeBool(value);
     }
@@ -82,6 +89,20 @@ public final class BinSerializer {
 
     public void writeLong(long value) throws Exception {
         _stream.writeLong(value);
+    }
+
+    /**
+     * 大字序写入
+     */
+    public void writeLongBE(long value) throws Exception {
+        _stream.writeByte((byte) (value >>> 56));
+        _stream.writeByte((byte) (value >>> 48));
+        _stream.writeByte((byte) (value >>> 40));
+        _stream.writeByte((byte) (value >>> 32));
+        _stream.writeByte((byte) (value >>> 24));
+        _stream.writeByte((byte) (value >>> 16));
+        _stream.writeByte((byte) (value >>> 8));
+        _stream.writeByte((byte) (value));
     }
 
     public void writeVariant(int value) {

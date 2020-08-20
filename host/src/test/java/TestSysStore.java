@@ -1,7 +1,7 @@
+import appbox.channel.messages.KVInsertDataRequire;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
 import appbox.channel.messages.KVDeleteRequire;
-import appbox.channel.messages.KVInsertRequire;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;
 import org.junit.jupiter.api.AfterAll;
@@ -36,7 +36,7 @@ public class TestSysStore {
 
     @Test
     public void testKVInsertCommand() throws ExecutionException, InterruptedException {
-        var cmd = new KVInsertRequire();
+        var cmd = new KVInsertDataRequire();
         cmd.raftGroupId = 0;
         cmd.dataCF      = -1;
         cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD

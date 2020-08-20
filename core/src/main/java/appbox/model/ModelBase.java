@@ -1,12 +1,15 @@
 package appbox.model;
 
 import appbox.data.PersistentState;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
+import appbox.serialization.IBinSerializable;
 import appbox.utils.IdUtil;
 
 /**
  * 模型基类，实例分为设计时与运行时
  */
-public abstract class ModelBase {
+public abstract class ModelBase implements IBinSerializable {
     private long            _id;
     private String          _name;
     private String          _originalName;
@@ -29,6 +32,10 @@ public abstract class ModelBase {
     //region ====Properties====
     public ModelLayer modelLayer() {
         return ModelLayer.getByValue((byte) (_id & IdUtil.MODELID_LAYER_MASK));
+    }
+
+    public long id() {
+        return _id;
     }
 
     public String name() {
@@ -69,6 +76,18 @@ public abstract class ModelBase {
 
             _originalName = null;
         }
+    }
+    //endregion
+
+    //region ====Serialization====
+    @Override
+    public void writeTo(BinSerializer bs) throws Exception {
+
+    }
+
+    @Override
+    public void readFrom(BinDeserializer bs) throws Exception {
+
     }
     //endregion
 }

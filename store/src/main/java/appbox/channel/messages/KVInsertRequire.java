@@ -1,6 +1,5 @@
 package appbox.channel.messages;
 
-import appbox.cache.ObjectPool;
 import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
@@ -9,27 +8,12 @@ import appbox.store.KVTxnId;
 
 import javax.naming.OperationNotSupportedException;
 
-public final class KVInsertRequire implements IMessage {
-    //region ====ObjectPool====
-    private static final ObjectPool<KVInsertRequire> pool = new ObjectPool<>(KVInsertRequire::new, 32);
-
-    public static KVInsertRequire rentFromPool() {
-        return pool.rent();
-    }
-
-    public static void backToPool(KVInsertRequire obj) {
-        pool.back(obj);
-    }
-    //endregion
-
+public abstract class KVInsertRequire implements IMessage {
     public final KVTxnId txnId = new KVTxnId();
     public       long    raftGroupId;
     public       int     schemaVersion;
     public       byte    dataCF;
     public       boolean overrideIfExists;
-    public       byte[]  key;
-    public       byte[]  refs;
-    public       byte[]  data;
 
     @Override
     public byte MessageType() {
@@ -45,10 +29,6 @@ public final class KVInsertRequire implements IMessage {
         bs.writeInt(schemaVersion);
         bs.writeByte(dataCF);
         bs.writeBool(overrideIfExists);
-
-        bs.writeByteArray(key);
-        bs.writeByteArray(refs);
-        bs.writeByteArray(data);
     }
 
     @Override

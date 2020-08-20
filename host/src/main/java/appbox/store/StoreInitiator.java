@@ -32,12 +32,14 @@ public final class StoreInitiator {
                 var emploeeModel = createEmploeeModel(app);
 
                 //开始事务保存
-
+                //return KVTransaction.beginAsync().thenCompose(txn -> {
+                //
+                //})
+                return true;
             } catch (Exception e) {
-
+                Log.error(e.getMessage());
+                return false;
             }
-
-            return true;
         });
     }
 

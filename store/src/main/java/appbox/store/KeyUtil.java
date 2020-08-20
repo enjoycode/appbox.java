@@ -6,9 +6,6 @@ package appbox.store;
 public final class KeyUtil {
 
     public static final byte METACF_APP_PREFIX = 0x0C;
-
-    //region ====MetaCF=====
-
-    //endregion
+    public static final byte METACF_MODEL_PREFIX = 0x0D;
 
 }
