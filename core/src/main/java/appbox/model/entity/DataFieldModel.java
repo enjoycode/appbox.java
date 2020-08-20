@@ -40,8 +40,9 @@ public final class DataFieldModel extends EntityMemberModel {
     public DataFieldModel() {
     }
 
-    public DataFieldModel(EntityModel owner, String name, DataFieldType dataType, boolean isFK) {
-        super(owner, name);
+    public DataFieldModel(EntityModel owner, String name, DataFieldType dataType,
+                          boolean allowNull, boolean isFK) {
+        super(owner, name, allowNull);
 
         _dataType     = dataType;
         _isForeignKey = isFK;

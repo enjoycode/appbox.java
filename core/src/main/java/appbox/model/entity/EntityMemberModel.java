@@ -25,9 +25,10 @@ public abstract class EntityMemberModel implements IBinSerializable {
     public EntityMemberModel() {
     }
 
-    public EntityMemberModel(EntityModel owner, String name) {
+    public EntityMemberModel(EntityModel owner, String name, boolean allowNull) {
         this.owner = owner;
         _name      = name;
+        _allowNull = allowNull;
     }
 
     //region ====Properties====
@@ -52,6 +53,10 @@ public abstract class EntityMemberModel implements IBinSerializable {
     public boolean isNameChanged() {
         return _originalName != null && !_originalName.equals(_name);
     }
+
+    public boolean allowNull() {
+        return _allowNull;
+    }
     //endregion
 
     //region ====Runtime Methods====
@@ -59,9 +64,17 @@ public abstract class EntityMemberModel implements IBinSerializable {
     //endregion
 
     //region ====Design Methods====
-    public void initMemberId(short id) {
+    public void canAddTo(EntityModel owner) throws RuntimeException {
+        if (this.owner != owner) {
+            throw new RuntimeException();
+        }
+    }
+
+    public void initMemberId(short id) throws Exception {
         if (_memberId == 0) {
             _memberId = id;
+        } else {
+            throw new Exception("MemberId has init.");
         }
     }
 

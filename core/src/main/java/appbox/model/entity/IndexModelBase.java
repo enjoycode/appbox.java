@@ -10,17 +10,17 @@ import appbox.serialization.IBinSerializable;
  * 系统存储及Sql存储的索引模型基类
  */
 public abstract class IndexModelBase implements IBinSerializable {
-    private EntityModel      _owner;
-    private byte             _indexId;
-    private String           _name;
-    private boolean          _unique;
-    private FieldWithOrder[] _fields;
-    private short[]          _storingFields; //索引覆盖字段集合
-    private PersistentState  _persistentState;
+    protected EntityModel      owner;
+    private   byte             _indexId;
+    private   String           _name;
+    private   boolean          _unique;
+    private   FieldWithOrder[] _fields;
+    private   short[]          _storingFields; //索引覆盖字段集合
+    private   PersistentState  _persistentState;
 
     public IndexModelBase(EntityModel owner, String name, boolean unique,
                           FieldWithOrder[] fields, short[] storingFields) {
-        _owner         = owner;
+        this.owner     = owner;
         _name          = name;
         _unique        = unique;
         _fields        = fields;
@@ -34,9 +34,17 @@ public abstract class IndexModelBase implements IBinSerializable {
     //endregion
 
     //region ====Design Methods====
-    public void initIndexId(byte id) {
+    public void canAddTo(EntityModel owner) throws RuntimeException {
+        if (this.owner != owner) {
+            throw new RuntimeException();
+        }
+    }
+
+    public void initIndexId(byte id) throws Exception {
         if (_indexId == 0) {
             _indexId = id;
+        } else {
+            throw new Exception("Index's id has init.");
         }
     }
 
@@ -46,8 +54,8 @@ public abstract class IndexModelBase implements IBinSerializable {
 
     public void markDeleted() {
         _persistentState = PersistentState.Deleted;
-        _owner.onPropertyChanged();
-        _owner.changeSchemaVersion();
+        owner.onPropertyChanged();
+        owner.changeSchemaVersion();
     }
     //endregion
 

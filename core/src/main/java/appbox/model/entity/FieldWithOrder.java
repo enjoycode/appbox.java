@@ -5,7 +5,16 @@ package appbox.model.entity;
  */
 public final class FieldWithOrder {
 
-    public short   memberId;
-    public boolean orderByDesc;
+    public final short   memberId;
+    public final boolean orderByDesc;
 
+    public FieldWithOrder(short memberId) {
+        this.memberId    = memberId;
+        this.orderByDesc = false;
+    }
+
+    public FieldWithOrder(short memberId, boolean orderByDesc) {
+        this.memberId    = memberId;
+        this.orderByDesc = orderByDesc;
+    }
 }

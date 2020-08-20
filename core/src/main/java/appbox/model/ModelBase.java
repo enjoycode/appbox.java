@@ -14,7 +14,20 @@ public abstract class ModelBase {
     private int             _version;
     private PersistentState _persistentState;
 
-    public ModelLayer getModelLayer() {
+    /**
+     * only for Serialization
+     */
+    public ModelBase() {
+    }
+
+    public ModelBase(long id, String name) {
+        _designMode = true;
+        _id         = id;
+        _name       = name;
+    }
+
+    //region ====Properties====
+    public ModelLayer modelLayer() {
         return ModelLayer.getByValue((byte) (_id & IdUtil.MODELID_LAYER_MASK));
     }
 
@@ -24,11 +37,22 @@ public abstract class ModelBase {
 
     public abstract ModelType modelType();
 
+    public boolean designMode() {
+        return _designMode;
+    }
+
     public PersistentState persistentState() {
         return _persistentState;
     }
+    //endregion
 
     //region ====Design Methods====
+    public void checkDesignMode() throws RuntimeException {
+        if (!designMode()) {
+            throw new RuntimeException();
+        }
+    }
+
     public void onPropertyChanged() {
         if (_persistentState == PersistentState.Unchnaged) {
             _persistentState = PersistentState.Modified;

@@ -4,6 +4,7 @@ import appbox.data.PersistentState;
 import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.IEntityStoreOption;
 import appbox.model.entity.SysStoreOptions;
+import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,20 @@ public final class EntityModel extends ModelBase {
 
     private final ArrayList<EntityMemberModel> _members = new ArrayList<>(); //注意已按memberId排序
     private       IEntityStoreOption           _storeOptions; //null表示DTO
+
+    /**
+     * only for Serialization
+     */
+    public EntityModel() {}
+
+    /**
+     * New EntityModel for SysStore
+     */
+    public EntityModel(long id, String name, boolean mvcc, boolean orderByDesc) {
+        super(id, name);
+
+        _storeOptions = new SysStoreOptions(mvcc, orderByDesc);
+    }
 
     //region ====Properties====
     @Override
@@ -30,12 +45,29 @@ public final class EntityModel extends ModelBase {
     //endregion
 
     //region ====GetMember Methods====
+    public EntityMemberModel tryGetMember(String name) {
+        for (EntityMemberModel member : _members) {
+            if (member.name().equals(name)) {
+                return member;
+            }
+        }
+        return null;
+    }
+
+    public EntityMemberModel getMember(String name) throws Exception {
+        var m = tryGetMember(name);
+        if (m == null) {
+            throw new Exception("Member with name: " + name + " not exists");
+        }
+        return m;
+    }
+
     public EntityMemberModel tryGetMember(short id) {
         return binarySearch(_members, id);
     }
 
     public EntityMemberModel getMember(short id) throws Exception {
-        var m = binarySearch(_members, id);
+        var m = tryGetMember(id);
         if (m == null) {
             throw new Exception("Member with id: " + id + " not exists");
         }
@@ -87,6 +119,40 @@ public final class EntityModel extends ModelBase {
         if (persistentState() != PersistentState.Detached && sysStoreOptions() != null) {
             ((SysStoreOptions) _storeOptions).changeSchemaVersion();
         }
+    }
+
+    public void addMember(EntityMemberModel member, boolean byImport) throws Exception {
+        checkDesignMode();
+        member.canAddTo(this);
+
+        if (!byImport) { //非导入的需要生成成员标识
+            //TODO:通过设计时上下文获取ApplicationModel是否导入，从而确认当前Layer
+            var layer = ModelLayer.DEV;
+            var seq   = layer == ModelLayer.DEV ? ++_devMemberIdSeq : ++_usrMemberIdSeq;
+            if (seq >= MAX_MEMBER_ID) { //TODO:尝试找空的
+                throw new Exception("Member id out of range");
+            }
+            member.initMemberId(IdUtil.makeMemberId(layer, seq));
+        }
+        _members.add(member);
+        _members.sort((m1, m2) -> Short.compare(m1.memberId(), m2.memberId()));
+
+        if (!member.allowNull()) { //仅None nullable
+            changeSchemaVersion();
+        }
+        onPropertyChanged();
+    }
+
+    /**
+     * Only for StoreInitiator
+     */
+    public void addSysMember(EntityMemberModel member, short id) throws Exception {
+        checkDesignMode();
+        member.canAddTo(this);
+
+        member.initMemberId(id); //已处理Layer标记
+        _members.add(member);
+        _members.sort((m1, m2) -> Short.compare(m1.memberId(), m2.memberId()));
     }
     //endregion
 }

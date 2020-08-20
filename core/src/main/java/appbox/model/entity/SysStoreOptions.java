@@ -1,6 +1,7 @@
 package appbox.model.entity;
 
 import appbox.data.PersistentState;
+import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 
@@ -23,6 +24,17 @@ public final class SysStoreOptions implements IEntityStoreOption {
     private boolean                  _hasChangedSchema; //不用序列化
     private int                      _oldSchemaVersion;
     private int                      _schemaVersion;
+
+    /**
+     * only for Serialization
+     */
+    public SysStoreOptions() {
+    }
+
+    public SysStoreOptions(boolean mvcc, boolean orderByDesc) {
+        _isMVCC      = mvcc;
+        _orderByDesc = orderByDesc;
+    }
 
     //region ====Properties====
     public boolean hasPartitionKeys() {
@@ -67,6 +79,17 @@ public final class SysStoreOptions implements IEntityStoreOption {
 
         _oldSchemaVersion = _schemaVersion;
         _schemaVersion += 1;
+    }
+
+    /**
+     * only for StoreInitiator
+     */
+    public void addSysIndex(EntityModel owner, SysIndexModel index, byte id) throws Exception {
+        owner.checkDesignMode();
+        index.canAddTo(owner);
+
+        index.initIndexId(id);
+        _indexes.add(index);
     }
     //endregion
 
