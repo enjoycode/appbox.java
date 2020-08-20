@@ -1,4 +1,4 @@
-package appbox.server.channel.messages;
+package appbox.channel;
 
 import appbox.serialization.IBinSerializable;
 

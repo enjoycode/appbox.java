@@ -1,4 +1,4 @@
-import appbox.server.channel.messages.InvokeRequire;
+import appbox.channel.messages.InvokeRequire;
 import appbox.serialization.*;
 import org.junit.jupiter.api.Test;
 

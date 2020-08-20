@@ -1,7 +1,7 @@
-package appbox.server.channel;
+package appbox.channel;
 
 import appbox.runtime.RuntimeContext;
-import appbox.server.channel.messages.*;
+import appbox.channel.messages.*;
 import appbox.logging.Log;
 import appbox.store.SysStoreApi;
 import com.sun.jna.Pointer;

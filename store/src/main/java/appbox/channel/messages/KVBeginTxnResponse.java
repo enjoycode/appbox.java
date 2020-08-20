@@ -1,8 +1,8 @@
-package appbox.server.channel.messages;
+package appbox.channel.messages;
 
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import appbox.server.channel.MessageType;
+import appbox.channel.MessageType;
 import appbox.store.KVTxnId;
 
 public final class KVBeginTxnResponse extends StoreResponse {

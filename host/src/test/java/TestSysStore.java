@@ -1,7 +1,7 @@
 import appbox.runtime.RuntimeContext;
-import appbox.server.channel.SharedMemoryChannel;
-import appbox.server.channel.messages.KVDeleteRequire;
-import appbox.server.channel.messages.KVInsertRequire;
+import appbox.channel.SharedMemoryChannel;
+import appbox.channel.messages.KVDeleteRequire;
+import appbox.channel.messages.KVInsertRequire;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;
 import org.junit.jupiter.api.AfterAll;

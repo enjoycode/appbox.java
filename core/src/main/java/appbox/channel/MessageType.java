@@ -1,4 +1,4 @@
-package appbox.server.channel;
+package appbox.channel;
 
 public final class MessageType {
     public static final byte RawData            = 0;

@@ -1,16 +1,18 @@
-package appbox.server.channel.messages;
+package appbox.channel.messages;
 
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import appbox.server.channel.MessageType;
+import appbox.channel.MessageType;
 
-public final class MetaGenModelIdResponse extends StoreResponse {
+/**
+ * 通用的存储命令响应
+ */
+public final class KVCommandResponse extends StoreResponse {
     public int errorCode;
-    public int modelId;
 
     @Override
     public byte MessageType() {
-        return MessageType.MetaGenModelIdResponse;
+        return MessageType.KVCommandResponse;
     }
 
     @Override
@@ -22,6 +24,5 @@ public final class MetaGenModelIdResponse extends StoreResponse {
     public void readFrom(BinDeserializer bs) throws Exception {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
-        modelId   = bs.readInt();
     }
 }

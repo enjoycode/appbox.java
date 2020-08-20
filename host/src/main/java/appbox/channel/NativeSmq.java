@@ -1,4 +1,4 @@
-package appbox.server.channel;
+package appbox.channel;
 
 import com.sun.jna.*;
 

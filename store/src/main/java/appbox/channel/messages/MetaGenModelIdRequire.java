@@ -1,8 +1,9 @@
-package appbox.server.channel.messages;
+package appbox.channel.messages;
 
+import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import appbox.server.channel.MessageType;
+import appbox.channel.MessageType;
 
 public final class MetaGenModelIdRequire implements IMessage {
     public int     appId;

@@ -1,10 +1,11 @@
-package appbox.server.channel.messages;
+package appbox.channel.messages;
 
 import appbox.cache.ObjectPool;
+import appbox.channel.IMessage;
 import appbox.runtime.InvokeArg;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import appbox.server.channel.MessageType;
+import appbox.channel.MessageType;
 
 import java.util.ArrayList;
 

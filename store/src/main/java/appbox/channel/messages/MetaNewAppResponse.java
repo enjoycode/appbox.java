@@ -1,20 +1,19 @@
-package appbox.server.channel.messages;
+package appbox.channel.messages;
 
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import appbox.server.channel.MessageType;
+import appbox.channel.MessageType;
 
-/**
- * 通用的存储命令响应
- */
-public final class KVCommandResponse extends StoreResponse {
-    public int errorCode;
+public final class MetaNewAppResponse extends StoreResponse {
+    public int  errorCode;
+    public byte appId;
 
     @Override
     public byte MessageType() {
-        return MessageType.KVCommandResponse;
+        return MessageType.MetaNewAppResponse;
     }
 
+    //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
 
@@ -24,5 +23,7 @@ public final class KVCommandResponse extends StoreResponse {
     public void readFrom(BinDeserializer bs) throws Exception {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
+        appId     = bs.readByte();
     }
+    //endregion
 }

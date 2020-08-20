@@ -1,9 +1,10 @@
-package appbox.server.channel.messages;
+package appbox.channel.messages;
 
+import appbox.channel.IMessage;
 import appbox.model.ApplicationModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import appbox.server.channel.MessageType;
+import appbox.channel.MessageType;
 import appbox.store.KeyUtil;
 
 public final class MetaNewAppRequire implements IMessage {
