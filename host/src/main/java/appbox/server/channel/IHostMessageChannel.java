@@ -4,7 +4,10 @@ import appbox.server.channel.messages.IMessage;
 import appbox.serialization.BinDeserializer;
 import com.sun.jna.Pointer;
 
-public interface IMessageChannel {
+/**
+ * 服务端主子进程通讯通道接口
+ */
+public interface IHostMessageChannel {
 
     /**
      * 归还或释放完整的消息缓存

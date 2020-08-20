@@ -2,7 +2,7 @@ package appbox.store;
 
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
-import appbox.server.channel.IMessageChannel;
+import appbox.server.channel.IHostMessageChannel;
 import appbox.server.channel.messages.*;
 
 import java.io.IOException;
@@ -13,13 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * 系统存储的Api，通过消息通道与主进程的存储引擎交互
  */
 public final class SysStoreApi {
-    private static       IMessageChannel                                         _channel;
+    private static       IHostMessageChannel                                     _channel;
     private static final ConcurrentHashMap<Integer, CompletableFuture<IMessage>> _pendings = new ConcurrentHashMap<>();
 
     private SysStoreApi() {
     }
 
-    public static void init(IMessageChannel channel) {
+    public static void init(IHostMessageChannel channel) {
         _channel = channel;
     }
 

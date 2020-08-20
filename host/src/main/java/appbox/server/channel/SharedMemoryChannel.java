@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 与主进程通信的共享内存通道，每个实例包含两个单向消息队列
  */
-public final class SharedMemoryChannel implements IMessageChannel, AutoCloseable {
+public final class SharedMemoryChannel implements IHostMessageChannel, AutoCloseable {
     private final Pointer                   _sendQueue;    //发送队列
     private final Pointer                   _receiveQueue; //接收队列
     private final HashMap<Integer, Pointer> _pendings;     //挂起的不完整消息

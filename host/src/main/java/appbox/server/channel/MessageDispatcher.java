@@ -19,7 +19,7 @@ public final class MessageDispatcher {
      * @param channel 接收消息的通道
      * @param first   完整消息的第一包
      */
-    public static void processMessage(IMessageChannel channel, Pointer first) {
+    public static void processMessage(IHostMessageChannel channel, Pointer first) {
         switch (NativeSmq.getMsgType(first)) {
             case MessageType.InvokeRequire:
                 processInvokeRequire(channel, first);
@@ -40,13 +40,13 @@ public final class MessageDispatcher {
         }
     }
 
-    private static void processInvokeRequire(IMessageChannel channel, Pointer first) {
+    private static void processInvokeRequire(IHostMessageChannel channel, Pointer first) {
         //根据协议类型反序列化消息
         var req = InvokeRequire.rentFromPool();
         req.reqId = NativeSmq.getMsgId(first);
         boolean isDeserializeError = false;
         try {
-            IMessageChannel.deserialize(req, first);
+            IHostMessageChannel.deserialize(req, first);
         } catch (Exception e) {
             InvokeRequire.backToPool(req); //失败归还
             isDeserializeError = true;
@@ -83,12 +83,12 @@ public final class MessageDispatcher {
         }
     }
 
-    private static <T extends StoreResponse> void processStoreResponse(IMessageChannel channel, Pointer first, T res) {
+    private static <T extends StoreResponse> void processStoreResponse(IHostMessageChannel channel, Pointer first, T res) {
         //Log.debug(NativeSmq.getDebugInfo(first, true));
 
         boolean isDeserializeError = false;
         try {
-            IMessageChannel.deserialize(res, first);
+            IHostMessageChannel.deserialize(res, first);
         } catch (Exception e) {
             isDeserializeError = true;
         } finally {
