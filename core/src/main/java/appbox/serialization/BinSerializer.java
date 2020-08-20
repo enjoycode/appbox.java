@@ -91,6 +91,11 @@ public final class BinSerializer {
         _stream.writeLong(value);
     }
 
+    public void writeLong(long value, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
+        _stream.writeLong(value);
+    }
+
     /**
      * 大字序写入
      */

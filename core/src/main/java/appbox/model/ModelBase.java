@@ -82,12 +82,54 @@ public abstract class ModelBase implements IBinSerializable {
     //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
+        bs.writeLong(_id, 1);
+        bs.writeString(_name, 2);
+        bs.writeBool(_designMode, 3);
 
+        if (_designMode) {
+            bs.writeInt(_version, 4);
+            bs.writeByte(_persistentState.value, 5);
+            //TODO: folder
+            if (_originalName != null) {
+                bs.writeString(_originalName, 7);
+            }
+        } else if (modelType() == ModelType.Permission) {
+            //TODO: folder
+        }
+
+        bs.finishWriteFields();
     }
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-
+        int propIndex;
+        do {
+            propIndex = bs.readVariant();
+            switch (propIndex) {
+                case 1:
+                    _id = bs.readLong();
+                    break;
+                case 2:
+                    _name = bs.readString();
+                    break;
+                case 3:
+                    _designMode = bs.readBool();
+                    break;
+                case 4:
+                    _version = bs.readInt();
+                    break;
+                case 5:
+                    _persistentState = PersistentState.fromValue(bs.readByte());
+                    break;
+                case 7:
+                    _originalName = bs.readString();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new RuntimeException("Unknown field id:" + propIndex);
+            }
+        } while (propIndex != 0);
     }
     //endregion
 }
