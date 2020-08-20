@@ -8,6 +8,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class KVTransaction implements AutoCloseable {
+    final class RefFromItem {
+
+    }
 
     private final KVTxnId       _txnId  = new KVTxnId();
     private final AtomicInteger _status = new AtomicInteger(0);

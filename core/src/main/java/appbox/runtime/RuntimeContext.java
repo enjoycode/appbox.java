@@ -27,6 +27,10 @@ public final class RuntimeContext {
         return _current;
     }
 
+    public static short peerId() {
+        return _peerId;
+    }
+
     public static CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args) {
         return _current.invokeAsync(method, args);
     }

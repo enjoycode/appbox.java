@@ -14,7 +14,7 @@ public class App {
         System.out.println("Java AppHost running...");
 
         // 初始化运行时
-        RuntimeContext.init(new HostRuntimeContext(), (short) 1/*TODO: fix peerId*/);
+        RuntimeContext.init(new HostRuntimeContext(), (short) 0x1041/*TODO: fix peerId*/);
 
         // 新建Channel并开始阻塞接收
         var channel = new SharedMemoryChannel("AppChannel");
