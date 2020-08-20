@@ -8,6 +8,12 @@ public final class KVInsertModelRequire extends KVInsertRequire {
 
     public ModelBase model;
 
+    public KVInsertModelRequire() {
+        raftGroupId = KeyUtil.META_RAFTGROUP_ID;
+        schemaVersion = 0;
+        dataCF = -1;
+    }
+
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
         super.writeTo(bs);

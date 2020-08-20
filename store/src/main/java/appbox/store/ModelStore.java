@@ -28,12 +28,13 @@ public final class ModelStore {
         });
     }
 
-    public static CompletableFuture<Void> insertModelAsync(ModelBase model) {
+    public static CompletableFuture<Void> insertModelAsync(ModelBase model, KVTransaction txn) {
         var req = new KVInsertModelRequire();
         req.model = model;
+        req.txnId.copyFrom(txn.id());
 
         return SysStoreApi.execKVInsertAsync(req).thenAccept(r -> {
-           checkStoreError(r);
+            checkStoreError(r);
         });
     }
 

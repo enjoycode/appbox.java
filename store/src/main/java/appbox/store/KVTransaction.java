@@ -24,6 +24,10 @@ public final class KVTransaction implements AutoCloseable {
     private KVTransaction() {
     }
 
+    public KVTxnId id() {
+        return _txnId;
+    }
+
     public static CompletableFuture<KVTransaction> beginAsync(/*TODO: isoLevel*/) {
         return SysStoreApi.beginTxnAsync().thenApply(res -> {
             if (res.errorCode != 0) {
