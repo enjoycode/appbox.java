@@ -21,29 +21,38 @@ public final class StoreInitiator {
         //TODO:考虑判断是否已初始化
         Log.debug("Start init system store...");
 
-        //新建sys应用
+        return createAppAsync().thenCompose(app -> {
+            try {
+                //新建EntityModels
+                var emploeeModel    = createEmploeeModel();
+                var enterpriseModel = createEnterpriseModel();
+
+                //开始事务保存
+                return KVTransaction.beginAsync()
+                        .thenCompose(txn -> ModelStore.insertModelAsync(emploeeModel, txn)
+                        .thenCompose(r -> ModelStore.insertModelAsync(enterpriseModel, txn))
+                        .thenApply(r -> txn.commitAsync())
+                        .thenApply(r -> true));
+            } catch (Exception e) {
+                Log.error(e.getMessage());
+                return CompletableFuture.completedFuture(false);
+            }
+        }).exceptionally(ex -> {
+            Log.error(ex.getMessage());
+            return false;
+        });
+    }
+
+    private static CompletableFuture<ApplicationModel> createAppAsync() {
         var app = new ApplicationModel("appbox", "sys");
 
         return ModelStore.createApplicationAsync(app).thenApply(appStoreId -> {
             app.setAppStoreId(appStoreId);
-
-            try {
-                //新建EntityModels
-                var emploeeModel = createEmploeeModel(app);
-
-                //开始事务保存
-                //return KVTransaction.beginAsync().thenCompose(txn -> {
-                //
-                //})
-                return true;
-            } catch (Exception e) {
-                Log.error(e.getMessage());
-                return false;
-            }
+            return app;
         });
     }
 
-    private static EntityModel createEmploeeModel(ApplicationModel app) throws Exception {
+    private static EntityModel createEmploeeModel() throws Exception {
         var nameId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
         var maleId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
         var birthdayId = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -55,16 +64,12 @@ public final class StoreInitiator {
         //Members
         var name = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
         model.addSysMember(name, nameId);
-
         var male = new DataFieldModel(model, "Male", DataFieldType.Bool, false, false);
         model.addSysMember(male, maleId);
-
         var birthday = new DataFieldModel(model, "Birthday", DataFieldType.DateTime, false, false);
         model.addSysMember(birthday, birthdayId);
-
         var account = new DataFieldModel(model, "Account", DataFieldType.String, true, false);
         model.addSysMember(account, accountId);
-
         var password = new DataFieldModel(model, "Password", DataFieldType.Binary, true, false);
         model.addSysMember(password, passwordId);
 
@@ -81,4 +86,15 @@ public final class StoreInitiator {
         return model;
     }
 
+    private static EntityModel createEnterpriseModel() throws Exception {
+        var model = new EntityModel(IdUtil.SYS_ENTERPRISE_MODEL_ID, "Enterprise", true, false);
+
+        //Members
+        var name = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
+        model.addSysMember(name, (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET));
+        var address = new DataFieldModel(model, "Address", DataFieldType.String, true, false);
+        model.addSysMember(address, (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET));
+
+        return model;
+    }
 }
