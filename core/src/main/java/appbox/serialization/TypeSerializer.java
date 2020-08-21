@@ -1,8 +1,10 @@
 package appbox.serialization;
 
 import appbox.logging.Log;
+import appbox.model.EntityModel;
 import appbox.serialization.serializers.IntSerializer;
 import appbox.serialization.serializers.StringSerializer;
+import appbox.serialization.serializers.UserSerializer;
 
 import java.util.HashMap;
 import java.util.function.Supplier;
@@ -16,12 +18,13 @@ public abstract class TypeSerializer {
         Log.debug("开始注册序列化器...");
         registerKnownType(IntSerializer.instance);
         registerKnownType(StringSerializer.instance);
+
+        //----模型相关----
+        registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
     }
 
     /**
      * 注册已知类型的序列化器
-     *
-     * @param serializer
      */
     public static void registerKnownType(TypeSerializer serializer) {
         _knownTypes.put(serializer.targetType, serializer);
@@ -64,5 +67,5 @@ public abstract class TypeSerializer {
 
     public abstract void write(BinSerializer bs, Object value) throws Exception;
 
-    public abstract Object read(BinDeserializer bs) throws Exception;
+    public abstract Object read(BinDeserializer bs, Object value) throws Exception;
 }

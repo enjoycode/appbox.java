@@ -9,6 +9,7 @@ import appbox.serialization.BinSerializer;
  * 系统存储的二级索引
  */
 public final class SysIndexModel extends IndexModelBase {
+    //region ====SysIndexState====
     public enum SysIndexState {
         /**
          * 索引已构建完
@@ -23,10 +24,10 @@ public final class SysIndexModel extends IndexModelBase {
          */
         BuildFailed((byte) 2);
 
-        private final byte _value;
+        public final byte value;
 
         SysIndexState(byte value) {
-            _value = value;
+            this.value = value;
         }
 
         static SysIndexState fromValue(byte value) throws Exception {
@@ -42,9 +43,17 @@ public final class SysIndexModel extends IndexModelBase {
             }
         }
     }
+    //endregion
 
     private boolean       _global;  //是否全局索引,不支持非Mvcc表全局索引无法保证一致性
     private SysIndexState _state;   //索引异步构建状态
+
+    /**
+     * Only for serialization
+     */
+    SysIndexModel(EntityModel owner) {
+        super(owner);
+    }
 
     public SysIndexModel(EntityModel owner, String name, boolean unique,
                          FieldWithOrder[] fields, short[] storingFields) {
@@ -53,12 +62,13 @@ public final class SysIndexModel extends IndexModelBase {
         _state  = owner.persistentState() == PersistentState.Detached ? SysIndexState.Ready : SysIndexState.Building;
     }
 
+    //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
         super.writeTo(bs);
 
         bs.writeBool(_global, 1);
-        bs.writeByte(_state._value, 2);
+        bs.writeByte(_state.value, 2);
         bs.finishWriteFields();
     }
 
@@ -70,15 +80,18 @@ public final class SysIndexModel extends IndexModelBase {
         do {
             propIndex = bs.readVariant();
             switch (propIndex) {
-                case 0:
+                case 1:
                     _global = bs.readBool();
                     break;
-                case 1:
+                case 2:
                     _state = SysIndexState.fromValue(bs.readByte());
+                    break;
+                case 0:
                     break;
                 default:
                     throw new RuntimeException("Unknown field id: " + propIndex);
             }
         } while (propIndex != 0);
     }
+    //endregion
 }

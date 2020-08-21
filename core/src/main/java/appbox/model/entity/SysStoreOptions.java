@@ -17,6 +17,8 @@ public final class SysStoreOptions implements IEntityStoreOption {
     private byte _devIndexIdSeq;
     private byte _usrIndexIdSeq;
 
+    protected final EntityModel owner;              //不要序列化
+
     private boolean                  _isMVCC;        //是否MVCC存储格式
     private PartitionKey[]           _partitionKeys; //null表示不分区
     private ArrayList<SysIndexModel> _indexes;
@@ -26,12 +28,14 @@ public final class SysStoreOptions implements IEntityStoreOption {
     private int                      _schemaVersion;
 
     /**
-     * only for Serialization
+     * Only for serialization
      */
-    public SysStoreOptions() {
+    public SysStoreOptions(EntityModel owner) {
+        this.owner = owner;
     }
 
-    public SysStoreOptions(boolean mvcc, boolean orderByDesc) {
+    public SysStoreOptions(EntityModel owner, boolean mvcc, boolean orderByDesc) {
+        this.owner   = owner;
         _isMVCC      = mvcc;
         _orderByDesc = orderByDesc;
     }
@@ -89,7 +93,7 @@ public final class SysStoreOptions implements IEntityStoreOption {
         index.canAddTo(owner);
 
         index.initIndexId(id);
-        _indexes.add(index);
+        getIndexes().add(index);
     }
     //endregion
 
@@ -107,12 +111,86 @@ public final class SysStoreOptions implements IEntityStoreOption {
     //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
+        bs.writeBool(_isMVCC, 1);
+        bs.writeBool(_orderByDesc, 2);
+        bs.writeInt(_schemaVersion, 3);
 
+        //写入索引集合
+        if (hasIndexes()) {
+            bs.writeVariant(4);
+            bs.writeVariant(_indexes.size());
+            for (SysIndexModel index : _indexes) {
+                index.writeTo(bs);
+            }
+        }
+
+        //写入分区键
+        if (hasPartitionKeys()) {
+            bs.writeVariant(5);
+            bs.writeVariant(_partitionKeys.length);
+            for (PartitionKey partitionKey : _partitionKeys) {
+                partitionKey.writeTo(bs);
+            }
+        }
+
+        bs.writeByte(_devIndexIdSeq, 6);
+        bs.writeByte(_usrIndexIdSeq, 7);
+        if (_hasChangedSchema) {
+            bs.writeInt(_oldSchemaVersion, 8);
+        }
+
+        bs.finishWriteFields();
     }
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-
+        int propIndex;
+        do {
+            propIndex = bs.readVariant();
+            switch (propIndex) {
+                case 1:
+                    _isMVCC = bs.readBool();
+                    break;
+                case 2:
+                    _orderByDesc = bs.readBool();
+                    break;
+                case 3:
+                    _schemaVersion = bs.readInt();
+                    break;
+                case 4: {
+                    var count = bs.readVariant();
+                    for (int i = 0; i < count; i++) {
+                        var index = new SysIndexModel(owner);
+                        index.readFrom(bs);
+                        getIndexes().add(index);
+                    }
+                    break;
+                }
+                case 5: {
+                    var count = bs.readVariant();
+                    _partitionKeys = new PartitionKey[count];
+                    for (int i = 0; i < count; i++) {
+                        _partitionKeys[i] = new PartitionKey();
+                        _partitionKeys[i].readFrom(bs);
+                    }
+                    break;
+                }
+                case 6:
+                    _devIndexIdSeq = bs.readByte();
+                    break;
+                case 7:
+                    _usrIndexIdSeq = bs.readByte();
+                    break;
+                case 8:
+                    _hasChangedSchema = true;
+                    _oldSchemaVersion = bs.readInt();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new RuntimeException("Unknown field id:" + propIndex);
+            }
+        } while (propIndex != 0);
     }
     //endregion
 }

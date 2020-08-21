@@ -24,14 +24,15 @@ public abstract class ModelBase implements IBinSerializable {
     }
 
     public ModelBase(long id, String name) {
-        _designMode = true;
-        _id         = id;
-        _name       = name;
+        _designMode      = true;
+        _id              = id;
+        _name            = name;
+        _persistentState = PersistentState.Detached;
     }
 
     //region ====Properties====
     public ModelLayer modelLayer() {
-        return ModelLayer.getByValue((byte) (_id & IdUtil.MODELID_LAYER_MASK));
+        return ModelLayer.fromValue((byte) (_id & IdUtil.MODELID_LAYER_MASK));
     }
 
     public long id() {

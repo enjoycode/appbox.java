@@ -33,4 +33,7 @@ public final class PayloadType {
      */
     public static final byte UnknownType  = 23;
 
+    //----模型相关----
+    public static final byte EntityModel   = 50;
+
 }

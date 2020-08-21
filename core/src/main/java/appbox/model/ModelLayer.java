@@ -11,7 +11,7 @@ public enum ModelLayer {
         value = v;
     }
 
-    public static ModelLayer getByValue(byte value) {
+    public static ModelLayer fromValue(byte value) {
         switch (value) {
             case 0:
                 return ModelLayer.SYS;

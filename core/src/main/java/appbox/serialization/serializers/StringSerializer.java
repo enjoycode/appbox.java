@@ -18,7 +18,7 @@ public final class StringSerializer extends TypeSerializer {
     }
 
     @Override
-    public Object read(BinDeserializer bs) throws Exception {
+    public Object read(BinDeserializer bs, Object value) throws Exception {
         return bs.readString();
     }
 }

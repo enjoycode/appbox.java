@@ -1,13 +1,18 @@
 package appbox.model;
 
 import appbox.data.PersistentState;
+import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.IEntityStoreOption;
 import appbox.model.entity.SysStoreOptions;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
 import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static appbox.model.entity.EntityMemberModel.EntityMemberType;
 
 public final class EntityModel extends ModelBase {
     private static final short MAX_MEMBER_ID = 512;
@@ -21,7 +26,8 @@ public final class EntityModel extends ModelBase {
     /**
      * only for Serialization
      */
-    public EntityModel() {}
+    public EntityModel() {
+    }
 
     /**
      * New EntityModel for SysStore
@@ -29,7 +35,7 @@ public final class EntityModel extends ModelBase {
     public EntityModel(long id, String name, boolean mvcc, boolean orderByDesc) {
         super(id, name);
 
-        _storeOptions = new SysStoreOptions(mvcc, orderByDesc);
+        _storeOptions = new SysStoreOptions(this, mvcc, orderByDesc);
     }
 
     //region ====Properties====
@@ -153,6 +159,92 @@ public final class EntityModel extends ModelBase {
         member.initMemberId(id); //已处理Layer标记
         _members.add(member);
         _members.sort((m1, m2) -> Short.compare(m1.memberId(), m2.memberId()));
+    }
+    //endregion
+
+    //region ====Serialization====
+    private EntityMemberModel makeMemberByType(byte memberType) throws Exception {
+        if (memberType == EntityMemberType.DataField.value) {
+            return new DataFieldModel(this);
+        }
+        throw new RuntimeException("Unknown EntityMember type: " + memberType);
+    }
+
+    private IEntityStoreOption makeStoreOptionsByType(byte type) throws Exception {
+        if (type == 1) {
+            return new SysStoreOptions(this);
+        }
+        throw new RuntimeException("Unknown StoreOptions type: " + type);
+    }
+
+    @Override
+    public void writeTo(BinSerializer bs) throws Exception {
+        super.writeTo(bs);
+
+        //写入成员集合
+        bs.writeVariant(1);
+        bs.writeVariant(_members.size());
+        for (EntityMemberModel member : _members) {
+            //先写入类型
+            bs.writeByte(member.type().value);
+            //再写入成员
+            member.writeTo(bs);
+        }
+
+        //写入存储选项
+        if (_storeOptions != null) {
+            bs.writeVariant(2);
+            //先写入类型信息
+            if (_storeOptions instanceof SysStoreOptions) {
+                bs.writeByte((byte) 1);
+            } else {
+                //TODO:
+            }
+            _storeOptions.writeTo(bs);
+        }
+
+        if (designMode()) {
+            bs.writeShort(_devMemberIdSeq, 3);
+            bs.writeShort(_usrMemberIdSeq, 4);
+        }
+
+        bs.finishWriteFields();
+    }
+
+    @Override
+    public void readFrom(BinDeserializer bs) throws Exception {
+        super.readFrom(bs);
+
+        int propIndex;
+        do {
+            propIndex = bs.readVariant();
+            switch (propIndex) {
+                case 1: {
+                    var count = bs.readVariant();
+                    for (int i = 0; i < count; i++) {
+                        var m = makeMemberByType(bs.readByte());
+                        m.readFrom(bs);
+                        _members.add(m);
+                    }
+                    //TODO:考虑强制重新排序
+                    break;
+                }
+                case 2:
+                    _storeOptions = makeStoreOptionsByType(bs.readByte());
+                    _storeOptions.readFrom(bs);
+                    break;
+                case 3:
+                    _devMemberIdSeq = bs.readShort();
+                    break;
+                case 4:
+                    _usrMemberIdSeq = bs.readShort();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new RuntimeException("Unknown field id: " + propIndex);
+            }
+        } while (propIndex != 0);
     }
     //endregion
 }

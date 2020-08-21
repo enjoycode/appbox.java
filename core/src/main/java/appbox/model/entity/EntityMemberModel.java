@@ -6,29 +6,40 @@ import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
 
+/**
+ * 实体成员模型基类
+ */
 public abstract class EntityMemberModel implements IBinSerializable {
     public enum EntityMemberType {
-        DataField, EntityRef, EntitySet;
+        DataField(0), EntityRef(2), EntitySet(3);
+        public final byte value;
+
+        EntityMemberType(int v) {
+            value = (byte)v;
+        }
     }
 
-    protected EntityModel     owner;     //不用序列化
-    private   String          _name;
-    private   String          _originalName;
-    private   short           _memberId;
-    private   boolean         _allowNull; //设计时改变时如果是DataField需要调用其onDataTypeChanged
-    private   PersistentState _persistentState;
-    private   String          _comment;
+    protected final EntityModel owner;     //不用序列化
+
+    private String          _name;
+    private String          _originalName;
+    private short           _memberId;
+    private boolean         _allowNull; //设计时改变时如果是DataField需要调用其onDataTypeChanged
+    private PersistentState _persistentState;
+    private String          _comment;
 
     /**
      * Only for serialization
      */
-    public EntityMemberModel() {
+    public EntityMemberModel(EntityModel owner) {
+        this.owner = owner;
     }
 
     public EntityMemberModel(EntityModel owner, String name, boolean allowNull) {
-        this.owner = owner;
-        _name      = name;
-        _allowNull = allowNull;
+        this.owner       = owner;
+        _name            = name;
+        _allowNull       = allowNull;
+        _persistentState = PersistentState.Detached;
     }
 
     //region ====Properties====
@@ -99,12 +110,52 @@ public abstract class EntityMemberModel implements IBinSerializable {
     //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
-        //TODO:
+        bs.writeBool(_allowNull, 2);
+        bs.writeString(_name, 3);
+        bs.writeShort(_memberId, 4);
+        if (_comment != null) {
+            bs.writeString(_comment, 7);
+        }
+
+        if (owner.designMode()) {
+            bs.writeString(_originalName, 5);
+            bs.writeByte(_persistentState.value, 6);
+        }
+
+        bs.finishWriteFields();
     }
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-        //TODO:
+        int propIndex;
+        do {
+            propIndex = bs.readVariant();
+            switch (propIndex) {
+                case 2:
+                    _allowNull = bs.readBool();
+                    break;
+                case 3:
+                    _name = bs.readString();
+                    break;
+                case 4:
+                    _memberId = bs.readShort();
+                    break;
+                case 5:
+                    _originalName = bs.readString();
+                    break;
+                case 6:
+                    _persistentState = PersistentState.fromValue(bs.readByte());
+                    break;
+                case 7:
+                    _comment = bs.readString();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new RuntimeException("Unknown field id: " + propIndex);
+            }
+
+        } while (propIndex != 0);
     }
     //endregion
 }

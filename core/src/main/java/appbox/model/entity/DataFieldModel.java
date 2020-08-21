@@ -2,6 +2,8 @@ package appbox.model.entity;
 
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
 
 public final class DataFieldModel extends EntityMemberModel {
     public enum DataFieldType {
@@ -20,10 +22,19 @@ public final class DataFieldModel extends EntityMemberModel {
         Float(15),
         Double(16);
 
-        private final byte _value;
+        public final byte value;
 
         DataFieldType(int value) {
-            _value = (byte) value;
+            this.value = (byte) value;
+        }
+
+        public static DataFieldType fromValue(byte v) throws Exception {
+            for (DataFieldType item : DataFieldType.values()) {
+                if (item.value == v) {
+                    return item;
+                }
+            }
+            throw new RuntimeException("Unknown value: " + v);
         }
     }
 
@@ -37,7 +48,11 @@ public final class DataFieldModel extends EntityMemberModel {
     private int           _decimals; //仅用于Sql存储设置Decimal小数部分长度
     //TODO:默认值
 
-    public DataFieldModel() {
+    /**
+     * Only for serialization
+     */
+    public DataFieldModel(EntityModel owner) {
+        super(owner);
     }
 
     public DataFieldModel(EntityModel owner, String name, DataFieldType dataType,
@@ -82,4 +97,61 @@ public final class DataFieldModel extends EntityMemberModel {
     }
     //endregion
 
+    //region ====Serialization====
+    @Override
+    public void writeTo(BinSerializer bs) throws Exception {
+        super.writeTo(bs);
+
+        bs.writeByte(_dataType.value, 1);
+        bs.writeBool(_isForeignKey, 2);
+        if (_dataType == DataFieldType.Enum) {
+            bs.writeLong(_enumModelId, 3);
+        } else if (_dataType == DataFieldType.String) {
+            bs.writeVariant(_length, 5);
+        } else if (_dataType == DataFieldType.Decimal) {
+            bs.writeVariant(_length, 5);
+            bs.writeVariant(_decimals, 6);
+        }
+
+        //TODO:写入默认值
+
+        bs.writeBool(_isDataTypeChanged, 7);
+
+        bs.finishWriteFields();
+    }
+
+    @Override
+    public void readFrom(BinDeserializer bs) throws Exception {
+        super.readFrom(bs);
+
+        int propIndex;
+        do {
+            propIndex = bs.readVariant();
+            switch (propIndex) {
+                case 1:
+                    _dataType = DataFieldType.fromValue(bs.readByte());
+                    break;
+                case 2:
+                    _isForeignKey = bs.readBool();
+                    break;
+                case 3:
+                    _enumModelId = bs.readLong();
+                    break;
+                case 5:
+                    _length = bs.readVariant();
+                    break;
+                case 6:
+                    _decimals = bs.readVariant();
+                    break;
+                case 7:
+                    _isDataTypeChanged = bs.readBool();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new RuntimeException("Unknown field id: " + propIndex);
+            }
+        } while (propIndex != 0);
+    }
+    //endregion
 }

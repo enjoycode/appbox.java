@@ -40,10 +40,14 @@ public final class BinDeserializer {
         if (serializer.creator == null
                 && payloadType != PayloadType.Array //非数组类型
             /*&& serializer.genericTypeCount <= 0 //非范型类型*/) {
-            return serializer.read(this);
+            return serializer.read(this, null);
         } else { //其他需要创建实例的类型
-            //TODO:
-            throw new Exception();
+            Object result = null;
+            //TODO: 先处理数组及范型类型
+            result = serializer.creator.get();
+            //TODO: 加入已序列化列表
+            serializer.read(this, result);
+            return result;
         }
     }
 

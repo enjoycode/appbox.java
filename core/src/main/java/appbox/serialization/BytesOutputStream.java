@@ -15,6 +15,10 @@ public final class BytesOutputStream implements IOutputStream {
         index = 0;
     }
 
+    public int size() {
+        return index;
+    }
+
     public BytesInputStream copyToInput() {
         var input = new BytesInputStream(index);
         System.arraycopy(data, 0, input.data, 0, index);

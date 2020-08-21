@@ -21,6 +21,14 @@ public final class BinSerializer {
     private BinSerializer() {
     }
 
+    public void serialize(Object obj, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
+        serialize(obj);
+    }
+
+    /**
+     * 序列化对象，写入类型信息
+     */
     public void serialize(Object obj) throws Exception {
         if (obj == null) {
             _stream.writeByte(PayloadType.Null);
@@ -75,6 +83,11 @@ public final class BinSerializer {
     }
 
     public void writeShort(short value) throws Exception {
+        _stream.writeShort(value);
+    }
+
+    public void writeShort(short value, int fieldId) throws Exception {
+        _stream.writeVariant(fieldId);
         _stream.writeShort(value);
     }
 
