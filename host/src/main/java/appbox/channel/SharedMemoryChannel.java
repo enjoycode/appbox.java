@@ -14,7 +14,7 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
     private final Pointer                   _sendQueue;    //发送队列
     private final Pointer                   _receiveQueue; //接收队列
     private final HashMap<Integer, Pointer> _pendings;     //挂起的不完整消息
-    private       AtomicInteger             _msgNo;        //发送消息流水号
+    private final AtomicInteger             _msgNo;        //发送消息流水号
 
     public SharedMemoryChannel(String name) {
         // 注意与主进程的名称相反
@@ -81,7 +81,7 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
     /**
      * 收到消息开始组合为完整的消息
      */
-    private void onMessageChunk(Pointer chunk) {
+    private void onMessageChunk(Pointer chunk) { //TODO:特殊类型消息(KVScanResponse)流式处理
         var msgId   = NativeSmq.getMsgId(chunk);
         var msgFlag = NativeSmq.getMsgFlag(chunk);
 

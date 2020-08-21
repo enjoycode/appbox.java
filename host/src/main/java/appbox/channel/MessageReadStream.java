@@ -8,6 +8,7 @@ import com.sun.jna.Pointer;
  * 消息读取流，用于从消息链中读取完整消息
  */
 public final class MessageReadStream implements IInputStream {
+    //region ====ObjectPool====
     private static final ObjectPool<MessageReadStream> pool = new ObjectPool<>(MessageReadStream::new, 32);
 
     public static MessageReadStream rentFromPool(Pointer first) {
@@ -19,6 +20,7 @@ public final class MessageReadStream implements IInputStream {
     public static void backToPool(MessageReadStream obj) {
         pool.back(obj);
     }
+    //endregion
 
     private Pointer _curChunk;
     private Pointer _dataPtr;
