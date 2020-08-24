@@ -1,3 +1,4 @@
+import appbox.channel.messages.KVGetModelRequest;
 import appbox.channel.messages.KVInsertDataRequire;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
@@ -78,6 +79,16 @@ public class TestSysStore {
         var fut2 = SysStoreApi.rollbackTxnAsync(res1.txnId);
         var res2 = fut2.get();
         assertEquals(0, res2.errorCode);
+    }
+
+    @Test
+    public void testKVGetModel() throws Exception {
+        long modelId = 0x9E9AA8F702000004L;
+        var req = new KVGetModelRequest(modelId);
+
+        var fut = SysStoreApi.execKVGetAsync(req);
+        var res = fut.get();
+        assertEquals(0, res.errorCode);
     }
 
 }

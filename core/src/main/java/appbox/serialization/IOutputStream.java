@@ -35,6 +35,10 @@ public interface IOutputStream {
 
     default void writeVariant(int value) {
         value = (value << 1) ^ (value >> 0x1F);
+        writeNativeVariant(value);
+    }
+
+    default void writeNativeVariant(int value) {
         do {
             byte temp = (byte) ((value & 0x7F) | 0x80);
             if ((value >>>= 7) != 0) {

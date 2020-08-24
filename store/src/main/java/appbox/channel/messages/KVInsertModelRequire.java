@@ -19,13 +19,9 @@ public final class KVInsertModelRequire extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        bs.writeVariant(9);
-        bs.writeByte(KeyUtil.METACF_MODEL_PREFIX);
-        bs.writeLongBE(model.id()); //暂大字节序写入
-
+        KeyUtil.writeModelKey(bs, model.id());
         //refs
-        bs.writeVariant(-1);
-
+        bs.writeVariant(0);
         //data
         bs.writeByte(model.modelType().value); //注意写入模型类型信息
         model.writeTo(bs);

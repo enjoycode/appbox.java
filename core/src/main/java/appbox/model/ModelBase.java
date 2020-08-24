@@ -81,6 +81,13 @@ public abstract class ModelBase implements IBinSerializable {
     //endregion
 
     //region ====Serialization====
+    public static ModelBase makeModelByType(byte type) throws Exception {
+        if (type == ModelType.Entity.value) {
+            return new EntityModel();
+        }
+        throw new RuntimeException("Unknown model type: " + type);
+    }
+
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
         bs.writeLong(_id, 1);

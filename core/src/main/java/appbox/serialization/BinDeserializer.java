@@ -75,6 +75,10 @@ public final class BinDeserializer {
         return _stream.readVariant();
     }
 
+    public int readNativeVariant() throws Exception {
+        return _stream.readNativeVariant();
+    }
+
     public String readString() throws Exception {
         return _stream.readString();
     }

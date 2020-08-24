@@ -100,6 +100,16 @@ public final class BinSerializer {
         _stream.writeInt(value);
     }
 
+    /**
+     * 大字节序写入
+     */
+    public void writeIntBE(int value) throws Exception {
+        _stream.writeByte((byte) (value >>> 24));
+        _stream.writeByte((byte) (value >>> 16));
+        _stream.writeByte((byte) (value >>> 8));
+        _stream.writeByte((byte) (value));
+    }
+
     public void writeLong(long value) throws Exception {
         _stream.writeLong(value);
     }
@@ -130,6 +140,10 @@ public final class BinSerializer {
     public void writeVariant(int value, int fieldId) throws Exception {
         _stream.writeVariant(fieldId);
         _stream.writeVariant(value);
+    }
+
+    public void writeNativeVariant(int value) {
+        _stream.writeNativeVariant(value);
     }
 
     public void writeByteArray(byte[] value) throws Exception {

@@ -145,4 +145,14 @@ public final class SysStoreApi {
         return task.thenApply(m -> (KVCommandResponse) m);
     }
     //endregion
+
+    //region ====ReadIndex====
+    public static CompletableFuture<KVGetResponse> execKVGetAsync(KVGetRequest req) {
+        var task = makeTaskAndSendRequire(req);
+        if (task == null) {
+            return makeSendRequireError(new KVGetResponse());
+        }
+        return task.thenApply(m -> (KVGetResponse) m);
+    }
+    //endregion
 }
