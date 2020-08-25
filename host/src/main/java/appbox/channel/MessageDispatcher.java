@@ -61,8 +61,6 @@ public final class MessageDispatcher {
             //异步交给运行时服务容器处理
             CompletableFuture.runAsync(() -> {
                 RuntimeContext.invokeAsync(req.service, req.args).handle((r, ex) -> {
-                    InvokeRequire.backToPool(req);
-
                     //发送请求响应
                     var res = InvokeResponse.rentFromPool();
                     res.reqId  = req.reqId;
@@ -74,6 +72,7 @@ public final class MessageDispatcher {
                     } catch (Exception e) {
                         Log.warn("发送响应消息失败");
                     } finally {
+                        InvokeRequire.backToPool(req);
                         InvokeResponse.backToPool(res);
                     }
 
