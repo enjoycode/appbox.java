@@ -5,13 +5,15 @@ import appbox.model.ModelBase;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 
-public final class KVGetResponse extends StoreResponse {
+public final class KVScanResponse extends StoreResponse {
 
     public Object result;
+    public int    skipped;
+    public int    length;
 
     @Override
     public byte MessageType() {
-        return MessageType.KVGetResponse;
+        return MessageType.KVScanResponse;
     }
 
     @Override
@@ -24,15 +26,19 @@ public final class KVGetResponse extends StoreResponse {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 
-        //直接反序列化数据，以避免内存复制
         if (errorCode == 0) {
             byte dataType = bs.readByte(); //读取数据类型
+            skipped = bs.readInt();
+            length  = bs.readInt();
             if (dataType == 1) {
-                bs.readNativeVariant(); //跳过长度
-                //注意直接反序列化为模型，以减少内存复制
-                var model = ModelBase.makeModelByType(bs.readByte());
-                model.readFrom(bs);
-                result = model;
+                var arrayOfModels = new ModelBase[length];
+                for (int i = 0; i < length; i++) {
+                    bs.skip(bs.readNativeVariant()); //跳过Row's Key
+                    bs.readNativeVariant(); //跳过Row's Value size;
+                    arrayOfModels[i] = ModelBase.makeModelByType(bs.readByte());
+                    arrayOfModels[i].readFrom(bs);
+                }
+                result = arrayOfModels;
             } else {
                 throw new RuntimeException("暂未实现");
             }

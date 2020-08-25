@@ -1,5 +1,6 @@
 import appbox.channel.messages.KVGetModelRequest;
 import appbox.channel.messages.KVInsertDataRequire;
+import appbox.channel.messages.KVScanModelsRequest;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
 import appbox.channel.messages.KVDeleteRequire;
@@ -87,6 +88,14 @@ public class TestSysStore {
         var req = new KVGetModelRequest(modelId);
 
         var fut = SysStoreApi.execKVGetAsync(req);
+        var res = fut.get();
+        assertEquals(0, res.errorCode);
+    }
+
+    @Test
+    public void testKVScanModels() throws Exception {
+        var req = new KVScanModelsRequest();
+        var fut = SysStoreApi.execKVScanAsync(req);
         var res = fut.get();
         assertEquals(0, res.errorCode);
     }

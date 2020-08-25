@@ -36,6 +36,9 @@ public final class MessageDispatcher {
             case MessageType.KVGetResponse:
                 processStoreResponse(channel, first, new KVGetResponse());
                 break;
+            case MessageType.KVScanResponse:
+                processStoreResponse(channel, first, new KVScanResponse());
+                break;
             default:
                 channel.returnAllChunks(first);
                 Log.warn("Receive unknown type message.");

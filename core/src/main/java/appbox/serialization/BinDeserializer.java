@@ -51,6 +51,10 @@ public final class BinDeserializer {
         }
     }
 
+    public void skip(int size) throws Exception {
+        _stream.skip(size);
+    }
+
     public boolean readBool() throws Exception {
         return _stream.readBool();
     }

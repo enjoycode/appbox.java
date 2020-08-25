@@ -154,5 +154,13 @@ public final class SysStoreApi {
         }
         return task.thenApply(m -> (KVGetResponse) m);
     }
+
+    public static CompletableFuture<KVScanResponse> execKVScanAsync(KVScanRequest req) {
+        var task = makeTaskAndSendRequire(req);
+        if (task == null) {
+            return makeSendRequireError(new KVScanResponse());
+        }
+        return task.thenApply(m -> (KVScanResponse) m);
+    }
     //endregion
 }

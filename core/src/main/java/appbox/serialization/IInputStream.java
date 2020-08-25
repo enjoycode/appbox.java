@@ -6,6 +6,15 @@ public interface IInputStream {
 
     void read(byte[] dest, int offset, int count) throws Exception;
 
+    /**
+     * 跳过指定字节数
+     */
+    default void skip(int size) throws Exception {
+        for (int i = 0; i < size; i++) {
+            readByte();
+        }
+    }
+
     default boolean readBool() throws Exception {
         return readByte() == 1;
     }
