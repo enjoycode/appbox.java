@@ -28,8 +28,8 @@ public final class InvokeResponse implements IMessage {
 
     public int    reqId;
     public short  shard;
-    public byte   error;
-    public Object result;
+    public byte   error;    //无错误=0
+    public Object result;   //有错误则为错误信息
 
     @Override
     public byte MessageType() {
