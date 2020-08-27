@@ -14,6 +14,7 @@ public final class InvokeResponse implements IMessage {
         public static final byte ServiceInnerError      = 3;
         public static final byte SessionNotExists       = 4;
         public static final byte SerializeResponseFail  = 5;
+        public static final byte Timeout                = 6;
     }
 
     private static final ObjectPool<InvokeResponse> pool = new ObjectPool<>(InvokeResponse::new, 32);
