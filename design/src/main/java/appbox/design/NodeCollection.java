@@ -36,7 +36,7 @@ public final class NodeCollection
 			int index = -1;
 			for (var i = 0; i < nodes.size(); i++)
 			{
-				if (item.CompareTo(nodes.get(i)) < 0)
+				if (!item.equals(nodes.get(i)) )
 				{
 					index = i;
 					break;
