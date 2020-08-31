@@ -6,6 +6,7 @@ import appbox.logging.Log;
 import appbox.store.SysStoreApi;
 import com.sun.jna.Pointer;
 
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -72,6 +73,10 @@ public final class MessageDispatcher {
                 res.result = ex == null ? r : ex.getMessage();
                 try {
                     channel.sendMessage(channel.newMessageId(), res);
+                    if (ex != null) {
+                        Log.error("Invoke Service[" + req.service
+                                + "] Error:" + ex.getMessage() + "\n" + Arrays.toString(ex.getStackTrace()));
+                    }
                 } catch (Exception e) {
                     Log.warn("发送响应消息失败");
                 } finally {
