@@ -10,41 +10,16 @@ import java.util.concurrent.ExecutionException;
 public abstract class DesignNode
 {
 
-    private DesignNode Parent;
+    private DesignNode parent;
 
-
-    private NodeCollection Nodes;
-    public final NodeCollection getNodes()
-    {
-        return Nodes;
-    }
+    private NodeCollection nodes;
 
     public abstract DesignNodeType getNodeType();
-    public int getSortNo()
-    {
-        return Integer.MAX_VALUE;
-    }
 
-    private String Text;
-    public String getText()
-    {
-        return Text;
-    }
-    public void setText(String value)
-    {
-        Text = value;
-    }
+    private String text;
 
     //region ====Checkout相关属性====
-    private int Version;
-    public int getVersion()
-    {
-        return Version;
-    }
-    public void setVersion(int value)
-    {
-        Version = value;
-    }
+    private int version;
 
     /**
      是否允许签出
@@ -98,14 +73,12 @@ public abstract class DesignNode
 
     public DesignNode()
     {
-        Nodes = new NodeCollection(this);
+        nodes = new NodeCollection(this);
     }
 
     /**
      目前仅支持签出ModelRootNode及ModelNode
      */
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-//ORIGINAL LINE: public virtual async Task<bool> Checkout()
     public CompletableFuture<Boolean> Checkout() throws ExecutionException, InterruptedException //TODO:考虑加入参数允许签出所有下属节点
     {
         //判断是否已签出或者能否签出
@@ -156,11 +129,11 @@ public abstract class DesignNode
 
     public final DesignNode getParent()
     {
-        return Parent;
+        return parent;
     }
     public final void setParent(DesignNode value)
     {
-        Parent = value;
+        parent = value;
     }
 
     public DesignTree getDesignTree()
@@ -173,6 +146,30 @@ public abstract class DesignNode
         return null;
     }
 
+    public final NodeCollection getNodes()
+    {
+        return nodes;
+    }
+    public int getSortNo()
+    {
+        return Integer.MAX_VALUE;
+    }
+    public String getText()
+    {
+        return text;
+    }
+    public void setText(String value)
+    {
+        text = value;
+    }
+    public int getVersion()
+    {
+        return version;
+    }
+    public void setVersion(int value)
+    {
+        version = value;
+    }
     /**
      用于前端回传时识别是哪个节点
      */
