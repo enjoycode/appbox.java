@@ -4,15 +4,34 @@ import appbox.logging.Log;
 import appbox.runtime.IRuntimeContext;
 import appbox.runtime.ISessionInfo;
 import appbox.runtime.InvokeArg;
+import appbox.utils.ReflectUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
+import com.alibaba.ttl.threadpool.TtlExecutors;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 public final class HostRuntimeContext implements IRuntimeContext {
 
     private final        ServiceContainer                       _services = new ServiceContainer();
     private static final TransmittableThreadLocal<ISessionInfo> _session  = new TransmittableThreadLocal<>();
+
+    static {
+        //暂在这里Hack CompletableFuture's ASYNC_POOL
+        var async_pool = CompletableFuture.completedFuture(true).defaultExecutor();
+        if (async_pool instanceof ExecutorService) {
+            async_pool = TtlExecutors.getTtlExecutorService((ExecutorService) async_pool);
+        } else {
+            async_pool = TtlExecutors.getTtlExecutor(async_pool);
+        }
+
+        try {
+            ReflectUtil.setFinalStatic(CompletableFuture.class.getDeclaredField("ASYNC_POOL"), async_pool);
+        } catch (Exception e) {
+            Log.error("Can't find CompletableFuture's ASYNC_POOL field.");
+        }
+    }
 
     @Override
     public ISessionInfo currentSession() {

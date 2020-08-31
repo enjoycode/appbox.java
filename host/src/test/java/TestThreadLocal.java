@@ -2,14 +2,12 @@ import appbox.utils.ReflectUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.*;
-import java.util.Arrays;
 import java.util.concurrent.*;
 
 public class TestThreadLocal {
 
-    private static InheritableThreadLocal<Integer>   itl = new InheritableThreadLocal<>();
-    private static TransmittableThreadLocal<Integer> ttl = new TransmittableThreadLocal<>();
+    private static final InheritableThreadLocal<Integer>   itl = new InheritableThreadLocal<>();
+    private static final TransmittableThreadLocal<Integer> ttl = new TransmittableThreadLocal<>();
 
     private static void showITL(String task) {
         System.out.printf("%s %s : %s\n", task, Thread.currentThread().getName(), itl.get());
@@ -56,14 +54,13 @@ public class TestThreadLocal {
     @Test
     public void TestTTL() throws Exception {
         var async_pool      = CompletableFuture.completedFuture(true).defaultExecutor();
-        var wrap_async_pool = com.alibaba.ttl.threadpool.TtlExecutors.getTtlExecutor(async_pool);
-
-        ReflectUtil.setFinalStatic(CompletableFuture.class.getDeclaredField("ASYNC_POOL"), wrap_async_pool);
+        var ttl_async_pool = com.alibaba.ttl.threadpool.TtlExecutors.getTtlExecutor(async_pool);
+        ReflectUtil.setFinalStatic(CompletableFuture.class.getDeclaredField("ASYNC_POOL"), ttl_async_pool);
 
         ttl.set(10);
 
         //ExecutorService executorService = Executors.newFixedThreadPool(8);
-        //var wrap = com.alibaba.ttl.threadpool.TtlExecutors.getTtlExecutorService(executorService);
+        //var wrap = TtlExecutors.getTtlExecutorService(executorService);
 
         var fut1 = CompletableFuture.runAsync(() -> {
             showTTL("1");
@@ -89,9 +86,7 @@ public class TestThreadLocal {
         }).thenAcceptAsync((r) -> {
             try {
                 r.get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
             showTTL("2.1");
