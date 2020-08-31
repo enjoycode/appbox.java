@@ -67,6 +67,18 @@ public final class DesignTree {
         setNodes(new NodeCollection(null));
     }
 
+    private Map<String, CheckoutInfo> _checkouts;
+
+    //用于签出节点成功后添加签出信息列表
+    public void AddCheckoutInfos(List<CheckoutInfo> infos) {
+        for (int i = 0; i < infos.size(); i++) {
+            String key = CheckoutInfo.MakeKey(infos.get(i).getNodeType(), infos.get(i).getTargetID());
+            if (!_checkouts.containsKey(key)) {
+                _checkouts.put(key, infos.get(i));
+            }
+        }
+    }
+
     //region ====LoadMethod====
 //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
 //ORIGINAL LINE: internal async Task LoadNodesAsync()
@@ -175,9 +187,7 @@ public final class DesignTree {
 //C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
 //#if DEBUG
 
-    *//**
-     * 仅用于单元测试
-     *//*
+    //仅用于单元测试
 //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
 //ORIGINAL LINE: internal async Task LoadForTest(List<ApplicationModel> apps, List<ModelBase> models)
     public Task LoadForTest(ArrayList<ApplicationModel> apps, ArrayList<ModelBase> models) {
@@ -248,12 +258,7 @@ public final class DesignTree {
         return (byte) ((tempVar instanceof byte) ? tempVar : null);
     }
 
-    *//**
-     * 用于前端传回的参数查找对应的设计节点
-     *
-     * @param type
-     * @param id
-     *//*
+    //用于前端传回的参数查找对应的设计节点
     public DesignNode FindNode(DesignNodeType type, String id) {
         switch (type) {
             case EntityModelNode:
@@ -326,9 +331,7 @@ public final class DesignTree {
         return null;
     }
 
-    *//**
-     * 根据模型类型及标识号获取相应的节点
-     *//*
+    //根据模型类型及标识号获取相应的节点
 //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
 //ORIGINAL LINE: internal ModelNode FindModelNode(ModelType modelType, ulong modelId)
     public ModelNode FindModelNode(ModelType modelType, long modelId) {
@@ -353,9 +356,7 @@ public final class DesignTree {
         return list.toArray(new ModelNode[0]);
     }
 
-    *//**
-     * 查找所有引用指定模型标识的EntityRef Member集合
-     *//*
+    //查找所有引用指定模型标识的EntityRef Member集合
 //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
 //ORIGINAL LINE: public List<EntityRefModel> FindEntityRefModels(ulong targetEntityModelID)
     public ArrayList<EntityRefModel> FindEntityRefModels(long targetEntityModelID) {
@@ -400,14 +401,7 @@ public final class DesignTree {
 //C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
     ///#region ====Find for Create====
 
-    *//**
-     * 用于新建时检查相同名称的模型是否已存在
-     *
-     * @param appId App identifier.
-     * @param type  Type.
-     * @param name  Name.
-     * @return The model node by name.
-     *//*
+    //用于新建时检查相同名称的模型是否已存在
 //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
 //ORIGINAL LINE: internal ModelNode FindModelNodeByName(uint appId, ModelType type, string name)
     public ModelNode FindModelNodeByName(int appId, ModelType type, String name) {
@@ -418,9 +412,7 @@ public final class DesignTree {
         return modelRootNode == null ? null : modelRootNode.FindModelNodeByName(name);
     }
 
-    *//**
-     * 根据当前选择的节点查询新建模型的上级节点
-     *//*
+    //根据当前选择的节点查询新建模型的上级节点
 //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
 //ORIGINAL LINE: public DesignNode FindNewModelParentNode(DesignNode selected, out uint appID, ModelType newModelType)
     public DesignNode FindNewModelParentNode(DesignNode selected, tangible.RefObject<Integer> appID, ModelType newModelType) {
@@ -469,9 +461,7 @@ public final class DesignTree {
         FindNewModelParentNodeInternal((DesignNode) ((tempVar instanceof DesignNode) ? tempVar : null), target, appID, newModelType);
     }
 
-    *//**
-     * 根据当前选择的节点查找新建文件夹节点的上级节点
-     *//*
+    //根据当前选择的节点查找新建文件夹节点的上级节点
 //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
 //ORIGINAL LINE: public DesignNode FindNewFolderParentNode(DesignNode selected, out uint appID, out ModelType modelType)
     public DesignNode FindNewFolderParentNode(DesignNode selected, tangible.RefObject<Integer> appID, tangible.RefObject<ModelType> modelType) {
@@ -500,9 +490,7 @@ public final class DesignTree {
         return null;
     }
 
-    *//**
-     * 从上至下查找指定设计节点下的最后一个文件夹的索引号
-     *//*
+    //从上至下查找指定设计节点下的最后一个文件夹的索引号
     public int FindLastFolderIndex(DesignNode node) {
         if (node.getNodes().getCount() == 0 || ((DesignNode) node.getNodes().getItem(0)).getNodeType() != DesignNodeType.FolderNode) {
             return -1;
@@ -526,10 +514,8 @@ public final class DesignTree {
     ///#region ====Checkout Info manager====
     private HashMap<String, CheckoutInfo> _checkouts;
 
-    *//**
-     * 用于签出节点成功后添加签出信息列表
-     *//*
-    public void AddCheckoutInfos(ArrayList<CheckoutInfo> infos) {
+    //用于签出节点成功后添加签出信息列表
+    public void AddCheckoutInfos(List<CheckoutInfo> infos) {
         for (int i = 0; i < infos.size(); i++) {
             String key = CheckoutInfo.MakeKey(infos.get(i).getNodeType(), infos.get(i).getTargetID());
             if (!_checkouts.containsKey(key)) {
@@ -538,9 +524,7 @@ public final class DesignTree {
         }
     }
 
-    *//**
-     * 给设计节点添加签出信息，如果已签出的模型节点则用本地存储替换原模型
-     *//*
+    //给设计节点添加签出信息，如果已签出的模型节点则用本地存储替换原模型
     public void BindCheckoutInfo(DesignNode node, boolean isNewNode) {
         //if (node.NodeType == DesignNodeType.FolderNode || !node.AllowCheckout)
         //    throw new ArgumentException("不允许绑定签出信息: " + node.NodeType.ToString());
@@ -576,9 +560,7 @@ public final class DesignTree {
         }
     }
 
-    *//**
-     * 部署完后更新所有模型节点的状态，并移除待删除的节点
-     *//*
+    //部署完后更新所有模型节点的状态，并移除待删除的节点
     public void CheckinAllNodes() {
         //循环更新模型节点
         for (int i = 0; i < getAppRootNode().getNodes().getCount(); i++) {

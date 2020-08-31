@@ -1,42 +1,17 @@
 package appbox.design;
 
-import appbox.runtime.RuntimeContext;
 import appbox.serialization.PayloadType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public abstract class DesignNode
 {
 
     private DesignNode Parent;
-    public final DesignNode getParent()
-    {
-        return Parent;
-    }
-    public final void setParent(DesignNode value)
-    {
-        Parent = value;
-    }
 
-    public DesignTree getDesignTree()
-    {
-        DesignNode root = GetRootNode(this);
-        if (root instanceof ITopNode)
-        {
-            return root.getDesignTree();
-        }
-        return null;
-    }
-
-    /**
-     用于前端回传时识别是哪个节点
-     */
-    public String getID()
-    {
-        return getText();
-    }
 
     private NodeCollection Nodes;
     public final NodeCollection getNodes()
@@ -131,49 +106,79 @@ public abstract class DesignNode
      */
 //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
 //ORIGINAL LINE: public virtual async Task<bool> Checkout()
-    /*public CompletableFuture<Boolean> Checkout() //TODO:考虑加入参数允许签出所有下属节点
+    public CompletableFuture<Boolean> Checkout() throws ExecutionException, InterruptedException //TODO:考虑加入参数允许签出所有下属节点
     {
         //判断是否已签出或者能否签出
         if (!getAllowCheckout())
         {
-            return false;
+            return CompletableFuture.completedFuture(false);
         }
         if (getIsCheckoutByMe())
         {
-            return true;
+            return CompletableFuture.completedFuture(true);
         }
 
         //调用签出服务
         List<CheckoutInfo> infos = new ArrayList<CheckoutInfo>();
-        CheckoutInfo       info  = new CheckoutInfo(getNodeType(), getCheckoutInfoTargetID(), getVersion(), getDesignTree().getDesignHub().getSession().getName(), getDesignTree().getDesignHub().getSession().getLeafOrgUnitID());
+        //CheckoutInfo info = new CheckoutInfo(getNodeType(), getCheckoutInfoTargetID(), getVersion(), getDesignTree().getDesignHub().getSession().getName(), getDesignTree().getDesignHub().getSession().getLeafOrgUnitID());
+        CheckoutInfo info = new CheckoutInfo();
+        //TODO set param
         infos.add(info);
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-//        CheckoutResult result = await CheckoutService.CheckoutAsync(infos);
 
-        //CompletableFuture<CheckoutResult> future = CompletableFuture.supplyAsync(() -> CheckoutService.CheckoutAsync(infos));
-        if (result.getSuccess())
-        {
-            //签出成功则将请求的签出信息添加至当前的已签出列表
-            getDesignTree().AddCheckoutInfos(infos);
-            //如果签出的是单个模型，且具备更新的版本，则更新
+        return CheckoutService.CheckoutAsync(infos).thenApply(r->{
+            if(r.getSuccess()){
+                //签出成功则将请求的签出信息添加至当前的已签出列表
+                getDesignTree().AddCheckoutInfos(infos);
+                //如果签出的是单个模型，且具备更新的版本，则更新
 //C# TO JAVA CONVERTER TODO TASK: Java has no equivalent to C# pattern variables in 'is' expressions:
 //ORIGINAL LINE: if (this is ModelNode modelNode && result.ModelWithNewVersion != null)
-            if (this instanceof ModelNode modelNode && result.getModelWithNewVersion() != null)
-            {
-                modelNode.Model = result.getModelWithNewVersion(); //替换旧模型
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                await getDesignTree().getDesignHub().getTypeSystem().UpdateModelDocumentAsync(modelNode); //更新为新模型的RoslynDocument
+//            if (this instanceof ModelNode modelNode && result.getModelWithNewVersion() != null)
+//            {
+//                modelNode.Model = result.getModelWithNewVersion(); //替换旧模型
+////C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
+//                await getDesignTree().getDesignHub().getTypeSystem().UpdateModelDocumentAsync(modelNode); //更新为新模型的RoslynDocument
+//            }
+                //更新当前节点的签出信息
+                setCheckoutInfo(infos.get(0));
+                return true;
+            }else{
+                return false;
             }
-            //更新当前节点的签出信息
-            setCheckoutInfo(infos.get(0));
-        }
 
-        return result.getSuccess();
-    }*/
+        });
+
+    }
 
     private static DesignNode GetRootNode(DesignNode current)
     {
         return current.getParent() == null ? current : GetRootNode(current.getParent());
+    }
+
+    public final DesignNode getParent()
+    {
+        return Parent;
+    }
+    public final void setParent(DesignNode value)
+    {
+        Parent = value;
+    }
+
+    public DesignTree getDesignTree()
+    {
+        DesignNode root = GetRootNode(this);
+        if (root instanceof ITopNode)
+        {
+            return root.getDesignTree();
+        }
+        return null;
+    }
+
+    /**
+     用于前端回传时识别是哪个节点
+     */
+    public String getID()
+    {
+        return getText();
     }
 
 /*    public final int CompareTo(DesignNode other)

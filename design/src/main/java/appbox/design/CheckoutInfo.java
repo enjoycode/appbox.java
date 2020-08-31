@@ -73,7 +73,10 @@ public final class CheckoutInfo
 		CheckoutTime = value;
 	}
 
-//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
+	public CheckoutInfo() {
+	}
+
+	//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
 //ORIGINAL LINE: public CheckoutInfo(DesignNodeType nodeType, string targetID, uint version, string developerName, Guid developerOuID)
 	public CheckoutInfo(DesignNodeType nodeType, String targetID, int version, String developerName, UUID developerOuID)
 	{

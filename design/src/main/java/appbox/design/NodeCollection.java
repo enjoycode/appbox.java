@@ -9,7 +9,7 @@ public final class NodeCollection
 {
 
 	private DesignNode owner;
-	private ArrayList<DesignNode> nodes;
+	private List<DesignNode> nodes;
 
 	public int getCount()
 	{
