@@ -2,6 +2,7 @@ package appbox.server.runtime;
 
 import appbox.runtime.IService;
 import appbox.server.services.SystemService;
+import appbox.server.services.TestLoginService;
 import appbox.server.services.TestService;
 
 import java.util.HashMap;
@@ -20,6 +21,7 @@ public final class ServiceContainer {
     public ServiceContainer() {
         //注册系统服务
         registerService("sys.System", new SystemService());
+        registerService("sys.LoginService", new TestLoginService()); //TODO:测试待移除
         registerService("sys.OrderService", new TestService()); //TODO:测试待移除
     }
 

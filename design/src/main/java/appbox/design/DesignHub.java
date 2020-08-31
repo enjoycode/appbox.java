@@ -1,4 +1,4 @@
 package appbox.design;
 
-public class DesignHub {
+public final class DesignHub {
 }

@@ -14,6 +14,7 @@ public final class InvokeResponse implements IMessage {
         public static final byte ServiceInnerError      = 3;
         public static final byte SessionNotExists       = 4;
         public static final byte SerializeResponseFail  = 5;
+        public static final byte Timeout                = 6;
     }
 
     private static final ObjectPool<InvokeResponse> pool = new ObjectPool<>(InvokeResponse::new, 32);
@@ -28,8 +29,8 @@ public final class InvokeResponse implements IMessage {
 
     public int    reqId;
     public short  shard;
-    public byte   error;
-    public Object result;
+    public byte   error;    //无错误=0
+    public Object result;   //有错误则为错误信息
 
     @Override
     public byte MessageType() {

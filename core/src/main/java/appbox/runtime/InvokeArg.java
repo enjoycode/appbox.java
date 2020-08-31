@@ -27,8 +27,16 @@ public final class InvokeArg {
         value = v;
     }
 
+    public short getShort() {
+        return (short) value;
+    }
+
     public int getInt() {
         return (int) value;
+    }
+
+    public String getString() {
+        return (String) value;
     }
 
     public void writeTo(BinSerializer bs) throws Exception {
