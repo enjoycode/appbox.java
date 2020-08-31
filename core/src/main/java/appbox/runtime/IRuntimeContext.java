@@ -9,6 +9,11 @@ import java.util.concurrent.CompletableFuture;
 public interface IRuntimeContext {
 
     /**
+     * 当前会话信息
+     */
+    ISessionInfo currentSession();
+
+    /**
      * 异步调用服务
      *
      * @param method eg: "sys.OrderService.Save"
