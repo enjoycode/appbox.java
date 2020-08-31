@@ -18,6 +18,11 @@ public abstract class DesignNode
 
     private String text;
 
+    public DesignNode()
+    {
+        nodes = new NodeCollection(this);
+    }
+
     //region ====Checkout相关属性====
     private int version;
 
@@ -70,11 +75,6 @@ public abstract class DesignNode
         //return getCheckoutInfo() != null && getCheckoutInfo().getDeveloperOuid().equals(RuntimeContext.getCurrent().getCurrentSession().getLeafOrgUnitID());
     }
     //endregion
-
-    public DesignNode()
-    {
-        nodes = new NodeCollection(this);
-    }
 
     /**
      目前仅支持签出ModelRootNode及ModelNode

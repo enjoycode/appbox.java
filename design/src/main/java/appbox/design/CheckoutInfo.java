@@ -1,6 +1,5 @@
 package appbox.design;
 
-import appbox.*;
 import java.util.*;
 
 /** 
@@ -8,76 +7,15 @@ import java.util.*;
 */
 public final class CheckoutInfo
 {
-	private DesignNodeType NodeType = DesignNodeType.values()[0];
-	public DesignNodeType getNodeType()
-	{
-		return NodeType;
-	}
-	private void setNodeType(DesignNodeType value)
-	{
-		NodeType = value;
-	}
-	public boolean getIsSingleModel()
-	{
-		return getNodeType().getValue() >= DesignNodeType.EntityModelNode.getValue();
-	}
-	private String TargetID;
-	public String getTargetID()
-	{
-		return TargetID;
-	}
-	private void setTargetID(String value)
-	{
-		TargetID = value;
-	}
-//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-//ORIGINAL LINE: private uint Version;
-	private int Version;
-//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-//ORIGINAL LINE: public uint getVersion()
-	public int getVersion()
-	{
-		return Version;
-	}
-//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-//ORIGINAL LINE: private void setVersion(uint value)
-	private void setVersion(int value)
-	{
-		Version = value;
-	}
-	private String DeveloperName;
-	public String getDeveloperName()
-	{
-		return DeveloperName;
-	}
-	private void setDeveloperName(String value)
-	{
-		DeveloperName = value;
-	}
-	private UUID DeveloperOuid;
-	public UUID getDeveloperOuid()
-	{
-		return DeveloperOuid;
-	}
-	private void setDeveloperOuid(UUID value)
-	{
-		DeveloperOuid = value;
-	}
-	private java.time.LocalDateTime CheckoutTime = java.time.LocalDateTime.MIN;
-	public java.time.LocalDateTime getCheckoutTime()
-	{
-		return CheckoutTime;
-	}
-	public void setCheckoutTime(java.time.LocalDateTime value)
-	{
-		CheckoutTime = value;
-	}
+	private DesignNodeType nodeType = DesignNodeType.values()[0];
+	private String targetID;
+	private int version;
+	private String developerName;
+	private UUID developerOuid;
 
 	public CheckoutInfo() {
 	}
 
-	//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-//ORIGINAL LINE: public CheckoutInfo(DesignNodeType nodeType, string targetID, uint version, string developerName, Guid developerOuID)
 	public CheckoutInfo(DesignNodeType nodeType, String targetID, int version, String developerName, UUID developerOuID)
 	{
 		setNodeType(nodeType);
@@ -95,9 +33,61 @@ public final class CheckoutInfo
 
 	public static String MakeKey(DesignNodeType nodeType, String targetId)
 	{
-//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-//ORIGINAL LINE: return string.Format("{0}|{1}", (byte)nodeType, targetId);
 		return String.format("%1$s|%2$s", (byte)nodeType.getValue(), targetId);
 	}
-
+	//region ====get set====
+	public DesignNodeType getNodeType()
+	{
+		return nodeType;
+	}
+	private void setNodeType(DesignNodeType value)
+	{
+		nodeType = value;
+	}
+	public boolean getIsSingleModel()
+	{
+		return getNodeType().getValue() >= DesignNodeType.EntityModelNode.getValue();
+	}
+	public String getTargetID()
+	{
+		return targetID;
+	}
+	private void setTargetID(String value)
+	{
+		targetID = value;
+	}
+	public int getVersion()
+	{
+		return version;
+	}
+	private void setVersion(int value)
+	{
+		version = value;
+	}
+	public String getDeveloperName()
+	{
+		return developerName;
+	}
+	private void setDeveloperName(String value)
+	{
+		developerName = value;
+	}
+	public UUID getDeveloperOuid()
+	{
+		return developerOuid;
+	}
+	private void setDeveloperOuid(UUID value)
+	{
+		developerOuid = value;
+	}
+	private java.time.LocalDateTime CheckoutTime = java.time.LocalDateTime.MIN;
+	public java.time.LocalDateTime getCheckoutTime()
+	{
+		return CheckoutTime;
+	}
+	public void setCheckoutTime(java.time.LocalDateTime value)
+	{
+		CheckoutTime = value;
+	}
+	//endregion
 }

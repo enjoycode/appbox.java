@@ -11,16 +11,6 @@ public final class NodeCollection
 	private DesignNode owner;
 	private List<DesignNode> nodes;
 
-	public int getCount()
-	{
-		return nodes.size();
-	}
-
-	public DesignNode getItem(int index)
-	{
-		return nodes.get(index);
-	}
-
 	public NodeCollection(DesignNode owner)
 	{
 		this.owner = owner;
@@ -93,6 +83,16 @@ public final class NodeCollection
 			}
 		}
 		return false;
+	}
+
+	public int getCount()
+	{
+		return nodes.size();
+	}
+
+	public DesignNode getItem(int index)
+	{
+		return nodes.get(index);
 	}
 
 	public DesignNode[] ToArray()

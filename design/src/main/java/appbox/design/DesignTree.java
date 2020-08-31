@@ -1,9 +1,5 @@
 package appbox.design;
 
-
-import appbox.model.ApplicationModel;
-import appbox.model.ModelBase;
-
 import java.util.*;
 
 public final class DesignTree {
@@ -12,55 +8,11 @@ public final class DesignTree {
     /**
      * 仅用于加载树时临时放入挂起的模型
      */
-    private StagedItems Staged;
-
-    public StagedItems getStaged() {
-        return Staged;
-    }
-
-    public void setStaged(StagedItems value) {
-        Staged = value;
-    }
-
-    private DesignHub DesignHub;
-
-    public DesignHub getDesignHub() {
-        return DesignHub;
-    }
-
-    public void setDesignHub(DesignHub value) {
-        DesignHub = value;
-    }
-
-    private NodeCollection Nodes;
-
-    public NodeCollection getNodes() {
-        return Nodes;
-    }
-
-    private void setNodes(NodeCollection value) {
-        Nodes = value;
-    }
-
-    private byte StoreRootNode;
-
-    public byte getStoreRootNode() {
-        return StoreRootNode;
-    }
-
-    public void setStoreRootNode(byte value) {
-        StoreRootNode = value;
-    }
-
-    private byte AppRootNode;
-
-    public byte getAppRootNode() {
-        return AppRootNode;
-    }
-
-    public void setAppRootNode(byte value) {
-        AppRootNode = value;
-    }
+    private StagedItems staged;
+    private DesignHub designHub;
+    private NodeCollection nodes;
+    private byte storeRootNode;
+    private byte appRootNode;
 
     public DesignTree(DesignHub hub) {
         setDesignHub(hub);
@@ -78,7 +30,52 @@ public final class DesignTree {
             }
         }
     }
+    //region ====get set====
+    public StagedItems getStaged() {
+        return staged;
+    }
 
+    public void setStaged(StagedItems value) {
+        staged = value;
+    }
+
+
+    public DesignHub getDesignHub() {
+        return designHub;
+    }
+
+    public void setDesignHub(DesignHub value) {
+        designHub = value;
+    }
+
+
+    public NodeCollection getNodes() {
+        return nodes;
+    }
+
+    private void setNodes(NodeCollection value) {
+        nodes = value;
+    }
+
+
+
+    public byte getStoreRootNode() {
+        return storeRootNode;
+    }
+
+    public void setStoreRootNode(byte value) {
+        storeRootNode = value;
+    }
+
+
+    public byte getAppRootNode() {
+        return appRootNode;
+    }
+
+    public void setAppRootNode(byte value) {
+        appRootNode = value;
+    }
+    //endregion
     //region ====LoadMethod====
 //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
 //ORIGINAL LINE: internal async Task LoadNodesAsync()
