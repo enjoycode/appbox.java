@@ -1,4 +1,4 @@
-package appbox.design;
+package appbox.design.common;
 
 import appbox.model.ModelBase;
 

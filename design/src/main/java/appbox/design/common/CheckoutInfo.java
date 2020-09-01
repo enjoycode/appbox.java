@@ -1,4 +1,6 @@
-package appbox.design;
+package appbox.design.common;
+
+import appbox.design.tree.DesignNodeType;
 
 import java.util.*;
 
@@ -8,10 +10,10 @@ import java.util.*;
 public final class CheckoutInfo
 {
 	private DesignNodeType nodeType = DesignNodeType.values()[0];
-	private String targetID;
-	private int version;
-	private String developerName;
-	private UUID developerOuid;
+	private String         targetID;
+	private int            version;
+	private String         developerName;
+	private UUID           developerOuid;
 
 	public CheckoutInfo() {
 	}

@@ -1,4 +1,7 @@
-package appbox.design;
+package appbox.design.tree;
+
+import appbox.design.tree.DesignNode;
+import appbox.design.tree.DesignNodeType;
 
 import java.util.*;
 
@@ -8,7 +11,7 @@ import java.util.*;
 public final class NodeCollection
 {
 
-	private DesignNode owner;
+	private DesignNode       owner;
 	private List<DesignNode> nodes;
 
 	public NodeCollection(DesignNode owner)
