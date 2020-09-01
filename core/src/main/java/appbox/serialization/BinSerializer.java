@@ -2,7 +2,10 @@ package appbox.serialization;
 
 import appbox.cache.ObjectPool;
 
-public final class BinSerializer {
+import java.io.IOException;
+import java.io.OutputStream;
+
+public final class BinSerializer extends OutputStream /*暂继承OutputStream方便写Json*/ {
     private static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, 32);
 
     public static BinSerializer rentFromPool(IOutputStream stream) {
@@ -60,6 +63,7 @@ public final class BinSerializer {
     /**
      * 写入原始数据
      */
+    @Override
     public void write(byte[] src, int offset, int count) {
         _stream.write(src, offset, count);
     }
@@ -162,4 +166,15 @@ public final class BinSerializer {
     public void finishWriteFields() throws Exception {
         _stream.writeVariant(0);
     }
+
+    //region ===OutputStream====
+    @Override
+    public void write(int i) throws IOException {
+        try {
+            writeByte((byte) i);
+        } catch (Exception e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+    //endregion
 }
