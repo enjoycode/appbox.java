@@ -35,6 +35,10 @@ public final class InvokeArg {
         return (int) value;
     }
 
+    public long getLong() {
+        return (long) value;
+    }
+
     public String getString() {
         return (String) value;
     }

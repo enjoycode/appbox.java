@@ -51,17 +51,16 @@ public final class MessageDispatcher {
         //根据协议类型反序列化消息
         var req = InvokeRequire.rentFromPool();
         req.reqId = NativeSmq.getMsgId(first);
-        boolean isDeserializeError = false;
+        Exception deserializeError = null;
         try {
             IHostMessageChannel.deserialize(req, first);
         } catch (Exception e) {
-            InvokeRequire.backToPool(req); //失败归还
-            isDeserializeError = true;
+            deserializeError = e;
         } finally {
             channel.returnAllChunks(first);
         }
 
-        if (!isDeserializeError) {
+        if (deserializeError == null) {
             //异步交给运行时服务容器处理
             CompletableFuture.supplyAsync(() -> RuntimeContext.invokeAsync(req.service, req.args))
                     .thenCompose(r -> r).handle((r, ex) -> {
@@ -86,9 +85,26 @@ public final class MessageDispatcher {
 
                 return null;
             });
-        } else {
-            Log.warn("反序列化InvokeRequire错误");
-            //TODO: 发送反序列化失败错误给调用者
+        } else { //反序列化错误直接发送响应
+            Exception finalDeserializeError = deserializeError;
+            CompletableFuture.runAsync(() -> {
+                var res = InvokeResponse.rentFromPool();
+                res.reqId  = req.reqId;
+                res.shard  = req.shard;
+                res.error  = InvokeResponse.ErrorCode.DeserializeRequestFail;
+                res.result = finalDeserializeError.getMessage();
+
+                try {
+                    channel.sendMessage(channel.newMessageId(), res);
+                } catch (Exception e) {
+                    Log.warn("发送响应消息失败");
+                } finally {
+                    InvokeRequire.backToPool(req);
+                    InvokeResponse.backToPool(res);
+                }
+
+                Log.warn("反序列化InvokeRequire错误: " + finalDeserializeError.getMessage());
+            });
         }
     }
 

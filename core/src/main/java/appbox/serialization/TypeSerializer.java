@@ -1,8 +1,10 @@
 package appbox.serialization;
 
+import appbox.data.JsonResult;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.serialization.serializers.IntSerializer;
+import appbox.serialization.serializers.LongSerializer;
 import appbox.serialization.serializers.StringSerializer;
 import appbox.serialization.serializers.UserSerializer;
 
@@ -17,9 +19,12 @@ public abstract class TypeSerializer {
     static {
         Log.debug("开始注册序列化器...");
         registerKnownType(IntSerializer.instance);
+        registerKnownType(LongSerializer.instance);
         registerKnownType(StringSerializer.instance);
 
-        //----模型相关----
+        registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null/*不支持*/));
+
+      //----模型相关----
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
     }
 

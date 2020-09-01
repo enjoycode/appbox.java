@@ -5,20 +5,20 @@ import appbox.serialization.BinSerializer;
 import appbox.serialization.PayloadType;
 import appbox.serialization.TypeSerializer;
 
-public final class IntSerializer extends TypeSerializer {
-    public static final IntSerializer instance = new IntSerializer();
+public final class LongSerializer extends TypeSerializer {
+    public static final LongSerializer instance = new LongSerializer();
 
-    private IntSerializer() {
-        super(PayloadType.Int32, Integer.class, null);
+    private LongSerializer() {
+        super(PayloadType.Int64, Long.class, null);
     }
 
     @Override
     public void write(BinSerializer bs, Object value) throws Exception {
-        bs.writeInt((int) value);
+        bs.writeLong((long) value);
     }
 
     @Override
     public Object read(BinDeserializer bs, Object value) throws Exception {
-        return bs.readInt();
+        return bs.readLong();
     }
 }
