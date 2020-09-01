@@ -38,8 +38,9 @@ public class TestMsgSerialization {
     @Test
     public void saveClientInvokeRequire() throws Exception {
         var req = InvokeRequire.rentFromPool();
-        req.shard   = 0;
-        req.service = "sys.OrderService.SayHello";
+        req.shard     = 0;
+        req.sessionId = 0;
+        req.service   = "sys.OrderService.SayHello";
         req.addArg(12345);
 
         var output = new BytesOutputStream(8192);
@@ -47,6 +48,6 @@ public class TestMsgSerialization {
         req.writeTo(os);
         BinSerializer.backToPool(os);
 
-        output.saveToFile(2/*偏移2字节shard*/, "src/test/java/InvokeRequire.bin");
+        output.saveToFile(10/*偏移shard + sessionId*/, "src/test/java/InvokeRequire.bin");
     }
 }

@@ -30,6 +30,7 @@ public final class InvokeRequire implements IMessage {
     //TODO: srcId //原客户端请求的标识，http始终为0，websocket区分
     public       int                  reqId;    //主进程转发的消息id,用于等待子进程处理完. 不用序列化
     public       short                shard;    //主进程的shard
+    public       long                 sessionId;//当前会话标识，无则=0
     public       String               service;  //eg: sys.OrderService.Save
     public final ArrayList<InvokeArg> args;
 
@@ -67,6 +68,7 @@ public final class InvokeRequire implements IMessage {
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
         bs.writeShort(shard);
+        bs.writeLong(sessionId);
         bs.writeString(service);
         bs.writeVariant(args.size());
         for (int i = 0; i < args.size(); i++) {
@@ -76,8 +78,9 @@ public final class InvokeRequire implements IMessage {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-        shard   = bs.readShort();
-        service = bs.readString();
+        shard     = bs.readShort();
+        sessionId = bs.readLong();
+        service   = bs.readString();
         int argsLen = bs.readVariant();
         for (int i = 0; i < argsLen; i++) {
             var arg = InvokeArg.pool.rent();

@@ -62,6 +62,7 @@ public final class MessageDispatcher {
 
         if (deserializeError == null) {
             //异步交给运行时服务容器处理
+            //TODO:调用服务前设置会话信息
             CompletableFuture.supplyAsync(() -> RuntimeContext.invokeAsync(req.service, req.args))
                     .thenCompose(r -> r).handle((r, ex) -> {
                 //发送请求响应
