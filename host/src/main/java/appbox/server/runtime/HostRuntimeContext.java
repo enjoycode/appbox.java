@@ -33,6 +33,18 @@ public final class HostRuntimeContext implements IRuntimeContext {
         }
     }
 
+    /**
+     * 仅用于消息分发器调用服务前设置
+     * @param session 可为空
+     */
+    public void setCurrentSession(ISessionInfo session) {
+        if (session == null) {
+            _session.remove();
+        } else {
+            _session.set(session);
+        }
+    }
+
     @Override
     public ISessionInfo currentSession() {
         return _session.get();

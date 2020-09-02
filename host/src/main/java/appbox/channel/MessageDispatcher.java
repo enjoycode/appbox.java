@@ -1,8 +1,10 @@
 package appbox.channel;
 
+import appbox.runtime.ISessionInfo;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.messages.*;
 import appbox.logging.Log;
+import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;
 import com.sun.jna.Pointer;
 
@@ -62,9 +64,16 @@ public final class MessageDispatcher {
 
         if (deserializeError == null) {
             //异步交给运行时服务容器处理
-            //TODO:调用服务前设置会话信息
-            CompletableFuture.supplyAsync(() -> RuntimeContext.invokeAsync(req.service, req.args))
-                    .thenCompose(r -> r).handle((r, ex) -> {
+            CompletableFuture.supplyAsync(() -> {
+                //先设置当前会话信息
+                ISessionInfo sessionInfo = null;
+                if (req.sessionId != 0) {
+                    sessionInfo = SessionManager.tryGet(req.sessionId);
+                }
+                ((HostRuntimeContext) RuntimeContext.current()).setCurrentSession(sessionInfo);
+                //再调用服务
+                return RuntimeContext.invokeAsync(req.service, req.args);
+            }).thenCompose(r -> r).handle((r, ex) -> {
                 //发送请求响应
                 var res = InvokeResponse.rentFromPool();
                 res.reqId  = req.reqId;
