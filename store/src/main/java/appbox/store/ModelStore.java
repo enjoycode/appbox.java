@@ -1,6 +1,7 @@
 package appbox.store;
 
 import appbox.channel.messages.KVInsertModelRequire;
+import appbox.channel.messages.KVScanModelsRequest;
 import appbox.channel.messages.StoreResponse;
 import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
@@ -36,6 +37,22 @@ public final class ModelStore {
         return SysStoreApi.execKVInsertAsync(req).thenAccept(r -> {
             checkStoreError(r);
         });
+    }
+
+    /**
+     * 用于设计时加载所有ApplicationModel
+     */
+    public static CompletableFuture<ApplicationModel[]> loadAllApplicationAsync() {
+        var req = new KVScanModelsRequest(KVScanModelsRequest.ModelsType.Applications);
+        return SysStoreApi.execKVScanAsync(req).thenApply(r -> (ApplicationModel[]) r.result);
+    }
+
+    /**
+     * 用于设计时加载所有Model
+     */
+    public static CompletableFuture<ModelBase[]> loadAllModelAsync() {
+        var req = new KVScanModelsRequest(KVScanModelsRequest.ModelsType.Models);
+        return SysStoreApi.execKVScanAsync(req).thenApply(r -> (ModelBase[]) r.result);
     }
 
 }
