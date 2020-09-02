@@ -6,6 +6,7 @@ public final class ApplicationRootNode extends DesignNode implements ITopNode {
 
     public ApplicationRootNode(DesignTree tree) {
         designTree = tree;
+        text       = "Applications";
     }
 
     @Override

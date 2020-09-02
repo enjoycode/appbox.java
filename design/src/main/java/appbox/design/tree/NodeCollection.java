@@ -1,14 +1,14 @@
 package appbox.design.tree;
 
-import appbox.design.tree.DesignNode;
-import appbox.design.tree.DesignNodeType;
+import appbox.serialization.IJsonSerializable;
+import com.alibaba.fastjson.JSONWriter;
 
 import java.util.*;
 
 /**
  * 子节点，添加时自动排序
  */
-public final class NodeCollection {
+public final class NodeCollection implements IJsonSerializable {
 
     public final DesignNode       owner; //Maybe null
     public final List<DesignNode> nodes;
@@ -82,5 +82,16 @@ public final class NodeCollection {
     public DesignNode getItem(int index) {
         return nodes.get(index);
     }
+
+    //region ====IJsonSerializable====
+    @Override
+    public void writeToJson(JSONWriter writer) {
+        writer.startArray();
+        for (DesignNode node : nodes) {
+            node.writeToJson(writer);
+        }
+        writer.endArray();
+    }
+    //endregion
 
 }

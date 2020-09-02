@@ -6,7 +6,9 @@ dependencies {
     // 依赖 core 模块
     implementation project(':core')
     implementation project(':store')
+
     // 依赖的第三方包
+    implementation 'com.alibaba:fastjson:1.2.73'
     implementation fileTree(dir: 'lib', include:['*.jar'])
 }
 

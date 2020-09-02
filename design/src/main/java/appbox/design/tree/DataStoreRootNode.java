@@ -6,6 +6,7 @@ public final class DataStoreRootNode extends DesignNode implements ITopNode {
 
     public DataStoreRootNode(DesignTree tree) {
         designTree = tree;
+        text       = "DataStore";
     }
 
     @Override
