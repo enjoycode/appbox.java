@@ -94,7 +94,7 @@ public class TestSysStore {
 
     @Test
     public void testKVScanModels() throws Exception {
-        var req = new KVScanModelsRequest();
+        var req = new KVScanModelsRequest(KVScanModelsRequest.ModelsType.Applications);
         var fut = SysStoreApi.execKVScanAsync(req);
         var res = fut.get();
         assertEquals(0, res.errorCode);

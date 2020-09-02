@@ -16,6 +16,12 @@ public final class ApplicationModel implements IBinSerializable {
         return _id;
     }
 
+    /**
+     * Only for serialization
+     */
+    public ApplicationModel() {
+    }
+
     public ApplicationModel(String owner, String name) {
         _owner = owner;
         _name  = name;
@@ -24,6 +30,10 @@ public final class ApplicationModel implements IBinSerializable {
 
     public void setAppStoreId(byte id) {
         _storeId = id;
+    }
+
+    public void setDevModelIdSeq(int seq) {
+        _devModelIdSeq = seq;
     }
 
     //region ====IBinSerializable====
