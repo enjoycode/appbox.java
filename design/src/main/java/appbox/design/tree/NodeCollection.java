@@ -21,7 +21,7 @@ public final class NodeCollection implements IJsonSerializable {
     public int Add(DesignNode item) {
         item.setParent(owner);
         //特定owner找到插入点
-        if (owner != null && (owner.getNodeType() == DesignNodeType.ModelRootNode || owner.getNodeType() == DesignNodeType.FolderNode)) {
+        if (owner != null && (owner.nodeType() == DesignNodeType.ModelRootNode || owner.nodeType() == DesignNodeType.FolderNode)) {
             int index = -1;
             for (var i = 0; i < nodes.size(); i++) {
                 if (!item.equals(nodes.get(i))) {

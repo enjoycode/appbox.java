@@ -15,7 +15,7 @@ public final class ApplicationRootNode extends DesignNode implements ITopNode {
     }
 
     @Override
-    public DesignNodeType getNodeType() {
+    public DesignNodeType nodeType() {
         return DesignNodeType.ApplicationRoot;
     }
 }

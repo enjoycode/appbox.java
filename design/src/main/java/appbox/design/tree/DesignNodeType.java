@@ -22,7 +22,7 @@ public enum DesignNodeType
 
     public static final int SIZE = java.lang.Byte.SIZE;
 
-    private byte byteValue;
+    public final byte                                      value;
     private static java.util.HashMap<Byte, DesignNodeType> mappings;
     private static java.util.HashMap<Byte, DesignNodeType> getMappings()
     {
@@ -39,15 +39,10 @@ public enum DesignNodeType
         return mappings;
     }
 
-    private DesignNodeType(byte value)
+    DesignNodeType(byte value)
     {
-        byteValue = value;
+        this.value = value;
         getMappings().put(value, this);
-    }
-
-    public byte getValue()
-    {
-        return byteValue;
     }
 
     public static DesignNodeType forValue(byte value)

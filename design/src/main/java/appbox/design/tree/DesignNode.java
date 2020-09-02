@@ -17,11 +17,12 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     private   int          version;
     private   CheckoutInfo _checkoutInfo;
 
-    public final NodeCollection nodes = new NodeCollection(this);
+    protected final NodeCollection nodes = new NodeCollection(this);
 
-    public abstract DesignNodeType getNodeType();
+    public abstract DesignNodeType nodeType();
 
     //region ====Properties====
+
     /**
      * 用于前端回传时识别是哪个节点
      */
@@ -56,7 +57,9 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
      * 是否允许签出
      */
     public boolean getAllowCheckout() {
-        if (getNodeType() == DesignNodeType.ModelRootNode || getNodeType().getValue() >= DesignNodeType.EntityModelNode.getValue() || getNodeType() == DesignNodeType.DataStoreNode) {
+        if (nodeType() == DesignNodeType.ModelRootNode
+                || nodeType().value >= DesignNodeType.EntityModelNode.value
+                || nodeType() == DesignNodeType.DataStoreNode) {
             return true;
         }
         //TODO:根据证书判断
@@ -146,10 +149,10 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     //region ====Comparable====
     @Override
     public int compareTo(DesignNode designNode) {
-        if (getNodeType() == designNode.getNodeType()) {
+        if (nodeType() == designNode.nodeType()) {
             return String.CASE_INSENSITIVE_ORDER.compare(getText(), designNode.getText());
         }
-        return Byte.compare(getNodeType().getValue(), designNode.getNodeType().getValue());
+        return Byte.compare(nodeType().value, designNode.nodeType().value);
     }
     //endregion
 
@@ -162,7 +165,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         writer.writeValue(id());
 
         writer.writeKey("Type");
-        writer.writeValue(getNodeType().getValue());
+        writer.writeValue(nodeType().value);
 
         writer.writeKey("Text");
         writer.writeValue(getText());

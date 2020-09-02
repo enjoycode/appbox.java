@@ -6,7 +6,7 @@ import appbox.design.tree.DesignNodeType;
 public final class ModelNode extends DesignNode
 {
 	@Override
-	public DesignNodeType getNodeType() {
+	public DesignNodeType nodeType() {
 		return null;
 	}
 }
