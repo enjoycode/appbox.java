@@ -1,5 +1,6 @@
 package appbox.server.runtime;
 
+import appbox.design.services.DesignService;
 import appbox.runtime.IService;
 import appbox.server.services.SystemService;
 import appbox.server.services.TestService;
@@ -20,6 +21,7 @@ public final class ServiceContainer {
     public ServiceContainer() {
         //注册系统服务
         registerService("sys.System", new SystemService());
+        registerService("sys.DesignService", new DesignService());
         registerService("sys.OrderService", new TestService()); //TODO:测试待移除
     }
 

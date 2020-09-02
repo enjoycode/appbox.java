@@ -1,6 +1,8 @@
 package appbox.design;
 
-public interface IDeveloperSession {
+import appbox.runtime.ISessionInfo;
+
+public interface IDeveloperSession extends ISessionInfo {
 
     /**
      * 获取当前用户会话的开发者的DesighHub实例

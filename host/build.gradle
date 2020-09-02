@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation project(':core')
     implementation project(':store')
+    implementation project(':design')
 
     implementation 'com.alibaba:fastjson:1.2.73'
     implementation 'com.alibaba:transmittable-thread-local:2.11.5'

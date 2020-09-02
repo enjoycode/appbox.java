@@ -1,13 +1,15 @@
 package appbox.channel;
 
 import appbox.data.TreeNodePath;
-import appbox.runtime.ISessionInfo;
+import appbox.design.DesignHub;
+import appbox.design.IDeveloperSession;
 
 import java.util.UUID;
 
-public final class WebSession implements ISessionInfo {
-    private final long   _id;
-    private final String _name;
+public final class WebSession implements IDeveloperSession {
+    private final long      _id;
+    private final String    _name;
+    private       DesignHub _designHub;
 
     public WebSession(long id, String name) {
         _id   = id;
@@ -57,5 +59,19 @@ public final class WebSession implements ISessionInfo {
     @Override
     public UUID externalId() {
         return null;
+    }
+
+    @Override
+    public synchronized DesignHub getDesignHub() {
+        if (_designHub == null) {
+            //TODO:创建DesignHub实例前，判断当前用户是否具备开发者权限
+            _designHub = new DesignHub(this);
+        }
+        return _designHub;
+    }
+
+    @Override
+    public void sendEvent(int source, String body) {
+
     }
 }
