@@ -1,10 +1,10 @@
 package appbox.design.tree;
 
-import appbox.data.JsonResult;
 import appbox.design.common.CheckoutInfo;
 import appbox.design.DesignHub;
 import appbox.design.services.StagedItems;
-import appbox.logging.Log;
+import appbox.model.ApplicationModel;
+import appbox.store.ModelStore;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -78,8 +78,17 @@ public final class DesignTree {
         //TODO: 先加载签出信息及StagedModels
         //TODO: 暂简单实现
 
-        _loadingFlag.compareAndExchange(1, 0);
-        return CompletableFuture.completedFuture(true);
+        return ModelStore.loadAllApplicationAsync().thenApply(apps -> {
+            for (ApplicationModel app : apps) {
+                appRootNode.nodes.Add(new ApplicationNode(this, app));
+            }
+
+            _loadingFlag.compareAndExchange(1, 0);
+            return true;
+            //return ModelStore.loadAllModelAsync().thenApply(models -> {
+            //    return true;
+            //});
+        });
     }
     //endregion
 

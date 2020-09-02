@@ -170,6 +170,11 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         writer.writeKey("Text");
         writer.writeValue(getText());
 
+        if (!(this instanceof ModelNode)) {
+            writer.writeKey("Nodes");
+            nodes.writeToJson(writer);
+        }
+
         writer.endObject();
     }
 
