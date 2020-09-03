@@ -5,6 +5,8 @@ plugins {
 dependencies {
     // 依赖 core 模块
     implementation project(':core')
+    // brotli压缩库，暂使用此库
+    implementation 'com.nixxcode.jvmbrotli:jvmbrotli:0.2.0'
 }
 
 tasks.jar {

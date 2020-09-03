@@ -7,6 +7,8 @@ import appbox.serialization.*;
 import appbox.utils.IdUtil;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSerialization {
@@ -15,7 +17,7 @@ public class TestSerialization {
     public void testUtf8EncodeAndDecode() {
         var s = "中A";
         try {
-            var bytes = s.getBytes("UTF-8");
+            var bytes = s.getBytes(StandardCharsets.UTF_8);
             assertEquals(bytes.length, 4);
             var d = new String(bytes, 0, bytes.length, "UTF-8");
             assertEquals(s, d);
