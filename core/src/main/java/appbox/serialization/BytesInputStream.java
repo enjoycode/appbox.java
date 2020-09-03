@@ -5,21 +5,26 @@ package appbox.serialization;
  */
 public final class BytesInputStream implements IInputStream {
     public final byte[] data;
-    private       int    index;
+    private      int    pos;
 
     public BytesInputStream(int size) {
-        data  = new byte[size];
-        index = 0;
+        data = new byte[size];
+        pos  = 0;
+    }
+
+    @Override
+    public int remaining() {
+        return data.length - pos;
     }
 
     @Override
     public byte readByte() throws Exception {
-        return data[index++];
+        return data[pos++];
     }
 
     @Override
     public void read(byte[] dest, int offset, int count) throws Exception {
-        System.arraycopy(data, index, dest, offset, count);
-        index += count;
+        System.arraycopy(data, pos, dest, offset, count);
+        pos += count;
     }
 }

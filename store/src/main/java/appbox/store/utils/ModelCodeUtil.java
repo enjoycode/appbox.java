@@ -1,5 +1,6 @@
 package appbox.store.utils;
 
+import appbox.store.ServiceCode;
 import com.nixxcode.jvmbrotli.common.BrotliLoader;
 import com.nixxcode.jvmbrotli.dec.BrotliInputStream;
 import com.nixxcode.jvmbrotli.enc.BrotliOutputStream;
@@ -13,11 +14,6 @@ import java.nio.charset.StandardCharsets;
  * 用于压缩编解码模型的代码
  */
 public final class ModelCodeUtil {
-    public static final class ServiceCode {
-        public String  sourceCode;
-        public boolean isDeclare;
-    }
-
 
     static {
         BrotliLoader.isBrotliAvailable();
@@ -54,7 +50,7 @@ public final class ModelCodeUtil {
         var input = new ByteArrayInputStream(data);
         //读压缩类型, TODO:检查类型或根据类型解压缩
         var compressType = input.read();
-        serviceCode.isDeclare = input.read() == 1 ? true : false;
+        serviceCode.isDeclare = input.read() == 1;
 
         var brotli   = new BrotliInputStream(input);
         var utf8data = brotli.readAllBytes();

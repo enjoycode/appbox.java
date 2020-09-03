@@ -1,9 +1,6 @@
 package appbox.store;
 
-import appbox.channel.messages.KVInsertModelCodeRequire;
-import appbox.channel.messages.KVInsertModelRequire;
-import appbox.channel.messages.KVScanModelsRequest;
-import appbox.channel.messages.StoreResponse;
+import appbox.channel.messages.*;
 import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
 
@@ -52,6 +49,15 @@ public final class ModelStore {
         req.txnId.copyFrom(txn.id());
 
         return SysStoreApi.execKVInsertAsync(req).thenAccept(r -> checkStoreError(r));
+    }
+
+    /**
+     * 仅用于加载服务模型的代码
+     */
+    public static CompletableFuture<ServiceCode> loadServiceCodeAsync(long modelId) {
+        var req = new KVGetModelCodeRequest(modelId);
+
+        return SysStoreApi.execKVGetAsync(req).thenApply(r -> (ServiceCode) r.result);
     }
     //endregion
 

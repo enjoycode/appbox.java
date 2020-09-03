@@ -18,4 +18,13 @@ public enum ModelType {
     ModelType(byte v) {
         value = v;
     }
+
+    public static ModelType fromValue(byte v) {
+        for (ModelType item : ModelType.values()) {
+            if (item.value == v) {
+                return item;
+            }
+        }
+        throw new RuntimeException("Unknown value: " + v);
+    }
 }

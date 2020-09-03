@@ -2,6 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.BinSerializer;
 import appbox.store.KeyUtil;
+import appbox.utils.IdUtil;
 
 public final class KVInsertModelCodeRequire extends KVInsertRequire {
     public long   modelId;
@@ -23,6 +24,7 @@ public final class KVInsertModelCodeRequire extends KVInsertRequire {
         //refs
         bs.writeVariant(0);
         //data
+        bs.writeByte(IdUtil.getModelTypeFromModelId(modelId).value); //注意写入模型类型信息
         bs.write(codeData);
     }
 }

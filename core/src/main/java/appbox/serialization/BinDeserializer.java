@@ -55,6 +55,15 @@ public final class BinDeserializer {
         _stream.skip(size);
     }
 
+    /**
+     * 读剩余字节
+     */
+    public byte[] readRemaining() throws Exception {
+        var data = new byte[_stream.remaining()];
+        _stream.read(data, 0, data.length);
+        return data;
+    }
+
     public boolean readBool() throws Exception {
         return _stream.readBool();
     }

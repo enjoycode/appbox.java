@@ -2,6 +2,11 @@ package appbox.serialization;
 
 public interface IInputStream {
 
+    /**
+     * 流内剩余字节数
+     */
+    int remaining();
+
     byte readByte() throws Exception;
 
     void read(byte[] dest, int offset, int count) throws Exception;

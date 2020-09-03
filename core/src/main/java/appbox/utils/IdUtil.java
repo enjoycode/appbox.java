@@ -34,6 +34,11 @@ public final class IdUtil {
         return (int) (modelId >>> MODELID_APPID_OFFSET);
     }
 
+    public static ModelType getModelTypeFromModelId(long modelId) {
+        byte value = (byte) ((modelId >> MODELID_TYPE_OFFSET) & 0xFF);
+        return ModelType.fromValue(value);
+    }
+
     /**
      * 根据模型层级及成员流水号生成实体成员标识
      */
