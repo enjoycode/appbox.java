@@ -10,55 +10,55 @@ import java.util.*;
  */
 public final class NodeCollection implements IJsonSerializable {
 
-    public final DesignNode       owner; //Maybe null
-    public final List<DesignNode> nodes;
+    public final    DesignNode       owner; //Maybe null
+    protected final List<DesignNode> list;
 
     public NodeCollection(DesignNode owner) {
         this.owner = owner;
-        nodes      = new ArrayList<DesignNode>();
+        list       = new ArrayList<>();
     }
 
-    public int Add(DesignNode item) {
+    public int add(DesignNode item) {
         item.setParent(owner);
         //特定owner找到插入点
         if (owner != null && (owner.nodeType() == DesignNodeType.ModelRootNode || owner.nodeType() == DesignNodeType.FolderNode)) {
             int index = -1;
-            for (var i = 0; i < nodes.size(); i++) {
-                if (!item.equals(nodes.get(i))) {
+            for (var i = 0; i < list.size(); i++) {
+                if (!item.equals(list.get(i))) {
                     index = i;
                     break;
                 }
             }
             if (index != -1) {
-                nodes.add(index, item);
+                list.add(index, item);
                 return index;
             }
 
-            nodes.add(item);
-            return nodes.size() - 1;
+            list.add(item);
+            return list.size() - 1;
         }
 
-        nodes.add(item);
-        return nodes.size() - 1;
+        list.add(item);
+        return list.size() - 1;
     }
 
-    public void Remove(DesignNode item) {
-        int index = nodes.indexOf(item);
+    public void remove(DesignNode item) {
+        int index = list.indexOf(item);
         if (index >= 0) {
             item.setParent(null);
-            nodes.remove(index);
+            list.remove(index);
         }
     }
 
-    public void Clear() {
-        for (int i = 0; i < nodes.size(); i++) {
-            nodes.get(i).setParent(null);
+    public void clear() {
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).setParent(null);
         }
-        nodes.clear();
+        list.clear();
     }
 
-    public DesignNode Find(java.util.function.Predicate<DesignNode> match) {
-        for (DesignNode node : nodes) {
+    public DesignNode find(java.util.function.Predicate<DesignNode> match) {
+        for (DesignNode node : list) {
             if (match.test(node)) {
                 return node;
             }
@@ -66,8 +66,8 @@ public final class NodeCollection implements IJsonSerializable {
         return null;
     }
 
-    public boolean Exists(java.util.function.Predicate<DesignNode> match) {
-        for (DesignNode node : nodes) {
+    public boolean exists(java.util.function.Predicate<DesignNode> match) {
+        for (DesignNode node : list) {
             if (match.test(node)) {
                 return true;
             }
@@ -75,19 +75,19 @@ public final class NodeCollection implements IJsonSerializable {
         return false;
     }
 
-    public int getCount() {
-        return nodes.size();
+    public int count() {
+        return list.size();
     }
 
-    public DesignNode getItem(int index) {
-        return nodes.get(index);
+    public DesignNode get(int index) {
+        return list.get(index);
     }
 
     //region ====IJsonSerializable====
     @Override
     public void writeToJson(JSONWriter writer) {
         writer.startArray();
-        for (DesignNode node : nodes) {
+        for (DesignNode node : list) {
             node.writeToJson(writer);
         }
         writer.endArray();

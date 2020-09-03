@@ -13,33 +13,42 @@ public final class ApplicationNode extends DesignNode {
 
         //添加各类模型的根节点
         var modelRoot = new ModelRootNode(ModelType.Entity);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
         //tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.Service);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
 
         modelRoot = new ModelRootNode(ModelType.View);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
 
         modelRoot = new ModelRootNode(ModelType.Workflow);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
 
         modelRoot = new ModelRootNode(ModelType.Report);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
 
         modelRoot = new ModelRootNode(ModelType.Enum);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
 
         modelRoot = new ModelRootNode(ModelType.Event);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
 
         modelRoot = new ModelRootNode(ModelType.Permission);
-        nodes.Add(modelRoot);
+        nodes.add(modelRoot);
     }
 
     @Override
     public DesignNodeType nodeType() {
         return DesignNodeType.ApplicationNode;
+    }
+
+    public ModelRootNode findModelRootNode(ModelType modelType) {
+        for (DesignNode node : nodes.list) {
+            if (node instanceof ModelRootNode && ((ModelRootNode) node).targetType == modelType) {
+                return (ModelRootNode) node;
+            }
+        }
+        return null;
     }
 }

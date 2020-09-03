@@ -31,25 +31,29 @@ public abstract class ModelBase implements IBinSerializable {
     }
 
     //region ====Properties====
-    public ModelLayer modelLayer() {
+    public final ModelLayer modelLayer() {
         return ModelLayer.fromValue((byte) (_id & IdUtil.MODELID_LAYER_MASK));
     }
 
-    public long id() {
+    public final long id() {
         return _id;
     }
 
-    public String name() {
+    public final int appId() {
+        return IdUtil.getAppIdFromModelId(_id);
+    }
+
+    public final String name() {
         return _name;
     }
 
     public abstract ModelType modelType();
 
-    public boolean designMode() {
+    public final boolean designMode() {
         return _designMode;
     }
 
-    public PersistentState persistentState() {
+    public final PersistentState persistentState() {
         return _persistentState;
     }
     //endregion

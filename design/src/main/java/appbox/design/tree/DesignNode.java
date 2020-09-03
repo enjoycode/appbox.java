@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutionException;
 public abstract class DesignNode implements Comparable<DesignNode>, IJsonSerializable {
 
     private   DesignNode   parent;
-    protected String       text;
+    protected String       text; //TODO: remove it，改为抽象
     private   int          version;
     private   CheckoutInfo _checkoutInfo;
 

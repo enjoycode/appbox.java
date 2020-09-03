@@ -4,6 +4,8 @@ import appbox.design.common.CheckoutInfo;
 import appbox.design.DesignHub;
 import appbox.design.services.StagedItems;
 import appbox.model.ApplicationModel;
+import appbox.model.ModelBase;
+import appbox.model.ModelType;
 import appbox.store.ModelStore;
 
 import java.util.*;
@@ -28,16 +30,6 @@ public final class DesignTree {
     public DesignTree(DesignHub hub) {
         designHub = hub;
         nodes     = new NodeCollection(null);
-    }
-
-    //用于签出节点成功后添加签出信息列表
-    public void AddCheckoutInfos(List<CheckoutInfo> infos) {
-        for (int i = 0; i < infos.size(); i++) {
-            String key = CheckoutInfo.MakeKey(infos.get(i).getNodeType(), infos.get(i).getTargetID());
-            if (!_checkouts.containsKey(key)) {
-                _checkouts.put(key, infos.get(i));
-            }
-        }
     }
 
     //region ====Properties====
@@ -65,30 +57,78 @@ public final class DesignTree {
         }
 
         //先判断是否已经加载过，是则清空准备重新加载
-        if (nodes.getCount() > 0) {
-            nodes.Clear();
+        if (nodes.count() > 0) {
+            nodes.clear();
         }
 
         //开始加载
         storeRootNode = new DataStoreRootNode(this);
-        nodes.Add(storeRootNode);
+        nodes.add(storeRootNode);
         appRootNode = new ApplicationRootNode(this);
-        nodes.Add(appRootNode);
+        nodes.add(appRootNode);
 
         //TODO: 先加载签出信息及StagedModels
         //TODO: 暂简单实现
 
-        return ModelStore.loadAllApplicationAsync().thenApply(apps -> {
+        return ModelStore.loadAllApplicationAsync().thenCompose(apps -> { //加载所有Apps
             for (ApplicationModel app : apps) {
-                appRootNode.nodes.Add(new ApplicationNode(this, app));
+                appRootNode.nodes.add(new ApplicationNode(this, app));
+            }
+
+            return ModelStore.loadAllModelAsync(); //加载所有模型
+        }).thenCompose(models -> {
+            //TODO:先移除已删除的
+            for (ModelBase m : models) {
+                if (m.modelType() == ModelType.DataStore) {
+                    //TODO:
+                } else {
+                    findModelRootNode(m.appId(), m.modelType()).addModel(m);
+                }
             }
 
             _loadingFlag.compareAndExchange(1, 0);
-            return true;
-            //return ModelStore.loadAllModelAsync().thenApply(models -> {
-            //    return true;
-            //});
+            return CompletableFuture.completedFuture(true);
         });
+    }
+    //endregion
+
+    //region ====Find Methods====
+    public ApplicationNode findApplicationNode(int appId) {
+        for (DesignNode node : appRootNode.nodes.list) {
+            if (((ApplicationNode) node).model.id() == appId) {
+                return (ApplicationNode) node;
+            }
+        }
+        return null;
+    }
+
+    public ModelRootNode findModelRootNode(int appId, ModelType modelType) {
+        for (DesignNode node : appRootNode.nodes.list) {
+            var appNode = (ApplicationNode) node;
+            if (appNode.model.id() == appId) {
+                return appNode.findModelRootNode(modelType);
+            }
+        }
+        return null;
+    }
+    //endregion
+
+    //region ====Checkout Methods====
+    //用于签出节点成功后添加签出信息列表
+    public void AddCheckoutInfos(List<CheckoutInfo> infos) {
+        for (int i = 0; i < infos.size(); i++) {
+            String key = CheckoutInfo.MakeKey(infos.get(i).getNodeType(), infos.get(i).getTargetID());
+            if (!_checkouts.containsKey(key)) {
+                _checkouts.put(key, infos.get(i));
+            }
+        }
+    }
+
+    /**
+     * 给设计节点添加签出信息，如果已签出的模型节点则用本地存储替换原模型
+     */
+    protected void bindCheckoutInfo(DesignNode node, boolean isNewNode) {
+        //TODO:
     }
     //endregion
 
