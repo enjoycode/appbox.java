@@ -21,7 +21,7 @@ public final class ModelRootNode extends DesignNode {
     @Override
     public String id() {
         var appIdString = Integer.toUnsignedString(((ApplicationNode) getParent()).model.id());
-        return appIdString + "-" + targetType.value;
+        return String.format("%s-%s", appIdString, targetType.value);
     }
 
     @Override
