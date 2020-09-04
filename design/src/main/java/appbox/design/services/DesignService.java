@@ -1,9 +1,7 @@
 package appbox.design.services;
 
 import appbox.design.IDeveloperSession;
-import appbox.design.handlers.Checkout;
-import appbox.design.handlers.IRequestHandler;
-import appbox.design.handlers.LoadDesignTree;
+import appbox.design.handlers.*;
 import appbox.design.handlers.service.OpenServiceModel;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArg;
@@ -19,6 +17,8 @@ public final class DesignService implements IService {
         put("LoadDesignTree", new LoadDesignTree());
         put("Checkout", new Checkout());
         put("OpenServiceModel", new OpenServiceModel());
+        put("ChangeBuffer", new ChangeBuffer());
+        put("CheckCode", new CheckCode());
     }};
 
     @Override
