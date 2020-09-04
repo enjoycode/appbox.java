@@ -1,6 +1,7 @@
 package appbox.design.services;
 
 import appbox.design.IDeveloperSession;
+import appbox.design.handlers.Checkout;
 import appbox.design.handlers.IRequestHandler;
 import appbox.design.handlers.LoadDesignTree;
 import appbox.design.handlers.service.OpenServiceModel;
@@ -16,6 +17,7 @@ public final class DesignService implements IService {
 
     private final HashMap<CharSequence, IRequestHandler> handlers = new HashMap<>() {{
         put("LoadDesignTree", new LoadDesignTree());
+        put("Checkout", new Checkout());
         put("OpenServiceModel", new OpenServiceModel());
     }};
 

@@ -3,6 +3,7 @@ package appbox.serialization;
 import appbox.cache.ObjectPool;
 
 public final class BinDeserializer {
+    //region ====ObjectPool====
     private static final ObjectPool<BinDeserializer> pool = new ObjectPool<>(BinDeserializer::new, 32);
 
     public static BinDeserializer rentFromPool(IInputStream stream) {
@@ -15,6 +16,7 @@ public final class BinDeserializer {
         obj._stream = null;
         pool.back(obj);
     }
+    //endregion
 
     private BinDeserializer() {
     }
