@@ -29,7 +29,7 @@ public final class ModelRootNode extends DesignNode {
         return DesignNodeType.ModelRootNode;
     }
 
-    //region ====Add & Remove Child Method====
+    //region ====Add & Remove Child Methods====
 
     /**
      * 仅用于加载设计树时添加节点并绑定签出信息
@@ -47,4 +47,9 @@ public final class ModelRootNode extends DesignNode {
     }
     //endregion
 
+    //region ====Find Methods====
+    protected final ModelNode findModelNode(long modelId) {
+        return _models.get(modelId);
+    }
+    //endregion
 }

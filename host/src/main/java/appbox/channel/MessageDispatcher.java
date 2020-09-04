@@ -126,6 +126,8 @@ public final class MessageDispatcher {
             IHostMessageChannel.deserialize(res, first);
         } catch (Exception e) {
             isDeserializeError = true;
+            Log.warn("反序列化StoreResponse错误: ");
+            e.printStackTrace();
         } finally {
             channel.returnAllChunks(first);
         }
@@ -139,7 +141,6 @@ public final class MessageDispatcher {
                 SysStoreApi.onResponseDeserializeError(res.reqId);
                 //TODO:res back to pool, if it is pooled.
             });
-            Log.warn("反序列化StoreResponse错误");
         }
     }
 }

@@ -3,13 +3,18 @@ package appbox.store;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
+import appbox.model.ModelType;
+import appbox.model.ServiceModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.FieldWithOrder;
 import appbox.model.entity.SysIndexModel;
+import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
 
 import static appbox.model.entity.DataFieldModel.DataFieldType;
 
+import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -30,9 +35,10 @@ public final class StoreInitiator {
                 //开始事务保存
                 return KVTransaction.beginAsync()
                         .thenCompose(txn -> ModelStore.insertModelAsync(emploeeModel, txn)
-                        .thenCompose(r -> ModelStore.insertModelAsync(enterpriseModel, txn))
-                        .thenApply(r -> txn.commitAsync())
-                        .thenApply(r -> true));
+                                .thenCompose(r -> ModelStore.insertModelAsync(enterpriseModel, txn))
+                                .thenCompose(r -> createServiceModel("TestService", 1, null, txn))
+                                .thenApply(r -> txn.commitAsync())
+                                .thenApply(r -> true));
             } catch (Exception e) {
                 Log.error(e.getMessage());
                 return CompletableFuture.completedFuture(false);
@@ -96,5 +102,29 @@ public final class StoreInitiator {
         model.addSysMember(address, (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET));
 
         return model;
+    }
+
+    private static CompletableFuture<Boolean> createServiceModel(String name, long idIndex, UUID folderId, KVTransaction txn) {
+        var modelId = ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
+                | ((long) ModelType.Service.value << IdUtil.MODELID_TYPE_OFFSET)
+                | (idIndex << IdUtil.MODELID_SEQ_OFFSET);
+        var model = new ServiceModel(modelId, name);
+        model.setFolderId(folderId);
+
+        //TODO:添加依赖项
+        return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
+            try {
+                var codeStream = StoreInitiator.class.getResourceAsStream(String.format("/services/%s.java", name));
+                var utf8Data   = codeStream.readAllBytes();
+                codeStream.close();
+                var codeData = ModelCodeUtil.encodeServiceCodeData(utf8Data, false);
+                return ModelStore.upsertModelCodeAsync(modelId, codeData, txn);
+            } catch (IOException e) {
+                return CompletableFuture.failedFuture(e);
+            }
+        }).thenCompose(r -> {
+            //TODO:继续处理编译好的类库
+            return CompletableFuture.completedFuture(true);
+        });
     }
 }

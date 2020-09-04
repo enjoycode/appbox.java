@@ -148,7 +148,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     //region ====Comparable====
     @Override
-    public int compareTo(DesignNode designNode) {
+    public final int compareTo(DesignNode designNode) {
         if (nodeType() == designNode.nodeType()) {
             return String.CASE_INSENSITIVE_ORDER.compare(getText(), designNode.getText());
         }
@@ -158,7 +158,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     //region ====IJsonSerializable====
     @Override
-    public void writeToJson(JSONWriter writer) {
+    public final void writeToJson(JSONWriter writer) {
         writer.startObject();
 
         writer.writeKey("ID");
@@ -175,47 +175,16 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
             nodes.writeToJson(writer);
         }
 
+        //TODO:签出信息
+
+        //写入子类成员
+        writeJsonMembers(writer);
+
         writer.endObject();
     }
 
-    /*public final void WriteToJson(Utf8JsonWriter writer, WritedObjects objrefs)
-    {
-        writer.WriteString("ID", getID());
-        writer.WriteNumber("Type", getNodeType().getValue());
-        writer.WriteString("Text", getText());
-        if (!(this instanceof ModelNode))
-        {
-            writer.WritePropertyName("Nodes");
-            writer.WriteStartArray();
-            for (int i = 0; i < getNodes().getCount(); i++)
-            {
-                appbox.Serialization.JsonExtensions.Serialize(writer, getNodes().getItem(i), objrefs);
-            }
-            writer.WriteEndArray();
-        }
-
-        if (getCheckoutInfo() != null)
-        {
-            writer.WritePropertyName("CheckoutBy");
-            if (getIsCheckoutByMe())
-            {
-                writer.WriteStringValue("Me");
-            }
-            else
-            {
-                writer.WriteStringValue(getCheckoutInfo().getDeveloperName());
-            }
-        }
-
-        WriteMembers(writer, objrefs);
+    protected void writeJsonMembers(JSONWriter writer) {
     }
-
-    *//**
-     用于继承类重写。来写入子类的成员
-     *//*
-    public void WriteMembers(Utf8JsonWriter writer, WritedObjects objrefs)
-    {
-    }*/
     //endregion
 
 }

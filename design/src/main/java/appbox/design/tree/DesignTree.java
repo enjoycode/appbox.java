@@ -7,6 +7,7 @@ import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
 import appbox.model.ModelType;
 import appbox.store.ModelStore;
+import appbox.utils.IdUtil;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -18,10 +19,7 @@ public final class DesignTree {
     public final DesignHub      designHub;
     public final NodeCollection nodes;
 
-    /**
-     * 仅用于加载树时临时放入挂起的模型
-     */
-    private StagedItems         staged;
+    private StagedItems         staged;       //仅用于加载树时临时放入挂起的模型
     private DataStoreRootNode   storeRootNode;
     private ApplicationRootNode appRootNode;
 
@@ -110,6 +108,18 @@ public final class DesignTree {
             }
         }
         return null;
+    }
+
+    /**
+     * 根据模型类型及标识号获取相应的节点
+     */
+    public final ModelNode findModelNode(ModelType modelType, long modelId) {
+        var appId         = IdUtil.getAppIdFromModelId(modelId);
+        var modelRootNode = findModelRootNode(appId, modelType);
+        if (modelRootNode == null) {
+            return null;
+        }
+        return modelRootNode.findModelNode(modelId);
     }
     //endregion
 

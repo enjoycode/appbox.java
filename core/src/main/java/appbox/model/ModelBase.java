@@ -6,6 +6,8 @@ import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
 import appbox.utils.IdUtil;
 
+import java.util.UUID;
+
 /**
  * 模型基类，实例分为设计时与运行时
  */
@@ -16,6 +18,7 @@ public abstract class ModelBase implements IBinSerializable {
     private boolean         _designMode;
     private int             _version;
     private PersistentState _persistentState;
+    private UUID            _folderId;
 
     /**
      * only for Serialization
@@ -56,6 +59,14 @@ public abstract class ModelBase implements IBinSerializable {
     public final PersistentState persistentState() {
         return _persistentState;
     }
+
+    public final UUID getFolderId() {
+        return _folderId;
+    }
+
+    public final void setFolderId(UUID folderId) {
+        _folderId = folderId;
+    }
     //endregion
 
     //region ====Design Methods====
@@ -88,6 +99,8 @@ public abstract class ModelBase implements IBinSerializable {
     public static ModelBase makeModelByType(byte type) throws Exception {
         if (type == ModelType.Entity.value) {
             return new EntityModel();
+        } else if (type == ModelType.Service.value) {
+            return new ServiceModel();
         }
         throw new RuntimeException("Unknown model type: " + type);
     }

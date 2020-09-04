@@ -1,9 +1,10 @@
 package appbox.design.tree;
 
 import appbox.design.DesignHub;
-import appbox.design.tree.DesignNode;
-import appbox.design.tree.DesignNodeType;
 import appbox.model.ModelBase;
+import appbox.model.ModelType;
+import appbox.model.ServiceModel;
+import com.alibaba.fastjson.JSONWriter;
 
 public final class ModelNode extends DesignNode {
     private         ModelBase       _model;
@@ -45,6 +46,24 @@ public final class ModelNode extends DesignNode {
                 return DesignNodeType.EventModelNode;
             default:
                 throw new RuntimeException("Unknow design node type.");
+        }
+    }
+
+    @Override
+    protected void writeJsonMembers(JSONWriter writer) {
+        super.writeJsonMembers(writer);
+
+        writer.writeKey("App"); //TODO:考虑不用，由前端处理
+        writer.writeValue(appNode.model.name());
+
+        writer.writeKey("ModelType");
+        writer.writeValue(_model.modelType().value);
+
+        //TODO: EntityModel输出对应的存储标识，方便前端IDE筛选相同存储的实体
+        //ServiceModel输出Language
+        if (_model.modelType() == ModelType.Service) {
+            writer.writeKey("Language");
+            writer.writeValue(((ServiceModel)_model).language().value);
         }
     }
 }

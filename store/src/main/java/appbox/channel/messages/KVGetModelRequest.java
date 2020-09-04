@@ -23,6 +23,6 @@ public final class KVGetModelRequest extends KVGetRequest {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-
+        throw new RuntimeException("Not supported.");
     }
 }

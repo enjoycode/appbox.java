@@ -30,7 +30,11 @@ public final class ModelCodeUtil {
     public static byte[] encodeServiceCode(String sourceCode, boolean isDeclare) throws IOException {
         //TODO:判断少量代码不压缩
         var utf8data = sourceCode.getBytes(StandardCharsets.UTF_8);
-        var out      = new ByteArrayOutputStream();
+        return encodeServiceCodeData(utf8data, isDeclare);
+    }
+
+    public static byte[] encodeServiceCodeData(byte[] utf8CodeData, boolean isDeclare) throws IOException {
+        var out = new ByteArrayOutputStream();
         //写入1字节压缩类型标记
         out.write(1);
         //写入1字节是否声明代码
@@ -38,7 +42,7 @@ public final class ModelCodeUtil {
 
         //再写入压缩的utf8
         var brotli = new BrotliOutputStream(out);
-        brotli.write(utf8data);
+        brotli.write(utf8CodeData);
         brotli.close();
 
         return out.toByteArray();

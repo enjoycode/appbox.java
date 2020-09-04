@@ -3,6 +3,7 @@ package appbox.design.services;
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.IRequestHandler;
 import appbox.design.handlers.LoadDesignTree;
+import appbox.design.handlers.service.OpenServiceModel;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArg;
 import appbox.runtime.RuntimeContext;
@@ -15,6 +16,7 @@ public final class DesignService implements IService {
 
     private final HashMap<CharSequence, IRequestHandler> handlers = new HashMap<>() {{
         put("LoadDesignTree", new LoadDesignTree());
+        put("OpenServiceModel", new OpenServiceModel());
     }};
 
     @Override
