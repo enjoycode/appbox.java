@@ -8,6 +8,7 @@ dependencies {
     implementation project(':store')
 
     // 依赖的第三方包
+    implementation 'com.github.javaparser:javaparser-symbol-solver-core:+'
     implementation 'com.alibaba:fastjson:1.2.73'
     implementation fileTree(dir: 'lib', include:['*.jar'])
 }
