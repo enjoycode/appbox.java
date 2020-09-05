@@ -1,7 +1,7 @@
 
 public class Main {
     public void sayHello() {
-        aa;
+        aa = 2;
     }
 
     public int getNumber() {
