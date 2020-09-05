@@ -19,6 +19,7 @@ public final class DesignService implements IService {
         put("OpenServiceModel", new OpenServiceModel());
         put("ChangeBuffer", new ChangeBuffer());
         put("CheckCode", new CheckCode());
+        put("CloseDesigner", new CloseDesigner());
     }};
 
     @Override
