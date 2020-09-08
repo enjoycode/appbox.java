@@ -2,6 +2,7 @@ package appbox.design.handlers.service;
 
 import appbox.design.DesignHub;
 import appbox.design.handlers.IRequestHandler;
+import appbox.design.services.code.JavaDocument;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;
 import appbox.store.ModelStore;
@@ -21,6 +22,11 @@ public final class OpenServiceModel implements IRequestHandler {
 
         //TODO:暂直接从存储加载源码
         return ModelStore.loadServiceCodeAsync(modelId).thenApply(r -> {
+            //TODO:测试代码加入打开的
+            var fileName = String.format("%s.Services.%s.java",
+                    modelNode.appNode.model.name(), modelNode.model().name());
+            var doc = new JavaDocument(fileName, r.sourceCode);
+            hub.typeSystem.opendDocs.put(fileName, doc);
             return r.sourceCode;
         });
     }

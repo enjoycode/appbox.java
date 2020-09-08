@@ -11,6 +11,9 @@ dependencies {
     implementation 'com.github.javaparser:javaparser-symbol-solver-core:+'
     implementation 'com.alibaba:fastjson:1.2.73'
     implementation fileTree(dir: 'lib', include:['*.jar'])
+
+//    testImplementation 'org.mockito:mockito-core:+'
+//    testImplementation 'commons-io:commons-io:+'
 }
 
 tasks.jar {

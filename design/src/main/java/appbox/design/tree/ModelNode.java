@@ -8,7 +8,7 @@ import com.alibaba.fastjson.JSONWriter;
 
 public final class ModelNode extends DesignNode {
     private         ModelBase       _model;
-    protected final ApplicationNode appNode;
+    public final ApplicationNode appNode;
 
     public ModelNode(ModelBase targetModel, DesignHub hub) { //注意：新建时尚未加入树，无法获取TreeView实例
         appNode = hub.designTree.findApplicationNode(targetModel.appId());

@@ -18,6 +18,7 @@ public final class DesignService implements IService {
         put("Checkout", new Checkout());
         put("OpenServiceModel", new OpenServiceModel());
         put("ChangeBuffer", new ChangeBuffer());
+        put("GetCompletion", new GetCompletion());
         put("CheckCode", new CheckCode());
         put("CloseDesigner", new CloseDesigner());
     }};
