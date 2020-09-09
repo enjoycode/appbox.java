@@ -1,23 +1,15 @@
 
 import com.github.javaparser.JavaParser;
-import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
-import com.github.javaparser.symbolsolver.javaparsermodel.contexts.CompilationUnitContext;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-import org.eclipse.jdt.ls.core.internal.JDTUtils;
-import org.eclipse.jdt.ls.core.internal.syntaxserver.SyntaxLanguageServer;
 import org.javacs.JavaLanguageServer;
 import org.javacs.lsp.InitializeParams;
-import org.javacs.lsp.TextDocumentPositionParams;
 import org.javacs.lsp.WorkspaceSymbolParams;
 import org.junit.jupiter.api.Test;
 
@@ -87,13 +79,27 @@ public class TestLanguageServer {
     }
 
     @Test
-    public void testTokenRange() {
+    public void testParseExpression() {
         var src = "class A {\n int sayHello() {\n return 1;\n}\n}";
+        var reflectionTypeSolver = new ReflectionTypeSolver();
+        var symbolSolver = new JavaSymbolSolver(reflectionTypeSolver);
         var parser = new JavaParser();
-        var res = parser.parse(src);
-        var cu = res.getResult().get();
-        var tokenRange = cu.getTokenRange();
-        assertNotNull(cu);
+        parser.getParserConfiguration().setSymbolResolver(symbolSolver);
+
+        var res = parser.parseExpression("Integer");
+        var exp = res.getResult().get();
+
+        CompilationUnit cu = new CompilationUnit();
+        var cls = cu.addClass("MyClass").setPublic(true);
+        exp.setParentNode(cu);
+
+        var type = symbolSolver.calculateType(exp);
+        assertNotNull(type);
+
+        //var res = parser.parse(src);
+        //var cu = res.getResult().get();
+        //var tokenRange = cu.getTokenRange();
+        //assertNotNull(cu);
     }
 
 }

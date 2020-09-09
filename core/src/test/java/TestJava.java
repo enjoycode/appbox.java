@@ -41,11 +41,14 @@ public class TestJava {
         assertEquals(b, Long.parseUnsignedLong(b1));
     }
 
-    //@Test
-    //void testCast() {
-    //    Object v = (byte)1;
-    //    int r = (int)v;
-    //    assertEquals(1, r);
-    //}
+    @Test
+    void testCast() {
+        var sb = new StringBuffer("a");
+        sb.replace(0,0,"Hello");
+        assertEquals("Helloa", sb.toString());
+
+        sb.replace(0, 5, "");
+        assertEquals("a", sb.toString());
+    }
 
 }
