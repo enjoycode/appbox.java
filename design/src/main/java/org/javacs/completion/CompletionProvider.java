@@ -32,6 +32,8 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeVariable;
+import javax.tools.JavaFileObject;
+
 import org.javacs.CompileTask;
 import org.javacs.CompilerProvider;
 import org.javacs.CompletionData;
@@ -129,6 +131,20 @@ public class CompletionProvider {
         var endOfLine = endOfLine(contents, (int) cursor);
         contents.insert(endOfLine, ';');
         var list = compileAndComplete(file, contents.toString(), cursor);
+        addTopLevelSnippets(task, list);
+        logCompletionTiming(started, list.items, list.isIncomplete);
+        return list;
+    }
+
+    //TODO:临时测试用
+    public CompletionList complete(JavaFileObject file, int line, int column) {
+        var started = Instant.now();
+        var task = compiler.parse(file);
+        var cursor = task.root.getLineMap().getPosition(line, column);
+        var contents = new PruneMethodBodies(task.task).scan(task.root, cursor);
+        var endOfLine = endOfLine(contents, (int) cursor);
+        contents.insert(endOfLine, ';');
+        var list = compileAndComplete(Path.of(file.toUri()), contents.toString(), cursor);
         addTopLevelSnippets(task, list);
         logCompletionTiming(started, list.items, list.isIncomplete);
         return list;

@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-class InferConfig {
+public class InferConfig {
     private static final Logger LOG = Logger.getLogger("main");
 
     /** Root of the workspace that is currently open in VSCode */
@@ -30,7 +30,7 @@ class InferConfig {
         this.gradleHome = gradleHome;
     }
 
-    InferConfig(Path workspaceRoot, Collection<String> externalDependencies) {
+    public InferConfig(Path workspaceRoot, Collection<String> externalDependencies) {
         this(workspaceRoot, externalDependencies, defaultMavenHome(), defaultGradleHome());
     }
 
@@ -47,7 +47,7 @@ class InferConfig {
     }
 
     /** Find .jar files for external dependencies, for examples maven dependencies in ~/.m2 or jars in bazel-genfiles */
-    Set<Path> classPath() {
+    public Set<Path> classPath() {
         // externalDependencies
         if (!externalDependencies.isEmpty()) {
             var result = new HashSet<Path>();
@@ -64,16 +64,16 @@ class InferConfig {
         }
 
         // Maven
-        var pomXml = workspaceRoot.resolve("pom.xml");
-        if (Files.exists(pomXml)) {
-            return mvnDependencies(pomXml, "dependency:list");
-        }
+        //var pomXml = workspaceRoot.resolve("pom.xml");
+        //if (Files.exists(pomXml)) {
+        //    return mvnDependencies(pomXml, "dependency:list");
+        //}
 
         // Bazel
-        var bazelWorkspaceRoot = bazelWorkspaceRoot();
-        if (Files.exists(bazelWorkspaceRoot.resolve("WORKSPACE"))) {
-            return bazelClasspath(bazelWorkspaceRoot);
-        }
+        //var bazelWorkspaceRoot = bazelWorkspaceRoot();
+        //if (Files.exists(bazelWorkspaceRoot.resolve("WORKSPACE"))) {
+        //    return bazelClasspath(bazelWorkspaceRoot);
+        //}
 
         return Collections.emptySet();
     }
@@ -88,7 +88,7 @@ class InferConfig {
     }
 
     /** Find source .jar files in local maven repository. */
-    Set<Path> buildDocPath() {
+    public Set<Path> buildDocPath() {
         // externalDependencies
         if (!externalDependencies.isEmpty()) {
             var result = new HashSet<Path>();

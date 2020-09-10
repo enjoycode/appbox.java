@@ -4,20 +4,16 @@ import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.logging.Log;
 import appbox.runtime.InvokeArg;
+import org.javacs.SourceFileObject;
+import org.javacs.completion.CompletionProvider;
 
-import java.util.ArrayList;
+import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public final class GetCompletion implements IRequestHandler {
-    public static final class AutoCompleteItem {
-        public String detail;           //returnType + displayText
-        public String documentation;
-        public int    kind;
-        public String insertText;
-        public String label;            //displayText
-    }
-
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
         var type           = args.get(0).getInt();
@@ -33,41 +29,14 @@ public final class GetCompletion implements IRequestHandler {
             return CompletableFuture.failedFuture(new Exception(error));
         }
 
-        //TODO:判断上一行结尾 ; { }
-        //TODO:以下测试
-        var list = new ArrayList<AutoCompleteItem>();
+        //继续测试
+        var provider = new CompletionProvider(hub.typeSystem.workspace.compiler());
+        var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
+        var list = provider.complete(sourceFile, line + 1, column + 1);
+        if (list != CompletionProvider.NOT_SUPPORTED) {
+            return CompletableFuture.completedFuture(new JsonResult(list.items));
+        }
 
-        var lineText = doc.sourceText.getLine(line);
-        Log.debug(lineText);
-        //if (lineText.endsWith(".")) {
-        //    var reflectionTypeSolver = new ReflectionTypeSolver();
-        //    var symbolSolver         = new JavaSymbolSolver(reflectionTypeSolver);
-        //    var parser               = new JavaParser();
-        //    parser.getParserConfiguration().setSymbolResolver(symbolSolver);
-        //
-        //    var cu = new CompilationUnit();
-        //    symbolSolver.inject(cu);
-        //    var res = parser.parseExpression(lineText.substring(0, column - 1));
-        //    var exp = res.getResult().get();
-        //    exp.setParentNode(cu);
-        //    var resolvedType = exp.calculateResolvedType();
-        //
-        //    if (resolvedType.isReferenceType()) {
-        //        var rtype   = resolvedType.asReferenceType();
-        //        var methods = rtype.getAllMethods();
-        //        for (var method : methods) {
-        //            var item = new AutoCompleteItem();
-        //            item.label         = method.getName();
-        //            item.insertText    = method.getName();
-        //            item.documentation = method.getQualifiedSignature();
-        //            item.detail        = method.getReturnType().describe() + " " + method.getName();
-        //            item.kind          = 1; //Kind.Method
-        //            list.add(item);
-        //        }
-        //    }
-        //
-        //}
-
-        return CompletableFuture.completedFuture(new JsonResult(list));
+        return CompletableFuture.completedFuture(new JsonResult(null));
     }
 }

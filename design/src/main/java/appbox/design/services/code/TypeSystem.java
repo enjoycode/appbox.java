@@ -7,7 +7,12 @@ import java.util.HashMap;
 
 public final class TypeSystem {
 
-    public final HashMap<String, JavaDocument> opendDocs = new HashMap<>();
+    public final HashMap<String, JavaDocument> opendDocs = new HashMap<>(); //TODO:移至Workspace内
+    public final Workspace workspace;
+
+    public TypeSystem() {
+        workspace = new Workspace(this);
+    }
 
     public void createModelDocument(ModelNode node) {
         var appName = node.appNode.model.name();
