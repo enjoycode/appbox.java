@@ -9,8 +9,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.javacs.JavaLanguageServer;
-import org.javacs.lsp.InitializeParams;
-import org.javacs.lsp.WorkspaceSymbolParams;
+import org.javacs.lsp.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -22,14 +21,20 @@ public class TestLanguageServer {
 
     @Test
     public void testSymbols() {
-        var ls = new JavaLanguageServer(new MockLanguageClient());
-        var init= new InitializeParams();
+        var ls   = new JavaLanguageServer(new MockLanguageClient());
+        var init = new InitializeParams();
         init.rootUri = Paths.get("src/test/examples/demo1").normalize().toUri();
         ls.initialize(init);
         ls.initialized();
 
         var symbols = ls.workspaceSymbols(new WorkspaceSymbolParams(""));
         assertNotNull(symbols);
+
+        var uri = Paths.get("src/test/examples/demo1/Service1.java").normalize().toUri();
+        var position = new TextDocumentPositionParams(
+                new TextDocumentIdentifier(uri),
+                new Position(5 - 1, 12 - 1));
+        var completions = ls.completion(position);
     }
 
     @Test
@@ -38,17 +43,17 @@ public class TestLanguageServer {
         try {
             var reflectionTypeSolver = new ReflectionTypeSolver();
             var javaParserTypeSolver = new JavaParserTypeSolver(demoFile.getParent());
-            var combinedSolver = new CombinedTypeSolver();
+            var combinedSolver       = new CombinedTypeSolver();
             combinedSolver.add(reflectionTypeSolver);
             combinedSolver.add(javaParserTypeSolver);
 
             var symbolSolver = new JavaSymbolSolver(combinedSolver);
-            var parser = new JavaParser();
+            var parser       = new JavaParser();
             parser.getParserConfiguration().setSymbolResolver(symbolSolver);
 
             //var cu =  StaticJavaParser.parse(demoFile);
             var result = parser.parse(demoFile);
-            var cu = result.getResult().get();
+            var cu     = result.getResult().get();
 
             cu.findFirst(NameExpr.class).ifPresent(n -> {
                 var type = n.calculateResolvedType();
@@ -63,38 +68,39 @@ public class TestLanguageServer {
 
     @Test
     public void testInjectTypeSolver() {
-        CompilationUnit cu = new CompilationUnit();
-        var cls = cu.addClass("MyClass").setPublic(true);
-        var field = cls.addField("int", "intField", Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC);
+        CompilationUnit cu    = new CompilationUnit();
+        var             cls   = cu.addClass("MyClass").setPublic(true);
+        var             field = cls.addField("int", "intField", Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC);
 
         var reflectionTypeSolver = new ReflectionTypeSolver();
-        var symbolSolver = new JavaSymbolSolver(reflectionTypeSolver);
+        var symbolSolver         = new JavaSymbolSolver(reflectionTypeSolver);
         symbolSolver.inject(cu);
 
         //var ctx = new CompilationUnitContext(cu, reflectionTypeSolver);
 
         ResolvedType type1 = field.getVariable(0).getType().resolve();
-        var type2 = reflectionTypeSolver.solveType("java.lang.String");
+        var          type2 = reflectionTypeSolver.solveType("java.lang.String");
         //var type3 = reflectionTypeSolver.solveType("java");
     }
 
     @Test
     public void testParseExpression() {
-        var src = "class A {\n int sayHello() {\n return 1;\n}\n}";
-        var reflectionTypeSolver = new ReflectionTypeSolver();
-        var symbolSolver = new JavaSymbolSolver(reflectionTypeSolver);
-        var parser = new JavaParser();
+        var src                  = "class A {\n int sayHello() {\n return 1;\n}\n}";
+        var reflectionTypeSolver = new ReflectionTypeSolver(false);
+        var symbolSolver         = new JavaSymbolSolver(reflectionTypeSolver);
+        var parser               = new JavaParser();
         parser.getParserConfiguration().setSymbolResolver(symbolSolver);
 
-        var res = parser.parseExpression("Integer");
+        var res = parser.parseBlock("{Integer a=1; a=2;}");
         var exp = res.getResult().get();
 
         CompilationUnit cu = new CompilationUnit();
-        var cls = cu.addClass("MyClass").setPublic(true);
+        symbolSolver.inject(cu);
         exp.setParentNode(cu);
 
-        var type = symbolSolver.calculateType(exp);
-        assertNotNull(type);
+        assertNotNull(res);
+        //var type = symbolSolver.calculateType(exp);
+        //assertNotNull(type);
 
         //var res = parser.parse(src);
         //var cu = res.getResult().get();

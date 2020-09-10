@@ -1,8 +1,8 @@
 
 public class Main {
     public void sayHello() {
-        aa = 2;
-        return aa;
+        Integer aa = 1;
+        aa.
     }
 
     //public int getNumber() {

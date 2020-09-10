@@ -10,10 +10,27 @@ dependencies {
     // 依赖的第三方包
     implementation 'com.github.javaparser:javaparser-symbol-solver-core:+'
     implementation 'com.alibaba:fastjson:1.2.73'
-    implementation fileTree(dir: 'lib', include:['*.jar'])
+    implementation fileTree(dir: 'lib', include: ['*.jar'])
 
 //    testImplementation 'org.mockito:mockito-core:+'
 //    testImplementation 'commons-io:commons-io:+'
+}
+
+compileJava {
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED')
 }
 
 tasks.jar {
