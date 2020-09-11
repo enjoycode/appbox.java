@@ -10,7 +10,6 @@ import org.javacs.completion.CompletionProvider;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public final class GetCompletion implements IRequestHandler {
@@ -30,13 +29,19 @@ public final class GetCompletion implements IRequestHandler {
         }
 
         //继续测试
-        var provider = new CompletionProvider(hub.typeSystem.workspace.compiler());
-        var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
-        var list = provider.complete(sourceFile, line + 1, column + 1);
-        if (list != CompletionProvider.NOT_SUPPORTED) {
-            return CompletableFuture.completedFuture(new JsonResult(list.items));
-        }
+        return CompletableFuture.supplyAsync(() -> {
+            Log.debug(String.format("GetCompletion: run at thread: %s", Thread.currentThread().getName()));
+            var provider   = new CompletionProvider(hub.typeSystem.workspace.compiler());
+            var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
+            var list       = provider.complete(sourceFile, line + 1, column + 1);
+            if (list != CompletionProvider.NOT_SUPPORTED) {
+                return new JsonResult(list.items);
+                //return CompletableFuture.completedFuture(new JsonResult(list.items));
+            }
 
-        return CompletableFuture.completedFuture(new JsonResult(null));
+            //return CompletableFuture.completedFuture(new JsonResult(null));
+            return new JsonResult(null); //TODO: empty array
+        }, hub.codeEditorTaskPool);
+
     }
 }

@@ -84,6 +84,7 @@ public final class MessageDispatcher {
                     channel.sendMessage(channel.newMessageId(), res);
                     if (ex != null) {
                         Log.error(String.format("Invoke Service[%s] Error:%s", req.service, ex.getMessage()));
+                        ex.getCause().printStackTrace(); //TODO: to log
                     }
                 } catch (Exception e) {
                     Log.warn("发送响应消息失败");

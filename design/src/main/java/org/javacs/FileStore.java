@@ -248,7 +248,7 @@ public class FileStore {
         try {
             return Files.readString(file);
         } catch (NoSuchFileException e) {
-            LOG.warning(e.getMessage());
+            LOG.warning("Can't read file contents: " +  e.getMessage());
             return "";
         } catch (IOException e) {
             throw new RuntimeException(e);

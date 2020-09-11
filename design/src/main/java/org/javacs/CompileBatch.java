@@ -57,17 +57,25 @@ class CompileBatch implements AutoCloseable {
             if (!err.getCode().equals("compiler.err.cant.resolve.location")) continue;
             if (!isValidFileRange(err)) continue;
             var className = errorText(err);
-            var packageName = packageName(err);
-            var location = findPackagePrivateClass(packageName, className);
-            if (location != FILE_NOT_FOUND) {
-                addFiles.add(location);
+            if (className != null && !className.isEmpty()) { //Rick: check
+                var packageName = packageName(err);
+                var location = findPackagePrivateClass(packageName, className);
+                if (location != FILE_NOT_FOUND) {
+                    addFiles.add(location);
+                }
             }
         }
         return addFiles;
     }
 
     private String errorText(javax.tools.Diagnostic<? extends javax.tools.JavaFileObject> err) {
-        var file = Paths.get(err.getSource().toUri());
+        //TODO: Rick: 临时fix read contents from SourceFileObject
+        var fileObject = err.getSource();
+        if (fileObject instanceof SourceFileObject && ((SourceFileObject)fileObject).contents != null) {
+            return null;
+        }
+
+        var file = Paths.get(fileObject.toUri());
         var contents = FileStore.contents(file);
         var begin = (int) err.getStartPosition();
         var end = (int) err.getEndPosition();

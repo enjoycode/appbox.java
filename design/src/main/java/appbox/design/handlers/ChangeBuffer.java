@@ -22,7 +22,7 @@ public final class ChangeBuffer implements IRequestHandler {
         Log.debug(String.format("ChangeBuffer: %d %s %d.%d-%d.%d %s",
                 type, targetId, startLine, startColumn, endLine, endColumn, newText));
 
-        var modelId = Long.parseUnsignedLong(targetId);
+        var modelId   = Long.parseUnsignedLong(targetId);
         var modelNode = hub.designTree.findModelNode(ModelType.Service, modelId);
         if (modelNode == null) {
             var error = String.format("Can't find ServiceModel: %d", modelId);
@@ -37,8 +37,11 @@ public final class ChangeBuffer implements IRequestHandler {
             return CompletableFuture.failedFuture(new Exception(error));
         }
 
-        doc.sourceText.changeText(startLine, startColumn, endLine, endColumn, newText);
-        //Log.debug(doc.sourceText.toString());
+        //注意队列顺序执行
+        CompletableFuture.runAsync(() -> {
+            doc.sourceText.changeText(startLine, startColumn, endLine, endColumn, newText);
+            //Log.debug(doc.sourceText.toString());
+        }, hub.codeEditorTaskPool);
 
         return CompletableFuture.completedFuture(null);
     }
