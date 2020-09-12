@@ -14,12 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import javax.lang.model.element.Element;
@@ -147,6 +142,12 @@ public class CompletionProvider {
         var list = compileAndComplete(Path.of(file.toUri()), contents.toString(), cursor);
         addTopLevelSnippets(task, list);
         logCompletionTiming(started, list.items, list.isIncomplete);
+        //Collections.sort(list.items, new Comparator<CompletionItem>() {
+        //    @Override
+        //    public int compare(CompletionItem m, CompletionItem n) {
+        //        return m.label.length()-n.label.length();
+        //    }
+        //});
         return list;
     }
 
@@ -328,10 +329,10 @@ public class CompletionProvider {
                 } else {
                     list.items.add(item(task, member));
                 }
-                if (list.items.size() + methods.size() > MAX_COMPLETION_ITEMS) {
-                    list.isIncomplete = true;
-                    break outer;
-                }
+                //if (list.items.size() + methods.size() > MAX_COMPLETION_ITEMS) {
+                //    list.isIncomplete = true;
+                //    break outer;
+                //}
             }
         }
         for (var overloads : methods.values()) {
@@ -360,10 +361,10 @@ public class CompletionProvider {
         for (var className : compiler.publicTopLevelTypes()) {
             if (!StringSearch.matchesPartialName(simpleName(className), partial)) continue;
             if (uniques.contains(className)) continue;
-            if (list.items.size() > MAX_COMPLETION_ITEMS) {
-                list.isIncomplete = true;
-                break;
-            }
+            //if (list.items.size() > MAX_COMPLETION_ITEMS) {
+            //    list.isIncomplete = true;
+            //    break;
+            //}
             list.items.add(classItem(className));
             uniques.add(className);
         }
@@ -579,10 +580,10 @@ public class CompletionProvider {
                 } else {
                     list.items.add(packageItem(segment));
                 }
-                if (list.items.size() > MAX_COMPLETION_ITEMS) {
-                    list.isIncomplete = true;
-                    return list;
-                }
+                //if (list.items.size() > MAX_COMPLETION_ITEMS) {
+                //    list.isIncomplete = true;
+                //    return list;
+                //}
             }
         }
         return list;
