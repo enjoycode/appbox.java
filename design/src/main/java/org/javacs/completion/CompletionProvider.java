@@ -375,23 +375,6 @@ public class CompletionProvider {
         }
         LOG.info("...found " + (list.items.size() - previousSize) + " class names");
     }
-    private void addPackageNames(CompilationUnitTree root, String partial, CompletionList list) {
-        var packageName = Objects.toString(root.getPackageName(), "");
-        var uniques = new HashSet<String>();
-        var previousSize = list.items.size();
-        for (var className : compiler.packagePrivateTopLevelTypes(packageName)) {
-            if (!StringSearch.matchesPartialName(className, partial)) continue;
-            list.items.add(classItem(className));
-            uniques.add(className);
-        }
-        for (var className : compiler.publicTopLevelTypes()) {
-            if (!StringSearch.matchesPartialName(simpleName(className), partial)) continue;
-            if (uniques.contains(className)) continue;
-            list.items.add(classItem(className));
-            uniques.add(className);
-        }
-        LOG.info("...found " + (list.items.size() - previousSize) + " class names");
-    }
 
     private CompletionList completeMemberSelect(
             CompileTask task, TreePath path, String partial, boolean endsWithParen) {
