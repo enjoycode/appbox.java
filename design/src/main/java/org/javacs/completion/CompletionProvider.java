@@ -161,6 +161,7 @@ public class CompletionProvider {
     }
 
     private CompletionList compileAndComplete(Path file, String contents, long cursor) {
+        CompletionList list=new CompletionList();
         var started = Instant.now();
         var source = new SourceFileObject(file, contents, Instant.now());
         var partial = partialIdentifier(contents, (int) cursor);
@@ -170,17 +171,23 @@ public class CompletionProvider {
             var path = new FindCompletionsAt(task.task).scan(task.root(), cursor);
             switch (path.getLeaf().getKind()) {
                 case IDENTIFIER:
-                    return completeIdentifier(task, path, partial, endsWithParen);
+                    list= completeIdentifier(task, path, partial, endsWithParen);
+                    list=completeImport(list,qualifiedPartialIdentifier(contents, (int) cursor));
+                    return list;
                 case MEMBER_SELECT:
-                    return completeMemberSelect(task, path, partial, endsWithParen);
+                    list=completeMemberSelect(task, path, partial, endsWithParen);
+                    list=completeImport(list,qualifiedPartialIdentifier(contents, (int) cursor));
+                    return list;
                 case MEMBER_REFERENCE:
-                    return completeMemberReference(task, path, partial);
+                    list=completeMemberReference(task, path, partial);
+                    return list;
                 case SWITCH:
-                    return completeSwitchConstant(task, path, partial);
+                    list=completeSwitchConstant(task, path, partial);
+                    return list;
                 case IMPORT:
-                    return completeImport(qualifiedPartialIdentifier(contents, (int) cursor));
+                    list=completeImport(list,qualifiedPartialIdentifier(contents, (int) cursor));
+                    return list;
                 default:
-                    var list = new CompletionList();
                     addKeywords(path, partial, list);
                     return list;
             }
@@ -251,10 +258,12 @@ public class CompletionProvider {
         var list = new CompletionList();
         list.items = completeUsingScope(task, path, partial, endsWithParen);
         addStaticImports(task, path.getCompilationUnit(), partial, endsWithParen, list);
+        //add class
         if (!list.isIncomplete && partial.length() > 0 && Character.isUpperCase(partial.charAt(0))) {
             addClassNames(path.getCompilationUnit(), partial, list);
         }
         addKeywords(path, partial, list);
+
         return list;
     }
 
@@ -361,10 +370,23 @@ public class CompletionProvider {
         for (var className : compiler.publicTopLevelTypes()) {
             if (!StringSearch.matchesPartialName(simpleName(className), partial)) continue;
             if (uniques.contains(className)) continue;
-            //if (list.items.size() > MAX_COMPLETION_ITEMS) {
-            //    list.isIncomplete = true;
-            //    break;
-            //}
+            list.items.add(classItem(className));
+            uniques.add(className);
+        }
+        LOG.info("...found " + (list.items.size() - previousSize) + " class names");
+    }
+    private void addPackageNames(CompilationUnitTree root, String partial, CompletionList list) {
+        var packageName = Objects.toString(root.getPackageName(), "");
+        var uniques = new HashSet<String>();
+        var previousSize = list.items.size();
+        for (var className : compiler.packagePrivateTopLevelTypes(packageName)) {
+            if (!StringSearch.matchesPartialName(className, partial)) continue;
+            list.items.add(classItem(className));
+            uniques.add(className);
+        }
+        for (var className : compiler.publicTopLevelTypes()) {
+            if (!StringSearch.matchesPartialName(simpleName(className), partial)) continue;
+            if (uniques.contains(className)) continue;
             list.items.add(classItem(className));
             uniques.add(className);
         }
@@ -387,8 +409,10 @@ public class CompletionProvider {
         } else if (type instanceof DeclaredType) {
             return completeDeclaredTypeMemberSelect(task, scope, (DeclaredType) type, isStatic, partial, endsWithParen);
         } else {
-            return NOT_SUPPORTED;
+            //TODO support for other type
+            return new CompletionList();
         }
+
     }
 
     private CompletionList completeArrayMemberSelect(boolean isStatic) {
@@ -562,10 +586,12 @@ public class CompletionProvider {
         return new CompletionList(false, list);
     }
 
-    private CompletionList completeImport(String path) {
+    private CompletionList completeImport(CompletionList list,String path) {
         LOG.info("...complete import");
         var names = new HashSet<String>();
-        var list = new CompletionList();
+        if(list==null){
+            list = new CompletionList();
+        }
         for (var className : compiler.publicTopLevelTypes()) {
             if (className.startsWith(path)) {
                 var start = path.lastIndexOf('.');
@@ -580,10 +606,6 @@ public class CompletionProvider {
                 } else {
                     list.items.add(packageItem(segment));
                 }
-                //if (list.items.size() > MAX_COMPLETION_ITEMS) {
-                //    list.isIncomplete = true;
-                //    return list;
-                //}
             }
         }
         return list;
@@ -593,6 +615,7 @@ public class CompletionProvider {
         var i = new CompletionItem();
         i.label = name;
         i.kind = CompletionItemKind.Module;
+        i.insertText = name;
         return i;
     }
 
@@ -603,6 +626,7 @@ public class CompletionProvider {
         i.detail = className;
         var data = new CompletionData();
         data.className = className;
+        i.insertText = i.label;
         i.data = JsonHelper.GSON.toJsonTree(data);
         return i;
     }
@@ -637,9 +661,11 @@ public class CompletionProvider {
         i.data = JsonHelper.GSON.toJsonTree(data);
         if (addParens) {
             if (overloads.size() == 1 && first.getParameters().isEmpty()) {
-                i.insertText = first.getSimpleName() + "()$0";
+                i.insertText = first.getSimpleName() + "()";
+                //i.insertText = first.getSimpleName() + "()$0";
             } else {
-                i.insertText = first.getSimpleName() + "($0)";
+                i.insertText = first.getSimpleName() + "()";
+                //i.insertText = first.getSimpleName() + "($0)";
                 // Activate signatureHelp
                 // Remove this if VSCode ever fixes https://github.com/microsoft/vscode/issues/78806
                 i.command = new Command();
@@ -723,6 +749,7 @@ public class CompletionProvider {
         i.label = keyword;
         i.kind = CompletionItemKind.Keyword;
         i.detail = "keyword";
+        i.insertText= i.label;
         i.sortText = String.format("%02d%s", Priority.KEYWORD, i.label);
         return i;
     }
