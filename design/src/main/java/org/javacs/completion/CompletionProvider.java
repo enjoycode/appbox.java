@@ -630,6 +630,7 @@ public class CompletionProvider {
         i.label = element.getSimpleName().toString();
         i.kind = kind(element);
         i.detail = element.toString();
+        i.insertText = i.label;
         i.data = JsonHelper.GSON.toJsonTree(data(task, element, 1));
         return i;
     }
@@ -642,6 +643,7 @@ public class CompletionProvider {
         i.detail = first.getReturnType() + " " + first;
         var data = data(task, first, overloads.size());
         i.data = JsonHelper.GSON.toJsonTree(data);
+        i.insertText=i.label;
         if (addParens) {
             if (overloads.size() == 1 && first.getParameters().isEmpty()) {
                 i.insertText = first.getSimpleName() + "()";
