@@ -179,14 +179,11 @@ public class CompletionProvider {
                     list=completeImport(list,qualifiedPartialIdentifier(contents, (int) cursor));
                     return list;
                 case MEMBER_REFERENCE:
-                    list=completeMemberReference(task, path, partial);
-                    return list;
+                    return completeMemberReference(task, path, partial);
                 case SWITCH:
-                    list=completeSwitchConstant(task, path, partial);
-                    return list;
+                    return completeSwitchConstant(task, path, partial);
                 case IMPORT:
-                    list=completeImport(list,qualifiedPartialIdentifier(contents, (int) cursor));
-                    return list;
+                    return completeImport(list,qualifiedPartialIdentifier(contents, (int) cursor));
                 default:
                     addKeywords(path, partial, list);
                     return list;
