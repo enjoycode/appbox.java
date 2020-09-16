@@ -4,6 +4,7 @@ import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.services.code.QuickFix;
 import appbox.logging.Log;
+import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;
 import com.sun.source.tree.LineMap;
 import org.javacs.CompileTask;
@@ -20,8 +21,17 @@ public final class CheckCode implements IRequestHandler {
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
         int type = args.get(0).getInt();
-        String fileName = args.get(1).getString();
-        Log.debug(String.format("CheckCode: %d %s", type, fileName));
+        var targetId    = args.get(1).getString();
+        Log.debug(String.format("CheckCode: %d %s", type, targetId));
+        var modelId   = Long.parseUnsignedLong(targetId);
+        var modelNode = hub.designTree.findModelNode(ModelType.Service, modelId);
+        if (modelNode == null) {
+            var error = String.format("Can't find ServiceModel: %d", modelId);
+            return CompletableFuture.failedFuture(new Exception(error));
+        }
+
+        var fileName = String.format("%s.Services.%s.java",
+                modelNode.appNode.model.name(), modelNode.model().name());
         var doc = hub.typeSystem.opendDocs.get(fileName);
         if (doc == null) {
             var error = String.format("Can't find opened ServiceModel: %s", fileName);
