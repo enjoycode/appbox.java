@@ -1,5 +1,9 @@
 package appbox.design.services.code;
 
+import com.sun.source.tree.Tree;
+
+import javax.tools.Diagnostic;
+
 public class QuickFix {
 
     private int line;
@@ -43,6 +47,19 @@ public class QuickFix {
 
     public int getLevel() {
         return level;
+    }
+
+    public int getLevelFromKind(Diagnostic.Kind kind) {
+        if(kind.equals(Diagnostic.Kind.OTHER)){
+            return 0;
+        }else if(kind.equals(Diagnostic.Kind.NOTE)){
+            return 1;
+        }else if(kind.equals(Diagnostic.Kind.WARNING)||kind.equals(Diagnostic.Kind.MANDATORY_WARNING)){
+            return 2;
+        }else if(kind.equals(Diagnostic.Kind.ERROR)){
+            return 3;
+        }
+        return 0;
     }
 
     public void setLevel(int level) {
