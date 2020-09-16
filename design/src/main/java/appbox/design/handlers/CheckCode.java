@@ -8,9 +8,11 @@ import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;
 import com.sun.source.tree.LineMap;
 import org.javacs.CompileTask;
+import org.javacs.SourceFileObject;
 
 import javax.tools.JavaFileObject;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -39,8 +41,8 @@ public final class CheckCode implements IRequestHandler {
         }
         return CompletableFuture.supplyAsync(() -> {
             List<QuickFix> quickFixes = new ArrayList<>();
-            Path path=Path.of(fileName);
-            CompileTask task = hub.typeSystem.workspace.compiler().compile(path);
+            var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
+            CompileTask task = hub.typeSystem.workspace.compiler().compile(List.of(sourceFile));
             LineMap lines = task.root().getLineMap();
             for(javax.tools.Diagnostic<? extends JavaFileObject> diagnostic:task.diagnostics){
                 QuickFix quickFix=new QuickFix();
