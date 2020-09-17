@@ -52,6 +52,7 @@ public final class CheckCode implements IRequestHandler {
                 quickFix.setLevel(quickFix.getLevelFromKind(diagnostic.getKind()));//TODO check
                 quickFix.setEndLine((int)lines.getLineNumber(diagnostic.getEndPosition()));
                 quickFix.setEndColumn((int)lines.getColumnNumber(diagnostic.getEndPosition()));
+                quickFixes.add(quickFix);
             }
             return new JsonResult(quickFixes);
         }, hub.codeEditorTaskPool);
