@@ -18,7 +18,7 @@ public class CompletionItem {
     public List<TextEdit> additionalTextEdits;
     @JSONField(serialize=false)
     public List<Character> commitCharacters;
-    @JSONField(serialize=false)
+    //@JSONField(serialize=false)
     public Command command;
     @JSONField(serialize=false)
     public JsonElement data;
