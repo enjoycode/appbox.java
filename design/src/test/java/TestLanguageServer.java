@@ -13,7 +13,7 @@ public class TestLanguageServer {
     public void testSymbols() {
         var ls   = new JavaLanguageServer(new MockLanguageClient());
         var init = new InitializeParams();
-        //init.rootUri = Paths.get("src/test/examples/demo1").normalize().toUri();
+        init.rootUri = Paths.get("src/test/examples/demo1").normalize().toUri();
         ls.initialize(init);
         ls.initialized();
         assertNotNull(ls);
@@ -21,12 +21,12 @@ public class TestLanguageServer {
         //var symbols = ls.workspaceSymbols(new WorkspaceSymbolParams(""));
         //assertNotNull(symbols);
 
-        //var uri = Paths.get("src/test/examples/demo1/Service1.java").normalize().toUri();
-        //var position = new TextDocumentPositionParams(
-        //        new TextDocumentIdentifier(uri),
-        //        new Position(5 - 1, 12 - 1));
-        //var completions = ls.completion(position);
-        //assertNotNull(completions);
+        var uri = Paths.get("src/test/examples/demo1/Service1.java").normalize().toUri();
+        var position = new TextDocumentPositionParams(
+                new TextDocumentIdentifier(uri),
+                new Position(5 - 1, 12 - 1));
+        var completions = ls.completion(position);
+        assertNotNull(completions);
     }
 
 }

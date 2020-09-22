@@ -11,6 +11,7 @@ dependencies {
     //implementation 'com.github.javaparser:javaparser-symbol-solver-core:+'
     implementation 'com.alibaba:fastjson:1.2.73'
     implementation fileTree(dir: 'lib', include: ['*.jar'])
+    testImplementation fileTree(dir: 'lib', include: ['*.jar'])
     // TODO:临时引用
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.google.protobuf:protobuf-java:3.9.1'
@@ -31,6 +32,25 @@ compileJava {
     options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED')
     options.compilerArgs.add('--add-exports')
     options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED')
+}
+
+compileTestJava {
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED')
+    options.compilerArgs.add('--add-exports')
+    options.compilerArgs.add('jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED')
 }
 
 tasks.jar {
