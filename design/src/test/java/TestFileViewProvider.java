@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class TestFileViewProvider extends AbstractFileViewProvider {
 
-    private static final JavaParserDefinition parserDefinition = new JavaParserDefinition();
+    public static final JavaParserDefinition parserDefinition = new JavaParserDefinition();
 
     public TestFileViewProvider(PsiManager psiManager, VirtualFile file) {
         super(psiManager, file, false);

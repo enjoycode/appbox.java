@@ -1,12 +1,21 @@
 import com.intellij.core.CoreEncodingRegistry;
+import com.intellij.core.CoreFileTypeRegistry;
+import com.intellij.ide.highlighter.ArchiveFileType;
+import com.intellij.ide.highlighter.JavaFileType;
+import com.intellij.lang.*;
+import com.intellij.lang.impl.PsiBuilderFactoryImpl;
+import com.intellij.lang.java.JavaLanguage;
+import com.intellij.lang.java.JavaParserDefinition;
 import com.intellij.mock.MockFileDocumentManagerImpl;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.*;
 import com.intellij.openapi.editor.impl.DocumentImpl;
+import com.intellij.openapi.extensions.ExtensionsArea;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.vfs.encoding.EncodingManager;
+import com.intellij.psi.impl.source.tree.JavaASTFactory;
 import com.intellij.util.messages.MessageBus;
 import org.picocontainer.PicoContainer;
 
@@ -19,9 +28,36 @@ public class TestApplication extends UserDataHolderBase implements Application {
     private       FileDocumentManager _fileDocumentManager =
             new MockFileDocumentManagerImpl(charSequence -> new DocumentImpl(charSequence), null);
     private       EncodingManager     _encodingManager     = new CoreEncodingRegistry();
+    private final PsiBuilderFactory   _psiBuilderFactory   = new PsiBuilderFactoryImpl();
+
+    private final CoreFileTypeRegistry _fileTypeRegistry;
 
     public TestApplication() {
-        ApplicationManager.setApplication(this, _lastDisposable);
+        _fileTypeRegistry = new CoreFileTypeRegistry();
+
+        ApplicationManager.setApplication(this,
+                () -> _fileTypeRegistry,
+                _lastDisposable);
+
+        //_fileTypeRegistry.registerFileType(JavaClassFileType.INSTANCE, "class");
+        _fileTypeRegistry.registerFileType(JavaFileType.INSTANCE, "java");
+        _fileTypeRegistry.registerFileType(ArchiveFileType.INSTANCE, "jar;zip");
+
+        addExplicitExtension(LanguageASTFactory.INSTANCE, JavaLanguage.INSTANCE, new JavaASTFactory());
+        registerParserDefinition(new JavaParserDefinition());
+    }
+
+    public <T> void addExplicitExtension(LanguageExtension<T> instance, Language language,T object) {
+        instance.addExplicitExtension(language, object, _lastDisposable);
+    }
+
+    public void registerParserDefinition(ParserDefinition definition) {
+        addExplicitExtension(LanguageParserDefinitions.INSTANCE, definition.getFileNodeType().getLanguage(), definition);
+    }
+
+    @Override
+    public ExtensionsArea getExtensionArea() {
+        return null;
     }
 
     @Override
@@ -31,6 +67,8 @@ public class TestApplication extends UserDataHolderBase implements Application {
             return (T) _fileDocumentManager;
         } else if (simpleName.equals("EncodingManager")) {
             return (T) _encodingManager;
+        } else if (simpleName.equals("PsiBuilderFactory")) {
+            return (T) _psiBuilderFactory;
         }
         return null;
     }

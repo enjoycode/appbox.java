@@ -1,11 +1,15 @@
 import com.intellij.core.CoreJavaFileManager;
+import com.intellij.core.CoreJavaPsiImplementationHelper;
+import com.intellij.core.CoreLanguageLevelProjectExtension;
 import com.intellij.openapi.extensions.ExtensionsArea;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.LanguageLevelProjectExtension;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.impl.JavaPsiImplementationHelper;
 import com.intellij.psi.impl.PsiCachedValuesFactory;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.CachedValuesManagerImpl;
@@ -17,11 +21,15 @@ import com.intellij.util.pico.DefaultPicoContainer;
 
 public final class TestProject extends UserDataHolderBase implements Project, MessageBusOwner {
 
-    public final  CoreJavaFileManager fileManager;
-    public final  PsiManager          psiManager;
-    private final CachedValuesManager cachedValuesManager;
-    private final PsiDocumentManager  psiDocumentManager;
-    private final MessageBus          messageBus = MessageBusFactoryImpl.createRootBus(this);
+    public final  CoreJavaFileManager         fileManager;
+    public final  PsiManager                  psiManager;
+    private final CachedValuesManager         cachedValuesManager;
+    private final PsiDocumentManager          psiDocumentManager;
+    private final MessageBus                  messageBus                  = MessageBusFactoryImpl.createRootBus(this);
+    private final JavaPsiImplementationHelper   javaPsiImplementationHelper   =
+            new CoreJavaPsiImplementationHelper(this);
+    private final LanguageLevelProjectExtension languageLevelProjectExtension =
+            new CoreLanguageLevelProjectExtension();
 
     public TestProject() {
         psiManager          = new TestPsiManager(this); //new PsiManagerImpl(this);
@@ -78,6 +86,10 @@ public final class TestProject extends UserDataHolderBase implements Project, Me
             return (T) cachedValuesManager;
         } else if (simpleName.equals("PsiDocumentManager")) {
             return (T) psiDocumentManager;
+        } else if (simpleName.equals("JavaPsiImplementationHelper")) {
+            return (T) javaPsiImplementationHelper;
+        } else if (simpleName.equals("LanguageLevelProjectExtension")) {
+            return (T) languageLevelProjectExtension;
         }
         return null;
     }
