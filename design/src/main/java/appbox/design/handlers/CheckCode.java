@@ -2,24 +2,12 @@ package appbox.design.handlers;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
-import appbox.design.services.code.QuickFix;
 import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;
-import com.sun.source.tree.LineMap;
-import org.javacs.CompileTask;
-import org.javacs.SourceFileObject;
-import org.javacs.completion.CompletionProvider;
 
-import javax.tools.JavaFileObject;
-import java.nio.file.Path;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-
 
 public final class CheckCode implements IRequestHandler {
     @Override
@@ -42,22 +30,23 @@ public final class CheckCode implements IRequestHandler {
             return CompletableFuture.failedFuture(new Exception(error));
         }
         return CompletableFuture.supplyAsync(() -> {
-            List<QuickFix> quickFixes = new ArrayList<>();
-            var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
-            try(CompileTask task = hub.typeSystem.workspace.compiler().compile(List.of(sourceFile))) {
-                LineMap lines = task.root().getLineMap();
-                for (javax.tools.Diagnostic<? extends JavaFileObject> diagnostic : task.diagnostics) {
-                    QuickFix quickFix = new QuickFix();
-                    quickFix.setLine((int) diagnostic.getLineNumber());
-                    quickFix.setColumn((int) diagnostic.getColumnNumber());
-                    quickFix.setText(diagnostic.getMessage(Locale.CHINESE));
-                    quickFix.setLevel(quickFix.getLevelFromKind(diagnostic.getKind()));//TODO check
-                    quickFix.setEndLine((int) lines.getLineNumber(diagnostic.getEndPosition()));
-                    quickFix.setEndColumn((int) lines.getColumnNumber(diagnostic.getEndPosition()));
-                    quickFixes.add(quickFix);
-                }
-                return new JsonResult(quickFixes);
-            }
+            //List<QuickFix> quickFixes = new ArrayList<>();
+            //var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
+            //try(CompileTask task = hub.typeSystem.workspace.compiler().compile(List.of(sourceFile))) {
+            //    LineMap lines = task.root().getLineMap();
+            //    for (javax.tools.Diagnostic<? extends JavaFileObject> diagnostic : task.diagnostics) {
+            //        QuickFix quickFix = new QuickFix();
+            //        quickFix.setLine((int) diagnostic.getLineNumber());
+            //        quickFix.setColumn((int) diagnostic.getColumnNumber());
+            //        quickFix.setText(diagnostic.getMessage(Locale.CHINESE));
+            //        quickFix.setLevel(quickFix.getLevelFromKind(diagnostic.getKind()));//TODO check
+            //        quickFix.setEndLine((int) lines.getLineNumber(diagnostic.getEndPosition()));
+            //        quickFix.setEndColumn((int) lines.getColumnNumber(diagnostic.getEndPosition()));
+            //        quickFixes.add(quickFix);
+            //    }
+            //    return new JsonResult(quickFixes);
+                  return new JsonResult(null);
+            //}
         }, hub.codeEditorTaskPool);
     }
 

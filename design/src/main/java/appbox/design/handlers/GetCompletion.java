@@ -4,9 +4,6 @@ import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.logging.Log;
 import appbox.runtime.InvokeArg;
-import org.javacs.SourceFileObject;
-import org.javacs.completion.CompletionProvider;
-
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
@@ -31,13 +28,13 @@ public final class GetCompletion implements IRequestHandler {
         //继续测试
         return CompletableFuture.supplyAsync(() -> {
             Log.debug(String.format("GetCompletion: run at thread: %s", Thread.currentThread().getName()));
-            var provider   = new CompletionProvider(hub.typeSystem.workspace.compiler());
-            var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
-            var list       = provider.complete(sourceFile, line + 1, column + 1);
-            if (list != CompletionProvider.NOT_SUPPORTED) {
-                return new JsonResult(list.items);
-                //return CompletableFuture.completedFuture(new JsonResult(list.items));
-            }
+            //var provider   = new CompletionProvider(hub.typeSystem.workspace.compiler());
+            //var sourceFile = new SourceFileObject(Path.of(fileName), doc.sourceText.toString(), Instant.now());
+            //var list       = provider.complete(sourceFile, line + 1, column + 1);
+            //if (list != CompletionProvider.NOT_SUPPORTED) {
+            //    return new JsonResult(list.items);
+            //    //return CompletableFuture.completedFuture(new JsonResult(list.items));
+            //}
 
             //return CompletableFuture.completedFuture(new JsonResult(null));
             return new JsonResult(null); //TODO: empty array

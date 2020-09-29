@@ -1,4 +1,6 @@
+import com.google.protobuf.compiler.PluginProtos;
 import com.intellij.core.*;
+import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.lang.LanguageParserDefinitions;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.lang.jvm.JvmClass;
@@ -8,6 +10,8 @@ import com.intellij.openapi.application.impl.ApplicationImpl;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.extensions.ExtensionPointName;
 import com.intellij.openapi.extensions.Extensions;
+import com.intellij.openapi.fileTypes.BinaryFileDecompiler;
+import com.intellij.openapi.fileTypes.BinaryFileTypeDecompilers;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.projectRoots.DefaultJdkConfigurator;
 import com.intellij.openapi.projectRoots.JavaSdk;
@@ -18,6 +22,7 @@ import com.intellij.openapi.projectRoots.impl.JavaSdkImpl;
 import com.intellij.openapi.roots.FileIndexFacade;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.*;
 import com.intellij.psi.augment.PsiAugmentProvider;
@@ -28,10 +33,15 @@ import com.intellij.psi.impl.file.impl.JavaFileManagerImpl;
 import com.intellij.psi.impl.file.impl.ResolveScopeManagerImpl;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScopeBuilder;
+import org.jetbrains.java.decompiler.IdeaDecompiler;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarFile;
+import java.util.jar.JarEntry;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -90,10 +100,23 @@ public class TestIdea {
         JavaCoreApplicationEnvironment.registerApplicationExtensionPoint(JavaModuleSystem.EP_NAME, JavaPlatformModuleSystem.class);
         JavaCoreApplicationEnvironment.registerApplicationExtensionPoint(SdkType.EP_NAME, JavaSdkImpl.class);
         JavaCoreApplicationEnvironment.registerApplicationExtensionPoint(OrderRootType.EP_NAME, OrderRootType.class);
+        //替换ClassFileViewProviderFactory测试
+        var old = FileTypeFileViewProviders.INSTANCE.findSingle(JavaClassFileType.INSTANCE);
+        FileTypeFileViewProviders.INSTANCE.removeExplicitExtension(JavaClassFileType.INSTANCE, old);
+        FileTypeFileViewProviders.INSTANCE.addExplicitExtension(JavaClassFileType.INSTANCE, new TestClassFileViewProviderFactory());
 
-        //var CFD_EP_NAME = ExtensionPointName.create("com.intellij.psi.classFileDecompiler");
+        var epname1= ExtensionPointName.create("com.intellij.filetype.decompiler");
+        JavaCoreApplicationEnvironment.registerApplicationExtensionPoint(epname1, BinaryFileTypeDecompilers.class);
+
+        var CFD_EP_NAME = ExtensionPointName.create("com.intellij.psi.classFileDecompiler");
+        JavaCoreApplicationEnvironment.registerApplicationExtensionPoint(CFD_EP_NAME, ClassFileDecompilers.Light.class);
         //JavaCoreApplicationEnvironment.registerApplicationExtensionPoint(CFD_EP_NAME, ClassFileDecompilers.Full.class);
-        //app.addExtension(CFD_EP_NAME, new ClsDecompilerImpl());
+        //app.addExtension(CFD_EP_NAME, new TestClsDecompilerImpl());
+
+        var ep = Extensions.getRootArea().getExtensionPoint(ClassFileDecompilers.getInstance().EP_NAME);
+        app.addExtension(ClassFileDecompilers.getInstance().EP_NAME, new IdeaDecompiler());
+        var d = app.getApplication().getService(ClassFileDecompilers.class);
+        d.EP_NAME.getExtensions();
 
         var prj = new JavaCoreProjectEnvironment(_lastDisposable, app);
         prj.registerProjectExtensionPoint(PsiElementFinder.EP_NAME, PsiElementFinderImpl.class);
@@ -133,4 +156,27 @@ public class TestIdea {
         //var res = ((PsiJavaCodeReferenceElement) ref).advancedResolve(true);
     }
 
+    @Test
+    public void testJarFile() throws IOException {
+        var jarFile = new JarFile("/media/psf/Home/Projects/intellij-community/java/mockJDK-11/jre/lib/rt.jar");
+        JarEntry              entry;
+        Enumeration<JarEntry> e = jarFile.entries();
+        while (e.hasMoreElements()) {
+            entry = e.nextElement();
+            if (entry != null && !entry.isDirectory() && entry.getName().endsWith(".class")) {
+                String name = entryPathToClassName(entry.getName());
+                //classpathElements.put(name, new ClasspathElement(jarFile, entry));
+            }
+        }
+    }
+
+    private String entryPathToClassName(String entryPath) {
+        if (!entryPath.endsWith(".class")) {
+            throw new IllegalStateException();
+        }
+        String className = entryPath.substring(0, entryPath.length() - ".class".length());
+        className = className.replace('/', '.');
+        className = className.replace('$', '.');
+        return className;
+    }
 }
