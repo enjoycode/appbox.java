@@ -1,3 +1,5 @@
+package appbox.design.idea;
+
 import com.intellij.codeInsight.daemon.HighlightDisplayKey;
 import com.intellij.codeInspection.SuppressIntentionAction;
 import com.intellij.codeInspection.SuppressManager;
@@ -5,7 +7,7 @@ import com.intellij.codeInspection.SuppressQuickFix;
 import com.intellij.psi.PsiDocCommentOwner;
 import com.intellij.psi.PsiElement;
 
-public class TestSuppressManager extends SuppressManager {
+public class IdeaSuppressManager extends SuppressManager {
     @Override
     public SuppressIntentionAction[] createSuppressActions(HighlightDisplayKey highlightDisplayKey) {
         return new SuppressIntentionAction[0];

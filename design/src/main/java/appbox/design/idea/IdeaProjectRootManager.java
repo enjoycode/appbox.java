@@ -1,3 +1,5 @@
+package appbox.design.idea;
+
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.OrderEnumerator;
@@ -10,8 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public class TestProjectRootManager extends ProjectRootManager {
-    private final TestProjectFileIndex _fileIndex = new TestProjectFileIndex();
+public final class IdeaProjectRootManager extends ProjectRootManager {
+    private final IdeaProjectFileIndex _fileIndex = new IdeaProjectFileIndex(); //Rick
 
     @Override
     public ProjectFileIndex getFileIndex() {

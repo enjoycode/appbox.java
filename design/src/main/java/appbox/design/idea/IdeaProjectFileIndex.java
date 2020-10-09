@@ -1,3 +1,5 @@
+package appbox.design.idea;
+
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.roots.ContentIterator;
 import com.intellij.openapi.roots.OrderEntry;
@@ -9,7 +11,7 @@ import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 import java.util.List;
 import java.util.Set;
 
-public class TestProjectFileIndex implements ProjectFileIndex {
+public final class IdeaProjectFileIndex implements ProjectFileIndex {
     @Override
     public Module getModuleForFile(VirtualFile virtualFile) {
         return null;
