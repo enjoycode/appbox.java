@@ -1,8 +1,7 @@
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.vfs.VfsUtilCore;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileSystem;
+import com.intellij.openapi.vfs.*;
+import com.intellij.testFramework.LightVirtualFileBase;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +15,8 @@ public class TestVirtualFile extends VirtualFile {
     private CharSequence               _content;
     private ArrayList<TestVirtualFile> _childs;
     private TestVirtualFile            _parent;
+
+    private static final TestVirtualFile.TestVirtualFileSystem ourFileSystem = new TestVirtualFile.TestVirtualFileSystem();
 
     public TestVirtualFile(String path, long modificationStamp) {
         _name     = path;
@@ -38,7 +39,7 @@ public class TestVirtualFile extends VirtualFile {
 
     @Override
     public VirtualFileSystem getFileSystem() {
-        return null;
+        return ourFileSystem;
     }
 
     @Override
@@ -108,6 +109,30 @@ public class TestVirtualFile extends VirtualFile {
     }
     //endregion
 
+    //region ====VirtualFileSystem====
+    private static class TestVirtualFileSystem extends DeprecatedVirtualFileSystem implements NonPhysicalFileSystem {
+        private static final String PROTOCOL = "mock";
+
+        private TestVirtualFileSystem() {
+            this.startEventPropagation();
+        }
+
+        public String getProtocol() {
+            return "mock";
+        }
+
+        public VirtualFile findFileByPath(String path) {
+            return null;
+        }
+
+        public void refresh(boolean asynchronous) {
+        }
+
+        public VirtualFile refreshAndFindFileByPath(String path) {
+            return null;
+        }
+    }
+    //endregion
 
     @Override
     public FileType getFileType() {

@@ -15,7 +15,7 @@ public class TestProjectScopeBuilder extends CoreProjectScopeBuilder {
 
     @Override
     public GlobalSearchScope buildAllScope() {
-        return super.buildLibrariesScope(); //super.buildAllScope();
+        return super.buildAllScope();
     }
 
     @Override
