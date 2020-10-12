@@ -147,6 +147,13 @@ public class TestVirtualFile extends VirtualFile {
         _childs.add(file);
     }
 
+    //public void replaceString(int pos, int count, String text) {
+    //    var sb = new StringBuilder(_content);
+    //    sb.replace(pos, pos + count, text);
+    //    _content = sb.toString();
+    //    _modStamp = System.currentTimeMillis();
+    //}
+
     @Override
     public String toString() {
         if (_parent != null) {

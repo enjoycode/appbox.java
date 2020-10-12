@@ -9,6 +9,7 @@ import com.intellij.lang.jvm.facade.JvmFacade;
 import com.intellij.lang.jvm.facade.JvmFacadeImpl;
 import com.intellij.mock.*;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.extensions.ExtensionPoint;
 import com.intellij.openapi.extensions.ExtensionPointName;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.DumbUtil;
@@ -18,7 +19,12 @@ import com.intellij.openapi.roots.PackageIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.pom.PomManager;
+import com.intellij.pom.PomModel;
+import com.intellij.pom.core.impl.PomModelImpl;
+import com.intellij.pom.tree.TreeAspect;
 import com.intellij.psi.*;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.codeStyle.JavaCodeStyleManager;
 import com.intellij.psi.codeStyle.JavaCodeStyleSettingsFacade;
 import com.intellij.psi.controlFlow.ControlFlowFactory;
@@ -27,10 +33,12 @@ import com.intellij.psi.impl.file.PsiDirectoryFactory;
 import com.intellij.psi.impl.file.PsiDirectoryFactoryImpl;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.psi.impl.smartPointers.SmartPointerManagerImpl;
+import com.intellij.psi.impl.source.codeStyle.CodeStyleManagerImpl;
 import com.intellij.psi.impl.source.resolve.JavaResolveCache;
 import com.intellij.psi.impl.source.resolve.PsiResolveHelperImpl;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.psi.search.ProjectScopeBuilder;
+import com.intellij.psi.text.BlockSupport;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.util.CachedValuesManagerImpl;
@@ -109,6 +117,16 @@ public final class IdeaProjectEnvironment {
         myProject.registerService(JavaProjectCodeInsightSettings.class, new JavaProjectCodeInsightSettings()); //completion
         registerProjectExtensionPoint(PsiElementFinder.EP_NAME, PsiElementFinderImpl.class);
         addProjectExtension(PsiElementFinder.EP_NAME, new PsiElementFinderImpl(myProject));
+
+        myProject.registerService(BlockSupport.class, new BlockSupportImpl()); //incremental reparse
+        //myProject.registerService(CodeStyleManager.class, new CodeStyleManagerImpl(myProject)); //incremental reparse
+        myProject.registerService(TreeAspect.class, new TreeAspect()); //
+        myProject.registerService(PomModel.class, new PomModelImpl(myProject)); //incremental reparse
+        //TODO:移除以下依赖，暂DiffLog.performActualPsiChange需要
+        myProject.getExtensionArea().registerExtensionPoint(PsiTreeChangePreprocessor.EP.getName(),
+                PsiTreeChangePreprocessor.class.getName(), ExtensionPoint.Kind.INTERFACE);
+        myProject.getExtensionArea().registerExtensionPoint(PsiTreeChangeListener.EP.getName(),
+                PsiTreeChangeListener.class.getName(), ExtensionPoint.Kind.INTERFACE);
     }
 
     protected MockProject createProject(PicoContainer parent, Disposable parentDisposable) {

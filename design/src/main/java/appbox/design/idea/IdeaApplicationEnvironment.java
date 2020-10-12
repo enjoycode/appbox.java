@@ -33,6 +33,8 @@ import com.intellij.navigation.ItemPresentationProviders;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.TransactionGuard;
+import com.intellij.openapi.application.TransactionGuardImpl;
 import com.intellij.openapi.application.impl.ApplicationInfoImpl;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.impl.CoreCommandProcessor;
@@ -66,10 +68,7 @@ import com.intellij.openapi.vfs.pointers.VirtualFilePointerManager;
 import com.intellij.psi.*;
 import com.intellij.psi.augment.PsiAugmentProvider;
 import com.intellij.psi.compiled.ClassFileDecompilers;
-import com.intellij.psi.impl.JavaClassSupersImpl;
-import com.intellij.psi.impl.JavaPlatformModuleSystem;
-import com.intellij.psi.impl.PsiSubstitutorFactoryImpl;
-import com.intellij.psi.impl.RecordAugmentProvider;
+import com.intellij.psi.impl.*;
 import com.intellij.psi.impl.compiled.ClassFileStubBuilder;
 import com.intellij.psi.impl.file.PsiPackageImplementationHelper;
 import com.intellij.psi.impl.search.MethodSuperSearcher;
@@ -127,7 +126,8 @@ public final class IdeaApplicationEnvironment {
         myJrtFileSystem   = createJrtFileSystem();
 
         registerApplicationService(FileDocumentManager.class, new MockFileDocumentManagerImpl(charSequence -> {
-            return new DocumentImpl(charSequence);
+            //TODO:重新实现Document
+            return new DocumentImpl(charSequence, true);
         }, null));
 
         registerApplicationExtensionPoint(new ExtensionPointName<>("com.intellij.virtualFileManagerListener"),
@@ -219,6 +219,8 @@ public final class IdeaApplicationEnvironment {
         registerApplicationService(CodeInsightSettings.class, new CodeInsightSettings());
         registerApplicationService(SuppressManager.class, new IdeaSuppressManager()); //completion
 
+        registerApplicationService(TransactionGuard.class, new TransactionGuardImpl()); //document commit
+        //myApplication.registerService(DocumentCommitProcessor.class, DocumentCommitThread.class); //document commit
     }
 
     public <T> void registerApplicationService(Class<T> serviceInterface, T serviceImplementation) {
@@ -234,6 +236,21 @@ public final class IdeaApplicationEnvironment {
             @Override
             public boolean isUnitTestMode() {
                 return myUnitTestMode;
+            }
+
+            @Override
+            public boolean isDispatchThread() {
+                return true; //Rick changed
+            }
+
+            //@Override
+            //public boolean isHeadlessEnvironment() {
+            //    return true; //Rick changed
+            //}
+
+            @Override
+            public boolean hasWriteAction(Class<?> actionClass) {
+                return true; //Rick changed
             }
         };
     }
