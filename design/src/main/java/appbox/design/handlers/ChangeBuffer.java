@@ -21,6 +21,9 @@ public final class ChangeBuffer implements IRequestHandler { //TODO: rename
         var endLine     = args.get(4).getInt() - 1;
         var endColumn   = args.get(5).getInt() - 1;
         var newText     = args.get(6).getString();
+        if (newText == null) {
+            newText = "";
+        }
 
         Log.debug(String.format("ChangeBuffer: %d %s %d.%d-%d.%d %s",
                 type, targetId, startLine, startColumn, endLine, endColumn, newText));
@@ -32,19 +35,20 @@ public final class ChangeBuffer implements IRequestHandler { //TODO: rename
             return CompletableFuture.failedFuture(new Exception(error));
         }
 
-        //var fileName = String.format("%s.Services.%s.java",
-        //        modelNode.appNode.model.name(), modelNode.model().name());
-        //var doc = hub.typeSystem.openedDocs.get(fileName);
-        //if (doc == null) {
-        //    var error = String.format("Can't find opened ServiceModel: %s", fileName);
-        //    return CompletableFuture.failedFuture(new Exception(error));
-        //}
-        //
-        ////注意队列顺序执行
-        //CompletableFuture.runAsync(() -> {
-        //    doc.sourceText.changeText(startLine, startColumn, endLine, endColumn, newText);
-        //    //Log.debug(doc.sourceText.toString());
-        //}, hub.codeEditorTaskPool);
+        var doc = hub.typeSystem.workspace.findOpenedDocument(modelId);
+        if (doc == null) {
+            var fileName = String.format("%s.Services.%s.java",
+                    modelNode.appNode.model.name(), modelNode.model().name());
+            var error = String.format("Can't find opened ServiceModel: %s", fileName);
+            return CompletableFuture.failedFuture(new Exception(error));
+        }
+
+        //注意队列顺序执行
+        String finalNewText = newText;
+        CompletableFuture.runAsync(() -> {
+            hub.typeSystem.workspace.changeDocument(doc, startLine, startColumn, endLine, endColumn, finalNewText);
+            //Log.debug(doc.getText());
+        }, hub.codeEditorTaskPool);
 
         return CompletableFuture.completedFuture(null);
     }
