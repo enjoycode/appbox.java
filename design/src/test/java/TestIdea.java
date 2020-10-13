@@ -22,6 +22,7 @@ import com.intellij.psi.impl.*;
 import com.intellij.psi.impl.file.impl.FileManager;
 import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.PsiJavaFileImpl;
+import com.intellij.psi.impl.source.tree.FileElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.text.BlockSupport;
 import com.intellij.util.DocumentUtil;
@@ -137,22 +138,25 @@ public class TestIdea {
                 (IdeaPsiDocumentManager) PsiDocumentManager.getInstance(prj.getProject());
 
         var psiFile1 = PsiManager.getInstance(prj.getProject()).findFile(vf);
-        var class1 = ((PsiJavaFileImpl)psiFile1).getClasses();
+        var class1   = ((PsiJavaFileImpl) psiFile1).getClasses();
         //assertTrue(psiFile1.getViewProvider().supportsIncrementalReparse(JavaLanguage.INSTANCE));
 
         //测试改变文件内容
-        var doc = FileDocumentManager.getInstance().getDocument(vf);
+        var doc           = FileDocumentManager.getInstance().getDocument(vf);
         var lastCommitted = psiDocumentManager.getLastCommittedText(doc);
-        WriteCommandAction.runWriteCommandAction(prj.getProject(), ()-> {
+        WriteCommandAction.runWriteCommandAction(prj.getProject(), () -> {
             //doc.insertString(6, "B"); //full reparse
             //doc.replaceString(6, 7, "B"); //full reparse
             //doc.insertString(19, "1");
-            doc.insertString(24, "//");
+            doc.insertString(24, "int a=1;");
         });
         var bs = BlockSupportImpl.getInstance(prj.getProject());
         //var textRange = new TextRange(6, 7);
         //var textRange = new TextRange(19, 20);
-        var textRange = ProperTextRange.create(24, 26);
+        var range1 = ChangedPsiRangeUtil.getChangedPsiRange(psiFile1, (FileElement) psiFile1.getNode(), doc.getImmutableCharSequence());
+        var textRange = getChangedPsiRange2(psiFile1, doc, lastCommitted, doc.getImmutableCharSequence(),
+                24, 0);
+        //var textRange         = ProperTextRange.create(24, 24);
         var progressIndicator = new EmptyProgressIndicator();
         var diffLog = bs.reparseRange(psiFile1, psiFile1.getNode(), textRange, doc.getImmutableCharSequence(),
                 progressIndicator, lastCommitted);
@@ -168,7 +172,7 @@ public class TestIdea {
         //}
 
         var psiFile2 = PsiManager.getInstance(prj.getProject()).findFile(vf);
-        var clss2 = ((PsiJavaFileImpl)psiFile2).getClasses();
+        var clss2    = ((PsiJavaFileImpl) psiFile2).getClasses();
 
         assertSame(psiFile1, psiFile2);
         //assertEquals( "BA", ((PsiJavaFileImpl) psiFile2).getClasses()[0].getName());
@@ -197,8 +201,35 @@ public class TestIdea {
         }
         //Important! delete+insert sequence can give some of same chars back, lets grow affixes to include them.
         int shortestLength = Math.min(psiLength, newDocumentText.length());
-        while (prefix < shortestLength &&
-                oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
+        while (prefix < shortestLength && oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
+            prefix++;
+        }
+        while (suffix < shortestLength - prefix &&
+                oldDocumentText.charAt(psiLength - suffix - 1) == newDocumentText.charAt(newDocumentText.length() - suffix - 1)) {
+            suffix++;
+        }
+        int end = Math.max(prefix, psiLength - suffix);
+        if (end == prefix && newDocumentText.length() == oldDocumentText.length()) return null;
+        return ProperTextRange.create(prefix, end);
+    }
+
+    private static ProperTextRange getChangedPsiRange2(PsiFile file,
+                                                       Document document,
+                                                       CharSequence oldDocumentText,
+                                                       CharSequence newDocumentText,
+                                                       int eventOffset, int eventOldLength) {
+        int psiLength = oldDocumentText.length();
+        int lengthBeforeEvent = psiLength;
+        int prefix            = eventOffset;
+        int suffix            = lengthBeforeEvent - eventOffset - eventOldLength;
+        //lengthBeforeEvent = lengthBeforeEvent - eventOldLength + eventNewLength;
+
+        if ((prefix == psiLength || suffix == psiLength) && newDocumentText.length() == psiLength) {
+            return null;
+        }
+        //Important! delete+insert sequence can give some of same chars back, lets grow affixes to include them.
+        int shortestLength = Math.min(psiLength, newDocumentText.length());
+        while (prefix < shortestLength && oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
             prefix++;
         }
         while (suffix < shortestLength - prefix &&
