@@ -88,10 +88,8 @@ public class TestIdea {
     }
 
     @Test
-    public void testIdea2() {
-        var lastDisposable = Disposer.newDisposable();
-        var app            = new IdeaApplicationEnvironment(lastDisposable);
-        var prj            = new IdeaProjectEnvironment(lastDisposable, app);
+    public void testCompletion() { //测试代码提示
+        var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
 
         prj.addJarToClassPath(new File("/media/psf/Home/Projects/intellij-community/java/mockJDK-11/jre/lib/rt.jar"));
         var root = new TestVirtualFile("", System.currentTimeMillis());
@@ -129,9 +127,7 @@ public class TestIdea {
 
     @Test
     public void testReparse() { //测试修改代码后incremental reparse
-        var lastDisposable = Disposer.newDisposable();
-        var app            = new IdeaApplicationEnvironment(lastDisposable, false);
-        var prj            = new IdeaProjectEnvironment(lastDisposable, app);
+        var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
         var vf = new TestVirtualFile("A.java", "class A {\n void say(){\n\n}\n}\n",
                 System.currentTimeMillis());
         var psiDocumentManager =
@@ -218,7 +214,7 @@ public class TestIdea {
                                                        CharSequence oldDocumentText,
                                                        CharSequence newDocumentText,
                                                        int eventOffset, int eventOldLength) {
-        int psiLength = oldDocumentText.length();
+        int psiLength         = oldDocumentText.length();
         int lengthBeforeEvent = psiLength;
         int prefix            = eventOffset;
         int suffix            = lengthBeforeEvent - eventOffset - eventOldLength;

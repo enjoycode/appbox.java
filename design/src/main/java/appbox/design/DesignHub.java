@@ -7,7 +7,10 @@ import appbox.runtime.ISessionInfo;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public final class DesignHub {
+/**
+ * 每个在线开发者对应一个DesignHub实例
+ */
+public final class DesignHub { //TODO: rename to DesignContext
     public final DesignTree designTree;
     public final TypeSystem typeSystem;
 
@@ -16,7 +19,7 @@ public final class DesignHub {
 
     public DesignHub(ISessionInfo session) {
         designTree = new DesignTree(this);
-        typeSystem = new TypeSystem();
+        typeSystem = new TypeSystem(this);
     }
 
 }

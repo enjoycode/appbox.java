@@ -8,7 +8,10 @@ import appbox.runtime.InvokeArg;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class ChangeBuffer implements IRequestHandler {
+/**
+ * 前端改变了模型或表达式的代码，后端进行同步与reparse
+ */
+public final class ChangeBuffer implements IRequestHandler { //TODO: rename
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
         var type        = args.get(0).getInt();
@@ -29,19 +32,19 @@ public final class ChangeBuffer implements IRequestHandler {
             return CompletableFuture.failedFuture(new Exception(error));
         }
 
-        var fileName = String.format("%s.Services.%s.java",
-                modelNode.appNode.model.name(), modelNode.model().name());
-        var doc = hub.typeSystem.opendDocs.get(fileName);
-        if (doc == null) {
-            var error = String.format("Can't find opened ServiceModel: %s", fileName);
-            return CompletableFuture.failedFuture(new Exception(error));
-        }
-
-        //注意队列顺序执行
-        CompletableFuture.runAsync(() -> {
-            doc.sourceText.changeText(startLine, startColumn, endLine, endColumn, newText);
-            //Log.debug(doc.sourceText.toString());
-        }, hub.codeEditorTaskPool);
+        //var fileName = String.format("%s.Services.%s.java",
+        //        modelNode.appNode.model.name(), modelNode.model().name());
+        //var doc = hub.typeSystem.openedDocs.get(fileName);
+        //if (doc == null) {
+        //    var error = String.format("Can't find opened ServiceModel: %s", fileName);
+        //    return CompletableFuture.failedFuture(new Exception(error));
+        //}
+        //
+        ////注意队列顺序执行
+        //CompletableFuture.runAsync(() -> {
+        //    doc.sourceText.changeText(startLine, startColumn, endLine, endColumn, newText);
+        //    //Log.debug(doc.sourceText.toString());
+        //}, hub.codeEditorTaskPool);
 
         return CompletableFuture.completedFuture(null);
     }

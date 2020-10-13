@@ -1,48 +1,33 @@
 package appbox.design.services.code;
 
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Set;
+import appbox.design.DesignHub;
+import appbox.design.idea.IdeaApplicationEnvironment;
+import appbox.design.idea.IdeaProjectEnvironment;
+import appbox.design.idea.ModelVirtualFile;
+import appbox.design.idea.ModelVirtualFileSystem;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 
+import java.util.HashMap;
+
+/**
+ * 一个TypeSystem对应一个Workspace实例，管理JavaProject及相应的虚拟文件
+ */
 public final class Workspace {
+    private final IdeaProjectEnvironment          projectEnvironment;
+    private final HashMap<Long, ModelVirtualFile> openedFiles = new HashMap<>();
+    public final  ModelVirtualFileSystem          virtualFileSystem;
 
-    private final TypeSystem typeSystem;
-
-    public Workspace(TypeSystem owner) {
-        typeSystem = owner;
+    public Workspace(DesignHub designHub) {
+        projectEnvironment = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
+        virtualFileSystem  = new ModelVirtualFileSystem(designHub);
     }
 
-    private Set<String> externalDependencies() {
-        return Set.of();
-        //if (!settings.has("externalDependencies")) return Set.of();
-        //var array = settings.getAsJsonArray("externalDependencies");
-        //var strings = new HashSet<String>();
-        //for (var each : array) {
-        //    strings.add(each.getAsString());
-        //}
-        //return strings;
-    }
-
-    private Set<Path> classPath() {
-        return Set.of();
-        //if (!settings.has("classPath")) return Set.of();
-        //var array = settings.getAsJsonArray("classPath");
-        //var paths = new HashSet<Path>();
-        //for (var each : array) {
-        //    paths.add(Paths.get(each.getAsString()).toAbsolutePath());
-        //}
-        //return paths;
-    }
-
-    private Set<String> addExports() {
-        return Set.of();
-        //if (!settings.has("addExports")) return Set.of();
-        //var array = settings.getAsJsonArray("addExports");
-        //var strings = new HashSet<String>();
-        //for (var each : array) {
-        //    strings.add(each.getAsString());
-        //}
-        //return strings;
+    public Document openDocument(long modelId) {
+        //TODO:仅允许打开特定类型的
+        var file = virtualFileSystem.findFileByModelId(modelId);
+        openedFiles.put(modelId, file);
+        return FileDocumentManager.getInstance().getDocument(file);
     }
 
 }

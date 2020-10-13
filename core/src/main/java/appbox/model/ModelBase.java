@@ -56,6 +56,10 @@ public abstract class ModelBase implements IBinSerializable {
         return _designMode;
     }
 
+    public final int version() {
+        return _version;
+    }
+
     public final PersistentState persistentState() {
         return _persistentState;
     }

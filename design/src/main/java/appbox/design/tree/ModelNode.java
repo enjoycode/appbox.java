@@ -6,8 +6,11 @@ import appbox.model.ModelType;
 import appbox.model.ServiceModel;
 import com.alibaba.fastjson.JSONWriter;
 
+/**
+ * 模型节点
+ */
 public final class ModelNode extends DesignNode {
-    private         ModelBase       _model;
+    private      ModelBase       _model;
     public final ApplicationNode appNode;
 
     public ModelNode(ModelBase targetModel, DesignHub hub) { //注意：新建时尚未加入树，无法获取TreeView实例
@@ -63,7 +66,7 @@ public final class ModelNode extends DesignNode {
         //ServiceModel输出Language
         if (_model.modelType() == ModelType.Service) {
             writer.writeKey("Language");
-            writer.writeValue(((ServiceModel)_model).language().value);
+            writer.writeValue(((ServiceModel) _model).language().value);
         }
     }
 }

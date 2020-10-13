@@ -59,8 +59,8 @@ public final class IdeaProjectEnvironment {
     private final JavaFileManager myFileManager;
     private final PackageIndex    myPackageIndex;
 
-    public IdeaProjectEnvironment(Disposable parentDisposable, IdeaApplicationEnvironment applicationEnvironment) {
-        myParentDisposable = parentDisposable;
+    public IdeaProjectEnvironment(IdeaApplicationEnvironment applicationEnvironment) {
+        myParentDisposable = IdeaApplicationEnvironment.lastDisposable; /*parentDisposable;*/
         myEnvironment      = applicationEnvironment;
         myProject          = createProject(myEnvironment.getApplication().getPicoContainer(), myParentDisposable);
 

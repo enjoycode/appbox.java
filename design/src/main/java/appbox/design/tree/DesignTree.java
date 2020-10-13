@@ -76,12 +76,19 @@ public final class DesignTree {
             return ModelStore.loadAllModelAsync(); //加载所有模型
         }).thenCompose(models -> {
             //TODO:先移除已删除的
+
+            var allModelNodes = new ArrayList<ModelNode>();
             for (ModelBase m : models) {
                 if (m.modelType() == ModelType.DataStore) {
                     //TODO:
                 } else {
-                    findModelRootNode(m.appId(), m.modelType()).addModel(m);
+                    allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
                 }
+            }
+
+            //在所有节点加载完后创建模型对应的虚拟文件
+            for (ModelNode n : allModelNodes) {
+                designHub.typeSystem.createModelDocument(n);
             }
 
             _loadingFlag.compareAndExchange(1, 0);
@@ -108,6 +115,13 @@ public final class DesignTree {
             }
         }
         return null;
+    }
+
+    /**
+     * 根据模型标识获取相应的节点
+     */
+    public final ModelNode findModelNode(long modelId) {
+        return findModelNode(IdUtil.getModelTypeFromModelId(modelId), modelId);
     }
 
     /**

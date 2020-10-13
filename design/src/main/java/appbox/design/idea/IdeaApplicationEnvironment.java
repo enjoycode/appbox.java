@@ -107,11 +107,11 @@ public final class IdeaApplicationEnvironment {
     private final   Disposable           myParentDisposable;
     private final   boolean              myUnitTestMode;
 
-    public IdeaApplicationEnvironment(Disposable parentDisposable) {
-        this(parentDisposable, true);
-    }
+    public static final Disposable                 lastDisposable = Disposer.newDisposable();
+    public static final IdeaApplicationEnvironment INSTANCE       =
+            new IdeaApplicationEnvironment(lastDisposable, false);
 
-    public IdeaApplicationEnvironment(Disposable parentDisposable, boolean unitTestMode) {
+    private IdeaApplicationEnvironment(Disposable parentDisposable, boolean unitTestMode) {
         myParentDisposable = parentDisposable;
         myUnitTestMode     = unitTestMode;
 
