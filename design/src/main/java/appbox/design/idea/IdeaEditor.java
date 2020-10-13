@@ -1,3 +1,5 @@
+package appbox.design.idea;
+
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.event.EditorMouseEventArea;
@@ -14,7 +16,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 
-public class TestEditor implements Editor {
+public final class IdeaEditor implements Editor {
     @Override
     public Document getDocument() {
         throw new RuntimeException();

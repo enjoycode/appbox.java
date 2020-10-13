@@ -14,7 +14,8 @@ public final class CheckCode implements IRequestHandler {
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
         int type     = args.get(0).getInt();
         var targetId = args.get(1).getString();
-        Log.debug(String.format("CheckCode: %d %s", type, targetId));
+        //Log.debug(String.format("CheckCode: %d %s", type, targetId));
+
         var modelId   = Long.parseUnsignedLong(targetId);
         var modelNode = hub.designTree.findModelNode(ModelType.Service, modelId);
         if (modelNode == null) {

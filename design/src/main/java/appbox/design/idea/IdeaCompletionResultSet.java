@@ -1,21 +1,22 @@
+package appbox.design.idea;
+
 import com.intellij.codeInsight.completion.*;
-import com.intellij.codeInsight.completion.impl.CamelHumpMatcher;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.patterns.ElementPattern;
 import com.intellij.util.Consumer;
 
-public class TestCompletionResultSet extends CompletionResultSet {
+public final class IdeaCompletionResultSet extends CompletionResultSet {
 
     private static final Logger LOG = Logger.getInstance(BaseCompletionService.class);
 
     protected final CompletionParameters    myParameters;
     protected       CompletionSorter        mySorter;
-    protected final TestCompletionResultSet myOriginal;
+    protected final IdeaCompletionResultSet myOriginal;
 
-    public TestCompletionResultSet(Consumer<? super CompletionResult> consumer, PrefixMatcher prefixMatcher,
+    public IdeaCompletionResultSet(Consumer<? super CompletionResult> consumer, PrefixMatcher prefixMatcher,
                                    CompletionContributor contributor, CompletionParameters parameters,
-                                   CompletionSorter sorter, TestCompletionResultSet original) {
+                                   CompletionSorter sorter, IdeaCompletionResultSet original) {
         super(prefixMatcher, consumer, contributor);
         myParameters = parameters;
         mySorter     = sorter;
@@ -47,7 +48,7 @@ public class TestCompletionResultSet extends CompletionResultSet {
         if (matcher.equals(getPrefixMatcher())) {
             return this;
         }
-        return new TestCompletionResultSet(getConsumer(), matcher, myContributor, myParameters, mySorter, this);
+        return new IdeaCompletionResultSet(getConsumer(), matcher, myContributor, myParameters, mySorter, this);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class TestCompletionResultSet extends CompletionResultSet {
 
     @Override
     public CompletionResultSet withRelevanceSorter(CompletionSorter sorter) {
-        return new TestCompletionResultSet(getConsumer(), getPrefixMatcher(), myContributor, myParameters, sorter, this);
+        return new IdeaCompletionResultSet(getConsumer(), getPrefixMatcher(), myContributor, myParameters, sorter, this);
     }
 
     @Override

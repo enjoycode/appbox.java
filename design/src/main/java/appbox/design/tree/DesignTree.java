@@ -98,6 +98,15 @@ public final class DesignTree {
     //endregion
 
     //region ====Find Methods====
+    public ApplicationNode findApplicationNodeByName(String name) {
+        for (DesignNode node : appRootNode.nodes.list) {
+            if (((ApplicationNode) node).model.name().equals(name)) {
+                return (ApplicationNode) node;
+            }
+        }
+        return null;
+    }
+
     public ApplicationNode findApplicationNode(int appId) {
         for (DesignNode node : appRootNode.nodes.list) {
             if (((ApplicationNode) node).model.id() == appId) {
@@ -134,6 +143,19 @@ public final class DesignTree {
             return null;
         }
         return modelRootNode.findModelNode(modelId);
+    }
+    //endregion
+
+    //region ====Find for Create====
+    /**
+     * 用于新建时检查相同名称的模型是否已存在
+     */
+    public ModelNode findModelNodeByName(int appId, ModelType type, String name) {
+        //TODO:***** 考虑在这里加载存储有没有相同名称的存在,或发布时检测，如改为全局Workspace没有此问题
+        // dev1 -> load tree -> checkout -> add model -> publish
+        // dev2 -> load tree                                 -> checkout -> add model with same name will pass
+        var modelRootNode = findModelRootNode(appId, type);
+        return modelRootNode.findModelNodeByName(name);
     }
     //endregion
 

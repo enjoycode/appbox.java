@@ -1,30 +1,33 @@
 package appbox.design.services.code;
 
 import appbox.design.DesignHub;
-import appbox.design.idea.IdeaApplicationEnvironment;
-import appbox.design.idea.IdeaProjectEnvironment;
-import appbox.design.idea.ModelVirtualFile;
-import appbox.design.idea.ModelVirtualFileSystem;
+import appbox.design.idea.*;
+import appbox.logging.Log;
+import com.intellij.codeInsight.completion.*;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
 import com.intellij.openapi.util.ProperTextRange;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.BlockSupportImpl;
 import com.intellij.psi.impl.ChangedPsiRangeUtil;
 import com.intellij.psi.impl.source.tree.FileElement;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * 一个TypeSystem对应一个Workspace实例，管理JavaProject及相应的虚拟文件
  */
 public final class Workspace {
     private final IdeaProjectEnvironment          projectEnvironment;
-    private final HashMap<Long, ModelVirtualFile> openedFiles = new HashMap<>();
+    private final HashMap<Long, ModelVirtualFile> openedFiles           = new HashMap<>();
     public final  ModelVirtualFileSystem          virtualFileSystem;
+    private final JavaCompletionContributor       completionContributor = new JavaCompletionContributor();
 
     public Workspace(DesignHub designHub) {
         projectEnvironment = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
@@ -97,6 +100,30 @@ public final class Workspace {
         int end = Math.max(prefix, psiLength - suffix);
         if (end == prefix && newDocumentText.length() == oldDocumentText.length()) return null;
         return ProperTextRange.create(prefix, end);
+    }
+
+    public List<CompletionResult> fillCompletion(Document doc, int line, int column, String wordToComplete) {
+        var list = new ArrayList<CompletionResult>();
+
+        var psiFile = PsiDocumentManager.getInstance(projectEnvironment.getProject()).getPsiFile(doc);
+        var cursor  = doc.getLineStartOffset(line) + column - 1; //暂减1
+        //Log.debug(doc.getText(new TextRange(doc.getLineStartOffset(line), cursor)));
+        var position = psiFile.findElementAt(cursor);
+        Log.debug(String.format("Completion at: %d %s %s",
+                cursor, position.getClass().getName(), position.getText()));
+
+        var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
+                cursor, 0, new IdeaEditor() /*TODO*/, () -> false);
+        var prefixMatcher = PrefixMatcher.ALWAYS_TRUE;
+        if (wordToComplete != null) {
+            prefixMatcher = new PlainPrefixMatcher(wordToComplete);
+        }
+        var cResultSet = new IdeaCompletionResultSet(
+                list::add, prefixMatcher, completionContributor, cParameters, null, null);
+
+        completionContributor.fillCompletionVariants(cParameters, cResultSet);
+
+        return list;
     }
 
 }

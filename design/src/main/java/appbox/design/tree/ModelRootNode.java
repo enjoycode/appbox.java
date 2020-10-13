@@ -9,8 +9,7 @@ import java.util.HashMap;
 
 public final class ModelRootNode extends DesignNode {
 
-    public final ModelType targetType;
-
+    public final  ModelType                targetType;
     private final HashMap<Long, ModelNode> _models = new HashMap<>();
 
     public ModelRootNode(ModelType targetType) {
@@ -48,7 +47,16 @@ public final class ModelRootNode extends DesignNode {
     //endregion
 
     //region ====Find Methods====
-    protected final ModelNode findModelNode(long modelId) {
+    protected ModelNode findModelNodeByName(String name) {
+        for (var n : _models.values()) {
+            if (n.model().name().equals(name)) {
+                return n;
+            }
+        }
+        return null;
+    }
+
+    protected ModelNode findModelNode(long modelId) {
         return _models.get(modelId);
     }
     //endregion

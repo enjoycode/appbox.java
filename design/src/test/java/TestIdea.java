@@ -1,6 +1,4 @@
-import appbox.design.idea.IdeaApplicationEnvironment;
-import appbox.design.idea.IdeaProjectEnvironment;
-import appbox.design.idea.IdeaPsiDocumentManager;
+import appbox.design.idea.*;
 import appbox.model.ServiceModel;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.lang.FileASTNode;
@@ -98,31 +96,49 @@ public class TestIdea {
         prj.addSourcesToClasspath(root);
 
         var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
-        //var ref     = psiFile.findReferenceAt(43); //25, 41
-        //var res     = ref.resolve();
-        //var res = ((PsiJavaCodeReferenceElement) ref).advancedResolve(true);
-        //var vars = ref.getVariants(); //代码必须设package
-
         //for (int i = 0; i < 10; i++) {
-        var cusor       = 43;
-        var position    = psiFile.findElementAt(cusor);
+        var cursor      = 43;
+        var position    = psiFile.findElementAt(cursor);
         var contributor = new JavaCompletionContributor();
 
         var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
-                cusor, 0, new TestEditor(), new CompletionProcess() {
-            @Override
-            public boolean isAutopopupCompletion() {
-                return false;
-            }
-        });
-
-        //测试直接使用JavaCompletionContributor
-        var cResultSet = new TestCompletionResultSet(
+                cursor, 0, new IdeaEditor(), () -> false);
+        var cResultSet = new IdeaCompletionResultSet(
                 completionResult -> System.out.println(completionResult),
                 PrefixMatcher.ALWAYS_TRUE, contributor, cParameters, null, null);
 
         contributor.fillCompletionVariants(cParameters, cResultSet);
         //}
+    }
+
+    @Test
+    public void testCompletion2() {
+        var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
+
+        prj.addJarToClassPath(new File("/media/psf/Home/Projects/intellij-community/java/mockJDK-11/jre/lib/rt.jar"));
+        var root = new TestVirtualFile("", System.currentTimeMillis());
+        var src = "import java.util.concurrent.CompletableFuture;\n";
+        src += "public class TestService\n";
+        src += "public CompletableFuture<String> say() {\n";
+        var cursor = src.length() + 5;
+        //src += "this.sa;\n";
+        src += "this.sa\n";
+        src += "return CompletableFuture.completedFuture(\"Hello\");\n";
+        src += "}\n";
+        var file1 = new TestVirtualFile("A.java", src, System.currentTimeMillis());
+        prj.addSourcesToClasspath(root);
+
+        var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
+        var position    = psiFile.findElementAt(cursor);
+        var contributor = new JavaCompletionContributor();
+
+        var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
+                cursor, 0, new IdeaEditor(), () -> false);
+        var cResultSet = new IdeaCompletionResultSet(
+                completionResult -> System.out.println(completionResult),
+                PrefixMatcher.ALWAYS_TRUE, contributor, cParameters, null, null);
+
+        contributor.fillCompletionVariants(cParameters, cResultSet);
     }
 
     @Test
