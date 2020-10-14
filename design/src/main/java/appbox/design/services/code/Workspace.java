@@ -2,6 +2,7 @@ package appbox.design.services.code;
 
 import appbox.design.DesignHub;
 import appbox.design.idea.*;
+import appbox.design.idea.CompletionUtil;
 import appbox.logging.Log;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -88,15 +89,15 @@ public final class Workspace {
         if ((prefix == psiLength || suffix == psiLength) && newDocumentText.length() == psiLength) {
             return null;
         }
-        //Important! delete+insert sequence can give some of same chars back, lets grow affixes to include them.
-        int shortestLength = Math.min(psiLength, newDocumentText.length());
-        while (prefix < shortestLength && oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
-            prefix++;
-        }
-        while (suffix < shortestLength - prefix &&
-                oldDocumentText.charAt(psiLength - suffix - 1) == newDocumentText.charAt(newDocumentText.length() - suffix - 1)) {
-            suffix++;
-        }
+        ////Important! delete+insert sequence can give some of same chars back, lets grow affixes to include them.
+        //int shortestLength = Math.min(psiLength, newDocumentText.length());
+        //while (prefix < shortestLength && oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
+        //    prefix++;
+        //}
+        //while (suffix < shortestLength - prefix &&
+        //        oldDocumentText.charAt(psiLength - suffix - 1) == newDocumentText.charAt(newDocumentText.length() - suffix - 1)) {
+        //    suffix++;
+        //}
         int end = Math.max(prefix, psiLength - suffix);
         if (end == prefix && newDocumentText.length() == oldDocumentText.length()) return null;
         return ProperTextRange.create(prefix, end);
@@ -106,22 +107,38 @@ public final class Workspace {
         var list = new ArrayList<CompletionResult>();
 
         var psiFile = PsiDocumentManager.getInstance(projectEnvironment.getProject()).getPsiFile(doc);
-        var cursor  = doc.getLineStartOffset(line) + column - 1; //暂减1
+        //var cursor  = doc.getLineStartOffset(line) + column - 1; //暂减1
+        var cursor = doc.getLineStartOffset(line) + column;
         //Log.debug(doc.getText(new TextRange(doc.getLineStartOffset(line), cursor)));
-        var position = psiFile.findElementAt(cursor);
-        Log.debug(String.format("Completion at: %d %s %s",
-                cursor, position.getClass().getName(), position.getText()));
 
-        var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
-                cursor, 0, new IdeaEditor() /*TODO*/, () -> false);
-        var prefixMatcher = PrefixMatcher.ALWAYS_TRUE;
-        if (wordToComplete != null) {
-            prefixMatcher = new PlainPrefixMatcher(wordToComplete);
+        //before completion
+        var dummyIdentifier = CompletionUtil.customizeDummyIdentifier(psiFile, cursor);
+        if (dummyIdentifier == null) {
+            dummyIdentifier = CompletionUtil.DUMMY_IDENTIFIER; //TODO:
         }
-        var cResultSet = new IdeaCompletionResultSet(
-                list::add, prefixMatcher, completionContributor, cParameters, null, null);
+        changeDocument(doc, line, column, line, column, dummyIdentifier);
+        //Log.debug(doc.getText());
 
-        completionContributor.fillCompletionVariants(cParameters, cResultSet);
+        //do completion
+        try {
+            var position = psiFile.findElementAt(cursor);
+            Log.debug(String.format("Completion at: %d %s %s", cursor, position.getClass().getSimpleName(), position.getText()));
+            //do completion
+            var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
+                    cursor, 0, new IdeaEditor() /*TODO*/, () -> false);
+            var prefixMatcher = PrefixMatcher.ALWAYS_TRUE;
+            if (wordToComplete != null) {
+                prefixMatcher = new PlainPrefixMatcher(wordToComplete);
+            }
+            var cResultSet = new IdeaCompletionResultSet(
+                    list::add, prefixMatcher, completionContributor, cParameters, null, null);
+
+            completionContributor.fillCompletionVariants(cParameters, cResultSet);
+        } finally {
+            //after completion
+            changeDocument(doc, line, column, line, column + dummyIdentifier.length(), "");
+            //Log.debug(doc.getText());
+        }
 
         return list;
     }

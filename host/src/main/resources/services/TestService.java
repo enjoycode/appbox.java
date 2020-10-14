@@ -1,12 +1,16 @@
-package sys.Services;
+package sys.services.impl;
 
 import java.util.concurrent.CompletableFuture;
 
 public final class TestService {
 
     public CompletableFuture<String> sayHello() {
-        java
+        this
         return CompletableFuture.completedFuture("Hello Future!");
     }
+
+    public void test1() {}
+
+    public void test2() {}
 
 }
