@@ -107,7 +107,6 @@ public final class Workspace {
         var list = new ArrayList<CompletionResult>();
 
         var psiFile = PsiDocumentManager.getInstance(projectEnvironment.getProject()).getPsiFile(doc);
-        //var cursor  = doc.getLineStartOffset(line) + column - 1; //暂减1
         var cursor = doc.getLineStartOffset(line) + column;
         //Log.debug(doc.getText(new TextRange(doc.getLineStartOffset(line), cursor)));
 
