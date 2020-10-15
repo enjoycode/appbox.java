@@ -13,5 +13,6 @@ kotlin-stdlib-1.3.70.jar
 platform-api.jar
 platform-impl.jar
 platform-util-ui.jar
+streamex-0.7.2.jar
 trove4j.jar
 util.jar

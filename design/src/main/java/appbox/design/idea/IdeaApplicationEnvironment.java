@@ -7,6 +7,7 @@ import com.intellij.codeInsight.ContainerProvider;
 import com.intellij.codeInsight.JavaContainerProvider;
 import com.intellij.codeInsight.completion.BaseCompletionService;
 import com.intellij.codeInsight.completion.CompletionService;
+import com.intellij.codeInsight.completion.InternalCompletionSettings;
 import com.intellij.codeInsight.folding.CodeFoldingSettings;
 import com.intellij.codeInsight.folding.JavaCodeFoldingSettings;
 import com.intellij.codeInsight.folding.impl.JavaCodeFoldingSettingsBase;
@@ -15,6 +16,8 @@ import com.intellij.codeInspection.SuppressManager;
 import com.intellij.concurrency.Job;
 import com.intellij.concurrency.JobLauncher;
 import com.intellij.core.*;
+import com.intellij.featureStatistics.FeatureUsageTracker;
+import com.intellij.featureStatistics.FeatureUsageTrackerImpl;
 import com.intellij.ide.highlighter.ArchiveFileType;
 import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.ide.highlighter.JavaFileType;
@@ -72,6 +75,8 @@ import com.intellij.psi.impl.*;
 import com.intellij.psi.impl.compiled.ClassFileStubBuilder;
 import com.intellij.psi.impl.file.PsiPackageImplementationHelper;
 import com.intellij.psi.impl.search.MethodSuperSearcher;
+import com.intellij.psi.impl.smartPointers.JavaAnchorProvider;
+import com.intellij.psi.impl.smartPointers.SmartPointerAnchorProvider;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistryImpl;
 import com.intellij.psi.impl.source.tree.JavaASTFactory;
@@ -213,11 +218,16 @@ public final class IdeaApplicationEnvironment {
         registerApplicationExtensionPoint(SdkType.EP_NAME, JavaSdkImpl.class);
         registerApplicationExtensionPoint(OrderRootType.EP_NAME, OrderRootType.class);
 
-        registerApplicationService(JavaClassSupers.class, new JavaClassSupersImpl()); //getVariants需要
+        registerApplicationService(JavaClassSupers.class, new JavaClassSupersImpl()); //getVariants
         registerApplicationService(PsiSymbolService.class, new PsiSymbolServiceImpl());
         registerApplicationService(CompletionService.class, new BaseCompletionService());
         registerApplicationService(CodeInsightSettings.class, new CodeInsightSettings());
         registerApplicationService(SuppressManager.class, new IdeaSuppressManager()); //completion
+        registerApplicationService(InternalCompletionSettings.class, new InternalCompletionSettings()); //completion
+        registerApplicationService(FeatureUsageTracker.class, new IdeaFeatureUsageTracker() /*new FeatureUsageTrackerImpl()*/); //completion
+
+        registerApplicationExtensionPoint(SmartPointerAnchorProvider.EP_NAME, SmartPointerAnchorProvider.class);
+        addExtension(SmartPointerAnchorProvider.EP_NAME, new JavaAnchorProvider()); //completion
 
         registerApplicationService(TransactionGuard.class, new TransactionGuardImpl()); //document commit
         //myApplication.registerService(DocumentCommitProcessor.class, DocumentCommitThread.class); //document commit

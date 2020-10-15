@@ -1,21 +1,32 @@
 import appbox.design.idea.*;
 import appbox.model.ServiceModel;
+import com.intellij.application.options.CodeStyle;
+import com.intellij.codeInsight.ExternalAnnotationsManager;
+import com.intellij.codeInsight.ExternalAnnotationsManagerImpl;
+import com.intellij.codeInsight.InferredAnnotationsManager;
+import com.intellij.codeInsight.InferredAnnotationsManagerImpl;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.lang.FileASTNode;
 import com.intellij.lang.java.JavaLanguage;
+import com.intellij.notification.NotificationDisplayType;
+import com.intellij.notification.NotificationGroup;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.MockDocumentEvent;
 import com.intellij.openapi.editor.impl.event.DocumentEventImpl;
+import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.ProperTextRange;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.*;
+import com.intellij.psi.codeStyle.*;
 import com.intellij.psi.impl.*;
 import com.intellij.psi.impl.file.impl.FileManager;
 import com.intellij.psi.impl.source.PsiFileImpl;
@@ -29,6 +40,7 @@ import com.intellij.util.FileContentUtilCore;
 import com.intellij.util.SmartList;
 import org.junit.jupiter.api.Test;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -112,36 +124,6 @@ public class TestIdea {
     }
 
     @Test
-    public void testCompletion2() {
-        var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
-
-        prj.addJarToClassPath(new File("/media/psf/Home/Projects/intellij-community/java/mockJDK-11/jre/lib/rt.jar"));
-        var root = new TestVirtualFile("", System.currentTimeMillis());
-        var src = "import java.util.concurrent.CompletableFuture;\n";
-        src += "public class TestService\n";
-        src += "public CompletableFuture<String> say() {\n";
-        var cursor = src.length() + 5;
-        //src += "this.sa;\n";
-        src += "this.sa\n";
-        src += "return CompletableFuture.completedFuture(\"Hello\");\n";
-        src += "}\n";
-        var file1 = new TestVirtualFile("A.java", src, System.currentTimeMillis());
-        prj.addSourcesToClasspath(root);
-
-        var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
-        var position    = psiFile.findElementAt(cursor);
-        var contributor = new JavaCompletionContributor();
-
-        var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
-                cursor, 0, new IdeaEditor(), () -> false);
-        var cResultSet = new IdeaCompletionResultSet(
-                completionResult -> System.out.println(completionResult),
-                PrefixMatcher.ALWAYS_TRUE, contributor, cParameters, null, null);
-
-        contributor.fillCompletionVariants(cParameters, cResultSet);
-    }
-
-    @Test
     public void testReparse() { //测试修改代码后incremental reparse
         var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
         var vf = new TestVirtualFile("A.java", "class A {\n void say(){\n\n}\n}\n",
@@ -190,41 +172,6 @@ public class TestIdea {
         //assertEquals( "BA", ((PsiJavaFileImpl) psiFile2).getClasses()[0].getName());
     }
 
-    private static ProperTextRange getChangedPsiRange(PsiFile file,
-                                                      Document document,
-                                                      CharSequence oldDocumentText,
-                                                      CharSequence newDocumentText) {
-        int psiLength = oldDocumentText.length();
-        if (!file.getViewProvider().supportsIncrementalReparse(file.getLanguage())) {
-            return new ProperTextRange(0, psiLength);
-        }
-        List<DocumentEvent> events = ((PsiDocumentManagerBase) PsiDocumentManager.getInstance(file.getProject()))
-                .getEventsSinceCommit(document);
-        int prefix            = Integer.MAX_VALUE;
-        int suffix            = Integer.MAX_VALUE;
-        int lengthBeforeEvent = psiLength;
-        for (DocumentEvent event : events) {
-            prefix            = Math.min(prefix, event.getOffset());
-            suffix            = Math.min(suffix, lengthBeforeEvent - event.getOffset() - event.getOldLength());
-            lengthBeforeEvent = lengthBeforeEvent - event.getOldLength() + event.getNewLength();
-        }
-        if ((prefix == psiLength || suffix == psiLength) && newDocumentText.length() == psiLength) {
-            return null;
-        }
-        //Important! delete+insert sequence can give some of same chars back, lets grow affixes to include them.
-        int shortestLength = Math.min(psiLength, newDocumentText.length());
-        while (prefix < shortestLength && oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
-            prefix++;
-        }
-        while (suffix < shortestLength - prefix &&
-                oldDocumentText.charAt(psiLength - suffix - 1) == newDocumentText.charAt(newDocumentText.length() - suffix - 1)) {
-            suffix++;
-        }
-        int end = Math.max(prefix, psiLength - suffix);
-        if (end == prefix && newDocumentText.length() == oldDocumentText.length()) return null;
-        return ProperTextRange.create(prefix, end);
-    }
-
     private static ProperTextRange getChangedPsiRange2(PsiFile file,
                                                        Document document,
                                                        CharSequence oldDocumentText,
@@ -251,6 +198,32 @@ public class TestIdea {
         int end = Math.max(prefix, psiLength - suffix);
         if (end == prefix && newDocumentText.length() == oldDocumentText.length()) return null;
         return ProperTextRange.create(prefix, end);
+    }
+
+    @Test
+    public void testCodeStyle() {
+        var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
+
+        prj.addJarToClassPath(new File("/media/psf/Home/Projects/intellij-community/java/mockJDK-11/jre/lib/rt.jar"));
+        var root = new TestVirtualFile("", System.currentTimeMillis());
+        var file1 = new TestVirtualFile("A.java", "class TT {}", System.currentTimeMillis());
+        prj.addSourcesToClasspath(root);
+
+        var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
+
+        prj.getProject().registerService(InferredAnnotationsManager.class, InferredAnnotationsManagerImpl.class);
+        var obj1 = ExternalAnnotationsManager.getInstance(prj.getProject());
+        var obj2 = InferredAnnotationsManager.getInstance(prj.getProject());
+
+        IdeaApplicationEnvironment.registerApplicationExtensionPoint(FileTypeIndentOptionsProvider.EP_NAME, FileTypeIndentOptionsProvider.class);
+        IdeaApplicationEnvironment.registerApplicationExtensionPoint(FileIndentOptionsProvider.EP_NAME, FileIndentOptionsProvider.class);
+        IdeaApplicationEnvironment.registerApplicationExtensionPoint(LanguageCodeStyleSettingsProvider.EP_NAME, LanguageCodeStyleSettingsProvider.class);
+        IdeaApplicationEnvironment.registerApplicationExtensionPoint(CodeStyleSettingsProvider.EXTENSION_POINT_NAME, CodeStyleSettingsProvider.class);
+        IdeaApplicationEnvironment.registerApplicationExtensionPoint(FileCodeStyleProvider.EP_NAME, FileCodeStyleProvider.class);
+        IdeaApplicationEnvironment.INSTANCE.getApplication().registerService(AppCodeStyleSettingsManager.class);
+
+        //var s = CodeStyle.getLanguageSettings(psiFile);
+        //var s2 = prj.getProject().getService(ProjectCodeStyleSettingsManager.class);
     }
 
     @Test

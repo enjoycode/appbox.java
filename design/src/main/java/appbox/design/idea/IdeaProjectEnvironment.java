@@ -1,6 +1,6 @@
 package appbox.design.idea;
 
-import com.intellij.codeInsight.JavaProjectCodeInsightSettings;
+import com.intellij.codeInsight.*;
 import com.intellij.codeInsight.guess.GuessManager;
 import com.intellij.codeInsight.guess.impl.GuessManagerImpl;
 import com.intellij.core.*;
@@ -27,6 +27,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.codeStyle.JavaCodeStyleManager;
 import com.intellij.psi.codeStyle.JavaCodeStyleSettingsFacade;
+import com.intellij.psi.codeStyle.ProjectCodeStyleSettingsManager;
 import com.intellij.psi.controlFlow.ControlFlowFactory;
 import com.intellij.psi.impl.*;
 import com.intellij.psi.impl.file.PsiDirectoryFactory;
@@ -117,9 +118,14 @@ public final class IdeaProjectEnvironment {
         myProject.registerService(JavaProjectCodeInsightSettings.class, new JavaProjectCodeInsightSettings()); //completion
         registerProjectExtensionPoint(PsiElementFinder.EP_NAME, PsiElementFinderImpl.class);
         addProjectExtension(PsiElementFinder.EP_NAME, new PsiElementFinderImpl(myProject));
+        myProject.registerService(ExternalAnnotationsManager.class, IdeaExternalAnnotationsManager.class); //completion
+        myProject.registerService(InferredAnnotationsManager.class, InferredAnnotationsManagerImpl.class); //completion
+        IdeaApplicationEnvironment.registerDynamicExtensionPoint(myProject.getExtensionArea(),
+                InferredAnnotationProvider.EP_NAME.getName(), InferredAnnotationProvider.class);
 
         myProject.registerService(BlockSupport.class, new BlockSupportImpl()); //incremental reparse
         //myProject.registerService(CodeStyleManager.class, new CodeStyleManagerImpl(myProject)); //incremental reparse
+        //myProject.registerService(ProjectCodeStyleSettingsManager.class, new ProjectCodeStyleSettingsManager(myProject));
         myProject.registerService(TreeAspect.class, new TreeAspect()); //
         myProject.registerService(PomModel.class, new PomModelImpl(myProject)); //incremental reparse
         //TODO:移除以下依赖，暂DiffLog.performActualPsiChange需要
