@@ -24,5 +24,6 @@ InvokeRequire.bin
 /design/lib/platform-api.jar
 /design/lib/platform-impl.jar
 /design/lib/platform-util-ui.jar
+/design/lib/streamex-0.7.2.jar
 /design/lib/trove4j.jar
 /design/lib/util.jar
