@@ -75,6 +75,7 @@ import com.intellij.psi.augment.PsiAugmentProvider;
 import com.intellij.psi.compiled.ClassFileDecompilers;
 import com.intellij.psi.impl.*;
 import com.intellij.psi.impl.compiled.ClassFileStubBuilder;
+import com.intellij.psi.impl.compiled.ClsCustomNavigationPolicy;
 import com.intellij.psi.impl.file.PsiPackageImplementationHelper;
 import com.intellij.psi.impl.search.MethodSuperSearcher;
 import com.intellij.psi.impl.smartPointers.JavaAnchorProvider;
@@ -274,6 +275,7 @@ public final class IdeaApplicationEnvironment {
 
         registerApplicationExtensionPoint(SmartPointerAnchorProvider.EP_NAME, SmartPointerAnchorProvider.class);
         addExtension(SmartPointerAnchorProvider.EP_NAME, new JavaAnchorProvider()); //completion
+        registerApplicationDynamicExtensionPoint(ClsCustomNavigationPolicy.EP_NAME.getName(), ClsCustomNavigationPolicy.class);
 
         registerApplicationService(TransactionGuard.class, new TransactionGuardImpl()); //document commit
         //myApplication.registerService(DocumentCommitProcessor.class, DocumentCommitThread.class); //document commit
