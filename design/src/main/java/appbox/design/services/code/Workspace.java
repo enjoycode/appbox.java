@@ -110,7 +110,7 @@ public final class Workspace {
         var cursor = doc.getLineStartOffset(line) + column;
         //Log.debug(doc.getText(new TextRange(doc.getLineStartOffset(line), cursor)));
 
-        //before completion
+        //before completion //TODO:不需要dummyIdentifier的情况
         var dummyIdentifier = CompletionUtil.customizeDummyIdentifier(psiFile, cursor);
         if (dummyIdentifier == null) {
             dummyIdentifier = CompletionUtil.DUMMY_IDENTIFIER; //TODO:
