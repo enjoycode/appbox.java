@@ -17,7 +17,6 @@ import com.intellij.concurrency.Job;
 import com.intellij.concurrency.JobLauncher;
 import com.intellij.core.*;
 import com.intellij.featureStatistics.FeatureUsageTracker;
-import com.intellij.featureStatistics.FeatureUsageTrackerImpl;
 import com.intellij.ide.highlighter.ArchiveFileType;
 import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.ide.highlighter.JavaFileType;
@@ -59,6 +58,9 @@ import com.intellij.openapi.projectRoots.impl.JavaSdkImpl;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.ClassExtension;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.registry.Registry;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileManagerListener;
 import com.intellij.openapi.vfs.VirtualFileSystem;
@@ -77,6 +79,7 @@ import com.intellij.psi.impl.file.PsiPackageImplementationHelper;
 import com.intellij.psi.impl.search.MethodSuperSearcher;
 import com.intellij.psi.impl.smartPointers.JavaAnchorProvider;
 import com.intellij.psi.impl.smartPointers.SmartPointerAnchorProvider;
+import com.intellij.psi.impl.source.FileLocalResolver;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistryImpl;
 import com.intellij.psi.impl.source.tree.JavaASTFactory;
@@ -95,6 +98,8 @@ import com.intellij.util.graph.impl.GraphAlgorithmsImpl;
 import org.jetbrains.java.decompiler.IdeaDecompiler;
 import org.picocontainer.MutablePicoContainer;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -111,6 +116,8 @@ public final class IdeaApplicationEnvironment {
     private final   VirtualFileSystem    myJrtFileSystem;
     private final   Disposable           myParentDisposable;
     private final   boolean              myUnitTestMode;
+
+    public final VirtualFile JdkRtRoot;
 
     public static final Disposable                 lastDisposable = Disposer.newDisposable();
     public static final IdeaApplicationEnvironment INSTANCE       =
@@ -129,6 +136,45 @@ public final class IdeaApplicationEnvironment {
         myLocalFileSystem = createLocalFileSystem();
         myJarFileSystem   = createJarFileSystem();
         myJrtFileSystem   = createJrtFileSystem();
+
+        //初始化Registry //TODO:暂放在这里 ide.hide.excluded.files
+        Registry.addKey("psi.track.invalidation",
+                "When PSI elements are invalidated, store stack traces in their user data for debugging",
+                1, false);
+        Registry.addKey("ide.java.completion.suggest.static.after.instance",
+                "Suggest static methods/fields after instance qualifier in Java completion",
+                0, false);
+        Registry.addKey("java.correct.class.type.by.place.resolve.scope",
+                "When resolving Java references, use the resolve scope of the currently processed source file",
+                1, false);
+        Registry.addKey("java.completion.show.constructors",
+                "Show separate constructors when completing constructor call, instead of a single class name",
+                0, false);
+        Registry.addKey("psi.incremental.reparse.depth.limit", "", 1000, false);
+        Registry.addKey("java.codeanalysis.annotations.available", "", 0, true);
+        Registry.getInstance().markAsLoaded();
+
+        //加载默认的Jdk
+        //TODO:暂从resource中复制
+        VirtualFile jdk_rt;
+        var path     = FileUtil.getTempDirectory() +  "/mockjdk/rt.jar";
+        var jarFile  = new File(path);
+        try {
+            if (!FileUtil.exists(path)) {
+                var inStream = IdeaApplicationEnvironment.class.getResourceAsStream("/mockjdk/rt.jar");
+                FileUtil.createIfNotExists(jarFile);
+                try (var outStream = new FileOutputStream(jarFile)) {
+                    FileUtil.copy(inStream, outStream);
+                }
+                Log.debug("Extract mock jdk to: " + path);
+            }
+
+            jdk_rt = myJarFileSystem.findFileByPath(path + "!/");
+        } catch (Exception ex) {
+            jdk_rt = null;
+            Log.error("Can't load mock jdk.");
+        }
+        JdkRtRoot = jdk_rt;
 
         registerApplicationService(FileDocumentManager.class, new MockFileDocumentManagerImpl(charSequence -> {
             //TODO:重新实现Document

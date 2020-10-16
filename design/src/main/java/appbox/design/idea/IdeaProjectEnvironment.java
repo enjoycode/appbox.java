@@ -5,6 +5,7 @@ import com.intellij.codeInsight.guess.GuessManager;
 import com.intellij.codeInsight.guess.impl.GuessManagerImpl;
 import com.intellij.core.*;
 import com.intellij.lang.injection.InjectedLanguageManager;
+import com.intellij.lang.jvm.facade.JvmElementProvider;
 import com.intellij.lang.jvm.facade.JvmFacade;
 import com.intellij.lang.jvm.facade.JvmFacadeImpl;
 import com.intellij.mock.*;
@@ -107,6 +108,7 @@ public final class IdeaProjectEnvironment {
 
         myFileManager = new CoreJavaFileManager(myPsiManager); //createCoreFileManager();
         myProject.registerService(JavaFileManager.class, myFileManager);
+        myProject.registerService(CoreJavaFileManager.class, (CoreJavaFileManager) myFileManager);
 
         myProject.registerService(JvmPsiConversionHelper.class, new JvmPsiConversionHelperImpl());
         myProject.registerService(JavaPsiFacade.class, new JavaPsiFacadeImpl(myProject));
@@ -120,8 +122,12 @@ public final class IdeaProjectEnvironment {
         addProjectExtension(PsiElementFinder.EP_NAME, new PsiElementFinderImpl(myProject));
         myProject.registerService(ExternalAnnotationsManager.class, IdeaExternalAnnotationsManager.class); //completion
         myProject.registerService(InferredAnnotationsManager.class, InferredAnnotationsManagerImpl.class); //completion
+        myProject.registerService(PsiNameHelper.class, PsiNameHelperImpl.class); //completion
+        myProject.registerService(NullableNotNullManager.class, IdeaNullableNotNullManager.class); //completion
         IdeaApplicationEnvironment.registerDynamicExtensionPoint(myProject.getExtensionArea(),
                 InferredAnnotationProvider.EP_NAME.getName(), InferredAnnotationProvider.class);
+        IdeaApplicationEnvironment.registerDynamicExtensionPoint(myProject.getExtensionArea(),
+                JvmElementProvider.EP_NAME.getName(), JvmElementProvider.class);
 
         myProject.registerService(BlockSupport.class, new BlockSupportImpl()); //incremental reparse
         //myProject.registerService(CodeStyleManager.class, new CodeStyleManagerImpl(myProject)); //incremental reparse
@@ -133,6 +139,9 @@ public final class IdeaProjectEnvironment {
                 PsiTreeChangePreprocessor.class.getName(), ExtensionPoint.Kind.INTERFACE);
         myProject.getExtensionArea().registerExtensionPoint(PsiTreeChangeListener.EP.getName(),
                 PsiTreeChangeListener.class.getName(), ExtensionPoint.Kind.INTERFACE);
+
+        //最后绑定默认Jdk
+        addSourcesToClasspath(IdeaApplicationEnvironment.INSTANCE.JdkRtRoot);
     }
 
     protected MockProject createProject(PicoContainer parent, Disposable parentDisposable) {

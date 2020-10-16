@@ -4,6 +4,7 @@ import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 
+import java.util.Collections;
 import java.util.List;
 
 public final class IdeaExternalAnnotationsManager extends ExternalAnnotationsManager {
@@ -24,7 +25,7 @@ public final class IdeaExternalAnnotationsManager extends ExternalAnnotationsMan
 
     @Override
     public List<PsiAnnotation> findExternalAnnotations(PsiModifierListOwner psiModifierListOwner, String s) {
-        return null;
+        return Collections.emptyList(); //NonNull
     }
 
     @Override

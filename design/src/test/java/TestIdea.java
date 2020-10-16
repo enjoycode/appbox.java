@@ -1,10 +1,8 @@
+import appbox.design.DesignHub;
 import appbox.design.idea.*;
 import appbox.model.ServiceModel;
 import com.intellij.application.options.CodeStyle;
-import com.intellij.codeInsight.ExternalAnnotationsManager;
-import com.intellij.codeInsight.ExternalAnnotationsManagerImpl;
-import com.intellij.codeInsight.InferredAnnotationsManager;
-import com.intellij.codeInsight.InferredAnnotationsManagerImpl;
+import com.intellij.codeInsight.*;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.lang.FileASTNode;
 import com.intellij.lang.java.JavaLanguage;
@@ -23,7 +21,9 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.ProperTextRange;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.impl.jar.JarFileSystemImpl;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.*;
@@ -38,11 +38,13 @@ import com.intellij.util.DocumentUtil;
 import com.intellij.util.FileContentUtil;
 import com.intellij.util.FileContentUtilCore;
 import com.intellij.util.SmartList;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -98,13 +100,12 @@ public class TestIdea {
     }
 
     @Test
-    public void testCompletion() { //测试代码提示
+    @DisplayName("测试代码提示")
+    public void testCompletion() {
         var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
-
-        prj.addJarToClassPath(new File("/media/psf/Home/Projects/intellij-community/java/mockJDK-11/jre/lib/rt.jar"));
         var root = new TestVirtualFile("", System.currentTimeMillis());
         var file1 = new TestVirtualFile("A.java",
-                "package s.impl; class A {A b; void say(){b.toString();}}", System.currentTimeMillis());
+                "package impl;class A{A b; void say(){var o=n}}", System.currentTimeMillis());
         prj.addSourcesToClasspath(root);
 
         var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
@@ -124,7 +125,8 @@ public class TestIdea {
     }
 
     @Test
-    public void testReparse() { //测试修改代码后incremental reparse
+    @DisplayName("测试修改代码后incremental reparse")
+    public void testReparse() {
         var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
         var vf = new TestVirtualFile("A.java", "class A {\n void say(){\n\n}\n}\n",
                 System.currentTimeMillis());
@@ -186,15 +188,15 @@ public class TestIdea {
         if ((prefix == psiLength || suffix == psiLength) && newDocumentText.length() == psiLength) {
             return null;
         }
-        //Important! delete+insert sequence can give some of same chars back, lets grow affixes to include them.
-        int shortestLength = Math.min(psiLength, newDocumentText.length());
-        while (prefix < shortestLength && oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
-            prefix++;
-        }
-        while (suffix < shortestLength - prefix &&
-                oldDocumentText.charAt(psiLength - suffix - 1) == newDocumentText.charAt(newDocumentText.length() - suffix - 1)) {
-            suffix++;
-        }
+        ////Important! delete+insert sequence can give some of same chars back, lets grow affixes to include them.
+        //int shortestLength = Math.min(psiLength, newDocumentText.length());
+        //while (prefix < shortestLength && oldDocumentText.charAt(prefix) == newDocumentText.charAt(prefix)) {
+        //    prefix++;
+        //}
+        //while (suffix < shortestLength - prefix &&
+        //        oldDocumentText.charAt(psiLength - suffix - 1) == newDocumentText.charAt(newDocumentText.length() - suffix - 1)) {
+        //    suffix++;
+        //}
         int end = Math.max(prefix, psiLength - suffix);
         if (end == prefix && newDocumentText.length() == oldDocumentText.length()) return null;
         return ProperTextRange.create(prefix, end);
@@ -204,7 +206,6 @@ public class TestIdea {
     public void testCodeStyle() {
         var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
 
-        prj.addJarToClassPath(new File("/media/psf/Home/Projects/intellij-community/java/mockJDK-11/jre/lib/rt.jar"));
         var root = new TestVirtualFile("", System.currentTimeMillis());
         var file1 = new TestVirtualFile("A.java", "class TT {}", System.currentTimeMillis());
         prj.addSourcesToClasspath(root);
@@ -212,8 +213,9 @@ public class TestIdea {
         var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
 
         prj.getProject().registerService(InferredAnnotationsManager.class, InferredAnnotationsManagerImpl.class);
-        var obj1 = ExternalAnnotationsManager.getInstance(prj.getProject());
-        var obj2 = InferredAnnotationsManager.getInstance(prj.getProject());
+        var s1 = ExternalAnnotationsManager.getInstance(prj.getProject());
+        var s2 = InferredAnnotationsManager.getInstance(prj.getProject());
+        var s3 = NullableNotNullManager.getInstance(prj.getProject());
 
         IdeaApplicationEnvironment.registerApplicationExtensionPoint(FileTypeIndentOptionsProvider.EP_NAME, FileTypeIndentOptionsProvider.class);
         IdeaApplicationEnvironment.registerApplicationExtensionPoint(FileIndentOptionsProvider.EP_NAME, FileIndentOptionsProvider.class);
