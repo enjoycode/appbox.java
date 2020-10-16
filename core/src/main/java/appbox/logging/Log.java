@@ -25,7 +25,7 @@ public final class Log {
         var f = StackWalker.getInstance(/*StackWalker.Option.RETAIN_CLASS_REFERENCE*/)
                 .walk(s -> s.skip(2).limit(1).findFirst())
                 .get();
-        System.out.format("%s%s %s:%d]:\33[0m %s\n", level, LocalDateTime.now().toString(),
+        System.out.format("%s%s %s:%d]:\33[0m %s\n", level, LocalDateTime.now(),
                 f.getFileName(), f.getLineNumber(), msg);
     }
 }

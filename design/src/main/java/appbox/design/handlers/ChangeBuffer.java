@@ -25,7 +25,7 @@ public final class ChangeBuffer implements IRequestHandler { //TODO: rename
             newText = "";
         }
 
-        Log.debug(String.format("ChangeBuffer: %d %s %d.%d-%d.%d %s",
+        Log.debug(String.format("%d %s %d.%d-%d.%d %s",
                 type, targetId, startLine, startColumn, endLine, endColumn, newText));
 
         var modelId   = Long.parseUnsignedLong(targetId);
