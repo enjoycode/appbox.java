@@ -44,7 +44,7 @@ public class TestVirtualFile extends VirtualFile {
 
     @Override
     public String getPath() {
-        return _name;
+        return _parent == null ? _name : _parent.getPath() + "/" + _name;
     }
 
     @Override

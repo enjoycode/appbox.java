@@ -1,53 +1,24 @@
-import appbox.design.DesignHub;
 import appbox.design.idea.*;
-import appbox.model.ServiceModel;
-import com.intellij.application.options.CodeStyle;
 import com.intellij.codeInsight.*;
 import com.intellij.codeInsight.completion.*;
-import com.intellij.lang.FileASTNode;
 import com.intellij.lang.java.JavaLanguage;
-import com.intellij.notification.NotificationDisplayType;
-import com.intellij.notification.NotificationGroup;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.event.DocumentEvent;
-import com.intellij.openapi.editor.event.MockDocumentEvent;
-import com.intellij.openapi.editor.impl.event.DocumentEventImpl;
-import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.ProperTextRange;
-import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.util.registry.Registry;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.impl.jar.JarFileSystemImpl;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.*;
 import com.intellij.psi.impl.*;
-import com.intellij.psi.impl.file.impl.FileManager;
-import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.PsiJavaFileImpl;
 import com.intellij.psi.impl.source.tree.FileElement;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.text.BlockSupport;
-import com.intellij.util.DocumentUtil;
-import com.intellij.util.FileContentUtil;
-import com.intellij.util.FileContentUtilCore;
-import com.intellij.util.SmartList;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.swing.*;
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
 
@@ -102,26 +73,36 @@ public class TestIdea {
     @Test
     @DisplayName("测试代码提示")
     public void testCompletion() {
-        var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
-        var root = new TestVirtualFile("", System.currentTimeMillis());
-        var file1 = new TestVirtualFile("A.java",
-                "package impl;class A{A b; void say(){var o=n}}", System.currentTimeMillis());
+        var prj    = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
+        var root   = new TestVirtualFile("", System.currentTimeMillis());
         prj.addSourcesToClasspath(root);
+        //add files
+        var dir2 = new TestVirtualFile("pack", System.currentTimeMillis());
+        root.addChild(dir2);
+        var file2 = new TestVirtualFile("B.java", "package pack;public class B{}", System.currentTimeMillis());
+        dir2.addChild(file2);
+        var file3 = new TestVirtualFile("C.java", "package pack;public class C{}",System.currentTimeMillis());
+        dir2.addChild(file3);
+
+        //var src    = "import m<caret>;class A{void say(){}}";
+        //var src    = "class A{void say(){var o=new pack.m<caret>}}";
+        var src    = "class A{void say(){var o=new pack.m<caret>}}";
+        //var prefixMatcher = new PlainPrefixMatcher("pac");
+        var prefixMatcher = PrefixMatcher.ALWAYS_TRUE;
+        var cursor = src.indexOf("<caret>") - 1;
+        var file1 = new TestVirtualFile("A.java",
+                src.replace("<caret>", ""), System.currentTimeMillis());
+        root.addChild(file1);
 
         var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
-        //for (int i = 0; i < 10; i++) {
-        var cursor      = 43;
         var position    = psiFile.findElementAt(cursor);
         var contributor = new JavaCompletionContributor();
-
         var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
                 cursor, 0, new IdeaEditor(), () -> false);
         var cResultSet = new IdeaCompletionResultSet(
                 completionResult -> System.out.println(completionResult),
-                PrefixMatcher.ALWAYS_TRUE, contributor, cParameters, null, null);
-
+                prefixMatcher, contributor, cParameters, null, null);
         contributor.fillCompletionVariants(cParameters, cResultSet);
-        //}
     }
 
     @Test
@@ -206,11 +187,12 @@ public class TestIdea {
     public void testCodeStyle() {
         var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
 
-        var root = new TestVirtualFile("", System.currentTimeMillis());
+        var root  = new TestVirtualFile("", System.currentTimeMillis());
         var file1 = new TestVirtualFile("A.java", "class TT {}", System.currentTimeMillis());
         prj.addSourcesToClasspath(root);
 
-        var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
+        var psiFile = (PsiJavaFile) PsiManager.getInstance(prj.getProject()).findFile(file1);
+        var clss    = psiFile.getClasses();
 
         prj.getProject().registerService(InferredAnnotationsManager.class, InferredAnnotationsManagerImpl.class);
         var s1 = ExternalAnnotationsManager.getInstance(prj.getProject());
