@@ -7,6 +7,10 @@ dependencies {
     implementation project(':core')
     // brotli压缩库，暂使用此库
     implementation 'com.nixxcode.jvmbrotli:jvmbrotli:0.2.0'
+
+    compile 'com.github.jasync-sql:jasync-postgresql:1.1.3'
+    //.yml配置文件读取支持
+    compile group: 'org.yaml', name: 'snakeyaml', version: '1.27'
 }
 
 tasks.jar {
