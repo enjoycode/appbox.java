@@ -25,4 +25,17 @@ public final class StringUtil {
 
         return hash1 + (hash2 * 1566083941);
     }
+
+    /**
+     * 首字母转化大写
+     */
+    public static String firstUpperCase(String str) {
+        if ((str == null) || (str.length() == 0))
+            return str;
+        char[] ch = str.toCharArray();
+        if (ch[0] >= 'a' && ch[0] <= 'z') {
+            ch[0] = (char) (ch[0] - 32);
+        }
+        return new String(ch);
+    }
 }
