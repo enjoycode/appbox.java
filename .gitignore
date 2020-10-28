@@ -11,21 +11,4 @@ build
 InvokeRequire.bin
 
 # Ignore libs from idea
-/design/lib/annotations.jar
-/design/lib/asm-all-8.0.1.jar
-/design/lib/asm_license.txt
-/design/lib/automaton-1.12-1.jar
-/design/lib/extensions.jar
-/design/lib/intellij-deps-fastutil-8.3.1-1.jar
-/design/lib/java-api.jar
-/design/lib/java-decompiler.jar
-/design/lib/java-impl.jar
-/design/lib/java_resources_en.jar
-/design/lib/jdom.jar
-/design/lib/kotlin-stdlib-1.3.70.jar
-/design/lib/platform-api.jar
-/design/lib/platform-impl.jar
-/design/lib/platform-util-ui.jar
-/design/lib/streamex-0.7.2.jar
-/design/lib/trove4j.jar
-/design/lib/util.jar
+/design/lib/*.jar

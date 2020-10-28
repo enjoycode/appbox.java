@@ -1,23 +1,43 @@
 import appbox.design.idea.*;
+import com.intellij.codeHighlighting.TextEditorHighlightingPassFactory;
+import com.intellij.codeHighlighting.TextEditorHighlightingPassFactoryRegistrar;
+import com.intellij.codeHighlighting.TextEditorHighlightingPassRegistrar;
 import com.intellij.codeInsight.*;
 import com.intellij.codeInsight.completion.*;
+import com.intellij.codeInsight.daemon.*;
+import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl;
+import com.intellij.codeInsight.daemon.impl.HighlightInfoType;
+import com.intellij.codeInsight.daemon.impl.SeverityRegistrar;
+import com.intellij.codeInsight.daemon.impl.TextEditorHighlightingPassRegistrarImpl;
+import com.intellij.codeInspection.ex.ApplicationInspectionProfileManager;
+import com.intellij.codeInspection.ex.InspectionProfileImpl;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.impl.DocumentMarkupModel;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
 import com.intellij.openapi.util.ProperTextRange;
+import com.intellij.packageDependencies.DependencyValidationManager;
+import com.intellij.packageDependencies.DependencyValidationManagerImpl;
 import com.intellij.pom.java.LanguageLevel;
+import com.intellij.profile.codeInspection.InspectionProfileManager;
+import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
+import com.intellij.profile.codeInspection.ProjectInspectionProfileManager;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.*;
 import com.intellij.psi.impl.*;
 import com.intellij.psi.impl.source.PsiJavaFileImpl;
 import com.intellij.psi.impl.source.tree.FileElement;
-import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.scope.packageSet.NamedScopeManager;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
@@ -27,74 +47,30 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestIdea {
 
     @Test
-    public void testIdea() {
-        //LanguageParserDefinitions.INSTANCE.addExplicitExtension(JavaLanguage.INSTANCE, TestFileViewProvider.parserDefinition);
-        var temp = LanguageLevel.HIGHEST; //new CoreLanguageLevelProjectExtension();
-
-        //var app = new ApplicationImpl(true, false, true, true);
-        var app = new TestApplication();
-
-        var project = new TestProject();
-
-        var module = new TestModule(project, "Module1");
-
-        var root = new TestVirtualFile("", System.currentTimeMillis());
-        var file1 = new TestVirtualFile("A.java",
-                "class A {}", System.currentTimeMillis());
-        root.addChild(file1);
-        project.fileManager.addToClasspath(root);
-
-        //测试VirtualFile -> PsiFile
-        var fileViewProvider = new TestFileViewProvider(project.psiManager, file1);
-        var psiFile          = fileViewProvider.getPsi(JavaLanguage.INSTANCE);
-        var childs           = psiFile.getChildren();
-
-        //FileViewProviderFactory factory = LanguageFileViewProviders.INSTANCE.forLanguage(JavaLanguage.INSTANCE);
-        //var vfp = new SingleRootFileViewProvider(project.psiManager, file1);
-
-
-        //var psiFile = project.psiManager.findFile(file1);
-
-        var cs = project.fileManager.findClass("A", GlobalSearchScope.projectScope(project));
-
-        //var psiManager = new PsiManagerImpl(project);
-
-        //PsiJavaParserFacadeImpl psiParserFacade = new PsiJavaParserFacadeImpl(project);
-        //JavaPsiFacadeImpl psiFacade  = new JavaPsiFacadeImpl(project);
-        //PsiManager        psiManager = PsiManager.getInstance(project);
-        //ModuleManager.getInstance(project).newModule(moduleFile, EmptyModuleType.EMPTY_MODULE);
-
-        //var m = psiFacade.findModule("TestModule",
-        //        GlobalSearchScope.EMPTY_SCOPE
-        //        /*GlobalSearchScope.allScope(project)*/);
-
-    }
-
-    @Test
     @DisplayName("测试代码提示")
     public void testCompletion() {
-        var prj    = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
-        var root   = new TestVirtualFile("", System.currentTimeMillis());
+        var prj  = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
+        var root = new TestVirtualFile("", System.currentTimeMillis());
         prj.addSourcesToClasspath(root);
         //add files
         var dir2 = new TestVirtualFile("pack", System.currentTimeMillis());
         root.addChild(dir2);
         var file2 = new TestVirtualFile("B.java", "package pack;public class B{}", System.currentTimeMillis());
         dir2.addChild(file2);
-        var file3 = new TestVirtualFile("C.java", "package pack;public class C{}",System.currentTimeMillis());
+        var file3 = new TestVirtualFile("C.java", "package pack;public class C{}", System.currentTimeMillis());
         dir2.addChild(file3);
 
         //var src    = "import m<caret>;class A{void say(){}}";
         //var src    = "class A{void say(){var o=new pack.m<caret>}}";
-        var src    = "class A{void say(){var o=new pack.m<caret>}}";
+        var src = "class A{void say(){var o=new pack.m<caret>}}";
         //var prefixMatcher = new PlainPrefixMatcher("pac");
         var prefixMatcher = PrefixMatcher.ALWAYS_TRUE;
-        var cursor = src.indexOf("<caret>") - 1;
+        var cursor        = src.indexOf("<caret>") - 1;
         var file1 = new TestVirtualFile("A.java",
                 src.replace("<caret>", ""), System.currentTimeMillis());
         root.addChild(file1);
 
-        var psiFile = PsiManager.getInstance(prj.getProject()).findFile(file1);
+        var psiFile     = PsiManager.getInstance(prj.getProject()).findFile(file1);
         var position    = psiFile.findElementAt(cursor);
         var contributor = new JavaCompletionContributor();
         var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
@@ -153,6 +129,36 @@ public class TestIdea {
 
         assertSame(psiFile1, psiFile2);
         //assertEquals( "BA", ((PsiJavaFileImpl) psiFile2).getClasses()[0].getName());
+    }
+
+    @Test
+    @DisplayName("测试代码问题")
+    public void testProblems() {
+        var prj = new IdeaProjectEnvironment(IdeaApplicationEnvironment.INSTANCE);
+        var vf = new TestVirtualFile("A.java", "class A {void say(){}",
+                System.currentTimeMillis());
+        var psiDocumentManager =
+                (IdeaPsiDocumentManager) PsiDocumentManager.getInstance(prj.getProject());
+
+        var psiFile = PsiManager.getInstance(prj.getProject()).findFile(vf);
+        var doc = FileDocumentManager.getInstance().getDocument(vf);
+        //var model = DocumentMarkupModel.forDocument(doc, prj.getProject(), true);
+
+        IdeaApplicationEnvironment.INSTANCE.registerApplicationService(DaemonCodeAnalyzerSettings.class,
+                new DaemonCodeAnalyzerSettingsImpl());
+        IdeaApplicationEnvironment.registerApplicationExtensionPoint(TextEditorHighlightingPassRegistrarImpl.EP_NAME,
+                        TextEditorHighlightingPassFactoryRegistrar.class);
+        prj.getProject().registerService(NamedScopeManager.class, NamedScopeManager.class);
+        prj.getProject().registerService(DependencyValidationManager.class, DependencyValidationManagerImpl.class);
+        prj.getProject().registerService(TextEditorHighlightingPassRegistrar.class,
+                TextEditorHighlightingPassRegistrarImpl.class);
+        prj.getProject().registerService(InspectionProjectProfileManager.class, ProjectInspectionProfileManager.class);
+        prj.getProject().registerService(DaemonCodeAnalyzer.class, DaemonCodeAnalyzerImpl.class);
+        //var analyzer = new DaemonCodeAnalyzerImpl(prj.getProject());
+        //var problems = analyzer.getFileLevelHighlights(prj.getProject(), psiFile);
+        var p = new ProjectInspectionProfileManager(prj.getProject());
+        var problems = DaemonCodeAnalyzerImpl.getHighlights(doc,
+                HighlightSeverity.ERROR, prj.getProject());
     }
 
     private static ProperTextRange getChangedPsiRange2(PsiFile file,
