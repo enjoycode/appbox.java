@@ -1,8 +1,6 @@
 package appbox.design.services.code;
 
 import appbox.design.DesignHub;
-import appbox.design.idea.ModelVirtualFile;
-import appbox.design.idea.ModelVirtualFileSystem;
 import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
 
@@ -27,8 +25,8 @@ public final class TypeSystem {
         if (model.modelType() == ModelType.Service) {
             //var docName = String.format("%s.Services.%s.java", appName, model.name());
             //不再需要加载源码, 注意已签出先从Staged中加载
-            var vf = new ModelVirtualFile(workspace.virtualFileSystem.root.designHub, model.id());
-            workspace.virtualFileSystem.modelFiles.add(vf);
+            //var vf = new ModelVirtualFile(workspace.virtualFileSystem.root.designHub, model.id());
+            //workspace.virtualFileSystem.modelFiles.add(vf);
 
             //TODO:服务模型创建虚拟代理
         }

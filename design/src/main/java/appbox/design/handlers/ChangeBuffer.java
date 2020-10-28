@@ -35,20 +35,20 @@ public final class ChangeBuffer implements IRequestHandler { //TODO: rename
             return CompletableFuture.failedFuture(new Exception(error));
         }
 
-        var doc = hub.typeSystem.workspace.findOpenedDocument(modelId);
-        if (doc == null) {
-            var fileName = String.format("%s.Services.%s.java",
-                    modelNode.appNode.model.name(), modelNode.model().name());
-            var error = String.format("Can't find opened ServiceModel: %s", fileName);
-            return CompletableFuture.failedFuture(new Exception(error));
-        }
-
-        //注意队列顺序执行
-        String finalNewText = newText;
-        CompletableFuture.runAsync(() -> {
-            hub.typeSystem.workspace.changeDocument(doc, startLine, startColumn, endLine, endColumn, finalNewText);
-            //Log.debug(doc.getText());
-        }, hub.codeEditorTaskPool);
+        //var doc = hub.typeSystem.workspace.findOpenedDocument(modelId);
+        //if (doc == null) {
+        //    var fileName = String.format("%s.Services.%s.java",
+        //            modelNode.appNode.model.name(), modelNode.model().name());
+        //    var error = String.format("Can't find opened ServiceModel: %s", fileName);
+        //    return CompletableFuture.failedFuture(new Exception(error));
+        //}
+        //
+        ////注意队列顺序执行
+        //String finalNewText = newText;
+        //CompletableFuture.runAsync(() -> {
+        //    hub.typeSystem.workspace.changeDocument(doc, startLine, startColumn, endLine, endColumn, finalNewText);
+        //    //Log.debug(doc.getText());
+        //}, hub.codeEditorTaskPool);
 
         return CompletableFuture.completedFuture(null);
     }
