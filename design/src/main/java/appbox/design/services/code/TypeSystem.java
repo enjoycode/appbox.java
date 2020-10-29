@@ -1,34 +1,82 @@
 package appbox.design.services.code;
 
 import appbox.design.DesignHub;
+import appbox.design.jdt.ModelFile;
 import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
+import org.eclipse.core.resources.IProject;
 
 public final class TypeSystem {
 
-    public final LanguageServer languageServer;
+    public final  LanguageServer languageServer;
+    private       IProject       modelsProject;
+    private final DesignHub      hub;
 
     public TypeSystem(DesignHub designHub) {
-        languageServer = new LanguageServer(designHub);
+        hub            = designHub;
+        languageServer = new LanguageServer();
+
+        //创建实体、枚举等通用模型项目
+        try {
+            modelsProject = languageServer.createProject("models");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * 用于加载设计树后创建模型相应的虚拟文件
      */
     public void createModelDocument(ModelNode node) throws Exception {
-        var appName = node.appNode.model.name();
-        var model = node.model();
+        var appName  = node.appNode.model.name();
+        var model    = node.model();
+        var fileName = String.format("%s.java", model.name());
 
         //TODO:其他类型模型
         if (model.modelType() == ModelType.Service) {
             //不再需要加载源码, 注意已签出先从Staged中加载
             var projectName = String.format("%s_services_%s", appName, model.name());
-            var project = languageServer.createProject(projectName);
-            var fileName = String.format("%s.java", model.name());
-            languageServer.createFile(project, fileName);
+            var project     = languageServer.createProject(projectName);
 
+            var file = project.getFile(fileName);
+            file.create(null, true, null);
             //TODO:服务模型创建虚拟代理
+        } else if (model.modelType() == ModelType.Entity) {
+            //需要包含目录,如sys/entities/Order.java
+            var appFolder = modelsProject.getFolder(appName);
+            if (!appFolder.exists()) {
+                appFolder.create(true, true, null);
+            }
+            var typeFolder = appFolder.getFolder("entities");
+            if (!typeFolder.exists()) {
+                typeFolder.create(true, true, null);
+            }
+            var file = typeFolder.getFile(fileName);
+            file.create(null, true, null);
         }
     }
+
+    //region ====find XXX====
+    public ModelNode findModelNodeByModelFile(ModelFile file) {
+        //TODO:暂简单处理路径
+        var fileName = file.getName();
+        fileName = fileName.substring(0, fileName.length() - 5); //去掉扩展名
+
+        var project = file.getProject();
+        if (project.equals(modelsProject)) {
+            var typeFolder = file.getParent();
+            var appFolder  = typeFolder.getParent();
+            var appNode    = hub.designTree.findApplicationNodeByName(appFolder.getName());
+            //TODO:其他类型
+            return hub.designTree.findModelNodeByName(appNode.model.id(), ModelType.Entity, fileName);
+        } else {
+            var projectName   = project.getName();
+            var firstSepIndex = projectName.indexOf('_');
+            var appName       = projectName.substring(0, firstSepIndex);
+            var appNode       = hub.designTree.findApplicationNodeByName(appName);
+            return hub.designTree.findModelNodeByName(appNode.model.id(), ModelType.Service, fileName);
+        }
+    }
+    //endregion
 
 }

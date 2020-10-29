@@ -77,12 +77,10 @@ public final class LanguageServer {
         });
     }
 
-    private final DesignHub               hub;
     public final  ModelWorkspace          jdtWorkspace;
     private final HashMap<Long, Document> openedFiles = new HashMap<>();
 
-    public LanguageServer(DesignHub designHub) {
-        hub          = designHub;
+    public LanguageServer() {
         jdtWorkspace = new ModelWorkspace();
         //TODO:如果不能共用JavaModelManager,在这里初始化
     }
@@ -109,28 +107,6 @@ public final class LanguageServer {
         perProjectInfo.setRawClasspath(buildPath, outPath, JavaModelStatus.VERIFIED_OK);
 
         return project;
-    }
-
-    protected IFile createFile(IProject project, String name) throws Exception {
-        var path = project.getFullPath().append(name);
-        var file = (IFile) jdtWorkspace.getRoot().getFile(path);
-        file.create(null, true, null); //必须创建才会加入tree
-        return file;
-    }
-    //endregion
-
-    //region ====find XXX====
-    public ModelNode findModelNodeByModelFile(ModelFile file) {
-        //TODO:暂简单处理路径
-        var project       = file.getProject();
-        var projectName   = project.getName();
-        var firstSepIndex = projectName.indexOf('_');
-        var appName       = projectName.substring(0, firstSepIndex);
-        var appNode       = hub.designTree.findApplicationNodeByName(appName);
-        var fileName      = file.getName();
-        var modelNode = hub.designTree.findModelNodeByName(appNode.model.id(),
-                ModelType.Service, fileName.substring(0, fileName.length() - 5));
-        return modelNode;
     }
     //endregion
 

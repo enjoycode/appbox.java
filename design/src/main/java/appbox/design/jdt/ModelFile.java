@@ -2,6 +2,7 @@ package appbox.design.jdt;
 
 import appbox.design.IDeveloperSession;
 import appbox.logging.Log;
+import appbox.model.ModelType;
 import appbox.runtime.RuntimeContext;
 import appbox.store.ModelStore;
 import org.eclipse.core.internal.resources.ResourceStatus;
@@ -86,12 +87,25 @@ public final class ModelFile extends ModelResource implements IFile {
         try {
             var session   = (IDeveloperSession) RuntimeContext.current().currentSession();
             var hub       = session.getDesignHub();
-            var modelNode = hub.typeSystem.languageServer.findModelNodeByModelFile(this);
-
-            //TODO:直接加载为utf8 bytes,避免字符串转换
-            var res = ModelStore.loadServiceCodeAsync(modelNode.model().id()).get();
-            Log.debug(String.format("Load model code[%s] from ModelStore.", this.getName()));
-            return new ByteArrayInputStream(res.sourceCode.getBytes(StandardCharsets.UTF_8));
+            //根据类型查找模型节点
+            var modelNode = hub.typeSystem.findModelNodeByModelFile(this);
+            //TODO:其他类型处理
+            if (modelNode.model().modelType() == ModelType.Entity) {
+                //TODO:通过CodeGenService生成虚拟代码
+                var testCode = "package sys.entities;\n";
+                testCode += "public class " + modelNode.model().name();
+                testCode += "{\npublic String getName() {return null;}\n";
+                testCode += "public void setName(String value) {}\n}\n";
+                Log.debug("生成实体模型虚拟代码:" + this.getName());
+                return new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
+            } else if (modelNode.model().modelType() == ModelType.Service) {
+                //TODO:直接加载为utf8 bytes,避免字符串转换
+                var res = ModelStore.loadServiceCodeAsync(modelNode.model().id()).get();
+                Log.debug(String.format("Load model code[%s] from ModelStore.", this.getName()));
+                return new ByteArrayInputStream(res.sourceCode.getBytes(StandardCharsets.UTF_8));
+            } else {
+                throw new RuntimeException("未实现");
+            }
         } catch (Exception ex) {
             Log.warn(String.format("Can't load model's source code: %s", this.getFullPath().toString()));
             throw new CoreException(new ResourceStatus(ResourceStatus.FAILED_READ_LOCAL, ex.getMessage()));
