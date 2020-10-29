@@ -8,14 +8,15 @@ import appbox.utils.ReflectUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.alibaba.ttl.threadpool.TtlExecutors;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 public final class HostRuntimeContext implements IRuntimeContext {
 
-    private final        ServiceContainer                       _services = new ServiceContainer();
-    private static final TransmittableThreadLocal<ISessionInfo> _session  = new TransmittableThreadLocal<>();
+    private final        ServiceContainer                       _services   = new ServiceContainer();
+    private static final TransmittableThreadLocal<ISessionInfo> _sessionTTL = new TransmittableThreadLocal<>();
 
     static {
         //暂在这里Hack CompletableFuture's ASYNC_POOL
@@ -34,20 +35,20 @@ public final class HostRuntimeContext implements IRuntimeContext {
     }
 
     /**
-     * 仅用于消息分发器调用服务前设置
-     * @param session 可为空
+     * 仅用于消息分发器调用服务前设置以及系统存储收到请求响应时设置
      */
-    public void setCurrentSession(ISessionInfo session) {
+    @Override
+    public void setCurrentSession(@Nullable ISessionInfo session) {
         if (session == null) {
-            _session.remove();
+            _sessionTTL.remove();
         } else {
-            _session.set(session);
+            _sessionTTL.set(session);
         }
     }
 
     @Override
     public ISessionInfo currentSession() {
-        return _session.get();
+        return _sessionTTL.get();
     }
 
     @Override

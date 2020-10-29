@@ -9,9 +9,15 @@ import java.util.concurrent.CompletableFuture;
 public interface IRuntimeContext {
 
     /**
-     * 当前会话信息
+     * 获取当前会话信息
      */
     ISessionInfo currentSession();
+
+    /**
+     * 设置当前会话信息
+     * @param session
+     */
+    void setCurrentSession(ISessionInfo session);
 
     /**
      * 异步调用服务

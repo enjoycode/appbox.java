@@ -5,6 +5,7 @@ import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.channel.IMessageChannel;
 import appbox.channel.messages.*;
+import appbox.runtime.RuntimeContext;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -58,7 +59,9 @@ public final class SysStoreApi {
     private static CompletableFuture<IMessage> makeTaskAndSendRequire(IMessage require) {
         var msgId = _channel.newMessageId();
         var task  = new CompletableFuture<IMessage>();
-        //加入等待列表 TODO:检测已存在
+        //注意处理当前会话信息，发送前获取，收到回复后恢复
+        var session = RuntimeContext.current().currentSession();
+        //加入等待列表 TODO:检测已存在，另考虑将会话信息一并放入字典表，在onResponse恢复会话
         _pendings.put(msgId, task);
         try {
             _channel.sendMessage(msgId, require);
@@ -66,7 +69,12 @@ public final class SysStoreApi {
             Log.warn("发送请求消息[" + require.getClass().getName() + "]错误: " + e.getMessage());
             return null;
         }
-        return task;
+        return task.thenApply(m -> {
+            //先恢复会话信息
+            RuntimeContext.current().setCurrentSession(session);
+            //再返回响应消息
+            return m;
+        });
     }
 
     private static <T extends StoreResponse> CompletableFuture<T> makeSendRequireError(T response) {
