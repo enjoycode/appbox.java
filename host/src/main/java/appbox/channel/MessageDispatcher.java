@@ -70,7 +70,7 @@ public final class MessageDispatcher {
                 if (req.sessionId != 0) {
                     sessionInfo = SessionManager.tryGet(req.sessionId);
                 }
-                ((HostRuntimeContext) RuntimeContext.current()).setCurrentSession(sessionInfo);
+                RuntimeContext.current().setCurrentSession(sessionInfo);
                 //再调用服务
                 return RuntimeContext.invokeAsync(req.service, req.args);
             }).thenCompose(r -> r).handle((r, ex) -> {

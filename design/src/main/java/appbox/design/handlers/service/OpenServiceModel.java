@@ -18,9 +18,12 @@ public final class OpenServiceModel implements IRequestHandler {
             return CompletableFuture.failedFuture(error);
         }
 
-        return CompletableFuture.failedFuture(new Exception("Not impl."));
         //注意与C#实现不同，不需要从Staged或存储加载代码，由虚拟文件加载代码
-        //var doc = hub.typeSystem.workspace.openDocument(modelId);
-        //return CompletableFuture.completedFuture(doc.getText()/*doc.getCharsSequence()*/);
+        try {
+            var doc = hub.typeSystem.languageServer.openDocument(modelNode);
+            return CompletableFuture.completedFuture(doc.getContents());
+        } catch (Exception ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
     }
 }

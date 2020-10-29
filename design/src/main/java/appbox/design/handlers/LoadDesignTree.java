@@ -10,8 +10,6 @@ import java.util.concurrent.CompletableFuture;
 public final class LoadDesignTree implements IRequestHandler {
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        return hub.designTree.loadNodesAsync().thenApply(r -> {
-            return new JsonResult(hub.designTree.nodes);
-        });
+        return hub.designTree.loadNodesAsync().thenApply(r -> new JsonResult(hub.designTree.nodes));
     }
 }

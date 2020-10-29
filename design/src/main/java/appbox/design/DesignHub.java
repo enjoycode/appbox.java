@@ -18,8 +18,8 @@ public final class DesignHub { //TODO: rename to DesignContext
     public final ExecutorService codeEditorTaskPool = Executors.newSingleThreadExecutor(); //Executors.newFixedThreadPool(1);
 
     public DesignHub(ISessionInfo session) {
-        designTree = new DesignTree(this);
         typeSystem = new TypeSystem(this);
+        designTree = new DesignTree(this);
     }
 
 }

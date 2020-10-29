@@ -87,11 +87,16 @@ public final class DesignTree {
             }
 
             //在所有节点加载完后创建模型对应的虚拟文件
-            for (ModelNode n : allModelNodes) {
-                designHub.typeSystem.createModelDocument(n);
+            try {
+                for (ModelNode n : allModelNodes) {
+                    designHub.typeSystem.createModelDocument(n);
+                }
+            } catch (Exception ex) {
+                return CompletableFuture.failedFuture(ex);
+            } finally {
+                _loadingFlag.compareAndExchange(1, 0);
             }
 
-            _loadingFlag.compareAndExchange(1, 0);
             return CompletableFuture.completedFuture(true);
         });
     }
@@ -147,6 +152,7 @@ public final class DesignTree {
     //endregion
 
     //region ====Find for Create====
+
     /**
      * 用于新建时检查相同名称的模型是否已存在
      */

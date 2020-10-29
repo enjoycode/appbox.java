@@ -23,14 +23,14 @@ public final class GetCompletion implements IRequestHandler {
 
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var type = args.get(0).getInt();
+        var type           = args.get(0).getInt();
         var fileName       = args.get(1).getString(); //TODO:考虑修改前端传模型标识
         var line           = args.get(2).getInt() - 1; //注意：前端值需要-1
         var column         = args.get(3).getInt() - 1; //注意：前端值需要-1
         var wordToComplete = args.get(4).getString();
 
         Log.debug(String.format("%d %s %d-%d %s", type, fileName, line, column, wordToComplete));
-        return CompletableFuture.completedFuture(Collections.EMPTY_LIST);
+        return CompletableFuture.completedFuture(new JsonResult(Collections.EMPTY_LIST));
 
         //TODO:待修改以下查找，暂根据名称找到模型
         //var firstDot = fileName.indexOf('.');
