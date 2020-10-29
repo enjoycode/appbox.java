@@ -8,6 +8,7 @@ import appbox.design.jdt.ModelFile;
 import appbox.design.jdt.ModelWorkspace;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.ReflectUtil;
+import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.runtime.RuntimeContext;
 import org.eclipse.core.internal.resources.ProjectPreferences;
@@ -28,7 +29,9 @@ import org.eclipse.jdt.ls.core.internal.DocumentAdapter;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JVMConfigurator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * 一个TypeSystem对应一个实例，管理JavaProject及相应的虚拟文件
@@ -131,6 +134,7 @@ public final class LanguageServer {
     }
     //endregion
 
+    //region ====open/close/edit Document====
     public Document openDocument(ModelNode node) throws JavaModelException {
         //TODO:仅允许打开特定类型的
         //TODO:暂简单处理
@@ -141,7 +145,7 @@ public final class LanguageServer {
         var project = jdtWorkspace.getRoot().getProject(projectName);
         var file    = (IFile) project.findMember(fileName);
         var cu      = JDTUtils.resolveCompilationUnit(file);
-        cu.becomeWorkingCopy(null);
+        cu.becomeWorkingCopy(null); //must call
         var doc = (Document) cu.getBuffer();
         openedFiles.put(node.model().id(), doc);
         return doc;
@@ -155,46 +159,27 @@ public final class LanguageServer {
                                int endLine, int endColumn, String newText) {
         doc.changeText(startLine, startColumn, endLine, endColumn, newText);
         //TODO:检查是否需要同步结构
-        //makeConsistent(null);
+        //CompliationUnit.makeConsistent(null);
     }
+    //endregion
 
-    //public List<CompletionResult> fillCompletion(Document doc, int line, int column, String wordToComplete) {
-    //    var list = new ArrayList<CompletionResult>();
-    //
-    //    var psiFile = PsiDocumentManager.getInstance(projectEnvironment.getProject()).getPsiFile(doc);
-    //    var cursor = doc.getLineStartOffset(line) + column;
-    //    //Log.debug(doc.getText(new TextRange(doc.getLineStartOffset(line), cursor)));
-    //
-    //    //before completion //TODO:不需要dummyIdentifier的情况
-    //    var dummyIdentifier = CompletionUtil.customizeDummyIdentifier(psiFile, cursor);
-    //    if (dummyIdentifier == null) {
-    //        dummyIdentifier = CompletionUtil.DUMMY_IDENTIFIER; //TODO:
-    //    }
-    //    changeDocument(doc, line, column, line, column, dummyIdentifier);
-    //    //Log.debug(doc.getText());
-    //
-    //    //do completion
-    //    try {
-    //        var position = psiFile.findElementAt(cursor);
-    //        Log.debug(String.format("Completion at: %d %s %s", cursor, position.getClass().getSimpleName(), position.getText()));
-    //        //do completion
-    //        var cParameters = new CompletionParameters(position, psiFile, CompletionType.BASIC,
-    //                cursor, 0, new IdeaEditor() /*TODO*/, () -> false);
-    //        var prefixMatcher = PrefixMatcher.ALWAYS_TRUE;
-    //        if (wordToComplete != null) {
-    //            prefixMatcher = new PlainPrefixMatcher(wordToComplete);
-    //        }
-    //        var cResultSet = new IdeaCompletionResultSet(
-    //                list::add, prefixMatcher, completionContributor, cParameters, null, null);
-    //
-    //        completionContributor.fillCompletionVariants(cParameters, cResultSet);
-    //    } finally {
-    //        //after completion
-    //        changeDocument(doc, line, column, line, column + dummyIdentifier.length(), "");
-    //        //Log.debug(doc.getText());
-    //    }
-    //
-    //    return list;
-    //}
+    public List<CompletionProposal> completion(Document doc, int line, int column, String wordToComplete) {
+        //TODO:暂简单实现
+        var offset = doc.getOffset(line, column);
+        var cu     = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+
+        var list = new ArrayList<CompletionProposal>();
+        try {
+            cu.codeComplete(offset, new CompletionRequestor() {
+                @Override
+                public void accept(CompletionProposal completionProposal) {
+                    list.add(completionProposal);
+                }
+            });
+        } catch (Exception ex) {
+            Log.warn("代码完成错误: " + ex.getMessage());
+        }
+        return list;
+    }
 
 }

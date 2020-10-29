@@ -180,6 +180,18 @@ public final class Document implements IBuffer {
         return list;
     }
 
+    /**
+     * 将行列转换为字符位置
+     */
+    public int getOffset(int line, int column) {
+        if (line == 0) {
+            return column;
+        }
+
+        var lines = getLineMap();
+        return lines.get(line - 1).end + 1 + column;
+    }
+
     public void changeText(int sline, int scol, int eline, int ecol, String newText) {
         //TODO:验证及优化
         int                     spos, epos;
