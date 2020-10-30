@@ -249,7 +249,7 @@ public final class EntityModel extends ModelBase {
     //endregion
 
 
-    public ArrayList<EntityMemberModel> get_members() {
+    public ArrayList<EntityMemberModel> getMembers() {
         return _members;
     }
 }

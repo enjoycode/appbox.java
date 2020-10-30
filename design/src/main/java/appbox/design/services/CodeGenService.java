@@ -28,17 +28,17 @@ public class CodeGenService {
         //append constructor
         sb.append("\tpublic "+StringUtil.firstUpperCase(model.name())+"() {}\n\n");
         //append propertites
-        List<EntityMemberModel> memberList = model.get_members();
+        List<EntityMemberModel> memberList = model.getMembers();
         for(EntityMemberModel memberModel:memberList){
             DataFieldModel modelField=(DataFieldModel)memberModel;
-            sb.append("\tprivate "+modelField.get_dataType().name()+" "+memberModel.name()+";\n");
+            sb.append("\tprivate "+modelField.getDataType().name()+" "+memberModel.name()+";\n");
         }
         sb.append("\n");
         //append get set
         for(EntityMemberModel memberModel:memberList){
             DataFieldModel modelField=(DataFieldModel)memberModel;
-            sb.append("\tpublic "+modelField.get_dataType().name()+" get"+ StringUtil.firstUpperCase(memberModel.name())+"(){return "+memberModel.name()+";}\n");
-            sb.append("\tpublic void set"+StringUtil.firstUpperCase(memberModel.name())+"("+modelField.get_dataType().name()+" "+memberModel.name()+"){this."+memberModel.name()+"="+memberModel.name()+";}\n");
+            sb.append("\tpublic "+modelField.getDataType().name()+" get"+ StringUtil.firstUpperCase(memberModel.name())+"(){return "+memberModel.name()+";}\n");
+            sb.append("\tpublic void set"+StringUtil.firstUpperCase(memberModel.name())+"("+modelField.getDataType().name()+" "+memberModel.name()+"){this."+memberModel.name()+"="+memberModel.name()+";}\n");
         }
         sb.append("}");
         return sb.toString();

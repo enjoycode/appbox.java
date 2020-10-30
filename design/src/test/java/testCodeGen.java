@@ -8,8 +8,8 @@ public class testCodeGen {
     @Test
     public void test(){
         EntityModel model =new EntityModel();
-        model.set_designMode(true);
-        model.set_name("user");
+        model.setDesignMode(true);
+        model.setName("user");
         DataFieldModel filed1 =new DataFieldModel(model,"id", DataFieldModel.DataFieldType.Int,false,false);
         DataFieldModel filed2 =new DataFieldModel(model,"name", DataFieldModel.DataFieldType.String,false,false);
         DataFieldModel filed3 =new DataFieldModel(model,"age", DataFieldModel.DataFieldType.Int,false,false);

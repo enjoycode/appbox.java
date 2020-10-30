@@ -156,7 +156,7 @@ public final class DataFieldModel extends EntityMemberModel {
     //endregion
 
 
-    public DataFieldType get_dataType() {
+    public DataFieldType getDataType() {
         return _dataType;
     }
 }
