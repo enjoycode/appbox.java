@@ -167,9 +167,9 @@ public final class DesignTree {
 
     //region ====Checkout Methods====
     //用于签出节点成功后添加签出信息列表
-    public void AddCheckoutInfos(List<CheckoutInfo> infos) {
+    public void addCheckoutInfos(List<CheckoutInfo> infos) {
         for (int i = 0; i < infos.size(); i++) {
-            String key = CheckoutInfo.MakeKey(infos.get(i).getNodeType(), infos.get(i).getTargetID());
+            String key = CheckoutInfo.makeKey(infos.get(i).getNodeType(), infos.get(i).getTargetID());
             if (!_checkouts.containsKey(key)) {
                 _checkouts.put(key, infos.get(i));
             }

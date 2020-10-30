@@ -43,7 +43,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     }
 
     public DesignTree getDesignTree() {
-        DesignNode root = GetRootNode(this);
+        DesignNode root = getRootNode(this);
         if (root instanceof ITopNode) {
             return root.getDesignTree();
         }
@@ -101,7 +101,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     /**
      * 目前仅支持签出ModelRootNode及ModelNode
      */
-    public CompletableFuture<Boolean> Checkout() throws ExecutionException, InterruptedException //TODO:考虑加入参数允许签出所有下属节点
+    public CompletableFuture<Boolean> checkout() throws ExecutionException, InterruptedException //TODO:考虑加入参数允许签出所有下属节点
     {
         //判断是否已签出或者能否签出
         if (!getAllowCheckout()) {
@@ -118,10 +118,10 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         //TODO set param
         infos.add(info);
 
-        return CheckoutService.CheckoutAsync(infos).thenApply(r -> {
+        return CheckoutService.checkoutAsync(infos).thenApply(r -> {
             if (r.getSuccess()) {
                 //签出成功则将请求的签出信息添加至当前的已签出列表
-                getDesignTree().AddCheckoutInfos(infos);
+                getDesignTree().addCheckoutInfos(infos);
                 //如果签出的是单个模型，且具备更新的版本，则更新
 //C# TO JAVA CONVERTER TODO TASK: Java has no equivalent to C# pattern variables in 'is' expressions:
 //ORIGINAL LINE: if (this is ModelNode modelNode && result.ModelWithNewVersion != null)
@@ -142,8 +142,8 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     }
 
-    private static DesignNode GetRootNode(DesignNode current) {
-        return current.getParent() == null ? current : GetRootNode(current.getParent());
+    private static DesignNode getRootNode(DesignNode current) {
+        return current.getParent() == null ? current : getRootNode(current.getParent());
     }
 
     //region ====Comparable====

@@ -19,7 +19,7 @@ public class testCodeGen {
             model.addMember(filed2,false);
             model.addMember(filed3,false);
             model.addMember(filed4,false);
-            String entity= CodeGenService.GenEntityDummyCode(model,"test",null);
+            String entity= CodeGenService.genEntityDummyCode(model,"test",null);
             System.out.println(entity);
         } catch (Exception e) {
             e.printStackTrace();

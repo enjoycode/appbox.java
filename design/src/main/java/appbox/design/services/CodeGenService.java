@@ -20,7 +20,7 @@ public class CodeGenService {
      * @param designTree
      * @return
      */
-    public static String GenEntityDummyCode(EntityModel model, String appName, DesignTree designTree){
+    public static String genEntityDummyCode(EntityModel model, String appName, DesignTree designTree){
         StringBuffer sb=new StringBuffer();
         sb.append("package com."+appName+".entities;\n\n");
         //append import
