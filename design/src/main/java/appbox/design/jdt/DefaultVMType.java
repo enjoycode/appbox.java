@@ -12,7 +12,7 @@ import java.util.HashSet;
 public final class DefaultVMType extends StandardVMType {
 
     private final LibraryInfo defaultLibInfo =
-            new LibraryInfo("11.0.8", new String[0], new String[0], new String[0]);
+            new LibraryInfo(System.getProperty("java.version"), new String[0], new String[0], new String[0]);
 
     @Override
     protected synchronized LibraryInfo getLibraryInfo(File javaHome, File javaExecutable) {

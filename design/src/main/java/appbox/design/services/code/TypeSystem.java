@@ -15,18 +15,23 @@ public final class TypeSystem {
     public TypeSystem(DesignHub designHub) {
         hub            = designHub;
         languageServer = new LanguageServer();
+        //Do not use languageServer here.
+    }
 
-        //创建实体、枚举等通用模型项目
+    /**
+     * 用于初始化通用项目等
+     */
+    public void init() {
         try {
-            modelsProject = languageServer.createProject("models");
+            //创建实体、枚举等通用模型项目
+            modelsProject = languageServer.createProject("models", null);
+            //TODO:创建服务代理项目
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * 用于加载设计树后创建模型相应的虚拟文件
-     */
+    /** 用于加载设计树后创建模型相应的虚拟文件 */
     public void createModelDocument(ModelNode node) throws Exception {
         var appName  = node.appNode.model.name();
         var model    = node.model();
@@ -36,7 +41,7 @@ public final class TypeSystem {
         if (model.modelType() == ModelType.Service) {
             //不再需要加载源码, 注意已签出先从Staged中加载
             var projectName = String.format("%s_services_%s", appName, model.name());
-            var project     = languageServer.createProject(projectName);
+            var project     = languageServer.createProject(projectName, new IProject[]{modelsProject});
 
             var file = project.getFile(fileName);
             file.create(null, true, null);

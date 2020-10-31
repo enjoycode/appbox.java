@@ -25,8 +25,8 @@ public final class ChangeBuffer implements IRequestHandler { //TODO: rename
             newText = "";
         }
 
-        Log.debug(String.format("%d %s %d.%d-%d.%d %s",
-                type, targetId, startLine, startColumn, endLine, endColumn, newText));
+        //Log.debug(String.format("%d %s %d.%d-%d.%d %s",
+        //        type, targetId, startLine, startColumn, endLine, endColumn, newText));
 
         var modelId   = Long.parseUnsignedLong(targetId);
         var modelNode = hub.designTree.findModelNode(ModelType.Service, modelId);

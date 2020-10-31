@@ -50,17 +50,8 @@ public final class GetCompletion implements IRequestHandler {
         //暂在同一线程内处理
         return CompletableFuture.supplyAsync(() -> {
             //Log.debug(String.format("GetCompletion: run at thread: %s", Thread.currentThread().getName()));
-            var list   = hub.typeSystem.languageServer.completion(doc, line, column, wordToComplete);
-            var result = new ArrayList<AutoCompleteItem>(list.size());
-            //转换为前端所需结构
-            for (var cr : list) {
-                //System.out.println(cr.toString());
-                var item = new AutoCompleteItem();
-                item.label = item.insertText = item.detail = new String(cr.getCompletion());
-                item.kind  = cr.getKind();
-                result.add(item);
-            }
-            return new JsonResult(result);
+            var list = hub.typeSystem.languageServer.completion(doc, line, column, wordToComplete);
+            return new JsonResult(list);
         }, hub.codeEditorTaskPool);
     }
 

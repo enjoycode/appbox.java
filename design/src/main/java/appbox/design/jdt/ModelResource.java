@@ -172,7 +172,8 @@ public abstract class ModelResource implements IResource {
 
     @Override
     public URI getLocationURI() {
-        throw new UnsupportedOperationException();
+        //简单返回, CompletionProposalRequestor.toCompleteItem需要
+        return null;//return URI.create("model:" + path.toString());
     }
 
     @Override
@@ -445,7 +446,6 @@ public abstract class ModelResource implements IResource {
     /**
      * Checks that this resource exists.
      * If checkType is true, the type of this resource and the one in the tree must match.
-     *
      * @throws CoreException if this resource does not exist
      */
     public void checkExists(int flags, boolean checkType) throws CoreException {

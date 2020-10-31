@@ -66,6 +66,7 @@ public final class WebSession implements IDeveloperSession {
         if (_designHub == null) {
             //TODO:创建DesignHub实例前，判断当前用户是否具备开发者权限
             _designHub = new DesignHub(this);
+            _designHub.typeSystem.init(); //注意创建完后初始化
         }
         return _designHub;
     }
