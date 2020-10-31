@@ -163,11 +163,11 @@ public abstract class ModelBase implements IBinSerializable {
     //endregion
 
 
-    public void setDesignMode(boolean _designMode) {
-        this._designMode = _designMode;
+    public void setDesignMode(boolean designMode) {
+        this._designMode = designMode;
     }
 
-    public void setName(String _name) {
-        this._name = _name;
+    public void setName(String name) {
+        this._name = name;
     }
 }
