@@ -93,7 +93,11 @@ public final class LanguageServer {
             //hack JavaLanguageServerPlugin & TypeFilter
             var javaLanguageServerPlugin = new JavaLanguageServerPlugin();
             ReflectUtil.setField(JavaLanguageServerPlugin.class, "pluginInstance", null, javaLanguageServerPlugin);
-            ReflectUtil.setField(TypeFilter.class, "fStringMatchers", javaLanguageServerPlugin.getTypeFilter(), new StringMatcher[0]);
+            ReflectUtil.setField(TypeFilter.class, "fStringMatchers", javaLanguageServerPlugin.getTypeFilter(),
+                    new StringMatcher[]{
+                            new StringMatcher("java.awt.*", false, false),
+                            new StringMatcher("com.sun.*", false, false)
+                    });
 
             //init default preferences (主要用于初始化JavaModelManager.optionNames,考虑直接设置)
             new JavaCorePreferenceInitializer().initializeDefaultPreferences();
