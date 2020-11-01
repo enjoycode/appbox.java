@@ -6,6 +6,7 @@ import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,25 +19,82 @@ public final class GetCompletion implements IRequestHandler {
             var wr   = serializer.getWriter();
 
             wr.writeFieldValue('{', "label", item.getLabel()); //必须有值，否则前端报错
-            wr.writeFieldValue(',', "insertText", item.getTextEdit().getNewText());
-            wr.writeFieldValue(',', "kind", item.getKind().getValue());
+            if (item.getInsertText() == null) {
+                wr.writeFieldValue(',', "insertText", item.getTextEdit().getNewText());
+                var range = item.getTextEdit().getRange();
+                wr.write(',');
+                wr.writeFieldName("range");
+                wr.writeFieldValue('{', "startLineNumber", range.getStart().getLine() + 1);
+                wr.writeFieldValue(',', "startColumn", range.getStart().getCharacter() + 1);
+                wr.writeFieldValue(',', "endLineNumber", range.getEnd().getLine() + 1);
+                wr.writeFieldValue(',', "endColumn", range.getEnd().getCharacter() + 1);
+                wr.write('}');
+            } else {
+                wr.writeFieldValue(',', "insertText", item.getInsertText());
+            }
+            wr.writeFieldValue(',', "kind", mapKind(item.getKind())); //类型与monaco不一致
+            //wr.writeFieldValue(',', "insertTextRules", 0);
             if (item.getDetail() != null) {
                 wr.writeFieldValue(',', "detail", item.getDetail());
             }
-
-            //TODO:判断不等于offset才写入range以节省流量
-            var range = item.getTextEdit().getRange();
-            wr.write(',');
-            wr.writeFieldName("range");
-            wr.writeFieldValue('{', "startLineNumber", range.getStart().getLine() + 1);
-            wr.writeFieldValue(',', "startColumn", range.getStart().getCharacter() + 1);
-            wr.writeFieldValue(',', "endLineNumber", range.getEnd().getLine() + 1);
-            wr.writeFieldValue(',', "endColumn", range.getEnd().getCharacter() + 1);
-            wr.write('}');
-
             //wr.writeFieldValue(',', "sortText", item.getSortText());
             wr.write('}');
         });
+    }
+
+    private static int mapKind(CompletionItemKind kind) {
+        switch (kind) {
+            case Method:
+                return 0;
+            case Function:
+                return 1;
+            case Constructor:
+                return 2;
+            case Field:
+                return 3;
+            case Variable:
+                return 4;
+            case Class:
+                return 5;
+            case Interface:
+                return 7;
+            case Module:
+                return 8;
+            case Property:
+                return 9;
+            case Unit:
+                return 12;
+            case Value:
+                return 13;
+            case Enum:
+                return 15;
+            case Keyword:
+                return 17;
+            case Snippet:
+                return 27;
+            case Color:
+                return 19;
+            case File:
+                return 20;
+            case Reference:
+                return 21;
+            case Folder:
+                return 23;
+            case EnumMember:
+                return 16;
+            case Constant:
+                return 14;
+            case Struct:
+                return 6;
+            case Event:
+                return 10;
+            case Operator:
+                return 11;
+            case TypeParameter:
+                return 24;
+            default:
+                return 18; //Text
+        }
     }
 
     @Override

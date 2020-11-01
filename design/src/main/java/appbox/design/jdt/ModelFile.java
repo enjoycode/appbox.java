@@ -25,8 +25,6 @@ import java.util.Map;
 
 public final class ModelFile extends ModelResource implements IFile {
 
-    private static final Map<IPath, InputStream> contentMap = new HashMap<>(); //TODO:待移除，测试用
-
     public ModelFile(IPath path, ModelWorkspace workspace) {
         super(path, workspace);
     }
@@ -51,7 +49,6 @@ public final class ModelFile extends ModelResource implements IFile {
         //TODO:
         var     info  = workspace.createResource(this, updateFlags);
         boolean local = content != null;
-        contentMap.put(this.path, content);
         if (!local)
             getResourceInfo(true, true).clearModificationStamp();
     }

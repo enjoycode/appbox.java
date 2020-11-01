@@ -224,7 +224,7 @@ public final class LanguageServer {
         //collector.setFavoriteReferences(getFavoriteStaticMembers());
 
         try {
-            //cu.codeComplete(offset, cr);
+            //cu.codeComplete(offset, collector);
             ModelBasedCompletionEngine.codeComplete(cu, offset, collector, DefaultWorkingCopyOwner.PRIMARY, null);
             return collector.getCompletionItems();
         } catch (Exception ex) {
