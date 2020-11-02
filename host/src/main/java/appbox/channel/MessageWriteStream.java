@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * 消息发送流, 注意目前实现边写边发
  */
 public final class MessageWriteStream implements IOutputStream {
-    private static final ObjectPool<MessageWriteStream> pool = new ObjectPool<>(MessageWriteStream::new,32);
+    private static final ObjectPool<MessageWriteStream> pool = new ObjectPool<>(MessageWriteStream::new, 32);
 
     public static MessageWriteStream rentFromPool(byte msgType, int msgId, long sourceId, byte msgFlag,
                                                   Supplier<Pointer> maker, Consumer<Pointer> sender) {
@@ -92,6 +92,17 @@ public final class MessageWriteStream implements IOutputStream {
         if (_sender != null) {
             _sender.accept(_curChunk);
         }
+    }
+
+    /**
+     * 用于发生错误时将当前消息转换为取消状态，并发送给接收端，由接收端丢弃其他包
+     */
+    protected void flushWhenCancelled() {
+        NativeSmq.setMsgDataLen(_curChunk, (short) 0);
+        NativeSmq.setMsgFlag(_curChunk, (byte) (NativeSmq.getMsgFlag(_curChunk)
+                | MessageFlag.LastChunk | MessageFlag.SerializeError));
+        if (_sender != null)
+            _sender.accept(_curChunk);
     }
 
     @Override

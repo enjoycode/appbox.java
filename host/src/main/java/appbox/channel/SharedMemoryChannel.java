@@ -144,19 +144,14 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
             mws.flush(); //必须
         } catch (Exception e) {
             //发生异常，则通知接收端取消挂起的消息
-            sendCancelMessage(mws.getCurrentChunk());
+            mws.flushWhenCancelled();
             //记录日志并重新抛出异常
-            Log.warn(e.getMessage());
+            Log.warn(e.toString());
             throw e;
         } finally {
             BinSerializer.backToPool(bs);
             MessageWriteStream.backToPool(mws);
         }
-    }
-
-    private void sendCancelMessage(Pointer chunk) {
-        //注意：标记当前包为取消状态，并且发送至接收端，由接收端取消本包及之前的包
-        Log.debug("Not implemented.");
     }
 
 }
