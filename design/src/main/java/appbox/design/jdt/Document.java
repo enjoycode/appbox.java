@@ -1,17 +1,15 @@
 package appbox.design.jdt;
 
+import appbox.logging.Log;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.IBuffer;
-import org.eclipse.jdt.core.IBufferChangedListener;
-import org.eclipse.jdt.core.IOpenable;
-import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Document implements IBuffer {
+public final class Document implements IBuffer /*, IDocumentListener*/ {
     //TODO:暂简单实现行检测，参考LineTracker实现
     public static final class TextLine {
         public final int start;
@@ -23,28 +21,42 @@ public final class Document implements IBuffer {
         }
     }
 
-    private IOpenable    owner;
-    private IFile        file;
-    private StringBuffer buffer;
+    private       IOpenable                    owner;
+    private       IFile                        file;
+    private       StringBuffer                 buffer;
+    private       List<IBufferChangedListener> changeListeners;
+    private final Object                       lock     = new Object();
+    private       boolean                      isClosed = false;
 
     public Document(IOpenable owner, IFile file) {
-        this.owner = owner;
-        this.file  = file;
+        this.owner           = owner;
+        this.file            = file;
+        this.changeListeners = new ArrayList<>(3);
     }
 
     @Override
-    public void append(char[] chars) {
-        buffer.append(chars);
+    public boolean isClosed() {
+        return this.isClosed;
     }
 
     @Override
-    public void append(String s) {
-        buffer.append(s);
+    public boolean isReadOnly() {
+        return false;
     }
 
     @Override
     public void close() {
+        synchronized (this.lock) {
+            if (!this.isClosed) {
+                this.isClosed = true;
 
+                fireBufferChanged(new BufferChangedEvent(this, 0, 0, null));
+                changeListeners.clear();
+                this.buffer   = null;
+
+                Log.debug(String.format("Document[%s] closed.", file.getName()));
+            }
+        }
     }
 
     @Override
@@ -55,15 +67,14 @@ public final class Document implements IBuffer {
     /**
      * Returns the contents of this buffer as a character array, or <code>null</code> if
      * the buffer has not been initialized.
-     *
+     * <p>
      * Callers should make no assumption about whether the returned character array
      * is or is not the genuine article or a copy. In other words, if the client
      * wishes to change this array, they should make a copy. Likewise, if the
      * client wishes to hang on to the array in its current state, they should
      * make a copy.
-     *
+     * <p>
      * The returned value is undefined if the buffer is closed.
-     *
      * @return the characters contained in this buffer
      */
     @Override
@@ -76,19 +87,35 @@ public final class Document implements IBuffer {
         return dest;
     }
 
+    //region ====get / set Contents====
+
     /**
      * Returns the contents of this buffer as a <code>String</code>. Like all strings,
      * the result is an immutable value object., It can also answer <code>null</code> if
      * the buffer has not been initialized.
-     *
+     * <p>
      * The returned value is undefined if the buffer is closed.
-     *
      * @return the contents of this buffer as a <code>String</code>
      */
     @Override
     public String getContents() {
         return buffer == null ? null : buffer.toString();
     }
+
+    @Override
+    public void setContents(char[] chars) {
+        setContents(new String(chars));
+    }
+
+    @Override
+    public void setContents(String s) {
+        //CompilationUnit.openBuffer会调用此方法
+        if (buffer == null)
+            buffer = new StringBuffer(s);
+        else
+            buffer.replace(0, buffer.length(), s);
+    }
+    //endregion
 
     @Override
     public int getLength() {
@@ -112,25 +139,58 @@ public final class Document implements IBuffer {
 
     @Override
     public boolean hasUnsavedChanges() {
-        return false;
+        return false; //TODO:
     }
 
-    @Override
-    public boolean isClosed() {
-        return false;
-    }
-
-    @Override
-    public boolean isReadOnly() {
-        return false;
-    }
+    //region ====buffer change event====
+    //region ----IDocumentListener----
+    //@Override
+    //public void documentAboutToBeChanged(DocumentEvent event) {
+    //    // no about to be changed on IBuffer
+    //}
+    //
+    //@Override
+    //public void documentChanged(DocumentEvent event) {
+    //    fireBufferChanged(new BufferChangedEvent(this, event.getOffset(), event.getLength(), event.getText()));
+    //}
+    //endregion
 
     @Override
     public void addBufferChangedListener(IBufferChangedListener listener) {
+        synchronized (lock) {
+            if (!changeListeners.contains(listener)) {
+                changeListeners.add(listener);
+            }
+        }
     }
 
     @Override
-    public void removeBufferChangedListener(IBufferChangedListener iBufferChangedListener) {
+    public void removeBufferChangedListener(IBufferChangedListener listener) {
+        synchronized (lock) {
+            changeListeners.remove(listener);
+        }
+    }
+
+    private void fireBufferChanged(BufferChangedEvent event) {
+        IBufferChangedListener[] listeners = null;
+        synchronized (lock) {
+            listeners = changeListeners.toArray(new IBufferChangedListener[changeListeners.size()]);
+        }
+        for (IBufferChangedListener listener : listeners) {
+            listener.bufferChanged(event);
+        }
+    }
+    //endregion
+
+    //region ====append & replace====
+    @Override
+    public void append(char[] chars) {
+        buffer.append(chars);
+    }
+
+    @Override
+    public void append(String s) {
+        buffer.append(s);
     }
 
     @Override
@@ -142,24 +202,11 @@ public final class Document implements IBuffer {
     public void replace(int offset, int length, String s) {
         buffer.replace(offset, offset + length, s);
     }
+    //endregion
 
     @Override
     public void save(IProgressMonitor monitor, boolean force) throws JavaModelException {
 
-    }
-
-    @Override
-    public void setContents(char[] chars) {
-        setContents(new String(chars));
-    }
-
-    @Override
-    public void setContents(String s) {
-        //CompilationUnit.openBuffer会调用此方法
-        if (buffer == null)
-            buffer = new StringBuffer(s);
-        else
-            buffer.replace(0, buffer.length(), s);
     }
 
     private List<TextLine> getLineMap() {

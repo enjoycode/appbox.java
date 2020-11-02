@@ -183,7 +183,14 @@ public final class LanguageServer {
     //region ====open/close/change Document====
     public Document openDocument(ModelNode node) throws JavaModelException {
         //TODO:仅允许打开特定类型的
-        //TODO:暂简单处理
+
+        //先判断是否已打开，如果已打开可能是前端签出时发现变更要求重新从存储加载
+        var doc = findOpenedDocument(node.model().id());
+        if (doc != null) {
+            //TODO:强制重新加载
+            return doc;
+        }
+
         var appName     = node.appNode.model.name();
         var fileName    = String.format("%s.java", node.model().name());
         var projectName = String.format("%s_services_%s", appName, node.model().name());
@@ -192,7 +199,7 @@ public final class LanguageServer {
         var file    = (IFile) project.findMember(fileName);
         var cu      = JDTUtils.resolveCompilationUnit(file);
         cu.becomeWorkingCopy(null); //must call
-        var doc = (Document) cu.getBuffer();
+        doc = (Document) cu.getBuffer();
         openedFiles.put(node.model().id(), doc);
         return doc;
     }
@@ -206,6 +213,24 @@ public final class LanguageServer {
         doc.changeText(startLine, startColumn, endLine, endColumn, newText);
         //TODO:检查是否需要同步结构
         //CompliationUnit.makeConsistent(null);
+    }
+
+    public void closeDocument(long modelId) {
+        var doc = findOpenedDocument(modelId);
+        if (doc != null) {
+            var file = (IFile) doc.getUnderlyingResource();
+            var unit = JDTUtils.resolveCompilationUnit(file);
+            try {
+                if (unit.hasUnsavedChanges()) {
+                    Log.debug(String.format("Close document[%s] with unsaved changes.", file.getName()));
+                }
+                unit.discardWorkingCopy();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }finally {
+                openedFiles.remove(modelId);
+            }
+        }
     }
     //endregion
 
