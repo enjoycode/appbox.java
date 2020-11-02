@@ -17,7 +17,7 @@ public final class CheckoutService
 	/** 
 	 签出指定节点
 	*/
-	public static CompletableFuture<CheckoutResult> CheckoutAsync(List<CheckoutInfo> checkoutInfos)
+	public static CompletableFuture<CheckoutResult> checkoutAsync(List<CheckoutInfo> checkoutInfos)
 	{
 		if (checkoutInfos == null || checkoutInfos.isEmpty())	{
 			return null;

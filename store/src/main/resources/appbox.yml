@@ -1,0 +1,7 @@
+database:
+  type: postgresql
+  host: 127.0.0.1
+  port: 5432
+  dataBaseName: testdb
+  user: test
+  password: 123456

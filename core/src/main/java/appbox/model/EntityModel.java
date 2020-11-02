@@ -247,4 +247,9 @@ public final class EntityModel extends ModelBase {
         } while (propIndex != 0);
     }
     //endregion
+
+
+    public ArrayList<EntityMemberModel> getMembers() {
+        return _members;
+    }
 }

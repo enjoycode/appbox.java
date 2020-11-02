@@ -26,11 +26,11 @@ public final class CheckoutInfo {
         setCheckoutTime(java.time.LocalDateTime.now());
     }
 
-    public String GetKey() {
-        return MakeKey(getNodeType(), getTargetID());
+    public String getKey() {
+        return makeKey(getNodeType(), getTargetID());
     }
 
-    public static String MakeKey(DesignNodeType nodeType, String targetId) {
+    public static String makeKey(DesignNodeType nodeType, String targetId) {
         return String.format("%1$s|%2$s", nodeType.value, targetId);
     }
 
@@ -79,14 +79,14 @@ public final class CheckoutInfo {
         developerOuid = value;
     }
 
-    private java.time.LocalDateTime CheckoutTime = java.time.LocalDateTime.MIN;
+    private java.time.LocalDateTime checkoutTime = java.time.LocalDateTime.MIN;
 
     public java.time.LocalDateTime getCheckoutTime() {
-        return CheckoutTime;
+        return checkoutTime;
     }
 
     public void setCheckoutTime(java.time.LocalDateTime value) {
-        CheckoutTime = value;
+        checkoutTime = value;
     }
     //endregion
 }

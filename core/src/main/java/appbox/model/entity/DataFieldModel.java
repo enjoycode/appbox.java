@@ -154,4 +154,9 @@ public final class DataFieldModel extends EntityMemberModel {
         } while (propIndex != 0);
     }
     //endregion
+
+
+    public DataFieldType getDataType() {
+        return _dataType;
+    }
 }
