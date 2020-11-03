@@ -1,5 +1,6 @@
 package appbox.design.jdt;
 
+import appbox.design.utils.PathUtil;
 import org.eclipse.core.internal.resources.*;
 import org.eclipse.core.internal.utils.Messages;
 import org.eclipse.core.resources.*;
@@ -190,8 +191,15 @@ public class ModelProject extends ModelContainer implements IProject {
     }
 
     @Override
-    public IPath getWorkingLocation(String s) {
-        return null;
+    public IPath getWorkingLocation(String id) {
+        if (id != null && this.exists()) {
+            //注意暂指向临时目录,eg:/tmp/appbox/workspace/sessionid/
+            IPath result = PathUtil.getWorkingLocation(workspace.languageServer.sessionId);
+            result.toFile().mkdirs();
+            return result;
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -260,8 +268,8 @@ public class ModelProject extends ModelContainer implements IProject {
     @Override
     public void open(int updateFlags, IProgressMonitor monitor) throws CoreException {
         //TODO:
-        ProjectInfo info = (ProjectInfo) getResourceInfo(false, false);
-        int flags = getFlags(info);
+        ProjectInfo info  = (ProjectInfo) getResourceInfo(false, false);
+        int         flags = getFlags(info);
         checkExists(flags, true);
         if (isOpen(flags))
             return;
@@ -310,8 +318,7 @@ public class ModelProject extends ModelContainer implements IProject {
      * Checks that this resource is accessible.  Typically this means that it
      * exists.  In the case of projects, they must also be open.
      * If phantom is true, phantom resources are considered.
-     *
-     * @exception CoreException if this resource is not accessible
+     * @throws CoreException if this resource is not accessible
      */
     @Override
     public void checkAccessible(int flags) throws CoreException {

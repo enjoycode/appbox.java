@@ -1,5 +1,6 @@
 package appbox.design.jdt;
 
+import appbox.design.services.code.LanguageServer;
 import appbox.design.utils.ReflectUtil;
 import org.eclipse.core.internal.resources.*;
 import org.eclipse.core.internal.utils.Messages;
@@ -23,7 +24,11 @@ public class ModelWorkspace implements IWorkspace {
     protected long nextMarkerId = 0;
     protected long nextNodeId   = 1;
 
-    public ModelWorkspace() {
+    public final LanguageServer languageServer;
+
+    public ModelWorkspace(LanguageServer languageServer) {
+        this.languageServer = languageServer;
+
         tree = new ElementTree();
         /* tree should only be modified during operations */
         //tree.immutable();
@@ -31,6 +36,13 @@ public class ModelWorkspace implements IWorkspace {
         tree.setTreeData(newElement(IResource.ROOT));
 
         //description = new WorkspacePreferences();
+    }
+
+    /**
+     * Returns the current element tree for this workspace
+     */
+    public ElementTree getElementTree() {
+        return tree;
     }
 
     @Override

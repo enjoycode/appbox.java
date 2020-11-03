@@ -5,6 +5,7 @@ import appbox.design.jdt.DefaultVMType;
 import appbox.design.jdt.Document;
 import appbox.design.jdt.ModelWorkspace;
 import appbox.design.tree.ModelNode;
+import appbox.design.utils.PathUtil;
 import appbox.design.utils.ReflectUtil;
 import appbox.logging.Log;
 import appbox.runtime.RuntimeContext;
@@ -18,7 +19,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.*;
@@ -38,14 +39,18 @@ import org.eclipse.jdt.ls.core.internal.syntaxserver.ModelBasedCompletionEngine;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * 一个TypeSystem对应一个实例，管理JavaProject及相应的虚拟文件
  */
 public final class LanguageServer {
+    //region ====static====
     private static final JREContainerInitializer jreContainerInitializer   = new JREContainerInitializer();
     private static final ProjectPreferences      defaultProjectPreferences = new ProjectPreferences();
     private static final PreferenceManager       lsPreferenceManager;
@@ -81,10 +86,14 @@ public final class LanguageServer {
             ReflectUtil.setField(EclipsePreferences.class, "children", defaultNode, dmap);
 
             //hack JavaModelManager //TODO:*** 暂共用JavaModelManager
-            var indexPath    = new Path(System.getProperty("java.io.tmpdir")).append("appbox_index_data");
-            var indexManager = new IndexManager(indexPath);
+            var indexManager = new IndexManager(PathUtil.INDEX_DATA);
             ReflectUtil.setField(JavaModelManager.class, "indexManager", JavaModelManager.getJavaModelManager(), indexManager);
             ReflectUtil.setField(JavaModelManager.class, "cache", JavaModelManager.getJavaModelManager(), new JavaModelCache());
+            var NO_PARTICIPANTS = ReflectUtil.getField(JavaModelManager.class, "NO_PARTICIPANTS", null);
+            ReflectUtil.setField(JavaModelManager.CompilationParticipants.class, "registeredParticipants",
+                    JavaModelManager.getJavaModelManager().compilationParticipants, NO_PARTICIPANTS);
+            ReflectUtil.setField(JavaModelManager.CompilationParticipants.class, "managedMarkerTypes",
+                    JavaModelManager.getJavaModelManager().compilationParticipants, new HashSet<String>());
             //JavaModelManager.getJavaModelManager().initializePreferences();
             JavaModelManager.getJavaModelManager().preferencesLookup[0] = instancePreferences;
             JavaModelManager.getJavaModelManager().preferencesLookup[1] = defaultPreferences;
@@ -126,13 +135,29 @@ public final class LanguageServer {
         lsPreferenceManager.updateClientPrefences(new ClientCapabilities(), new HashMap<>());
         JavaLanguageServerPlugin.setPreferencesManager(lsPreferenceManager);
     }
+    //endregion
 
-    public final  ModelWorkspace          jdtWorkspace;
+    public final  long                    sessionId;
+    private final ModelWorkspace          jdtWorkspace;
     private final HashMap<Long, Document> openedFiles = new HashMap<>();
 
-    public LanguageServer() {
-        jdtWorkspace = new ModelWorkspace();
+    public Function<IPath, InputStream> loadFileDelegate; //仅用于测试环境
+
+    public LanguageServer(long sessionId) {
+        this.sessionId = sessionId;
+        jdtWorkspace   = new ModelWorkspace(this);
         //TODO:如果不能共用JavaModelManager,在这里初始化
+    }
+
+    /**
+     * 仅用于单元测试
+     * @param loadFileDelegate 委托加载指定路径的测试文件
+     */
+    public LanguageServer(Function<IPath, InputStream> loadFileDelegate) {
+        sessionId                         = 0;
+        jdtWorkspace                      = new ModelWorkspace(this);
+        this.loadFileDelegate             = loadFileDelegate;
+        ResourcesPlugin.workspaceSupplier = () -> jdtWorkspace;
     }
 
     //region ====create XXX====
@@ -142,7 +167,7 @@ public final class LanguageServer {
      * @param name
      * @param deps 所依赖的内部项目列表，可为null
      */
-    protected IProject createProject(String name, IProject[] deps) throws Exception {
+    public IProject createProject(String name, IProject[] deps, IPath outPath) throws Exception {
         //TODO:check exists
         var project = jdtWorkspace.getRoot().getProject(name);
         project.create(null);
@@ -173,11 +198,14 @@ public final class LanguageServer {
         }
 
         //TODO: 待检查setRawClasspath的referencedEntries参数
-        var outPath = project.getFullPath().append("bin");
+        if (outPath == null)
+            outPath = project.getFullPath().append("bin");
         perProjectInfo.setRawClasspath(buildPath, outPath, JavaModelStatus.VERIFIED_OK);
 
         return project;
     }
+
+
     //endregion
 
     //region ====open/close/change Document====
@@ -227,7 +255,7 @@ public final class LanguageServer {
                 unit.discardWorkingCopy();
             } catch (Exception ex) {
                 ex.printStackTrace();
-            }finally {
+            } finally {
                 openedFiles.remove(modelId);
             }
         }

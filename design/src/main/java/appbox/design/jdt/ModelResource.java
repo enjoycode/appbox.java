@@ -1,9 +1,13 @@
 package appbox.design.jdt;
 
+import appbox.design.utils.PathUtil;
 import org.eclipse.core.internal.resources.ICoreConstants;
 import org.eclipse.core.internal.resources.ResourceException;
 import org.eclipse.core.internal.resources.ResourceInfo;
 import org.eclipse.core.internal.utils.Messages;
+import org.eclipse.core.internal.utils.WrappedRuntimeException;
+import org.eclipse.core.internal.watson.ElementTreeIterator;
+import org.eclipse.core.internal.watson.IElementContentVisitor;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -33,28 +37,68 @@ public abstract class ModelResource implements IResource {
 
     //region ====accept====
     @Override
-    public void accept(IResourceProxyVisitor iResourceProxyVisitor, int i) throws CoreException {
-
+    public void accept(IResourceProxyVisitor visitor, int memberFlags) throws CoreException {
+        accept(visitor, IResource.DEPTH_INFINITE, memberFlags);
     }
 
     @Override
-    public void accept(IResourceProxyVisitor iResourceProxyVisitor, int i, int i1) throws CoreException {
+    public void accept(IResourceProxyVisitor visitor, int depth, int memberFlags) throws CoreException {
+        // It is invalid to call accept on a phantom when INCLUDE_PHANTOMS is not specified.
+        final boolean includePhantoms = (memberFlags & IContainer.INCLUDE_PHANTOMS) != 0;
+        if ((memberFlags & IContainer.DO_NOT_CHECK_EXISTENCE) == 0)
+            checkAccessible(getFlags(getResourceInfo(includePhantoms, false)));
 
+        final var proxy = new ModelResourceProxy(this.workspace);
+        IElementContentVisitor elementVisitor = (tree, requestor, contents) -> {
+            ResourceInfo info = (ResourceInfo) contents;
+            if (!isMember(getFlags(info), memberFlags))
+                return false;
+            proxy.requestor = requestor;
+            proxy.info      = info;
+            try {
+                boolean shouldContinue = true;
+                switch (depth) {
+                    case DEPTH_ZERO:
+                        shouldContinue = false;
+                        break;
+                    case DEPTH_ONE:
+                        shouldContinue = !path.equals(requestor.requestPath().removeLastSegments(1));
+                        break;
+                    case DEPTH_INFINITE:
+                        shouldContinue = true;
+                        break;
+                }
+                return visitor.visit(proxy) && shouldContinue;
+            } catch (CoreException e) {
+                // Throw an exception to bail out of the traversal.
+                throw new WrappedRuntimeException(e);
+            } finally {
+                proxy.reset();
+            }
+        };
+        try {
+            new ElementTreeIterator(workspace.getElementTree(), getFullPath()).iterate(elementVisitor);
+        } catch (WrappedRuntimeException e) {
+            throw (CoreException) e.getTargetException();
+        } finally {
+            proxy.requestor = null;
+            proxy.info      = null;
+        }
     }
 
     @Override
-    public void accept(IResourceVisitor iResourceVisitor) throws CoreException {
-
+    public void accept(IResourceVisitor visitor) throws CoreException {
+        accept(visitor, IResource.DEPTH_INFINITE, 0);
     }
 
     @Override
-    public void accept(IResourceVisitor iResourceVisitor, int i, boolean b) throws CoreException {
-
+    public void accept(IResourceVisitor visitor, int depth, boolean includePhantoms) throws CoreException {
+        accept(visitor, depth, includePhantoms ? IContainer.INCLUDE_PHANTOMS : 0);
     }
 
     @Override
-    public void accept(IResourceVisitor iResourceVisitor, int i, int i1) throws CoreException {
-
+    public void accept(IResourceVisitor visitor, int depth, int memberFlags) throws CoreException {
+        throw new RuntimeException("未实现");
     }
     //endregion
 
@@ -92,7 +136,12 @@ public abstract class ModelResource implements IResource {
 
     @Override
     public IResourceProxy createProxy() {
-        return null;
+        throw new RuntimeException("未实现");
+        //var result = new ModelResourceProxy(this.workspace);
+        //result.info = getResourceInfo(false, false);
+        //result.requestor = this;
+        //result.resource = this;
+        //return result;
     }
 
     //region ====delete====
@@ -166,8 +215,9 @@ public abstract class ModelResource implements IResource {
 
     @Override
     public IPath getLocation() {
-        //TODO:暂简单返回
-        return path;
+        //注意返回指向临时目录, eg: /tmp/appbox/workspace/sessionid
+        var workingroot = PathUtil.getWorkingLocation(workspace.languageServer.sessionId);
+        return workingroot.append(this.path);
     }
 
     @Override
@@ -224,7 +274,7 @@ public abstract class ModelResource implements IResource {
 
     @Override
     public IPath getProjectRelativePath() {
-        return null;
+        return this.getFullPath().removeFirstSegments(1);
     }
 
     @Override

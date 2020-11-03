@@ -15,11 +15,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.content.IContentDescription;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 //注意：ModelFile不会指向同一实例
 
@@ -49,6 +50,23 @@ public final class ModelFile extends ModelResource implements IFile {
         //TODO:
         var     info  = workspace.createResource(this, updateFlags);
         boolean local = content != null;
+        if (local) { //目前仅适用于编译生成的class文件
+            var file = this.getLocation().toFile();
+            try {
+                if (!file.exists()) {
+                    var parent = file.getParentFile();
+                    if (!parent.exists()) {
+                        parent.mkdirs();
+                    }
+                    Files.createFile(file.toPath());
+                }
+                Files.copy(content, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                Log.debug("Write class file to: " + file.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         if (!local)
             getResourceInfo(true, true).clearModificationStamp();
     }
@@ -80,10 +98,13 @@ public final class ModelFile extends ModelResource implements IFile {
 
     @Override
     public InputStream getContents(boolean force) throws CoreException {
+        if (RuntimeContext.current() == null) { //仅用于单元测试
+            return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
+        }
+
         //TODO:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码
         try {
-            var session   = (IDeveloperSession) RuntimeContext.current().currentSession();
-            var hub       = session.getDesignHub();
+            var hub = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
             //根据类型查找模型节点
             var modelNode = hub.typeSystem.findModelNodeByModelFile(this);
             //TODO:其他类型处理
