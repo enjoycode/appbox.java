@@ -20,7 +20,6 @@ public class ModelWorkspace implements IWorkspace {
     protected          WorkspacePreferences description;
     protected volatile ElementTree          tree;
     //protected volatile Thread treeLocked = null;
-    protected LocalMetaArea localMetaArea;
     protected long nextMarkerId = 0;
     protected long nextNodeId   = 1;
 
@@ -502,11 +501,4 @@ public class ModelWorkspace implements IWorkspace {
         return (long)(this.nextMarkerId++);
     }
 
-    public ElementTree getElementTree() {
-        return this.tree;
-    }
-
-    public LocalMetaArea getMetaArea() {
-        return this.localMetaArea;
-    }
 }

@@ -31,7 +31,7 @@ public class ModelMarkerManager implements IManager {
     protected            Map<IPath, MarkerSet> currentDeltas = null;
     protected final      ModelMarkerDeltaManager    deltaManager  = new ModelMarkerDeltaManager();
     protected            ModelWorkspace                 workspace;
-    protected            ModelMarkerWriter              writer         = new ModelMarkerWriter(this);
+    //protected            ModelMarkerWriter              writer         = new ModelMarkerWriter(this);
 
     public ModelMarkerManager(ModelWorkspace workspace) {
         this.workspace = workspace;
@@ -467,102 +467,102 @@ public class ModelMarkerManager implements IManager {
         this.deltaManager.resetDeltas(startId);
     }
 
-    public void restore(IResource resource, boolean generateDeltas, IProgressMonitor monitor) throws Throwable {
-        this.restoreFromSave(resource, generateDeltas);
-        this.restoreFromSnap(resource);
-    }
+    //public void restore(IResource resource, boolean generateDeltas, IProgressMonitor monitor) throws Throwable {
+    //    this.restoreFromSave(resource, generateDeltas);
+    //    this.restoreFromSnap(resource);
+    //}
 
-    protected void restoreFromSave(IResource resource, boolean generateDeltas) throws Throwable {
-        IPath sourceLocation = this.workspace.getMetaArea().getMarkersLocationFor(resource);
-        IPath        tempLocation = this.workspace.getMetaArea().getBackupLocationFor(sourceLocation);
-        java.io.File sourceFile   = new java.io.File(sourceLocation.toOSString());
-        java.io.File tempFile     = new File(tempLocation.toOSString());
-        if (sourceFile.exists() || tempFile.exists()) {
-            String msg;
-            try {
-                Throwable var7 = null;
-                msg = null;
+    //protected void restoreFromSave(IResource resource, boolean generateDeltas) throws Throwable {
+    //    IPath sourceLocation = this.workspace.getMetaArea().getMarkersLocationFor(resource);
+    //    IPath        tempLocation = this.workspace.getMetaArea().getBackupLocationFor(sourceLocation);
+    //    java.io.File sourceFile   = new java.io.File(sourceLocation.toOSString());
+    //    java.io.File tempFile     = new File(tempLocation.toOSString());
+    //    if (sourceFile.exists() || tempFile.exists()) {
+    //        String msg;
+    //        try {
+    //            Throwable var7 = null;
+    //            msg = null;
+    //
+    //            try {
+    //                DataInputStream input = new DataInputStream(new SafeFileInputStream(sourceLocation.toOSString(), tempLocation.toOSString()));
+    //
+    //                try {
+    //                    ModelMarkerReader reader = new ModelMarkerReader(this.workspace);
+    //                    reader.read(input, generateDeltas);
+    //                } finally {
+    //                    if (input != null) {
+    //                        input.close();
+    //                    }
+    //
+    //                }
+    //
+    //            } catch (Throwable var18) {
+    //                if (var7 == null) {
+    //                    var7 = var18;
+    //                } else if (var7 != var18) {
+    //                    var7.addSuppressed(var18);
+    //                }
+    //
+    //                throw var7;
+    //            }
+    //        } catch (Exception var19) {
+    //            msg = NLS.bind(Messages.resources_readMeta, sourceLocation);
+    //            throw new ResourceException(567, sourceLocation, msg, var19);
+    //        }
+    //    }
+    //}
 
-                try {
-                    DataInputStream input = new DataInputStream(new SafeFileInputStream(sourceLocation.toOSString(), tempLocation.toOSString()));
+    //protected void restoreFromSnap(IResource resource) throws Throwable {
+    //    IPath sourceLocation = this.workspace.getMetaArea().getMarkersSnapshotLocationFor(resource);
+    //    if (sourceLocation.toFile().exists()) {
+    //        String msg;
+    //        try {
+    //            Throwable var3 = null;
+    //            msg = null;
+    //
+    //            try {
+    //                DataInputStream input = new DataInputStream(new SafeChunkyInputStream(sourceLocation.toFile()));
+    //
+    //                try {
+    //                    ModelMarkerSnapshotReader reader = new ModelMarkerSnapshotReader(this.workspace);
+    //
+    //                    while(true) {
+    //                        reader.read(input);
+    //                    }
+    //                } finally {
+    //                    if (input != null) {
+    //                        input.close();
+    //                    }
+    //
+    //                }
+    //            } catch (Throwable var16) {
+    //                if (var3 == null) {
+    //                    var3 = var16;
+    //                } else if (var3 != var16) {
+    //                    var3.addSuppressed(var16);
+    //                }
+    //
+    //                throw var3;
+    //            }
+    //        } catch (EOFException var17) {
+    //        } catch (Exception var18) {
+    //            msg = NLS.bind(Messages.resources_readMeta, sourceLocation);
+    //            Policy.log(new ResourceStatus(567, sourceLocation, msg, var18));
+    //        }
+    //
+    //    }
+    //}
 
-                    try {
-                        ModelMarkerReader reader = new ModelMarkerReader(this.workspace);
-                        reader.read(input, generateDeltas);
-                    } finally {
-                        if (input != null) {
-                            input.close();
-                        }
-
-                    }
-
-                } catch (Throwable var18) {
-                    if (var7 == null) {
-                        var7 = var18;
-                    } else if (var7 != var18) {
-                        var7.addSuppressed(var18);
-                    }
-
-                    throw var7;
-                }
-            } catch (Exception var19) {
-                msg = NLS.bind(Messages.resources_readMeta, sourceLocation);
-                throw new ResourceException(567, sourceLocation, msg, var19);
-            }
-        }
-    }
-
-    protected void restoreFromSnap(IResource resource) throws Throwable {
-        IPath sourceLocation = this.workspace.getMetaArea().getMarkersSnapshotLocationFor(resource);
-        if (sourceLocation.toFile().exists()) {
-            String msg;
-            try {
-                Throwable var3 = null;
-                msg = null;
-
-                try {
-                    DataInputStream input = new DataInputStream(new SafeChunkyInputStream(sourceLocation.toFile()));
-
-                    try {
-                        ModelMarkerSnapshotReader reader = new ModelMarkerSnapshotReader(this.workspace);
-
-                        while(true) {
-                            reader.read(input);
-                        }
-                    } finally {
-                        if (input != null) {
-                            input.close();
-                        }
-
-                    }
-                } catch (Throwable var16) {
-                    if (var3 == null) {
-                        var3 = var16;
-                    } else if (var3 != var16) {
-                        var3.addSuppressed(var16);
-                    }
-
-                    throw var3;
-                }
-            } catch (EOFException var17) {
-            } catch (Exception var18) {
-                msg = NLS.bind(Messages.resources_readMeta, sourceLocation);
-                Policy.log(new ResourceStatus(567, sourceLocation, msg, var18));
-            }
-
-        }
-    }
-
-    public void save(ResourceInfo info, IPathRequestor requestor, DataOutputStream output, List<String> list) throws IOException {
-        this.writer.save(info, requestor, output, list);
-    }
+    //public void save(ResourceInfo info, IPathRequestor requestor, DataOutputStream output, List<String> list) throws IOException {
+    //    this.writer.save(info, requestor, output, list);
+    //}
 
     public void shutdown(IProgressMonitor monitor) {
     }
 
-    public void snap(ResourceInfo info, IPathRequestor requestor, DataOutputStream output) throws IOException {
-        this.writer.snap(info, requestor, output);
-    }
+    //public void snap(ResourceInfo info, IPathRequestor requestor, DataOutputStream output) throws IOException {
+    //    this.writer.snap(info, requestor, output);
+    //}
 
     public void startup(IProgressMonitor monitor) {
     }
@@ -634,4 +634,6 @@ public class ModelMarkerManager implements IManager {
         };
         (new ElementTreeIterator(this.workspace.getElementTree(), path)).iterate(visitor);
     }
+
+
 }
