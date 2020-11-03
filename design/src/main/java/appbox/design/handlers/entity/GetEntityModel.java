@@ -21,9 +21,7 @@ public class GetEntityModel implements IRequestHandler {
         var model = (EntityModel)modelNode.model();
         if(model.sysStoreOptions()!=null){
             //TODO 加载变更添加的索引的构建状态
-            return CompletableFuture.supplyAsync(() -> {
-                return new JsonResult(modelNode.model());
-            });
+            return CompletableFuture.completedFuture(modelNode.model());
         } else{
             return CompletableFuture.failedFuture(new Exception("StoreOptions is unknown"));
         }
