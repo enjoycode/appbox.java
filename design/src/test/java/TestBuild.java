@@ -36,20 +36,21 @@ public class TestBuild {
 
     @Test
     public void testBuild() throws Exception {
-        var testCode = "public class Emploee{}";
-        //testCode += "public class Emploee";
-        //testCode += "{\npublic String getName() {return \"rick\";}\n";
-        //testCode += "public void setName(String value) {}\n}\n";
-        var inputStream = new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
-        Function<IPath, InputStream> loadDelegate = (path) -> inputStream;
+        var testCode = "public class Emploee {\n";
+        testCode += "public String getName() {\n";
+        testCode += " var name = \"rick\";\n";
+        testCode += " return name;\n";
+        testCode += "}\n";
+        testCode +="}";
+        //注意编译器会重复调用加载文件内容
+        String                       finalTestCode = testCode;
+        Function<IPath, InputStream> loadDelegate  =
+                (path) -> new ByteArrayInputStream(finalTestCode.getBytes(StandardCharsets.UTF_8));
 
         var ls = new LanguageServer(loadDelegate);
-        //var outPath = Path.forPosix("/media/psf/Home/Projects/AppBoxFuture/appbox.java/design/src/test/testdata/bin");
         var project = ls.createProject("testbuild", null, null);
         var file = project.getFile("Emploee.java");
         file.create(null, true, null);
-
-        //EclipseCompiler/ JavaCompiler
 
         var config = new BuildConfiguration(project);
         var builder = new TestJavaBuilder(config);

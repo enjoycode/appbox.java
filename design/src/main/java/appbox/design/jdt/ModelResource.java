@@ -1,9 +1,7 @@
 package appbox.design.jdt;
 
 import appbox.design.utils.PathUtil;
-import org.eclipse.core.internal.resources.ICoreConstants;
-import org.eclipse.core.internal.resources.ResourceException;
-import org.eclipse.core.internal.resources.ResourceInfo;
+import org.eclipse.core.internal.resources.*;
 import org.eclipse.core.internal.utils.Messages;
 import org.eclipse.core.internal.utils.WrappedRuntimeException;
 import org.eclipse.core.internal.watson.ElementTreeIterator;
@@ -130,8 +128,12 @@ public abstract class ModelResource implements IResource {
     //endregion
 
     @Override
-    public IMarker createMarker(String s) throws CoreException {
-        return null;
+    public IMarker createMarker(String type) throws CoreException {
+        MarkerInfo info = new MarkerInfo();
+        info.setType(type);
+        info.setCreationTime(System.currentTimeMillis());
+        //this.workspace.getMarkerManager().add(this, info);
+        return new ModelMarker(this, info.getId());
     }
 
     @Override
