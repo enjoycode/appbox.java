@@ -1,6 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.channel.MessageType;
+import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
 import appbox.model.ModelType;
 import appbox.serialization.BinDeserializer;
@@ -29,15 +30,20 @@ public final class KVGetResponse extends StoreResponse {
         //直接反序列化数据，以避免内存复制
         if (errorCode == 0) {
             byte dataType = bs.readByte(); //读取数据类型
-            if (dataType == 1) { //Model
+            if (dataType == 1) {
+                bs.readNativeVariant(); //跳过长度
+                var app = new ApplicationModel();
+                app.readFrom(bs);
+                result = app;
+            } else if (dataType == 2) { //Model
                 bs.readNativeVariant(); //跳过长度
                 var model = ModelBase.makeModelByType(bs.readByte());
                 model.readFrom(bs);
                 result = model;
-            } else if (dataType == 2) { //ModelCode
+            } else if (dataType == 3) { //ModelCode
                 bs.readNativeVariant(); //跳过长度
                 var modelType = ModelType.fromValue(bs.readByte());
-                var codeData = bs.readRemaining();
+                var codeData  = bs.readRemaining();
                 if (modelType == ModelType.Service) {
                     result = ModelCodeUtil.decodeServiceCode(codeData);
                 } else {

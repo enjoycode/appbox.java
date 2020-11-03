@@ -1,5 +1,8 @@
 package appbox.runtime;
 
+import appbox.model.ApplicationModel;
+import appbox.model.ModelBase;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -21,9 +24,15 @@ public interface IRuntimeContext {
 
     /**
      * 异步调用服务
-     *
      * @param method eg: "sys.OrderService.Save"
      */
     CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args);
 
+    //region ====ModelContainer====
+    //C#为异步，这里为了方便暂采用同步
+
+    ApplicationModel getApplicationModel(int appId);
+
+    <T extends ModelBase> T getModel(long modelId);
+    //endregion
 }

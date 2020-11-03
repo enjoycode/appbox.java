@@ -1,14 +1,19 @@
 package appbox.server.runtime;
 
 import appbox.logging.Log;
+import appbox.model.ApplicationModel;
+import appbox.model.ModelBase;
 import appbox.runtime.IRuntimeContext;
 import appbox.runtime.ISessionInfo;
 import appbox.runtime.InvokeArg;
+import appbox.store.ModelStore;
 import appbox.utils.ReflectUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.alibaba.ttl.threadpool.TtlExecutors;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -17,6 +22,9 @@ public final class HostRuntimeContext implements IRuntimeContext {
 
     private final        ServiceContainer                       _services   = new ServiceContainer();
     private static final TransmittableThreadLocal<ISessionInfo> _sessionTTL = new TransmittableThreadLocal<>();
+
+    private final ArrayList<ApplicationModel> apps   = new ArrayList<>(); //TODO:use RWLock
+    private final HashMap<Long, ModelBase>    models = new HashMap<>(100); //TODO:usr LRUCache
 
     static {
         //暂在这里Hack CompletableFuture's ASYNC_POOL
@@ -66,4 +74,68 @@ public final class HostRuntimeContext implements IRuntimeContext {
         var methodName = method.subSequence(methodDotIndex + 1, method.length());
         return service.invokeAsync(methodName, args);
     }
+
+    //region ====ModelContainer====
+    @Override
+    public ApplicationModel getApplicationModel(int appId) {
+        for (var app : apps) {
+            if (app.id() == appId) {
+                return app;
+            }
+        }
+
+        try {
+            var appModel = ModelStore.loadApplicationAsync(appId).get();
+            if (appModel == null) {
+                Log.warn("Can't load application model:" + appId);
+                return null;
+            }
+
+            synchronized (apps) {
+                boolean exists = false;
+                for (var app : apps) {
+                    if (app.id() == appId) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    apps.add(appModel);
+                }
+            }
+
+            return appModel;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public <T extends ModelBase> T getModel(long modelId) {
+        var model = models.get(modelId);
+        if (model != null) {
+            return (T) model;
+        }
+
+        try {
+            model = ModelStore.loadModelAsync(modelId).get();
+            if (model == null) {
+                Log.warn("Can't load model: " + modelId);
+                return null;
+            }
+
+            synchronized (models) {
+                models.putIfAbsent(modelId, model);
+            }
+            return (T) model;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+    //endregion
+
 }

@@ -8,14 +8,10 @@ import appbox.store.KeyUtil;
  * 扫描所有模型，用于设计时加载
  */
 public final class KVScanModelsRequest extends KVScanRequest {
-    public enum ModelsType {
-        Applications, Models;
-    }
+    private final boolean scanApps;
 
-    private final ModelsType scanWhat;
-
-    public KVScanModelsRequest(ModelsType scanWhat) {
-        this.scanWhat = scanWhat;
+    public KVScanModelsRequest(boolean scanApps) {
+        this.scanApps = scanApps;
     }
 
     @Override
@@ -23,7 +19,7 @@ public final class KVScanModelsRequest extends KVScanRequest {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeNativeVariant(1); //BeginKeySize
-        if (scanWhat == ModelsType.Applications) {
+        if (scanApps) {
             bs.writeByte(KeyUtil.METACF_APP_PREFIX); //BeginKey
         } else {
             bs.writeByte(KeyUtil.METACF_MODEL_PREFIX); //BeginKey
@@ -34,7 +30,7 @@ public final class KVScanModelsRequest extends KVScanRequest {
         bs.writeLong(0); //Timestamp
         bs.writeByte((byte) -1); //DataCF
 
-        if (scanWhat == ModelsType.Applications) {
+        if (scanApps) {
             bs.writeByte((byte) 1); //DataType
         } else {
             bs.writeByte((byte) 2); //DataType
