@@ -1,7 +1,9 @@
 package appbox.design.jdt;
 
 import appbox.design.IDeveloperSession;
+import appbox.design.services.CodeGenService;
 import appbox.logging.Log;
+import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.runtime.RuntimeContext;
 import appbox.store.ModelStore;
@@ -109,11 +111,12 @@ public final class ModelFile extends ModelResource implements IFile {
             var modelNode = hub.typeSystem.findModelNodeByModelFile(this);
             //TODO:其他类型处理
             if (modelNode.model().modelType() == ModelType.Entity) {
-                //TODO:通过CodeGenService生成虚拟代码
-                var testCode = "package sys.entities;\n";
-                testCode += "public class " + modelNode.model().name();
-                testCode += "{\npublic String getName() {return null;}\n";
-                testCode += "public void setName(String value) {}\n}\n";
+                //通过CodeGenService生成虚拟代码
+                var testCode=CodeGenService.genEntityDummyCode((EntityModel)modelNode.model(),modelNode.appNode.model.name(),null);
+                //var testCode = "package sys.entities;\n";
+                //testCode += "public class " + modelNode.model().name();
+                //testCode += "{\npublic String getName() {return null;}\n";
+                //testCode += "public void setName(String value) {}\n}\n";
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
                 return new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {
