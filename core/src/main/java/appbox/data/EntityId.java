@@ -47,6 +47,7 @@ public final class EntityId {
         return (p1 << 12) | (p2 >>> 4);
     }
 
+    /**仅用于新建时初始化*/
     public void initRaftGroupId(long raftGroupId) {
         //不需要判断是否已初始化，因为可能Schema变更后重试
         //RaftGroupId拆为32 + (12 + 4)
