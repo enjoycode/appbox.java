@@ -32,6 +32,10 @@ public final class ApplicationModel implements IBinSerializable {
         return _name;
     }
 
+    public byte getAppStoreId() {
+        return _storeId;
+    }
+
     public void setAppStoreId(byte id) {
         _storeId = id;
     }

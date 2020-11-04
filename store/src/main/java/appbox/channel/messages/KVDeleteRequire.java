@@ -49,7 +49,7 @@ public final class KVDeleteRequire implements IMessage {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-
+        throw new UnsupportedOperationException();
     }
     //endregion
 }

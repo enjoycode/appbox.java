@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class KVTransaction implements AutoCloseable {
+public final class KVTransaction implements IKVTransaction, AutoCloseable {
     static final class RefFromItem {
         EntityId targetEntityId;
         long     fromRaftGroupId;
@@ -24,6 +24,7 @@ public final class KVTransaction implements AutoCloseable {
     private KVTransaction() {
     }
 
+    @Override
     public KVTxnId id() {
         return _txnId;
     }

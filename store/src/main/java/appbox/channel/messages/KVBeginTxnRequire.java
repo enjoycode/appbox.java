@@ -22,6 +22,6 @@ public final class KVBeginTxnRequire implements IMessage {
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
-
+        throw new UnsupportedOperationException();
     }
 }

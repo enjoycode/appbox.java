@@ -7,6 +7,16 @@ public final class IdUtil {
     private IdUtil() {
     }
 
+    public static final int RAFTGROUPID_APPID_OFFSET = 36;
+    public static final int RAFTGROUPID_FLAGS_OFFFSET = 32;
+    public static final int RAFTGROUPID_FLAGS_TYPE_OFFSET = 2;
+    public static final int RAFTGROUPID_FLAGS_MVCC_OFFSET = 1;
+
+    public static final byte RAFT_TYPE_TABLE     = 0;
+    public static final byte RAFT_TYPE_INDEX     = 1;
+    public static final byte RAFT_TYPE_BLOB_META = 2;
+    //public static final byte RAFT_TYPE_BLOB_CHUNK = 3;
+
     public static final int  MODELID_APPID_OFFSET = 32;
     public static final int  MODELID_TYPE_OFFSET  = 24;
     public static final int  MODELID_SEQ_OFFSET   = 2;

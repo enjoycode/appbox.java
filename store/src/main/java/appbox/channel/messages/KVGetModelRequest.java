@@ -9,9 +9,9 @@ import appbox.store.KeyUtil;
  */
 public final class KVGetModelRequest extends KVGetRequest {
     private final long modelId;
-    private final byte type; //1=App,2=Model,3=ModelCode
+    private final KVReadDataType type;
 
-    public KVGetModelRequest(long modelId, byte type) {
+    public KVGetModelRequest(long modelId, KVReadDataType type) {
         this.modelId = modelId;
         this.type    = type;
     }
@@ -20,20 +20,15 @@ public final class KVGetModelRequest extends KVGetRequest {
     public void writeTo(BinSerializer bs) throws Exception {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
-        if (type == 1) {
-            KeyUtil.writeAppKey(bs, (int) modelId); //key
-        } else if (type == 2) {
+        if (type == KVReadDataType.ApplicationModel) {
+            KeyUtil.writeAppKey(bs, (int) modelId, true); //key
+        } else if (type == KVReadDataType.Model) {
             KeyUtil.writeModelKey(bs, modelId); //key
         } else {
             KeyUtil.writeModelCodeKey(bs, modelId); //key
         }
         bs.writeByte((byte) -1);    //dataCF
-        bs.writeByte(type);         //dataType
+        bs.writeByte(type.value);         //dataType
         bs.writeLong(0);      //timestamp
-    }
-
-    @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
-        throw new RuntimeException("Not supported.");
     }
 }

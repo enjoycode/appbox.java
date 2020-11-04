@@ -31,9 +31,9 @@ public final class KVScanModelsRequest extends KVScanRequest {
         bs.writeByte((byte) -1); //DataCF
 
         if (scanApps) {
-            bs.writeByte((byte) 1); //DataType
+            bs.writeByte(KVReadDataType.ApplicationModel.value); //DataType
         } else {
-            bs.writeByte((byte) 2); //DataType
+            bs.writeByte(KVReadDataType.Model.value); //DataType
         }
 
         bs.writeBool(false); //IsMVCC TODO: remove it
@@ -41,8 +41,4 @@ public final class KVScanModelsRequest extends KVScanRequest {
         bs.writeBool(false); //HasFilter
     }
 
-    @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
-        throw new Exception("Not supported.");
-    }
 }

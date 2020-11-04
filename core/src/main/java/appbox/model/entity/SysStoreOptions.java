@@ -4,6 +4,7 @@ import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +95,26 @@ public final class SysStoreOptions implements IEntityStoreOption {
 
         index.initIndexId(id);
         getIndexes().add(index);
+    }
+    //endregion
+
+    //region ====Store Flags====
+
+    /**
+     * 2bit RaftType + 1bit MvccFlag + 1bit OrderFlag
+     */
+    public byte tableFlags() {
+        return (byte) (IdUtil.RAFT_TYPE_TABLE << IdUtil.RAFTGROUPID_FLAGS_TYPE_OFFSET
+                | (_isMVCC ? 1 : 0) << IdUtil.RAFTGROUPID_FLAGS_MVCC_OFFSET
+                | (_orderByDesc ? 1 : 0));
+    }
+
+    /**
+     * 2bit RaftType + 1bit MvccFlag + 1bit OrderFlag(无用）
+     */
+    public byte indexFlags() {
+        return (byte) (IdUtil.RAFT_TYPE_INDEX << IdUtil.RAFTGROUPID_FLAGS_TYPE_OFFSET
+                | (_isMVCC ? 1 : 0) << IdUtil.RAFTGROUPID_FLAGS_MVCC_OFFSET);
     }
     //endregion
 

@@ -54,7 +54,7 @@ public final class ModelStore {
      * 仅用于加载服务模型的代码
      */
     public static CompletableFuture<ServiceCode> loadServiceCodeAsync(long modelId) {
-        var req = new KVGetModelRequest(modelId, (byte) 3);
+        var req = new KVGetModelRequest(modelId, KVReadDataType.ModelCode);
         return SysStoreApi.execKVGetAsync(req).thenApply(r -> (ServiceCode) r.result);
     }
     //endregion
@@ -73,7 +73,7 @@ public final class ModelStore {
      * 用于运行时加载单个应用模型
      */
     public static CompletableFuture<ApplicationModel> loadApplicationAsync(int appId) {
-        var req = new KVGetModelRequest(appId, (byte) 1);
+        var req = new KVGetModelRequest(appId, KVReadDataType.ApplicationModel);
         return SysStoreApi.execKVGetAsync(req).thenApply(r -> (ApplicationModel) r.result);
     }
 
@@ -89,7 +89,7 @@ public final class ModelStore {
      * 用于运行时加载单个模型
      */
     public static CompletableFuture<ModelBase> loadModelAsync(long modelId) {
-        var req = new KVGetModelRequest(modelId, (byte) 2);
+        var req = new KVGetModelRequest(modelId, KVReadDataType.Model);
         return SysStoreApi.execKVGetAsync(req).thenApply(r -> (ModelBase) r.result);
     }
     //endregion

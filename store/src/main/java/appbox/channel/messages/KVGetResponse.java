@@ -27,20 +27,25 @@ public final class KVGetResponse extends StoreResponse {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 
-        //直接反序列化数据，以避免内存复制
+        //直接反序列化数据，以减少内存复制
         if (errorCode == 0) {
             byte dataType = bs.readByte(); //读取数据类型
-            if (dataType == 1) {
+            if (dataType == KVReadDataType.ApplicationModel.value) {
                 bs.readNativeVariant(); //跳过长度
+                var appStoreId = bs.readByte();
+                var devIdSeq   = bs.readInt();
+                var usrIdSeq   = bs.readInt();
                 var app = new ApplicationModel();
                 app.readFrom(bs);
+                app.setAppStoreId(appStoreId);
+                app.setDevModelIdSeq(devIdSeq);
                 result = app;
-            } else if (dataType == 2) { //Model
+            } else if (dataType == KVReadDataType.Model.value) {
                 bs.readNativeVariant(); //跳过长度
                 var model = ModelBase.makeModelByType(bs.readByte());
                 model.readFrom(bs);
                 result = model;
-            } else if (dataType == 3) { //ModelCode
+            } else if (dataType == KVReadDataType.ModelCode.value) {
                 bs.readNativeVariant(); //跳过长度
                 var modelType = ModelType.fromValue(bs.readByte());
                 var codeData  = bs.readRemaining();

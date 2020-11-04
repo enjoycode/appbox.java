@@ -7,10 +7,12 @@ public final class MessageType {
     public static final byte InvokeRequire  = 10;
     public static final byte InvokeResponse = 11;
 
-    public static final byte MetaNewAppRequire      = 20;
-    public static final byte MetaNewAppResponse     = 21;
-    public static final byte MetaGenModelIdRequire  = 22;
-    public static final byte MetaGenModelIdResponse = 23;
+    public static final byte MetaNewAppRequire        = 20;
+    public static final byte MetaNewAppResponse       = 21;
+    public static final byte MetaGenModelIdRequire    = 22;
+    public static final byte MetaGenModelIdResponse   = 23;
+    public static final byte MetaGenPartitionRequest  = 24;
+    public static final byte MetaGenPartitionResponse = 25;
 
     public static final byte KVBeginTxnRequire  = 26;
     public static final byte KVBeginTxnResponse = 27;

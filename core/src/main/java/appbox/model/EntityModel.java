@@ -48,6 +48,11 @@ public final class EntityModel extends ModelBase {
         return _storeOptions != null && _storeOptions instanceof SysStoreOptions ?
                 (SysStoreOptions) _storeOptions : null;
     }
+
+    /** 存储用的标识号，模型标识号后3字节,仅用于SysStore */
+    public int tableId() { //TODO: rename to tableStoreId
+        return (int) (_id & 0xFFFFFF);
+    }
     //endregion
 
     //region ====GetMember Methods====
@@ -247,7 +252,6 @@ public final class EntityModel extends ModelBase {
         } while (propIndex != 0);
     }
     //endregion
-
 
     public ArrayList<EntityMemberModel> getMembers() {
         return _members;

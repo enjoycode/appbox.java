@@ -1,9 +1,6 @@
-import appbox.channel.messages.KVGetModelRequest;
-import appbox.channel.messages.KVInsertDataRequire;
-import appbox.channel.messages.KVScanModelsRequest;
+import appbox.channel.messages.*;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
-import appbox.channel.messages.KVDeleteRequire;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;
 import org.junit.jupiter.api.AfterAll;
@@ -48,7 +45,8 @@ public class TestSysStore {
                 .thenCompose(res -> {
                     cmd.txnId.copyFrom(res.txnId);
                     return SysStoreApi.execKVInsertAsync(cmd); //执行Insert命令
-                }).thenCompose(res -> SysStoreApi.commitTxnAsync(cmd.txnId)); //递交事务
+                })
+                .thenCompose(res -> SysStoreApi.commitTxnAsync(cmd.txnId)); //递交事务
 
         var res = fut.get();
         assertEquals(0, res.errorCode);
@@ -85,7 +83,7 @@ public class TestSysStore {
     @Test
     public void testKVGetModel() throws Exception {
         long modelId = 0x9E9AA8F702000004L;
-        var req = new KVGetModelRequest(modelId, (byte)2);
+        var  req     = new KVGetModelRequest(modelId, KVReadDataType.Model);
 
         var fut = SysStoreApi.execKVGetAsync(req);
         var res = fut.get();

@@ -12,13 +12,13 @@ import java.util.UUID;
  * 模型基类，实例分为设计时与运行时
  */
 public abstract class ModelBase implements IBinSerializable {
-    private long            _id;
-    private String          _name;
-    private String          _originalName;
-    private boolean         _designMode;
-    private int             _version;
-    private PersistentState _persistentState;
-    private UUID            _folderId;
+    protected long            _id;
+    private   String          _name;
+    private   String          _originalName;
+    private   boolean         _designMode;
+    private   int             _version;
+    private   PersistentState _persistentState;
+    private   UUID            _folderId;
 
     /**
      * only for Serialization

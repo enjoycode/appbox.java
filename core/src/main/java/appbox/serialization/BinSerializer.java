@@ -150,6 +150,7 @@ public final class BinSerializer extends OutputStream /*暂继承OutputStream方
         _stream.writeNativeVariant(value);
     }
 
+    /** 写入带长度信息的字节数组 */
     public void writeByteArray(byte[] value) throws Exception {
         _stream.writeByteArray(value);
     }

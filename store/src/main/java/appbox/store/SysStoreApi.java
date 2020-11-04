@@ -53,7 +53,6 @@ public final class SysStoreApi {
 
     /**
      * 根据请求消息新建异步任务加入挂起的字典表，并且序列化发送请求消息
-     *
      * @return 如果序列化或发送失败返回null
      */
     private static CompletableFuture<IMessage> makeTaskAndSendRequire(IMessage require) {
@@ -133,6 +132,15 @@ public final class SysStoreApi {
             return makeSendRequireError(new MetaGenModelIdResponse());
         }
         return task.thenApply(m -> ((MetaGenModelIdResponse) m));
+    }
+
+    protected static CompletableFuture<MetaGenPartitionResponse> metaGenPartitionAsync(PartitionInfo info, KVTxnId txnId) {
+        var req  = new MetaGenPartitionRequest(info, txnId);
+        var task = makeTaskAndSendRequire(req);
+        if (task == null) {
+            return makeSendRequireError(new MetaGenPartitionResponse());
+        }
+        return task.thenApply(m -> ((MetaGenPartitionResponse) m));
     }
     //endregion
 

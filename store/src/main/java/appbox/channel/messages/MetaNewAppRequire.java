@@ -24,7 +24,7 @@ public final class MetaNewAppRequire implements IMessage {
     @Override
     public void writeTo(BinSerializer bs) throws Exception {
         //写入５字节Key
-        KeyUtil.writeAppKey(bs, application.id());
+        KeyUtil.writeAppKey(bs, application.id(), false);
         //写入模型数据,注意不需要写入头部9字节，由读取端处理
         application.writeTo(bs);
     }
