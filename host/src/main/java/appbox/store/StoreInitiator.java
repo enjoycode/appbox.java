@@ -9,6 +9,8 @@ import appbox.model.ServiceModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.FieldWithOrder;
 import appbox.model.entity.SysIndexModel;
+import appbox.runtime.RuntimeContext;
+import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
 
@@ -30,14 +32,20 @@ public final class StoreInitiator {
         return createAppAsync().thenCompose(app -> {
             try {
                 //新建EntityModels
-                var emploeeModel    = createEmploeeModel();
                 var enterpriseModel = createEnterpriseModel();
+                var emploeeModel    = createEmploeeModel();
+                //将新建的模型加入运行时上下文
+                var ctx = (HostRuntimeContext) RuntimeContext.current();
+                ctx.injectApplication(app);
+                ctx.injectModel(enterpriseModel);
+                ctx.injectModel(emploeeModel);
 
                 //开始事务保存
                 return KVTransaction.beginAsync()
                         .thenCompose(txn -> ModelStore.insertModelAsync(emploeeModel, txn)
                                 .thenCompose(r -> ModelStore.insertModelAsync(enterpriseModel, txn))
                                 .thenCompose(r -> createServiceModel("TestService", 1, null, txn))
+                                .thenCompose(r -> insertEntities(txn))
                                 .thenApply(r -> txn.commitAsync())
                                 .thenApply(r -> true));
             } catch (Exception e) {
@@ -128,4 +136,12 @@ public final class StoreInitiator {
             return CompletableFuture.completedFuture(true);
         });
     }
+
+    /** insert default entities */
+    private static CompletableFuture<Void> insertEntities(KVTransaction txn) {
+        var defaultEnterprise = new Enterprise();
+        defaultEnterprise.setName("AppBoxFuture");
+        return EntityStore.insertEntityAsync(defaultEnterprise, txn);
+    }
+
 }

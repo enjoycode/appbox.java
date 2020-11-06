@@ -42,6 +42,7 @@ public final class KeyUtil {
 
     public static void writeEntityKey(BinSerializer bs, EntityId id) throws Exception {
         //TODO: write appStoreId + tableId
+        bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
     }
 }

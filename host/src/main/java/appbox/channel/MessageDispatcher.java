@@ -18,17 +18,20 @@ public final class MessageDispatcher {
 
     /**
      * 处理通道接收的消息，注意：当前线程为接收Loop内，由实现者决定在哪个线程执行具体的操作
-     *
      * @param channel 接收消息的通道
      * @param first   完整消息的第一包
      */
     public static void processMessage(IHostMessageChannel channel, Pointer first) {
-        switch (NativeSmq.getMsgType(first)) {
+        var msgType = NativeSmq.getMsgType(first);
+        switch (msgType) {
             case MessageType.InvokeRequire:
                 processInvokeRequire(channel, first);
                 break;
             case MessageType.MetaNewAppResponse:
                 processStoreResponse(channel, first, new MetaNewAppResponse());
+                break;
+            case MessageType.MetaGenPartitionResponse:
+                processStoreResponse(channel, first, new MetaGenPartitionResponse());
                 break;
             case MessageType.KVBeginTxnResponse:
                 processStoreResponse(channel, first, new KVBeginTxnResponse());
@@ -44,7 +47,7 @@ public final class MessageDispatcher {
                 break;
             default:
                 channel.returnAllChunks(first);
-                Log.warn("Receive unknown type message.");
+                Log.warn("Receive unknown type message: " + msgType);
                 break;
         }
     }

@@ -43,7 +43,6 @@ public class TestSysStore {
                     txnId.copyFrom(res.txnId);
                     var cmd = new KVInsertDataRequire(txnId);
                     cmd.raftGroupId = 0;
-                    cmd.dataCF      = -1;
                     cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
                     cmd.data        = new byte[]{65, 66, 67, 68};
                     return SysStoreApi.execKVInsertAsync(cmd); //执行Insert命令

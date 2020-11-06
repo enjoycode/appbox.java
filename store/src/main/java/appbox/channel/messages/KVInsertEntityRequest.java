@@ -14,6 +14,7 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
     public KVInsertEntityRequest(SysEntity entity, EntityModel model, KVTxnId txnId) {
         super(txnId);
 
+        dataCF  = -1;
         _entity = entity;
         _model  = model;
     }

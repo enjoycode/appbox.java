@@ -13,6 +13,8 @@ public final class KVInsertDataRequire extends KVInsertRequire {
 
     public KVInsertDataRequire(KVTxnId txnId) {
         super(txnId);
+
+        dataCF = -1;
     }
 
     @Override

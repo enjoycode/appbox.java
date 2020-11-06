@@ -76,6 +76,18 @@ public final class HostRuntimeContext implements IRuntimeContext {
     }
 
     //region ====ModelContainer====
+
+    /** 仅用于StoreInitiator */
+    public void injectApplication(ApplicationModel appModel) {
+        apps.add(appModel);
+    }
+
+    /** 仅用于StoreInitiator */
+    public void injectModel(ModelBase model) {
+        model.acceptChanges();
+        models.putIfAbsent(model.id(), model);
+    }
+
     @Override
     public ApplicationModel getApplicationModel(int appId) {
         for (var app : apps) {
