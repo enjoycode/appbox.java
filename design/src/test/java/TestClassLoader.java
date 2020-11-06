@@ -84,17 +84,23 @@ public class TestClassLoader {
            e.printStackTrace();
        }
    }
-
+    private static final String CLASS_ROOT_PATH="/home/rick/out/";
    @Test
    public void testCreateClass() throws Exception {
-       Class clz=DynamicClassFactory.getClass("MyTest");
-       clz=DynamicClassFactory.addProperty("MyTest","id",Integer.class);
-       Object obj    = clz.newInstance();
-       Method method = clz.getMethod("setId", Integer.class);
-       Object value = method.invoke(obj, 1);
-
-       Method method1 = clz.getMethod("getId", new Class<?>[] {});
-       Object value1 = method1.invoke(obj, new Object[] {});
-       System.out.println(value1.toString());
+        String className="MyTest";
+        String fullName="com/model/"+className;
+        byte[] code=DynamicClassFactory.getClassByte(className);
+        System.out.println(code.length);
+        code=DynamicClassFactory.addProperty(className,"id",Integer.class);
+        System.out.println(code.length);
+        //MyClassLoader classLoader=new MyClassLoader();
+        //Class clz=classLoader.defineClassPublic(fullName.replace("/","."), code, 0, code.length);
+        //Object obj    = clz.newInstance();
+        //Method method = clz.getMethod("setId", Integer.class);
+        //Object value = method.invoke(obj, 1);
+        //
+        //Method method1 = clz.getMethod("getId", new Class<?>[] {});
+        //Object value1 = method1.invoke(obj, new Object[] {});
+        //System.out.println(value1.toString());
    }
 }
