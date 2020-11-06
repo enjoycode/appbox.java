@@ -1,3 +1,4 @@
+import appbox.utils.DiskClassLoader;
 import appbox.utils.DynamicClassFactory;
 import appbox.utils.MyClassLoader;
 import appbox.utils.JavaCompilerUtil;
@@ -90,17 +91,16 @@ public class TestClassLoader {
         String className="MyTest";
         String fullName="com/model/"+className;
         byte[] code=DynamicClassFactory.getClassByte(className);
-        System.out.println(code.length);
         code=DynamicClassFactory.addProperty(className,"id",Integer.class);
-        System.out.println(code.length);
-        //MyClassLoader classLoader=new MyClassLoader();
-        //Class clz=classLoader.defineClassPublic(fullName.replace("/","."), code, 0, code.length);
-        //Object obj    = clz.newInstance();
-        //Method method = clz.getMethod("setId", Integer.class);
-        //Object value = method.invoke(obj, 1);
-        //
-        //Method method1 = clz.getMethod("getId", new Class<?>[] {});
-        //Object value1 = method1.invoke(obj, new Object[] {});
-        //System.out.println(value1.toString());
+
+        MyClassLoader classLoader=new MyClassLoader();
+        Class clz=classLoader.defineClassPublic(fullName.replace("/","."), code, 0, code.length);
+        Object obj    = clz.newInstance();
+        Method method = clz.getMethod("setId", Integer.class);
+        method.invoke(obj, 1);
+
+        Method method1 = clz.getMethod("getId", new Class<?>[] {});
+        Object value1 = method1.invoke(obj, new Object[] {});
+        System.out.println(value1.toString());
    }
 }

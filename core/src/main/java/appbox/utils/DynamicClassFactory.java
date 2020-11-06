@@ -18,16 +18,15 @@ public class DynamicClassFactory {
      */
     private static Map<String, byte[]> classPool = new HashMap<>();
 
-    private static final String CLASS_ROOT_PATH="/home/rick/out/";
-
-    public static byte[] getClassByte(String className) throws Exception{
+    public static byte[] getClassByte(String className) {
         String fullName="com/model/"+className;
         //自定义ClassLoader
 
         byte[] code=classPool.get(className);
         if(code==null){
             ClassWriter cw = new ClassWriter(0);
-            cw.visit(V1_8, ACC_PUBLIC, fullName, null, "java/lang/Object",null);
+            cw.visit(V13, ACC_PUBLIC, fullName, null, "java/lang/Object",null);
+            //生成构造方法
             MethodVisitor constructor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             constructor.visitVarInsn(ALOAD, 0);
             constructor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V",false);
@@ -37,21 +36,19 @@ public class DynamicClassFactory {
             //完成
             cw.visitEnd();
             code = cw.toByteArray();
-            //可以将其生成class文件保存在磁盘上,或者直接通过classLoad加载
-            //new File("/home/rick/out/").mkdirs();
-            //FileOutputStream fos = new FileOutputStream(new File(CLASS_ROOT_PATH+fullName+".class"));
-            //fos.write(code);
-            //fos.close();
         }
-        //MyClassLoader classLoader = new MyClassLoader();
-        ///**
-        // * name:指定的是加载类的全限制名,即通过"."分隔的
-        // */
-        //Class<?> cls = classLoader.defineClassPublic(fullName.replace("/","."), code, 0, code.length);
         classPool.put(className,code);
         return code;
     }
 
+    /**
+     * 添加字段并生成get、set方法
+     * @param className
+     * @param propertyName
+     * @param descriptorClz
+     * @return
+     * @throws Exception
+     */
     public static byte[] addProperty(String className,String propertyName,Class descriptorClz) throws Exception {
 
         String fullName="com/model/"+className;
@@ -64,10 +61,10 @@ public class DynamicClassFactory {
         //        ""
         //);
         //cr.accept(addField, ClassReader.EXPAND_FRAMES);
-
-        /**
-         * 增加属性字段:private String name;
-         */
+        cr.accept(cw, ClassReader.SKIP_DEBUG);
+        ///**
+        // * 增加属性字段:private String name;
+        // */
         FieldVisitor fv = cw.visitField(ACC_PRIVATE, propertyName, Type.getDescriptor(descriptorClz), null, null);
         fv.visitEnd();
         /**
