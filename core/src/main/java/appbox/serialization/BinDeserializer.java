@@ -97,4 +97,8 @@ public final class BinDeserializer {
     public String readString() throws Exception {
         return _stream.readString();
     }
+
+    public void read(byte[] buffer, int offset, int count) throws Exception {
+        _stream.read(buffer, offset, count);
+    }
 }

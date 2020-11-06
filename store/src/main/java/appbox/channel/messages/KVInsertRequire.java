@@ -9,11 +9,15 @@ import appbox.store.KVTxnId;
 import javax.naming.OperationNotSupportedException;
 
 public abstract class KVInsertRequire implements IMessage {
-    public final KVTxnId txnId = new KVTxnId();
+    private final KVTxnId txnId = new KVTxnId();
     public       long    raftGroupId;
     public       int     schemaVersion;
     public       byte    dataCF;
     public       boolean overrideIfExists;
+
+    public KVInsertRequire(KVTxnId txnId) {
+        this.txnId.copyFrom(txnId);
+    }
 
     @Override
     public byte MessageType() {

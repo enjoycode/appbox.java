@@ -1,6 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.serialization.BinSerializer;
+import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
 import appbox.utils.IdUtil;
 
@@ -8,7 +9,9 @@ public final class KVInsertModelCodeRequire extends KVInsertRequire {
     public long   modelId;
     public byte[] codeData;
 
-    public KVInsertModelCodeRequire() {
+    public KVInsertModelCodeRequire(KVTxnId txnId) {
+        super(txnId);
+
         raftGroupId      = KeyUtil.META_RAFTGROUP_ID;
         schemaVersion    = 0;
         dataCF           = -1;

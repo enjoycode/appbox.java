@@ -1,3 +1,5 @@
+package benchmark;
+
 import java.util.concurrent.TimeUnit;
 
 import appbox.serialization.BytesOutputStream;
@@ -6,6 +8,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import testutils.TestHelper;
 
 @BenchmarkMode(Mode.AverageTime)
 @State(Scope.Thread)

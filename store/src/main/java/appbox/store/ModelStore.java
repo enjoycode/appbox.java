@@ -28,9 +28,8 @@ public final class ModelStore {
     }
 
     public static CompletableFuture<Void> insertModelAsync(ModelBase model, KVTransaction txn) {
-        var req = new KVInsertModelRequire();
+        var req = new KVInsertModelRequire(txn.id());
         req.model = model;
-        req.txnId.copyFrom(txn.id());
 
         return SysStoreApi.execKVInsertAsync(req).thenAccept(r -> checkStoreError(r));
     }
@@ -42,10 +41,9 @@ public final class ModelStore {
      * @param codeData 已经压缩编码过
      */
     public static CompletableFuture<Void> upsertModelCodeAsync(long modelId, byte[] codeData, KVTransaction txn) {
-        var req = new KVInsertModelCodeRequire();
+        var req = new KVInsertModelCodeRequire(txn.id());
         req.modelId  = modelId;
         req.codeData = codeData;
-        req.txnId.copyFrom(txn.id());
 
         return SysStoreApi.execKVInsertAsync(req).thenAccept(r -> checkStoreError(r));
     }

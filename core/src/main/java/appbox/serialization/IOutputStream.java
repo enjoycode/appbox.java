@@ -38,6 +38,7 @@ public interface IOutputStream {
         writeNativeVariant(value);
     }
 
+    /** 写入与C++一致的可变长度整数 */
     default void writeNativeVariant(int value) {
         do {
             byte temp = (byte) ((value & 0x7F) | 0x80);

@@ -42,6 +42,10 @@ public final class SysStoreOptions implements IEntityStoreOption {
     }
 
     //region ====Properties====
+    public int schemaVersion() {
+        return _schemaVersion;
+    }
+
     public boolean hasPartitionKeys() {
         return _partitionKeys != null && _partitionKeys.length > 0;
     }

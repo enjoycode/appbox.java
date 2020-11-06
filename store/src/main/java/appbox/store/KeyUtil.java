@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.data.EntityId;
 import appbox.serialization.BinSerializer;
 
 /**
@@ -39,4 +40,8 @@ public final class KeyUtil {
         bs.writeLongBE(modelId);
     }
 
+    public static void writeEntityKey(BinSerializer bs, EntityId id) throws Exception {
+        //TODO: write appStoreId + tableId
+        id.writeTo(bs);
+    }
 }

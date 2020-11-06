@@ -1,7 +1,8 @@
 package appbox.store;
 
 import appbox.channel.messages.KVGetPartitionRequest;
-import appbox.data.Entity;
+import appbox.channel.messages.KVInsertEntityRequest;
+import appbox.data.SysEntity;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
@@ -60,7 +61,7 @@ public final class EntityStore { //TODO: rename to SysStore
     //region ====实体及索引相关操作====
     //TODO:*** Insert/Update/Delete本地索引及数据通过BatchCommand优化，减少RPC次数
 
-    public static CompletableFuture<Void> insertEntityAsync(Entity entity, KVTransaction txn) {
+    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn) {
         //TODO:考虑自动新建事务, 分区已存在且模型没有索引没有关系则可以不需要事务
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");
@@ -70,7 +71,7 @@ public final class EntityStore { //TODO: rename to SysStore
         //if (model.Members.Count == 0)
         //    throw new RuntimeException("Entity[{model.Name}] has no member");
 
-        var app = RuntimeContext.current().getApplicationModel(model.appId());
+        var                     app = RuntimeContext.current().getApplicationModel(model.appId());
         CompletableFuture<Long> getRaftGroupIdTask;
         if (model.sysStoreOptions().hasPartitionKeys()) {
             throw new RuntimeException("未实现");
@@ -78,7 +79,7 @@ public final class EntityStore { //TODO: rename to SysStore
             getRaftGroupIdTask = getOrCreateGlobalTablePartition(app, model, txn);
         }
 
-        return getRaftGroupIdTask.thenAccept(raftGroupId -> {
+        return getRaftGroupIdTask.thenCompose(raftGroupId -> {
             if (raftGroupId == 0)
                 throw new RuntimeException("Can't get or create partition.");
 
@@ -88,7 +89,16 @@ public final class EntityStore { //TODO: rename to SysStore
             //TODO:判断有无强制外键引用，有则先处理
             //TODO:插入索引，注意变更后可能已添加或删除了索引会报错
 
-
+            //插入数据
+            var req = new KVInsertEntityRequest(entity, model, txn.id()); //TODO: refs
+            req.raftGroupId      = raftGroupId;
+            req.schemaVersion    = model.sysStoreOptions().schemaVersion();
+            req.overrideIfExists = false;
+            return SysStoreApi.execKVInsertAsync(req);
+        }).thenAccept(res -> {
+            if (res.errorCode != 0) {
+                throw new SysStoreException(res.errorCode);
+            }
         });
     }
     //endregion

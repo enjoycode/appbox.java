@@ -2,6 +2,7 @@ import appbox.channel.messages.*;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
+import appbox.store.KVTxnId;
 import appbox.store.SysStoreApi;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,18 +36,19 @@ public class TestSysStore {
 
     @Test
     public void testKVInsertCommand() throws ExecutionException, InterruptedException {
-        var cmd = new KVInsertDataRequire();
-        cmd.raftGroupId = 0;
-        cmd.dataCF      = -1;
-        cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
-        cmd.data        = new byte[]{65, 66, 67, 68};
+        final KVTxnId txnId = new KVTxnId();
 
         var fut = SysStoreApi.beginTxnAsync() //启动事务
                 .thenCompose(res -> {
-                    cmd.txnId.copyFrom(res.txnId);
+                    txnId.copyFrom(res.txnId);
+                    var cmd = new KVInsertDataRequire(txnId);
+                    cmd.raftGroupId = 0;
+                    cmd.dataCF      = -1;
+                    cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
+                    cmd.data        = new byte[]{65, 66, 67, 68};
                     return SysStoreApi.execKVInsertAsync(cmd); //执行Insert命令
                 })
-                .thenCompose(res -> SysStoreApi.commitTxnAsync(cmd.txnId)); //递交事务
+                .thenCompose(res -> SysStoreApi.commitTxnAsync(txnId)); //递交事务
 
         var res = fut.get();
         assertEquals(0, res.errorCode);

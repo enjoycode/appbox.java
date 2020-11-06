@@ -1,3 +1,5 @@
+package testutils;
+
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.FieldWithOrder;

@@ -1,11 +1,7 @@
-import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
-import appbox.model.entity.DataFieldModel;
-import appbox.model.entity.FieldWithOrder;
-import appbox.model.entity.SysIndexModel;
 import appbox.serialization.*;
-import appbox.utils.IdUtil;
 import org.junit.jupiter.api.Test;
+import testutils.TestHelper;
 
 import java.nio.charset.StandardCharsets;
 

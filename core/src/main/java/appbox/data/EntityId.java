@@ -1,6 +1,8 @@
 package appbox.data;
 
 import appbox.runtime.RuntimeContext;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -97,5 +99,13 @@ public final class EntityId {
             }
         }
         return true;
+    }
+
+    public void writeTo(BinSerializer bs) throws Exception {
+        bs.write(_data);
+    }
+
+    protected void readFrom(BinDeserializer bs) throws Exception {
+        bs.read(_data, 0, 16);
     }
 }

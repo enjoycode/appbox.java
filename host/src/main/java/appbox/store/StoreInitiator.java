@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.entities.Enterprise;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
@@ -97,9 +98,9 @@ public final class StoreInitiator {
 
         //Members
         var name = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
-        model.addSysMember(name, (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET));
+        model.addSysMember(name, Enterprise.NAME_ID);
         var address = new DataFieldModel(model, "Address", DataFieldType.String, true, false);
-        model.addSysMember(address, (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET));
+        model.addSysMember(address, Enterprise.ADDRESS_ID);
 
         return model;
     }

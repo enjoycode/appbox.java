@@ -1,11 +1,15 @@
 package appbox.serialization;
 
 import appbox.cache.ObjectPool;
+import appbox.utils.IdUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
-public final class BinSerializer extends OutputStream /*暂继承OutputStream方便写Json*/ {
+public final class BinSerializer extends OutputStream implements IEntityMemberWriter /*暂继承OutputStream方便写Json*/ {
+    //region ====ObjectPool====
     private static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, 32);
 
     public static BinSerializer rentFromPool(IOutputStream stream) {
@@ -18,6 +22,7 @@ public final class BinSerializer extends OutputStream /*暂继承OutputStream方
         obj._stream = null;
         pool.back(obj);
     }
+    //endregion
 
     private IOutputStream _stream;
 
@@ -178,4 +183,50 @@ public final class BinSerializer extends OutputStream /*暂继承OutputStream方
         }
     }
     //endregion
+
+    //region ====IEntityMemberWriter====
+    private static final byte SF_WRITE_NULL    = 2;
+    private static final byte SF_ORDER_BY_DESC = 4;
+
+    /** 写入与存储一致的3字节长度(小字节序) */
+    private void writeStoreVarLen(int len) {
+        _stream.writeByte((byte) (len & 0xFF));
+        _stream.writeByte((byte) ((len >>> 8) & 0xFF));
+        _stream.writeByte((byte) ((len >>> 16) & 0xFF));
+    }
+
+    @Override
+    public void writeMember(short id, String value, byte storeFlags) throws Exception {
+        if (storeFlags != 0) {
+            if (value != null) {
+                writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
+                //TODO:优化写utf8,另判断长度超出范围
+                var bytes = value.getBytes(StandardCharsets.UTF_8);
+                writeStoreVarLen(bytes.length);
+                write(bytes);
+            } else if ((storeFlags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+                writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+            }
+        } else {
+            writeShort(id);
+            writeString(value);
+        }
+    }
+
+    @Override
+    public void writeMember(short id, int value, byte storeFlags) throws Exception {
+        writeShort(storeFlags == 0 ? id : (short) (id | 4));
+        writeInt(value);
+    }
+
+    @Override
+    public void writeMember(short id, Optional<Integer> value, byte storeFlags) throws Exception {
+        if (value.isPresent()) {
+            writeMember(id, value.get(), storeFlags);
+        } else if (storeFlags != 0 && (storeFlags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+            writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+        }
+    }
+    //endregion
+
 }

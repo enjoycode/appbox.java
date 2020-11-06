@@ -7,8 +7,8 @@ public final class IdUtil {
     private IdUtil() {
     }
 
-    public static final int RAFTGROUPID_APPID_OFFSET = 36;
-    public static final int RAFTGROUPID_FLAGS_OFFFSET = 32;
+    public static final int RAFTGROUPID_APPID_OFFSET      = 36;
+    public static final int RAFTGROUPID_FLAGS_OFFFSET     = 32;
     public static final int RAFTGROUPID_FLAGS_TYPE_OFFSET = 2;
     public static final int RAFTGROUPID_FLAGS_MVCC_OFFSET = 1;
 
@@ -29,6 +29,13 @@ public final class IdUtil {
     public static final int   MEMBERID_SEQ_OFFSET   = 7;
     public static final int   MEMBERID_LAYER_OFFSET = 5;
     public static final int   MEMBERID_ORDER_OFFSET = 4;
+
+    public static final byte  STORE_FIELD_VAR_FLAG        = 0;
+    public static final byte  STORE_FIELD_BOOL_TRUE_FLAG  = 3;
+    public static final byte  STORE_FIELD_BOOL_FALSE_FLAG = 5;
+    public static final byte  STORE_FIELD_16_LEN_FLAG     = 7;
+    public static final byte  STORE_FIELD_NULL_FLAG       = 9;
+    public static final short STORE_FIELD_ID_OF_ENTITY_ID = 7; //用于存储索引指向的实体的Id, 相当于MemberId(0) | 16LenFlag
 
     public static final int  SYS_APP_ID              = 0x9E9AA8F7;
     public static final long SYS_ENTITY_MODEL_ID     = Integer.toUnsignedLong(SYS_APP_ID) << MODELID_APPID_OFFSET
