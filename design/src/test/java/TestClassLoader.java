@@ -5,6 +5,7 @@ import appbox.utils.JavaCompilerUtil;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -94,8 +95,9 @@ public class TestClassLoader {
         code=DynamicClassFactory.addProperty(className,"id",Integer.class);
 
         MyClassLoader classLoader=new MyClassLoader();
-        Class clz=classLoader.defineClassPublic(fullName.replace("/","."), code, 0, code.length);
-        Object obj    = clz.newInstance();
+        Class      clz =classLoader.defineClassPublic(fullName.replace("/","."), code, 0, code.length);
+        Constructor con =clz.getConstructor(long.class);
+        Object     obj = con.newInstance(10l);
         Method method = clz.getMethod("setId", Integer.class);
         method.invoke(obj, 1);
 

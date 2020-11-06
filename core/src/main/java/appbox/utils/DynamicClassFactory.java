@@ -25,14 +25,30 @@ public class DynamicClassFactory {
         byte[] code=classPool.get(className);
         if(code==null){
             ClassWriter cw = new ClassWriter(0);
-            cw.visit(V13, ACC_PUBLIC, fullName, null, "java/lang/Object",null);
-            //生成构造方法
-            MethodVisitor constructor = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            constructor.visitVarInsn(ALOAD, 0);
-            constructor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V",false);
+            cw.visit(V13, ACC_PUBLIC, fullName, null, "appbox/data/Entity",null);
+            //生成带参数构造方法
+            MethodVisitor constructor = cw.visitMethod(ACC_PUBLIC, "<init>", "(J)V", null, null);
+            constructor.visitVarInsn(ALOAD, 0);//this
+            constructor.visitVarInsn(LLOAD, 1);//this
+            constructor.visitMethodInsn(INVOKESPECIAL, "appbox/data/Entity", "<init>", "(J)V",false);
             constructor.visitInsn(RETURN);
-            constructor.visitMaxs(1, 1);
+            constructor.visitMaxs(5, 5);
             constructor.visitEnd();
+
+            //重载方法：writeMember
+            MethodVisitor writeMember = cw.visitMethod(ACC_PUBLIC, "writeMember", "(SLappbox/serialization/IEntityMemberWriter;B)V", null, new String[]{"java/lang/Exception"});
+            writeMember.visitInsn(RETURN);
+            writeMember.visitMaxs(5, 5);
+            writeMember.visitEnd();
+
+            //重载方法：readMember
+            MethodVisitor readMember = cw.visitMethod(ACC_PUBLIC, "readMember", "(SLappbox/serialization/BinDeserializer;)V", null, new String[]{"java/lang/Exception"});
+            //constructor.visitVarInsn(ALOAD, 2);//参数2
+            //constructor.visitMethodInsn(INVOKEVIRTUAL, "appbox/serialization/BinDeserializer", "readShort", "()S",false);
+            //readMember.visitInsn(POP);
+            readMember.visitInsn(RETURN);
+            readMember.visitMaxs(5, 5);
+            readMember.visitEnd();
             //完成
             cw.visitEnd();
             code = cw.toByteArray();
@@ -54,13 +70,6 @@ public class DynamicClassFactory {
         String fullName="com/model/"+className;
         ClassReader cr = new ClassReader(classPool.get(className));
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
-        //ClassVisitor addField = new AddField(cw,
-        //        propertyName,
-        //        Opcodes.ACC_PRIVATE ,
-        //        Type.getDescriptor(descriptorClz),
-        //        ""
-        //);
-        //cr.accept(addField, ClassReader.EXPAND_FRAMES);
         cr.accept(cw, ClassReader.SKIP_DEBUG);
         ///**
         // * 增加属性字段:private String name;
