@@ -1,6 +1,7 @@
 package appbox.store.sysquery;
 
 import appbox.data.Entity;
+import appbox.data.SysEntity;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
 import appbox.store.ReadonlyTransaction;
@@ -9,13 +10,13 @@ import appbox.utils.IdUtil;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class TableScan extends KVScan {
+public final class TableScan<T extends SysEntity> extends KVScan {
     public TableScan(long modelId) {
         super(modelId);
     }
 
     //region ====toXXX methods====
-    public CompletableFuture<List<Entity>> toListAsync(/*ITransaction txn*/) {
+    public CompletableFuture<List<T>> toListAsync(/*ITransaction txn*/) {
         var         app   = RuntimeContext.current().getApplicationModel(IdUtil.getAppIdFromModelId(modelId));
         EntityModel model = RuntimeContext.current().getModel(modelId);
 
