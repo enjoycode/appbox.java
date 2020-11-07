@@ -19,7 +19,6 @@ public final class KVGetPartitionRequest extends KVGetRequest {
         bs.writeNativeVariant(partitionInfo.key.length); //key长度
         bs.write(partitionInfo.key); //key数据
         bs.writeByte(KeyUtil.PARTCF_INDEX);    //dataCF
-        bs.writeByte(KVReadDataType.Partition.value);  //dataType
         bs.writeLong(0);      //timestamp
     }
 

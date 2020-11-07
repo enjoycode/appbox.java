@@ -31,7 +31,7 @@ public final class ModelStore {
         var req = new KVInsertModelRequire(txn.id());
         req.model = model;
 
-        return SysStoreApi.execKVInsertAsync(req).thenAccept(r -> checkStoreError(r));
+        return SysStoreApi.execKVInsertAsync(req).thenAccept(ModelStore::checkStoreError);
     }
 
     //region ====模型代码及Assembly相关操作====
@@ -45,15 +45,16 @@ public final class ModelStore {
         req.modelId  = modelId;
         req.codeData = codeData;
 
-        return SysStoreApi.execKVInsertAsync(req).thenAccept(r -> checkStoreError(r));
+        return SysStoreApi.execKVInsertAsync(req).thenAccept(ModelStore::checkStoreError);
     }
 
     /**
      * 仅用于加载服务模型的代码
      */
     public static CompletableFuture<ServiceCode> loadServiceCodeAsync(long modelId) {
-        var req = new KVGetModelRequest(modelId, KVReadDataType.ModelCode);
-        return SysStoreApi.execKVGetAsync(req).thenApply(r -> (ServiceCode) r.result);
+        var req = new KVGetModelCodeRequest(modelId);
+        return SysStoreApi.execKVGetAsync(req, new KVGetModelCodeResponse())
+                .thenApply(r -> (ServiceCode) r.sourceCode);
     }
     //endregion
 
@@ -63,32 +64,36 @@ public final class ModelStore {
      * 用于设计时加载所有ApplicationModel
      */
     public static CompletableFuture<ApplicationModel[]> loadAllApplicationAsync() {
-        var req = new KVScanModelsRequest(true);
-        return SysStoreApi.execKVScanAsync(req).thenApply(r -> (ApplicationModel[]) r.result);
+        var req = new KVScanAppsRequest();
+        return SysStoreApi.execKVScanAsync(req, new KVScanAppsResponse())
+                .thenApply(r -> r.apps);
     }
 
     /**
      * 用于运行时加载单个应用模型
      */
     public static CompletableFuture<ApplicationModel> loadApplicationAsync(int appId) {
-        var req = new KVGetModelRequest(appId, KVReadDataType.ApplicationModel);
-        return SysStoreApi.execKVGetAsync(req).thenApply(r -> (ApplicationModel) r.result);
+        var req = new KVGetApplicationRequest(appId);
+        return SysStoreApi.execKVGetAsync(req, new KVGetApplicationResponse())
+                .thenApply(r -> r.applicationModel);
     }
 
     /**
      * 用于设计时加载所有Model
      */
     public static CompletableFuture<ModelBase[]> loadAllModelAsync() {
-        var req = new KVScanModelsRequest(false);
-        return SysStoreApi.execKVScanAsync(req).thenApply(r -> (ModelBase[]) r.result);
+        var req = new KVScanModelsRequest();
+        return SysStoreApi.execKVScanAsync(req, new KVScanModelsResponse())
+                .thenApply(r -> r.models);
     }
 
     /**
      * 用于运行时加载单个模型
      */
     public static CompletableFuture<ModelBase> loadModelAsync(long modelId) {
-        var req = new KVGetModelRequest(modelId, KVReadDataType.Model);
-        return SysStoreApi.execKVGetAsync(req).thenApply(r -> (ModelBase) r.result);
+        var req = new KVGetModelRequest(modelId);
+        return SysStoreApi.execKVGetAsync(req, new KVGetModelResponse())
+                .thenApply(r -> r.model);
     }
     //endregion
 

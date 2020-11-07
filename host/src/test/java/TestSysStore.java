@@ -84,17 +84,17 @@ public class TestSysStore {
     @Test
     public void testKVGetModel() throws Exception {
         long modelId = 0x9E9AA8F702000004L;
-        var  req     = new KVGetModelRequest(modelId, KVReadDataType.Model);
+        var  req     = new KVGetModelRequest(modelId);
 
-        var fut = SysStoreApi.execKVGetAsync(req);
+        var fut = SysStoreApi.execKVGetAsync(req, new KVGetModelResponse());
         var res = fut.get();
         assertEquals(0, res.errorCode);
     }
 
     @Test
     public void testKVScanModels() throws Exception {
-        var req = new KVScanModelsRequest(true);
-        var fut = SysStoreApi.execKVScanAsync(req);
+        var req = new KVScanAppsRequest();
+        var fut = SysStoreApi.execKVScanAsync(req, new KVScanAppsResponse());
         var res = fut.get();
         assertEquals(0, res.errorCode);
     }

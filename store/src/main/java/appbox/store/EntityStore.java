@@ -1,6 +1,7 @@
 package appbox.store;
 
 import appbox.channel.messages.KVGetPartitionRequest;
+import appbox.channel.messages.KVGetPartitionResponse;
 import appbox.channel.messages.KVInsertEntityRequest;
 import appbox.data.SysEntity;
 import appbox.model.ApplicationModel;
@@ -15,12 +16,12 @@ public final class EntityStore { //TODO: rename to SysStore
     //region ====分区信息及缓存====
     private static CompletableFuture<Long> tryGetPartitionByReadIndex(PartitionInfo partitionInfo) {
         var req = new KVGetPartitionRequest(partitionInfo);
-        return SysStoreApi.execKVGetAsync(req).thenApply(r -> {
-            var raftGroupId = (Long) r.result;
-            if (raftGroupId != null) {
-                MetaCaches.tryAddPartition(partitionInfo, raftGroupId); //加入本地缓存
+        return SysStoreApi.execKVGetAsync(req, new KVGetPartitionResponse()).thenApply(r -> {
+            //这里暂不判断没有取到，由调用者处理
+            if (r.raftGroupId != 0) {
+                MetaCaches.tryAddPartition(partitionInfo, r.raftGroupId); //加入本地缓存
             }
-            return raftGroupId;
+            return r.raftGroupId;
         });
     }
 

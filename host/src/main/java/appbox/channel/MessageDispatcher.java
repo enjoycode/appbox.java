@@ -4,11 +4,9 @@ import appbox.runtime.ISessionInfo;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.messages.*;
 import appbox.logging.Log;
-import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;
 import com.sun.jna.Pointer;
 
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -28,22 +26,12 @@ public final class MessageDispatcher {
                 processInvokeRequire(channel, first);
                 break;
             case MessageType.MetaNewAppResponse:
-                processStoreResponse(channel, first, new MetaNewAppResponse());
-                break;
             case MessageType.MetaGenPartitionResponse:
-                processStoreResponse(channel, first, new MetaGenPartitionResponse());
-                break;
             case MessageType.KVBeginTxnResponse:
-                processStoreResponse(channel, first, new KVBeginTxnResponse());
-                break;
             case MessageType.KVCommandResponse:
-                processStoreResponse(channel, first, new KVCommandResponse());
-                break;
             case MessageType.KVGetResponse:
-                processStoreResponse(channel, first, new KVGetResponse());
-                break;
             case MessageType.KVScanResponse:
-                processStoreResponse(channel, first, new KVScanResponse());
+                processStoreResponse(channel, first);
                 break;
             default:
                 channel.returnAllChunks(first);
@@ -121,29 +109,29 @@ public final class MessageDispatcher {
         }
     }
 
-    private static <T extends StoreResponse> void processStoreResponse(IHostMessageChannel channel, Pointer first, T res) {
-        //Log.debug(NativeSmq.getDebugInfo(first, true));
+    private static void processStoreResponse(IHostMessageChannel channel, Pointer first) {
+        var reqId = NativeSmq.getDataPtr(first).getInt(0);;
+        var pendingItem = SysStoreApi.getPendingItem(reqId);
+        if (pendingItem == null) { //可能已超时
+            channel.returnAllChunks(first);
+            Log.warn("收到存储引擎响应时找不到相应的请求:" + reqId);
+            return;
+        }
 
-        boolean isDeserializeError = false;
+        //反序列化响应
         try {
-            IHostMessageChannel.deserialize(res, first);
-        } catch (Exception e) {
-            isDeserializeError = true;
+            IHostMessageChannel.deserialize(pendingItem.response, first);
+        } catch (Exception ex) {
+            CompletableFuture.runAsync(() -> pendingItem.future.completeExceptionally(ex)); //同样必须异步
             Log.warn("反序列化StoreResponse错误: ");
-            e.printStackTrace();
+            ex.printStackTrace();
+            return;
         } finally {
             channel.returnAllChunks(first);
         }
 
-        if (!isDeserializeError) {
-            CompletableFuture.runAsync(() -> {
-                SysStoreApi.onResponse(res.reqId, res);
-            });
-        } else {
-            CompletableFuture.runAsync(() -> {
-                SysStoreApi.onResponseDeserializeError(res.reqId);
-                //TODO:res back to pool, if it is pooled.
-            });
-        }
+        //正常响应，注意必须异步，还在Loop线程内
+        pendingItem.completeAsync();
     }
+
 }
