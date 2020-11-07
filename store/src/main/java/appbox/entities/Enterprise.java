@@ -1,7 +1,7 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
@@ -41,14 +41,24 @@ public final class Enterprise extends SysEntity {
     @Override
     public void writeMember(short id, IEntityMemberWriter bs, byte storeFlags) throws Exception {
         switch (id) {
-            case NAME_ID: bs.writeMember(id, _name, storeFlags); break;
-            case ADDRESS_ID: bs.writeMember(id, _address, storeFlags); break;
-            default: throw new Exception("unknown member");
+            case NAME_ID:
+                bs.writeMember(id, _name, storeFlags); break;
+            case ADDRESS_ID:
+                bs.writeMember(id, _address, storeFlags); break;
+            default:
+                throw new Exception("unknown member");
         }
     }
 
     @Override
-    public void readMember(short id, BinDeserializer bs) throws Exception {
-
+    public void readMember(short id, IEntityMemberReader bs, int storeFlags) throws Exception {
+        switch (id) {
+            case NAME_ID:
+                _name = bs.readStringMember(storeFlags); break;
+            case ADDRESS_ID:
+                _address = bs.readStringMember(storeFlags); break;
+            default:
+                throw new Exception("unknown member");
+        }
     }
 }

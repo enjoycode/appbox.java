@@ -105,7 +105,7 @@ public final class EntityId {
         bs.write(_data);
     }
 
-    protected void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) throws Exception {
         bs.read(_data, 0, 16);
     }
 }

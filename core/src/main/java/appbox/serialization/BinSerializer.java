@@ -185,8 +185,6 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     //endregion
 
     //region ====IEntityMemberWriter====
-    private static final byte SF_WRITE_NULL    = 2;
-    private static final byte SF_ORDER_BY_DESC = 4;
 
     /** 写入与存储一致的3字节长度(小字节序) */
     private void writeStoreVarLen(int len) {
@@ -207,7 +205,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
             } else if ((storeFlags & SF_WRITE_NULL) == SF_WRITE_NULL) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
             }
-        } else {
+        } else if (value != null) {
             writeShort(id);
             writeString(value);
         }

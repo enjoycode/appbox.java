@@ -1,10 +1,13 @@
 package appbox.store.sysquery;
 
-import appbox.data.Entity;
+import appbox.channel.messages.KVScanTableRequest;
+import appbox.channel.messages.KVScanTableResponse;
 import appbox.data.SysEntity;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
+import appbox.store.EntityStore;
 import appbox.store.ReadonlyTransaction;
+import appbox.store.SysStoreApi;
 import appbox.utils.IdUtil;
 
 import java.util.List;
@@ -16,6 +19,14 @@ public final class TableScan<T extends SysEntity> extends KVScan {
     }
 
     //region ====toXXX methods====
+    private CompletableFuture<KVScanTableResponse<T>> execPartScanAsync(long raftGroupId, int skip, int take) {
+        if (raftGroupId == 0)
+            return CompletableFuture.completedFuture(new KVScanTableResponse<>());
+
+        var req = new KVScanTableRequest(raftGroupId, skip, take, null); //TODO:fix filter
+        return SysStoreApi.execKVScanAsync(req, new KVScanTableResponse<T>());
+    }
+
     public CompletableFuture<List<T>> toListAsync(/*ITransaction txn*/) {
         var         app   = RuntimeContext.current().getApplicationModel(IdUtil.getAppIdFromModelId(modelId));
         EntityModel model = RuntimeContext.current().getModel(modelId);
@@ -28,9 +39,10 @@ public final class TableScan<T extends SysEntity> extends KVScan {
         if (model.sysStoreOptions().hasPartitionKeys()) {
             throw new RuntimeException("未实现");
         } else {
-
+            return EntityStore.getOrCreateGlobalTablePartition(app, model, txn)
+                    .thenCompose(raftGroupId -> execPartScanAsync(raftGroupId, skip, take))
+                    .thenApply(res -> res.result); //TODO:处理Includes
         }
-        throw new RuntimeException("未实现");
     }
     //endregion
 

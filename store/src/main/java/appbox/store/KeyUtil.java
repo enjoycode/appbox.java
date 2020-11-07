@@ -20,6 +20,8 @@ public final class KeyUtil {
     public static final byte PARTCF_GLOBAL_INDEX_FLAG = 0x11;
     public static final byte PARTCF_PART_INDEX_FLAG   = 0x12;
 
+    public static final int ENTITY_KEY_SIZE = 16;
+
     public static void writeAppKey(BinSerializer bs, int appId, boolean withSize) throws Exception {
         if (withSize) {
             bs.writeNativeVariant(5); //注意按无符号写入key长度
@@ -45,4 +47,5 @@ public final class KeyUtil {
         bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
     }
+
 }

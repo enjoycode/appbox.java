@@ -3,15 +3,12 @@ import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.runtime.RuntimeContext;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
-import appbox.serialization.BytesOutputStream;
-import appbox.serialization.IEntityMemberWriter;
+import appbox.serialization.*;
 import org.junit.jupiter.api.Test;
 
 public class TestEntitySerialization {
     //测试实体类
-    public final class Emploee extends SysEntity {
+    public static final class Emploee extends SysEntity {
 
         private String name;
         private int    age;
@@ -51,13 +48,13 @@ public class TestEntitySerialization {
         }
 
         @Override
-        public void readMember(short id, BinDeserializer bs) throws Exception {
+        public void readMember(short id, IEntityMemberReader bs, int storeFlags) throws Exception {
             switch (id) {
                 case 1:
-                    name = bs.readString();
+                    name = bs.readStringMember(storeFlags);
                     break;
                 case 2:
-                    age = bs.readInt();
+                    age = bs.readIntMember(storeFlags);
                     break;
                 default:
                     throw new Exception("unknown member");

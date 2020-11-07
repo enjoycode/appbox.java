@@ -2,10 +2,7 @@ package appbox.data;
 
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
-import appbox.serialization.IBinSerializable;
-import appbox.serialization.IEntityMemberWriter;
+import appbox.serialization.*;
 
 public abstract class Entity implements IBinSerializable {
 
@@ -35,7 +32,7 @@ public abstract class Entity implements IBinSerializable {
         //write members
         var model = model(); //TODO:考虑判断model.schemaVersion与entity是否一致
         for (var m : model.getMembers()) {
-            writeMember(m.memberId(), bs, (byte)0);
+            writeMember(m.memberId(), bs, IEntityMemberWriter.SF_NONE);
         }
         bs.writeShort((short) 0); //end write members
     }
@@ -55,7 +52,7 @@ public abstract class Entity implements IBinSerializable {
             if (memberId == 0) {
                 break;
             }
-            readMember(memberId, bs);
+            readMember(memberId, bs, IEntityMemberReader.SF_NONE);
         }
     }
 
@@ -65,7 +62,10 @@ public abstract class Entity implements IBinSerializable {
      */
     public abstract void writeMember(short id, IEntityMemberWriter bs, byte storeFlags) throws Exception;
 
-    /** 读取指定成员Id的成员值 */
-    public abstract void readMember(short id, BinDeserializer bs) throws Exception;
+    /**
+     * 读取指定成员Id的成员值
+     * @param storeFlags 从系统存储读的格式
+     */
+    public abstract void readMember(short id, IEntityMemberReader bs, int storeFlags) throws Exception;
     //endregion
 }

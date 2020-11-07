@@ -1,20 +1,20 @@
 package appbox.serialization;
 
 import appbox.cache.ObjectPool;
+import appbox.utils.IdUtil;
 
-public final class BinDeserializer {
+import java.nio.charset.StandardCharsets;
+
+public final class BinDeserializer implements IEntityMemberReader {
     //region ====ObjectPool====
     private static final ObjectPool<BinDeserializer> pool = new ObjectPool<>(BinDeserializer::new, 32);
 
     public static BinDeserializer rentFromPool(IInputStream stream) {
-        var obj = pool.rent();
-        obj._stream = stream;
-        return obj;
+        var obj = pool.rent(); obj._stream = stream; return obj;
     }
 
     public static void backToPool(BinDeserializer obj) {
-        obj._stream = null;
-        pool.back(obj);
+        obj._stream = null; pool.back(obj);
     }
     //endregion
 
@@ -24,23 +24,17 @@ public final class BinDeserializer {
     private IInputStream _stream;
 
     public Object deserialize() throws Exception {
-        var payloadType = _stream.readByte();
-        if (payloadType == PayloadType.Null) return null;
+        var payloadType = _stream.readByte(); if (payloadType == PayloadType.Null) return null;
         else if (payloadType == PayloadType.BooleanTrue) return Boolean.TRUE;
         else if (payloadType == PayloadType.BooleanFalse) return Boolean.FALSE;
         else if (payloadType == PayloadType.ObjectRef) throw new Exception("TODO");
 
-        TypeSerializer serializer = null;
-        if (payloadType == PayloadType.ExtKnownType)
-            throw new Exception("TODO");
-        else
-            serializer = TypeSerializer.getSerializer(payloadType);
-        if (serializer == null)
-            throw new Exception("待实现未知类型反序列化");
+        TypeSerializer serializer = null; if (payloadType == PayloadType.ExtKnownType) throw new Exception("TODO");
+        else serializer = TypeSerializer.getSerializer(payloadType);
+        if (serializer == null) throw new Exception("待实现未知类型反序列化");
 
         //读取附加类型信息并创建实例
-        if (serializer.creator == null
-                && payloadType != PayloadType.Array //非数组类型
+        if (serializer.creator == null && payloadType != PayloadType.Array //非数组类型
             /*&& serializer.genericTypeCount <= 0 //非范型类型*/) {
             return serializer.read(this, null);
         } else { //其他需要创建实例的类型
@@ -48,8 +42,7 @@ public final class BinDeserializer {
             //TODO: 先处理数组及范型类型
             result = serializer.creator.get();
             //TODO: 加入已序列化列表
-            serializer.read(this, result);
-            return result;
+            serializer.read(this, result); return result;
         }
     }
 
@@ -61,9 +54,7 @@ public final class BinDeserializer {
      * 读剩余字节
      */
     public byte[] readRemaining() throws Exception {
-        var data = new byte[_stream.remaining()];
-        _stream.read(data, 0, data.length);
-        return data;
+        var data = new byte[_stream.remaining()]; _stream.read(data, 0, data.length); return data;
     }
 
     public boolean readBool() throws Exception {
@@ -101,4 +92,38 @@ public final class BinDeserializer {
     public void read(byte[] buffer, int offset, int count) throws Exception {
         _stream.read(buffer, offset, count);
     }
+
+    //region ====IEntityMemberReader====
+
+    /** 读取与存储一致的3字节长度(小字节序) */
+    public int readStoreVarLen() throws Exception {
+        var byte1 = (int) readByte();
+        var byte2 = (int) readByte();
+        var byte3 = (int) readByte();
+        return byte3 << 16 | byte2 << 8 | byte1;
+    }
+
+    @Override
+    public String readStringMember(int storeFlags) throws Exception {
+        if (storeFlags == 0)
+            return readString();
+        int size  = storeFlags >>> 8; //TODO:优化读utf8
+        var bytes = new byte[size];
+        read(bytes, 0, size);
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public boolean readBoolMemeber(int storeFlags) throws Exception {
+        if (storeFlags == 0)
+            return readBool();
+        return (storeFlags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;
+    }
+
+    @Override
+    public int readIntMember(int storeFlags) throws Exception {
+        return readInt();
+    }
+    //endregion
+
 }

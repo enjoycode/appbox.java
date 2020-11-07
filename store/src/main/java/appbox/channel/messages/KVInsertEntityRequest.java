@@ -3,6 +3,7 @@ package appbox.channel.messages;
 import appbox.data.SysEntity;
 import appbox.model.EntityModel;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IEntityMemberWriter;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
 
@@ -29,7 +30,7 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
         bs.writeVariant(0);
         //data
         for (var m : _model.getMembers()) {
-            _entity.writeMember(m.memberId(), bs, (byte) 1);
+            _entity.writeMember(m.memberId(), bs, IEntityMemberWriter.SF_STORE);
         }
     }
 
