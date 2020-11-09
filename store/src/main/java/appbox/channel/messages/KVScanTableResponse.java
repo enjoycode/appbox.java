@@ -4,17 +4,18 @@ import appbox.data.SysEntity;
 import appbox.serialization.BinDeserializer;
 import appbox.store.KeyUtil;
 import appbox.utils.IdUtil;
-import appbox.utils.ReflectUtil;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class KVScanTableResponse<T extends SysEntity> extends KVScanResponse {
 
     public  List<T>  result;
-    private Class<?> clazz;
+    private Class<T> clazz;
+
+    public KVScanTableResponse(Class<T> clazz) {
+        this.clazz = clazz;
+    }
 
     @Override
     public void readFrom(BinDeserializer bs) throws Exception {
@@ -30,8 +31,8 @@ public final class KVScanTableResponse<T extends SysEntity> extends KVScanRespon
                 var keySize = bs.readNativeVariant(); //Row's key size
                 assert keySize == KeyUtil.ENTITY_KEY_SIZE;
                 //创建对象实例并从RowKey读取Id
-                var obj = makeInstance();
-                result.set(i, obj);
+                var obj = clazz.getDeclaredConstructor().newInstance();
+                result.add(obj);
                 obj.id().readFrom(bs);
                 //开始读取当前行的各个字段
                 var   valueSize = bs.readNativeVariant(); //Row's value size
@@ -49,7 +50,7 @@ public final class KVScanTableResponse<T extends SysEntity> extends KVScanRespon
                     switch (dataLenFlag) {
                         case IdUtil.STORE_FIELD_VAR_FLAG:
                             int varSize = bs.readStoreVarLen();
-                            obj.readMember(memberId, bs, (valueSize << 8) | 1);
+                            obj.readMember(memberId, bs, (varSize << 8) | 1);
                             readSize += varSize + 3;
                             break;
                         case IdUtil.STORE_FIELD_BOOL_TRUE_FLAG:
@@ -74,12 +75,14 @@ public final class KVScanTableResponse<T extends SysEntity> extends KVScanRespon
         }
     }
 
-    private T makeInstance() throws Exception {
-        if (clazz == null) {
-            Type superClass = getClass().getGenericSuperclass();
-            Type type       = ((ParameterizedType) superClass).getActualTypeArguments()[0];
-            clazz = ReflectUtil.getRawType(type);
-        }
-        return (T) clazz.getDeclaredConstructor().newInstance();
-    }
+    //private T makeInstance() throws Exception {
+    //    if (clazz == null) {
+    //        var testType = ReflectUtil.getRawType(this.getClass());
+    //
+    //        Type superClass = getClass().getGenericSuperclass();
+    //        Type type       = ((ParameterizedType) superClass).getActualTypeArguments()[0];
+    //        clazz = ReflectUtil.getRawType(type);
+    //    }
+    //    return (T) clazz.getDeclaredConstructor().newInstance();
+    //}
 }

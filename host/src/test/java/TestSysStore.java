@@ -1,9 +1,12 @@
 import appbox.channel.messages.*;
+import appbox.entities.Enterprise;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.KVTxnId;
 import appbox.store.SysStoreApi;
+import appbox.store.sysquery.TableScan;
+import appbox.utils.IdUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -97,6 +100,14 @@ public class TestSysStore {
         var fut = SysStoreApi.execKVScanAsync(req, new KVScanAppsResponse());
         var res = fut.get();
         assertEquals(0, res.errorCode);
+    }
+
+    @Test
+    public void testTableScan() throws Exception {
+        var q = new TableScan<>(IdUtil.SYS_ENTERPRISE_MODEL_ID, Enterprise.class);
+        q.where(Enterprise.NAME.equalsTo("AppBoxFuture"));
+        var list = q.toListAsync().get();
+        assertNotNull(list);
     }
 
 }

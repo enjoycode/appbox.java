@@ -1,6 +1,9 @@
 package appbox.serialization;
 
 import appbox.data.JsonResult;
+import appbox.expressions.BinaryExpression;
+import appbox.expressions.KVFieldExpression;
+import appbox.expressions.PrimitiveExpression;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.serialization.serializers.IntSerializer;
@@ -24,8 +27,13 @@ public abstract class TypeSerializer {
 
         registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null/*不支持*/));
 
-      //----模型相关----
+        //----模型相关----
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
+
+        //----表达式相关(目前都不支持反序列化)----
+        registerKnownType(new UserSerializer(PayloadType.BinaryExpression, BinaryExpression.class, () -> null));
+        registerKnownType(new UserSerializer(PayloadType.PrimitiveExpression, PrimitiveExpression.class, () -> null));
+        registerKnownType(new UserSerializer(PayloadType.KVFieldExpression, KVFieldExpression.class, () -> null));
     }
 
     /**

@@ -1,6 +1,8 @@
 package appbox.expressions;
 
 import appbox.model.entity.DataFieldModel;
+import appbox.serialization.BinDeserializer;
+import appbox.serialization.BinSerializer;
 
 public final class KVFieldExpression extends Expression {
     public final short                        fieldId;
@@ -14,5 +16,17 @@ public final class KVFieldExpression extends Expression {
     @Override
     public ExpressionType getType() {
         return ExpressionType.KVFieldExpression;
+    }
+
+
+    @Override
+    public void writeTo(BinSerializer bs) throws Exception {
+        bs.writeShort(fieldId);
+        bs.writeByte(fieldType.value);
+    }
+
+    @Override
+    public void readFrom(BinDeserializer bs) throws Exception {
+        throw new UnsupportedOperationException();
     }
 }

@@ -1,6 +1,8 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
+import appbox.expressions.KVFieldExpression;
+import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
@@ -8,6 +10,9 @@ import appbox.utils.IdUtil;
 public final class Enterprise extends SysEntity {
     public static final short NAME_ID    = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short ADDRESS_ID = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
+
+    public static final KVFieldExpression NAME    = new KVFieldExpression(NAME_ID, DataFieldModel.DataFieldType.String);
+    public static final KVFieldExpression ADDRESS = new KVFieldExpression(ADDRESS_ID, DataFieldModel.DataFieldType.String);
 
     private String _name;
     private String _address;

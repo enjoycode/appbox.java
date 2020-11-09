@@ -45,7 +45,10 @@ public final class KVScanTableRequest extends KVScanRequest {
         bs.writeByte((byte) -1); //DataCF
         bs.writeBool(false); //IsMVCC TODO: remove it
         bs.writeBool(false); //ToIndexTarget
-        bs.writeBool(false); //HasFilter
-        //TODO:write filter
+
+        //Filter (最后)如果有则写入
+        if (filter != null) {
+            bs.serialize(filter);
+        }
     }
 }
