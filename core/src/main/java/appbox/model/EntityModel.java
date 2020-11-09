@@ -1,10 +1,7 @@
 package appbox.model;
 
 import appbox.data.PersistentState;
-import appbox.model.entity.DataFieldModel;
-import appbox.model.entity.EntityMemberModel;
-import appbox.model.entity.IEntityStoreOption;
-import appbox.model.entity.SysStoreOptions;
+import appbox.model.entity.*;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.utils.IdUtil;
@@ -77,10 +74,10 @@ public final class EntityModel extends ModelBase {
         return binarySearch(_members, id);
     }
 
-    public EntityMemberModel getMember(short id) throws Exception {
+    public EntityMemberModel getMember(short id) throws RuntimeException {
         var m = tryGetMember(id);
         if (m == null) {
-            throw new Exception("Member with id: " + id + " not exists");
+            throw new RuntimeException("Member with id: " + id + " not exists");
         }
         return m;
     }
@@ -171,6 +168,8 @@ public final class EntityModel extends ModelBase {
     private EntityMemberModel makeMemberByType(byte memberType) throws Exception {
         if (memberType == EntityMemberType.DataField.value) {
             return new DataFieldModel(this);
+        } else if (memberType == EntityMemberType.EntityRef.value) {
+            return new EntityRefModel(this);
         }
         throw new RuntimeException("Unknown EntityMember type: " + memberType);
     }

@@ -15,18 +15,18 @@ public abstract class EntityMemberModel implements IBinSerializable {
         public final byte value;
 
         EntityMemberType(int v) {
-            value = (byte)v;
+            value = (byte) v;
         }
     }
 
     protected final EntityModel owner;     //不用序列化
 
-    private String          _name;
-    private String          _originalName;
-    private short           _memberId;
-    private boolean         _allowNull; //设计时改变时如果是DataField需要调用其onDataTypeChanged
-    private PersistentState _persistentState;
-    private String          _comment;
+    private   String          _name;
+    private   String          _originalName;
+    private   short           _memberId;
+    protected boolean         _allowNull; //设计时改变时如果是DataField需要调用其onDataTypeChanged
+    private   PersistentState _persistentState;
+    private   String          _comment;
 
     /**
      * Only for serialization
@@ -45,15 +45,15 @@ public abstract class EntityMemberModel implements IBinSerializable {
     //region ====Properties====
     public abstract EntityMemberType type();
 
-    public String name() {
+    public final String name() {
         return _name;
     }
 
-    public String originalName() {
+    public final String originalName() {
         return _originalName == null ? _name : _originalName;
     }
 
-    public short memberId() {
+    public final short memberId() {
         return _memberId;
     }
 
@@ -61,13 +61,15 @@ public abstract class EntityMemberModel implements IBinSerializable {
         return _persistentState;
     }
 
-    public boolean isNameChanged() {
+    public final boolean isNameChanged() {
         return _originalName != null && !_originalName.equals(_name);
     }
 
-    public boolean allowNull() {
+    public final boolean allowNull() {
         return _allowNull;
     }
+
+    public abstract void setAllowNull(boolean value);
     //endregion
 
     //region ====Runtime Methods====
@@ -75,13 +77,13 @@ public abstract class EntityMemberModel implements IBinSerializable {
     //endregion
 
     //region ====Design Methods====
-    public void canAddTo(EntityModel owner) throws RuntimeException {
+    public final void canAddTo(EntityModel owner) throws RuntimeException {
         if (this.owner != owner) {
             throw new RuntimeException();
         }
     }
 
-    public void initMemberId(short id) throws Exception {
+    public final void initMemberId(short id) throws Exception {
         if (_memberId == 0) {
             _memberId = id;
         } else {
@@ -89,17 +91,17 @@ public abstract class EntityMemberModel implements IBinSerializable {
         }
     }
 
-    public void acceptChanges() {
+    public final void acceptChanges() {
         _persistentState = PersistentState.Unchnaged;
         _originalName    = null;
     }
 
-    public void markDeleted() {
+    public final void markDeleted() {
         _persistentState = PersistentState.Deleted;
         owner.onPropertyChanged();
     }
 
-    protected void onPropertyChanged() {
+    protected final void onPropertyChanged() {
         if (_persistentState == PersistentState.Unchnaged) {
             _persistentState = PersistentState.Modified;
             owner.onPropertyChanged();

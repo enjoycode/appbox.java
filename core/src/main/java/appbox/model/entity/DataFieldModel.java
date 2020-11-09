@@ -48,9 +48,7 @@ public final class DataFieldModel extends EntityMemberModel {
     private int           _decimals; //仅用于Sql存储设置Decimal小数部分长度
     //TODO:默认值
 
-    /**
-     * Only for serialization
-     */
+    /** Only for serialization */
     public DataFieldModel(EntityModel owner) {
         super(owner);
     }
@@ -94,6 +92,12 @@ public final class DataFieldModel extends EntityMemberModel {
             _isDataTypeChanged = true;
             onPropertyChanged();
         }
+    }
+
+    @Override
+    public void setAllowNull(boolean value) {
+        _allowNull = value;
+        onDataTypeChanged();
     }
     //endregion
 
@@ -154,7 +158,6 @@ public final class DataFieldModel extends EntityMemberModel {
         } while (propIndex != 0);
     }
     //endregion
-
 
     public DataFieldType getDataType() {
         return _dataType;
