@@ -165,11 +165,13 @@ public final class EntityModel extends ModelBase {
     //endregion
 
     //region ====Serialization====
-    private EntityMemberModel makeMemberByType(byte memberType) throws Exception {
+    private EntityMemberModel makeMemberByType(byte memberType) throws RuntimeException {
         if (memberType == EntityMemberType.DataField.value) {
             return new DataFieldModel(this);
         } else if (memberType == EntityMemberType.EntityRef.value) {
             return new EntityRefModel(this);
+        } else if (memberType == EntityMemberType.EntitySet.value) {
+            return new EntitySetModel(this);
         }
         throw new RuntimeException("Unknown EntityMember type: " + memberType);
     }
