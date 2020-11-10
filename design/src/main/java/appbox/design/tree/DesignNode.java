@@ -17,7 +17,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     private   int          version;
     private   CheckoutInfo _checkoutInfo;
 
-    protected final NodeCollection nodes = new NodeCollection(this);
+    public final NodeCollection nodes = new NodeCollection(this);
 
     public abstract DesignNodeType nodeType();
 

@@ -20,7 +20,6 @@ public class DynamicClassFactory {
 
     public static byte[] getClassByte(String className) {
         String fullName="com/model/"+className;
-        //自定义ClassLoader
 
         byte[] code=classPool.get(className);
         if(code==null){
@@ -100,6 +99,7 @@ public class DynamicClassFactory {
 
         cw.visitEnd();
         byte[] code = cw.toByteArray();
+        classPool.put(className,code);
         return code;
     }
 
