@@ -44,7 +44,7 @@ public class TestJava {
     @Test
     void testCast() {
         var sb = new StringBuffer("a");
-        sb.replace(0,0,"Hello");
+        sb.replace(0, 0, "Hello");
         assertEquals("Helloa", sb.toString());
 
         sb.replace(0, 5, "");

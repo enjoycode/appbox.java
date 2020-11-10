@@ -1,4 +1,4 @@
-package appbox.store.sysquery;
+package appbox.store.query;
 
 import appbox.expressions.Expression;
 

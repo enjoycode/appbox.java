@@ -10,6 +10,7 @@ public final class KVScanTableRequest extends KVScanRequest {
     private final int        skip;
     private final int        take;
     private final Expression filter;
+    //TODO:1.事务标识或只读事务的时间戳;2.CreateTime谓词定位
 
     public KVScanTableRequest(long raftGroupId, int skip, int take, Expression filter) {
         this.raftGroupId = raftGroupId;
