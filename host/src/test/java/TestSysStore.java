@@ -5,7 +5,7 @@ import appbox.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.KVTxnId;
 import appbox.store.SysStoreApi;
-import appbox.store.sysquery.TableScan;
+import appbox.store.query.TableScan;
 import appbox.utils.IdUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
