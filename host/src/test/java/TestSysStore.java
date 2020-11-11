@@ -105,7 +105,7 @@ public class TestSysStore {
     @Test
     public void testTableScan() throws Exception {
         var q = new TableScan<>(IdUtil.SYS_ENTERPRISE_MODEL_ID, Enterprise.class);
-        q.where(Enterprise.NAME.equalsTo("AppBoxFuture"));
+        q.where(Enterprise.NAME.eq("AppBoxFuture"));
         var list = q.toListAsync().get();
         assertNotNull(list);
     }
