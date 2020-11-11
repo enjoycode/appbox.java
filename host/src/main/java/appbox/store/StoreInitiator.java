@@ -34,16 +34,38 @@ public final class StoreInitiator {
                 //新建EntityModels
                 var enterpriseModel = createEnterpriseModel();
                 var emploeeModel    = createEmploeeModel();
+                
+                var workgroupModel = createWorkgroupModel();
+                var orgunitModel = createOrgUnitModel();
+                var stagedModel = createStagedModel();
+                var checkoutModel = createCheckoutModel();
+
+                //新建默认组织
+
+                //新建默认系统管理员及测试账号
+
+                //新建默认组织单元
+
                 //将新建的模型加入运行时上下文
                 var ctx = (HostRuntimeContext) RuntimeContext.current();
                 ctx.injectApplication(app);
                 ctx.injectModel(enterpriseModel);
                 ctx.injectModel(emploeeModel);
+                ctx.injectModel(workgroupModel);
+                ctx.injectModel(orgunitModel);
+                ctx.injectModel(stagedModel);
+                ctx.injectModel(checkoutModel);
+
+
 
                 //开始事务保存
                 return KVTransaction.beginAsync()
                         .thenCompose(txn -> ModelStore.insertModelAsync(emploeeModel, txn)
                                 .thenCompose(r -> ModelStore.insertModelAsync(enterpriseModel, txn))
+                                .thenCompose(r -> ModelStore.insertModelAsync(workgroupModel, txn))
+                                .thenCompose(r -> ModelStore.insertModelAsync(orgunitModel, txn))
+                                .thenCompose(r -> ModelStore.insertModelAsync(stagedModel, txn))
+                                .thenCompose(r -> ModelStore.insertModelAsync(checkoutModel, txn))
                                 .thenCompose(r -> createServiceModel("TestService", 1, null, txn))
                                 .thenCompose(r -> insertEntities(txn))
                                 .thenApply(r -> txn.commitAsync())
@@ -56,6 +78,98 @@ public final class StoreInitiator {
             Log.error(ex.getMessage());
             return false;
         });
+    }
+
+    private static EntityModel createCheckoutModel() throws Exception{
+        var model = new EntityModel(IdUtil.SYS_CHECKOUT_MODEL_ID, "Checkout", true, false);
+        var nodeTypeId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var targetId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var developerId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var developerNameId     = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var versionId     = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var nodeTypeFiled = new DataFieldModel(model, "NodeType", DataFieldType.Byte, false, false);
+        model.addSysMember(nodeTypeFiled, nodeTypeId);
+
+        var targetIdFiled = new DataFieldModel(model, "TargetId", DataFieldType.String, false, false);
+        targetIdFiled.setLength(100);
+        model.addSysMember(targetIdFiled, targetId);
+
+        var developerIdFiled = new DataFieldModel(model, "DeveloperId", DataFieldType.Guid, false, false);
+        model.addSysMember(developerIdFiled, developerId);
+
+        var developerNameFiled = new DataFieldModel(model, "DeveloperName", DataFieldType.String, false, false);
+        developerNameFiled.setLength(100);
+        model.addSysMember(developerNameFiled, developerNameId);
+
+        var versionFiled = new DataFieldModel(model, "Version", DataFieldType.Int, false, false);
+        model.addSysMember(versionFiled, versionId);
+        return model;
+    }
+
+    private static EntityModel createStagedModel() throws Exception{
+        var model = new EntityModel(IdUtil.SYS_STAGED_MODEL_ID, "StagedModel", true, false);
+        var typeId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var modelId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var developerId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var dataId     = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
+
+        var typeFiled = new DataFieldModel(model, "Type", DataFieldType.Byte, false, false);
+        model.addSysMember(typeFiled, typeId);
+
+        var modelFiled = new DataFieldModel(model, "ModelId", DataFieldType.String, false, false);
+        modelFiled.setLength(100);
+        model.addSysMember(modelFiled, modelId);
+
+        var developerFiled = new DataFieldModel(model, "DeveloperId", DataFieldType.Guid, false, false);
+        model.addSysMember(developerFiled, developerId);
+
+        var dataFiled = new DataFieldModel(model, "Data", DataFieldType.Binary, false, false);
+        model.addSysMember(dataFiled, dataId);
+        return model;
+    }
+
+    private static EntityModel createOrgUnitModel() throws Exception{
+        var model = new EntityModel(IdUtil.SYS_ORGUNIT_MODEL_ID, "OrgUnit", true, false);
+        var nameId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var baseId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var baseTypeId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var nameFiled = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
+        nameFiled.setLength(100);
+        model.addSysMember(nameFiled, nameId);
+
+        var baseFiled = new DataFieldModel(model, "BaseId", DataFieldType.Guid, false, false);
+        model.addSysMember(baseFiled, baseId);
+
+        var baseTypeFiled = new DataFieldModel(model, "BaseType", DataFieldType.Byte, false, false);
+        model.addSysMember(baseTypeFiled, baseTypeId);
+
+        //var Base = new EntityRefModel(model, "Base",
+        //        new List<ulong>() { Consts.SYS_ENTERPRISE_MODEL_ID, Consts.SYS_WORKGROUP_MODEL_ID, Consts.SYS_EMPLOEE_MODEL_ID },
+        //        new ushort[] { baseId.MemberId }, baseType.MemberId);
+        //model.AddSysMember(Base, Consts.ORGUNIT_BASE_ID);
+        return model;
+    }
+
+    private static EntityModel createWorkgroupModel() throws Exception{
+        var model = new EntityModel(IdUtil.SYS_WORKGROUP_MODEL_ID, "Workgroup", true, false);
+
+        var nameId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var CHECKOUT_NODETYPE_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
+        var CHECKOUT_TARGETID_ID     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
+
+        var nameFiled = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
+        nameFiled.setLength(50);
+        model.addSysMember(nameFiled, nameId);
+
+        //indexes
+        var ui_nodeType_targetId = new SysIndexModel(model, "UI_NodeType_TargetId", false,
+                new FieldWithOrder[]
+                        {
+                                new FieldWithOrder(CHECKOUT_NODETYPE_ID),
+                                new FieldWithOrder(CHECKOUT_TARGETID_ID)
+                        },new short[]{CHECKOUT_NODETYPE_ID,CHECKOUT_TARGETID_ID});
+        model.sysStoreOptions().addSysIndex(model, ui_nodeType_targetId, (byte) ((1 << IdUtil.INDEXID_UNIQUE_OFFSET) | (1 << 2)));
+        return model;
     }
 
     private static CompletableFuture<ApplicationModel> createAppAsync() {
@@ -142,6 +256,10 @@ public final class StoreInitiator {
         var defaultEnterprise = new Enterprise();
         defaultEnterprise.setName("AppBoxFuture");
         return EntityStore.insertEntityAsync(defaultEnterprise, txn);
+    }
+
+    public static void main(String args[]){
+        StoreInitiator.initAsync();
     }
 
 }
