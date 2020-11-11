@@ -24,6 +24,7 @@ public class TestSqlStore {
         var addrMember = new DataFieldModel(model, "Address", DataFieldModel.DataFieldType.String, true);
         model.addSysMember(idMember, ELog.ID_ID);
         model.addSysMember(nameMember, ELog.NAME_ID);
+        model.addSysMember(addrMember, ELog.ADDR_ID);
 
         var ctx = new MockRuntimeContext();
         ctx.injectApplicationModel(new ApplicationModel("appbox", "sys"));
@@ -46,8 +47,9 @@ public class TestSqlStore {
 
     @Test
     public void testQuery() throws Exception {
-        var q = new SqlQuery<ELog>(ELog.MODEL_ID);
+        var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
         var list = q.toListAsync().get();
+        assertNotNull(list);
     }
 
 }
