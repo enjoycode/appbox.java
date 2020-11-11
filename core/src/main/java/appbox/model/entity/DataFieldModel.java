@@ -54,6 +54,11 @@ public final class DataFieldModel extends EntityMemberModel {
     }
 
     public DataFieldModel(EntityModel owner, String name, DataFieldType dataType,
+                          boolean allowNull) {
+        this(owner, name, dataType, allowNull, false);
+    }
+
+    public DataFieldModel(EntityModel owner, String name, DataFieldType dataType,
                           boolean allowNull, boolean isFK) {
         super(owner, name, allowNull);
 

@@ -34,13 +34,13 @@ public class TestEntitySerialization {
         }
 
         @Override
-        public void writeMember(short id, IEntityMemberWriter bs, byte storeFlags) throws Exception {
+        public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
             switch (id) {
                 case 1:
-                    bs.writeMember(id, name, storeFlags);
+                    bs.writeMember(id, name, flags);
                     break;
                 case 2:
-                    bs.writeMember(id, age, storeFlags);
+                    bs.writeMember(id, age, flags);
                     break;
                 default:
                     throw new Exception("unknown member");
@@ -48,13 +48,13 @@ public class TestEntitySerialization {
         }
 
         @Override
-        public void readMember(short id, IEntityMemberReader bs, int storeFlags) throws Exception {
+        public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
             switch (id) {
                 case 1:
-                    name = bs.readStringMember(storeFlags);
+                    name = bs.readStringMember(flags);
                     break;
                 case 2:
-                    age = bs.readIntMember(storeFlags);
+                    age = bs.readIntMember(flags);
                     break;
                 default:
                     throw new Exception("unknown member");
@@ -69,10 +69,11 @@ public class TestEntitySerialization {
 
         var appModel = new ApplicationModel("appbox", "sys");
         ctx.injectApplicationModel(appModel);
-        var empModel   = new EntityModel(12345678L, "Emploee", true, false);
-        var nameMember = new DataFieldModel(empModel, "Name", DataFieldModel.DataFieldType.String, true, false);
+        var empModel   = new EntityModel(12345678L, "Emploee");
+        empModel.bindToSysStore(true, false);
+        var nameMember = new DataFieldModel(empModel, "Name", DataFieldModel.DataFieldType.String, true);
         empModel.addSysMember(nameMember, (short) 1);
-        var ageMember = new DataFieldModel(empModel, "Age", DataFieldModel.DataFieldType.Int, false, false);
+        var ageMember = new DataFieldModel(empModel, "Age", DataFieldModel.DataFieldType.Int, false);
         empModel.addSysMember(ageMember, (short) 2);
         ctx.injectEntityModel(empModel);
 

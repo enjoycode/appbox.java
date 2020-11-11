@@ -57,15 +57,15 @@ public abstract class Entity implements IBinSerializable {
     }
 
     /**
-     * 写入成员Id及对应的值
-     * @param storeFlags 写入到系统存储的格式
+     * 写入成员，由IEntityMemberWriter及flags决定写入格式
+     * @param flags 写入目标格式标记
      */
-    public abstract void writeMember(short id, IEntityMemberWriter bs, byte storeFlags) throws Exception;
+    public abstract void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception;
 
     /**
      * 读取指定成员Id的成员值
-     * @param storeFlags 从系统存储读的格式
+     * @param flags 读取格式标记
      */
-    public abstract void readMember(short id, IEntityMemberReader bs, int storeFlags) throws Exception;
+    public abstract void readMember(short id, IEntityMemberReader bs, int flags) throws Exception;
     //endregion
 }
