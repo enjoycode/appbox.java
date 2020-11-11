@@ -104,24 +104,24 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     @Override
-    public String readStringMember(int storeFlags) throws Exception {
-        if (storeFlags == 0)
+    public String readStringMember(int flags) throws Exception {
+        if (flags == 0)
             return readString();
-        int size  = storeFlags >>> 8; //TODO:优化读utf8
+        int size  = flags >>> 8; //TODO:优化读utf8
         var bytes = new byte[size];
         read(bytes, 0, size);
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
     @Override
-    public boolean readBoolMemeber(int storeFlags) throws Exception {
-        if (storeFlags == 0)
+    public boolean readBoolMemeber(int flags) throws Exception {
+        if (flags == 0)
             return readBool();
-        return (storeFlags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;
+        return (flags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;
     }
 
     @Override
-    public int readIntMember(int storeFlags) throws Exception {
+    public int readIntMember(int flags) throws Exception {
         return readInt();
     }
     //endregion

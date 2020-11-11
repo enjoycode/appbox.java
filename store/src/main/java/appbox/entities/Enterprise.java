@@ -44,24 +44,24 @@ public final class Enterprise extends SysEntity {
     }
 
     @Override
-    public void writeMember(short id, IEntityMemberWriter bs, byte storeFlags) throws Exception {
+    public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
         switch (id) {
             case NAME_ID:
-                bs.writeMember(id, _name, storeFlags); break;
+                bs.writeMember(id, _name, flags); break;
             case ADDRESS_ID:
-                bs.writeMember(id, _address, storeFlags); break;
+                bs.writeMember(id, _address, flags); break;
             default:
                 throw new Exception("unknown member");
         }
     }
 
     @Override
-    public void readMember(short id, IEntityMemberReader bs, int storeFlags) throws Exception {
+    public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
         switch (id) {
             case NAME_ID:
-                _name = bs.readStringMember(storeFlags); break;
+                _name = bs.readStringMember(flags); break;
             case ADDRESS_ID:
-                _address = bs.readStringMember(storeFlags); break;
+                _address = bs.readStringMember(flags); break;
             default:
                 throw new Exception("unknown member");
         }

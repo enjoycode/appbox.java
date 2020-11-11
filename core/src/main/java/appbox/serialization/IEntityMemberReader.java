@@ -5,10 +5,10 @@ package appbox.serialization;
 public interface IEntityMemberReader {
     int SF_NONE = 0;
 
-    String readStringMember(int storeFlags) throws Exception;
+    String readStringMember(int flags) throws Exception;
 
-    boolean readBoolMemeber(int storeFlags) throws Exception;
+    boolean readBoolMemeber(int flags) throws Exception;
 
-    int readIntMember(int storeFlags) throws Exception;
+    int readIntMember(int flags) throws Exception;
 
 }

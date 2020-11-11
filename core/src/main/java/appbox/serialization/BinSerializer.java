@@ -194,15 +194,15 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, String value, byte storeFlags) throws Exception {
-        if (storeFlags != 0) {
+    public void writeMember(short id, String value, byte flags) throws Exception {
+        if (flags != 0) {
             if (value != null) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
                 //TODO:优化写utf8,另判断长度超出范围
                 var bytes = value.getBytes(StandardCharsets.UTF_8);
                 writeStoreVarLen(bytes.length);
                 write(bytes);
-            } else if ((storeFlags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+            } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
             }
         } else if (value != null) {
@@ -212,16 +212,16 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, int value, byte storeFlags) throws Exception {
-        writeShort(storeFlags == 0 ? id : (short) (id | 4));
+    public void writeMember(short id, int value, byte flags) throws Exception {
+        writeShort(flags == 0 ? id : (short) (id | 4));
         writeInt(value);
     }
 
     @Override
-    public void writeMember(short id, Optional<Integer> value, byte storeFlags) throws Exception {
+    public void writeMember(short id, Optional<Integer> value, byte flags) throws Exception {
         if (value.isPresent()) {
-            writeMember(id, value.get(), storeFlags);
-        } else if (storeFlags != 0 && (storeFlags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+            writeMember(id, value.get(), flags);
+        } else if (flags != 0 && (flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
             writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
         }
     }

@@ -71,6 +71,10 @@ public abstract class ModelBase implements IBinSerializable {
     public final void setFolderId(UUID folderId) {
         _folderId = folderId;
     }
+
+    protected final String originalName() {
+        return _originalName == null ? _name : _originalName;
+    }
     //endregion
 
     //region ====Design Methods====
@@ -161,7 +165,6 @@ public abstract class ModelBase implements IBinSerializable {
         } while (propIndex != 0);
     }
     //endregion
-
 
     public void setDesignMode(boolean designMode) {
         this._designMode = designMode;

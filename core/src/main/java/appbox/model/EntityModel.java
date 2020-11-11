@@ -23,16 +23,10 @@ public final class EntityModel extends ModelBase {
     /**
      * only for Serialization
      */
-    public EntityModel() {
-    }
+    public EntityModel() {}
 
-    /**
-     * New EntityModel for SysStore
-     */
-    public EntityModel(long id, String name, boolean mvcc, boolean orderByDesc) {
+    public EntityModel(long id, String name) {
         super(id, name);
-
-        _storeOptions = new SysStoreOptions(this, mvcc, orderByDesc);
     }
 
     //region ====Properties====
@@ -44,6 +38,11 @@ public final class EntityModel extends ModelBase {
     public SysStoreOptions sysStoreOptions() {
         return _storeOptions != null && _storeOptions instanceof SysStoreOptions ?
                 (SysStoreOptions) _storeOptions : null;
+    }
+
+    public SqlStoreOptions sqlStoreOptions() {
+        return _storeOptions != null && _storeOptions instanceof SqlStoreOptions ?
+                (SqlStoreOptions) _storeOptions : null;
     }
 
     /** 存储用的标识号，模型标识号后3字节,仅用于SysStore */
@@ -106,6 +105,14 @@ public final class EntityModel extends ModelBase {
     //endregion
 
     //region ====Design Methods====
+    public void bindToSysStore(boolean mvcc, boolean orderByDesc) {
+        _storeOptions = new SysStoreOptions(this, mvcc, orderByDesc);
+    }
+
+    public void bindToSqlStore(long storeId) {
+        _storeOptions = new SqlStoreOptions(this, storeId);
+    }
+
     @Override
     public void acceptChanges() {
         super.acceptChanges();
@@ -162,6 +169,16 @@ public final class EntityModel extends ModelBase {
         _members.add(member);
         _members.sort((m1, m2) -> Short.compare(m1.memberId(), m2.memberId()));
     }
+
+    /**
+     * 用于根据规则生成Sql表的名称, eg:相同前缀、命名规则等
+     * @param original true表示设计时获取旧名称
+     * @param ctx      null表示运行时
+     */
+    public String getSqlTableName(boolean original, /*IDesignContext*/Object ctx) {
+        //TODO: 参考C#实现，暂简单返回名称
+        return original ? originalName() : name();
+    }
     //endregion
 
     //region ====Serialization====
@@ -179,6 +196,8 @@ public final class EntityModel extends ModelBase {
     private IEntityStoreOption makeStoreOptionsByType(byte type) throws Exception {
         if (type == 1) {
             return new SysStoreOptions(this);
+        } else if (type == 2) {
+            return new SqlStoreOptions(this);
         }
         throw new RuntimeException("Unknown StoreOptions type: " + type);
     }
@@ -203,8 +222,10 @@ public final class EntityModel extends ModelBase {
             //先写入类型信息
             if (_storeOptions instanceof SysStoreOptions) {
                 bs.writeByte((byte) 1);
+            } else if (_storeOptions instanceof SqlStoreOptions) {
+                bs.writeByte((byte) 2);
             } else {
-                //TODO:
+                throw new RuntimeException("未实现");
             }
             _storeOptions.writeTo(bs);
         }
