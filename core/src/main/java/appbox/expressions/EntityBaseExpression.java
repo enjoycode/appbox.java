@@ -18,5 +18,10 @@ public abstract class EntityBaseExpression extends Expression {
         this.owner = owner;
     }
 
+    public String getName() { return name; }
+
+    public EntityBaseExpression get(String name) {
+        throw new UnsupportedOperationException();
+    }
 
 }

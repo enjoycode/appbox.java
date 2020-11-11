@@ -1,7 +1,7 @@
 package appbox.expressions;
 
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.model.EntityModel;
+import appbox.runtime.RuntimeContext;
 
 public final class EntityExpression extends EntityBaseExpression {
 
@@ -9,6 +9,8 @@ public final class EntityExpression extends EntityBaseExpression {
     protected    String aliasName;
     public final long   modelId;
     private      Object _user;
+
+    private EntityModel _model; //only for cache
 
     /** New Root EntityExpression */
     public EntityExpression(long modelId, Object user) {
@@ -40,12 +42,19 @@ public final class EntityExpression extends EntityBaseExpression {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
-        throw new UnsupportedOperationException();
-    }
+    public EntityBaseExpression get(String name) {
+        //TODO: use cache
+        if (_model == null)
+            _model = RuntimeContext.current().getModel(modelId);
 
-    @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
-        throw new UnsupportedOperationException();
+        var m = _model.tryGetMember(name);
+        if (m == null)
+            throw new RuntimeException(String.format("Can't find member: %s.%s", _model.name(), name));
+        switch (m.type()) {
+            case DataField:
+                return new EntityFieldExpression(name, this);
+            default:
+                throw new RuntimeException("未实现");
+        }
     }
 }
