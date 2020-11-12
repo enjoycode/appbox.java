@@ -5,7 +5,7 @@ import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
-public class Staged extends SysEntity {
+public class StagedModel extends SysEntity {
 
     public static final short TYPE_ID      = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short MODEL_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -20,7 +20,7 @@ public class Staged extends SysEntity {
 
     private String _data;
 
-    public Staged() {
+    public StagedModel() {
         super(IdUtil.SYS_STAGED_MODEL_ID);
     }
 
