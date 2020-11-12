@@ -4,6 +4,7 @@ import appbox.cache.ObjectPool;
 import appbox.utils.IdUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public final class BinDeserializer implements IEntityMemberReader {
     //region ====ObjectPool====
@@ -89,6 +90,11 @@ public final class BinDeserializer implements IEntityMemberReader {
         return _stream.readString();
     }
 
+    public byte[] readBinary() throws Exception {
+        return null;
+    }
+
+
     public void read(byte[] buffer, int offset, int count) throws Exception {
         _stream.read(buffer, offset, count);
     }
@@ -129,6 +135,20 @@ public final class BinDeserializer implements IEntityMemberReader {
     public byte readByteMember(int flags) throws Exception {
         return readByte();
     }
+
+    @Override
+    public UUID readUUIDMember(int flags) throws Exception {
+        return new UUID(_stream.readLong(), _stream.readLong());
+    }
+
+    @Override
+    public byte[] readBinaryMember(int flags) throws Exception {
+        int size  = flags >>> 8;
+        var bytes = new byte[size];
+        read(bytes, 0, size);
+        return bytes;
+    }
+
     //endregion
 
 }

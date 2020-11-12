@@ -1,6 +1,7 @@
 package appbox.serialization;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface IEntityMemberWriter {
     byte SF_NONE          = 0;
@@ -14,4 +15,7 @@ public interface IEntityMemberWriter {
 
     void writeMember(short id, Optional<Integer> value, byte flags) throws Exception;
 
+    void writeMember(short id, UUID value, byte flags) throws Exception;
+
+    void writeMember(short id, byte[] data, byte flags) throws Exception;
 }
