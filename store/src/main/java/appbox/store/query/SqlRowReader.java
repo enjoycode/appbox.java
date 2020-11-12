@@ -4,6 +4,7 @@ import appbox.serialization.IEntityMemberReader;
 import com.github.jasync.sql.db.RowData;
 
 import java.util.List;
+import java.util.UUID;
 
 /** 用于包装RowData */
 public final class SqlRowReader implements IEntityMemberReader {
@@ -47,5 +48,16 @@ public final class SqlRowReader implements IEntityMemberReader {
     @Override
     public byte readByteMember(int flags) throws Exception {
         return rowData.getByte(flags);
+    }
+
+    @Override
+    public UUID readUUIDMember(int flags) throws Exception {
+        return new UUID(rowData.getLong(flags), rowData.getLong(flags));
+    }
+
+    @Override
+    public byte[] readBinaryMember(int flags) throws Exception {
+        String s=rowData.getString(flags);
+        return s.getBytes();
     }
 }

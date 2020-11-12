@@ -1,6 +1,7 @@
 package appbox.store;
 
 import appbox.entities.Enterprise;
+import appbox.entities.StagedModel;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
@@ -110,23 +111,19 @@ public final class StoreInitiator {
     private static EntityModel createStagedModel() throws Exception{
         var model = new EntityModel(IdUtil.SYS_STAGED_MODEL_ID, "StagedModel");
         model.bindToSysStore(false, false); //非MVCC
-        var typeId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
-        var modelId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
-        var developerId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
-        var dataId     = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
 
         var typeFiled = new DataFieldModel(model, "Type", DataFieldType.Byte, false, false);
-        model.addSysMember(typeFiled, typeId);
+        model.addSysMember(typeFiled, StagedModel.TYPE_ID);
 
         var modelFiled = new DataFieldModel(model, "ModelId", DataFieldType.String, false, false);
         modelFiled.setLength(100);
-        model.addSysMember(modelFiled, modelId);
+        model.addSysMember(modelFiled, StagedModel.MODEL_ID);
 
         var developerFiled = new DataFieldModel(model, "DeveloperId", DataFieldType.Guid, false, false);
-        model.addSysMember(developerFiled, developerId);
+        model.addSysMember(developerFiled, StagedModel.DEVELOPER_ID);
 
         var dataFiled = new DataFieldModel(model, "Data", DataFieldType.Binary, false, false);
-        model.addSysMember(dataFiled, dataId);
+        model.addSysMember(dataFiled, StagedModel.DATA_ID);
         return model;
     }
 

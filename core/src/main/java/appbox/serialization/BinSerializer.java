@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class BinSerializer extends OutputStream implements IEntityMemberWriter /*暂继承OutputStream方便写Json*/ {
     //region ====ObjectPool====
@@ -225,6 +226,19 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
             writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
         }
     }
+
+    @Override
+    public void writeMember(short id, UUID value, byte flags) throws Exception {
+        _stream.writeLong(value.getMostSignificantBits());
+        _stream.writeLong(value.getLeastSignificantBits());
+    }
+
+    @Override
+    public void writeMember(short id, byte[] data, byte flags) throws Exception {
+        writeStoreVarLen(data.length);
+        write(data);
+    }
+
     //endregion
 
 }
