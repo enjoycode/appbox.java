@@ -15,7 +15,7 @@ public final class SqlSelectItemExpression extends Expression {
         this.expression = expression;
         switch (expression.getType()) {
             case FieldExpression:
-                aliasName = ((EntityFieldExpression) expression).getName();
+                aliasName = ((EntityFieldExpression) expression).name;
                 break;
             case SelectItemExpression:
                 aliasName = ((SqlSelectItemExpression) expression).aliasName;
@@ -34,4 +34,10 @@ public final class SqlSelectItemExpression extends Expression {
     @Override
     public ExpressionType getType() { return ExpressionType.SelectItemExpression;}
 
+    @Override
+    public void toCode(StringBuilder sb, String preTabs) {
+        expression.toCode(sb, preTabs);
+        sb.append(" AS ");
+        sb.append(aliasName);
+    }
 }

@@ -6,7 +6,7 @@ import com.github.jasync.sql.db.RowData;
 import java.util.List;
 
 /** 用于包装RowData */
-final class SqlRowReader implements IEntityMemberReader {
+public final class SqlRowReader implements IEntityMemberReader {
     public final List<String> columns;
     public       RowData      rowData;
 
@@ -18,7 +18,16 @@ final class SqlRowReader implements IEntityMemberReader {
         return rowData.get(col) == null;
     }
 
-    //以下flags是列序号
+    //====GetXXX Methods, 用于填充动态类型的成员====
+    public int getInt(int col) {
+        return rowData.getInt(col);
+    }
+
+    public String getString(int col) {
+        return rowData.getString(col);
+    }
+
+    //====以下用于填充实体，其中flags是列序号====
 
     @Override
     public String readStringMember(int flags) throws Exception {

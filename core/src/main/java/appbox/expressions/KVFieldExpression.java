@@ -18,6 +18,13 @@ public final class KVFieldExpression extends Expression {
         return ExpressionType.KVFieldExpression;
     }
 
+    @Override
+    public void toCode(StringBuilder sb, String preTabs) {
+        sb.append(fieldId);
+        sb.append('[');
+        sb.append(fieldType.toString());
+        sb.append(']');
+    }
 
     @Override
     public void writeTo(BinSerializer bs) throws Exception {

@@ -9,18 +9,16 @@ public abstract class EntityBaseExpression extends Expression {
      * 1.2 如果为Ref EntityExpression，Name即属性名称
      * 2、如果为FieldExpression，Name为属性名称
      */
-    protected String name;
+    public final String name;
 
-    protected EntityExpression owner;
+    public final EntityExpression owner;
 
     public EntityBaseExpression(String name, EntityExpression owner) {
         this.name  = name;
         this.owner = owner;
     }
 
-    public String getName() { return name; }
-
-    public EntityBaseExpression get(String name) {
+    public EntityBaseExpression m(String name) {
         throw new UnsupportedOperationException();
     }
 

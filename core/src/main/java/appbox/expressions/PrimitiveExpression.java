@@ -16,6 +16,14 @@ public final class PrimitiveExpression extends Expression {
     }
 
     @Override
+    public void toCode(StringBuilder sb, String preTabs) {
+        if (value == null) {
+            sb.append("null"); return;
+        }
+        sb.append(value.toString());
+    }
+
+    @Override
     public void writeTo(BinSerializer bs) throws Exception {
         bs.serialize(value);
     }

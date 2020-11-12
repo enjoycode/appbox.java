@@ -61,6 +61,12 @@ public final class BinaryExpression extends Expression {
     }
 
     @Override
+    public void toCode(StringBuilder sb, String preTabs) {
+        //TODO:判断In,Like等特殊语法进行方法转换，否则解析器无法解析
+        throw new RuntimeException("未实现");
+    }
+
+    @Override
     public void writeTo(BinSerializer bs) throws Exception {
         bs.serialize(leftOperand);
         bs.writeByte(binaryType.value);
