@@ -10,7 +10,7 @@ final class QueryBuildContext {
     private final ISqlQuery rootQuery;     //根查询
     private final DbCommand command;
 
-    public ISqlQuery currentQuery;  //当前正在处理的查询
+    public  ISqlQuery currentQuery;  //当前正在处理的查询
     private QueryInfo currentQueryInfo;
 
     private int _queryIndex;
@@ -43,7 +43,7 @@ final class QueryBuildContext {
         currentQuery     = query;
         currentQueryInfo = qi;
 
-        //添加手工联接 TODO:
+        //添加手工联接
         loopAddQueryJoins((SqlQueryBase) query);
     }
 
@@ -62,8 +62,36 @@ final class QueryBuildContext {
         currentQueryInfo.buildStep = step;
     }
 
+    public QueryBuildStep getBuildStep() { return currentQueryInfo.buildStep; }
+
     public void append(String sql) {
         currentQueryInfo.getOut().append(sql);
+    }
+
+    public void addParameter(Object value) {
+        //TODO:转换无符号类型为有符号类型
+        command.addParameter(value);
+    }
+
+    /** 获取查询的别名,如果上下文中尚未存在查询，则自动设置别名并加入查询字典表 */
+    public String getQueryAliasName(ISqlQuery query) {
+        QueryInfo qi = queries.get(query);
+        if (qi == null)
+            qi = addSubQuery(query); //添加时会设置别名
+        return ((SqlQueryBase) query).aliasName;
+    }
+
+    public String getEntityRefAliasName(EntityExpression exp, SqlQueryBase query) {
+        var path = exp.toString();
+        var ds   = autoJoins.get(query);
+        var e    = ds.get(path);
+        if (e == null) {
+            ds.put(path, exp);
+            _queryIndex += 1;
+            exp.setAliasName("j" + _queryIndex);
+            e = exp;
+        }
+        return e.getAliasName();
     }
 
     /** 添加指定的子查询至查询字典表 */

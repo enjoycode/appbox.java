@@ -91,6 +91,8 @@ public final class EntityRefModel extends EntityMemberModel {
         return typeMemberId != 0;
     }
 
+    public List<Long> getRefModelIds() { return refModelIds; }
+
     @Override
     public EntityMemberType type() {
         return EntityMemberType.EntityRef;

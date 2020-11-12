@@ -12,6 +12,15 @@ public abstract class Expression implements IBinSerializable/*TODO:移至需要�
     }
 
     @Override
+    public String toString() {
+        var sb = new StringBuilder(20);
+        toCode(sb, null);
+        return sb.toString();
+    }
+
+    public abstract void toCode(StringBuilder sb, String preTabs);
+
+    @Override
     public void writeTo(BinSerializer bs) throws Exception {
         throw new UnsupportedOperationException();
     }

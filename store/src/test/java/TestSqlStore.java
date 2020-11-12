@@ -46,9 +46,34 @@ public class TestSqlStore {
     }
 
     @Test
-    public void testQuery() throws Exception {
-        var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
+    public void testQueryToList() throws Exception {
+        var q    = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
         var list = q.toListAsync().get();
+        assertNotNull(list);
+    }
+
+    @Test
+    public void testQueryToDynamic() throws Exception {
+        var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
+        q.where(q.t.m("Id").eq(200)); //t->t.Id == 200
+
+        var list = q.toListAsync(r -> new Object() {
+            final int eid = r.getInt(0);
+            final String ename = r.getString(1);
+        }, q.t.m("Id"), q.t.m("Name")).get();
+
+        assertNotNull(list);
+        for (var item : list) {
+            System.out.println("id: " + item.eid + " name: " + item.ename);
+        }
+    }
+
+    @Test
+    public void testQueryToExpand() throws Exception {
+        var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
+        var list = q.toListAsync(r -> new ELog(){
+            final String extName = "Ext" + r.getString(1);
+        }, q.t.m("Id"), q.t.m("Name"), q.t.m("Address")).get();
         assertNotNull(list);
     }
 
