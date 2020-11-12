@@ -2,7 +2,7 @@ package appbox.store.query;
 
 import appbox.store.expressions.SqlSelectItemExpression;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface ISqlSelectQuery extends ISqlQuery {
     enum QueryPurpose {
@@ -11,6 +11,6 @@ public interface ISqlSelectQuery extends ISqlQuery {
 
     QueryPurpose getPurpose();
 
-    Collection<SqlSelectItemExpression> getSelects();
+    List<SqlSelectItemExpression> getSelects();
 
 }
