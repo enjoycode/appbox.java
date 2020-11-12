@@ -12,11 +12,12 @@ subprojects {
 	}
 
 	dependencies {
+		implementation 'org.ow2.asm:asm:9.0'
+		implementation 'org.projectlombok:lombok:1.18.16'
 		// Use JUnit Jupiter API for testing.
 	    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
 	    // Use JUnit Jupiter Engine for testing.
 	    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
-
 		testImplementation 'org.openjdk.jmh:jmh-core:1.21'
 		testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:1.21'
 	}

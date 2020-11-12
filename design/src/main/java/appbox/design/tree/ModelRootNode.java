@@ -5,6 +5,7 @@ import appbox.design.utils.CodeHelper;
 import appbox.model.ModelBase;
 import appbox.model.ModelType;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public final class ModelRootNode extends DesignNode {
@@ -58,6 +59,10 @@ public final class ModelRootNode extends DesignNode {
 
     protected ModelNode findModelNode(long modelId) {
         return _models.get(modelId);
+    }
+
+    public Collection<ModelNode> getAllModelNodes() {
+        return  _models.values();
     }
     //endregion
 }

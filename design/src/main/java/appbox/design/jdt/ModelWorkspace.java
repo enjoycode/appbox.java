@@ -20,7 +20,6 @@ public class ModelWorkspace implements IWorkspace {
     protected          WorkspacePreferences description;
     protected volatile ElementTree          tree;
     //protected volatile Thread treeLocked = null;
-
     protected long nextMarkerId = 0;
     protected long nextNodeId   = 1;
 
@@ -496,6 +495,10 @@ public class ModelWorkspace implements IWorkspace {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    public long nextMarkerId() {
+        return (long)(this.nextMarkerId++);
     }
 
 }

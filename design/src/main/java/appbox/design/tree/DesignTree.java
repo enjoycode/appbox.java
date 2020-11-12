@@ -3,9 +3,9 @@ package appbox.design.tree;
 import appbox.design.common.CheckoutInfo;
 import appbox.design.DesignHub;
 import appbox.design.services.StagedItems;
-import appbox.model.ApplicationModel;
-import appbox.model.ModelBase;
-import appbox.model.ModelType;
+import appbox.model.*;
+import appbox.model.entity.EntityMemberModel;
+import appbox.model.entity.EntityRefModel;
 import appbox.store.ModelStore;
 import appbox.utils.IdUtil;
 
@@ -181,6 +181,48 @@ public final class DesignTree {
      */
     protected void bindCheckoutInfo(DesignNode node, boolean isNewNode) {
         //TODO:
+    }
+
+    /**
+     * 查找所有引用指定模型标识的EntityRef Member集合
+     * @param targetEntityModelID
+     * @return
+     */
+    public List<EntityRefModel> findEntityRefModels(long targetEntityModelID) {
+        List result=new ArrayList();
+        List<ModelNode> ls=findNodesByType(ModelType.Entity);
+
+        for (int i = 0; i < ls.size(); i++)
+        {
+            EntityModel model = (EntityModel)ls.get(i).model();
+            //注意：不能排除自身引用，主要指树状结构的实体
+            for (int j = 0; j < model.getMembers().size(); j++)
+            {
+                if (model.getMembers().get(j).type() == EntityMemberModel.EntityMemberType.EntityRef)
+                {
+                    EntityRefModel refMember = (EntityRefModel)model.getMembers().get(j);
+                    //注意不排除聚合引用
+                    for (int k = 0; k < refMember.getRefModelIds().size(); k++)
+                    {
+                        if (refMember.getRefModelIds().get(k) == targetEntityModelID)
+                            result.add(refMember);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<ModelNode> findNodesByType(ModelType modelType)
+    {
+        var list = new ArrayList<ModelNode>();
+        for (int i = 0; i < appRootNode.nodes.count(); i++)
+        {
+            var appNode = (ApplicationNode)appRootNode.nodes.get(i);
+            var modelRootNode = appNode.findModelRootNode(modelType);
+            list.addAll(modelRootNode.getAllModelNodes());
+        }
+        return list;
     }
     //endregion
 

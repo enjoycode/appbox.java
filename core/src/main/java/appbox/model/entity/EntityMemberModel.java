@@ -19,7 +19,7 @@ public abstract class EntityMemberModel implements IBinSerializable {
         }
     }
 
-    protected final EntityModel owner;     //不用序列化
+    public final EntityModel owner;     //不用序列化
 
     private   String          _name;
     private   String          _originalName;

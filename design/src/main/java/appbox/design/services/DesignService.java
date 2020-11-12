@@ -2,6 +2,7 @@ package appbox.design.services;
 
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
+import appbox.design.handlers.entity.GetEntityModel;
 import appbox.design.handlers.service.OpenServiceModel;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArg;
@@ -21,8 +22,8 @@ public final class DesignService implements IService {
         put("GetCompletion", new GetCompletion());
         put("CheckCode", new CheckCode());
         put("CloseDesigner", new CloseDesigner());
+        put("GetEntityModel", new GetEntityModel());
     }};
-
     @Override
     public CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args) {
         if (!(RuntimeContext.current().currentSession() instanceof IDeveloperSession)) {
@@ -39,6 +40,8 @@ public final class DesignService implements IService {
         if (handler == null) {
             return CompletableFuture.failedFuture(new Exception("Unknown design request: " + method));
         }
+        System.out.println("method:"+method);
+        System.out.println("method args:"+args.toString());
 
         return handler.handle(designHub, args);
     }
