@@ -104,6 +104,11 @@ public final class DataFieldModel extends EntityMemberModel {
         _allowNull = value;
         onDataTypeChanged();
     }
+
+    public void setLength(int value) {
+        _length = value;
+        onDataTypeChanged();
+    }
     //endregion
 
     //region ====Serialization====

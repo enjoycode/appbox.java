@@ -4,6 +4,7 @@ import appbox.design.common.CheckoutInfo;
 import appbox.design.common.CheckoutResult;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
+import appbox.runtime.RuntimeContext;
 import appbox.store.KVTransaction;
 import appbox.store.ModelStore;
 import appbox.utils.IdUtil;
@@ -24,7 +25,7 @@ public final class CheckoutService
 		}
 		try{
 			//尝试向存储插入签出信息
-			var model = new EntityModel(IdUtil.SYS_CHECKOUT_MODEL_ID, "Checkout", true, false);
+			EntityModel model = RuntimeContext.current().getModel(IdUtil.SYS_CHECKOUT_MODEL_ID);
 			//TODO set model/batch insert
 			return KVTransaction.beginAsync().thenCompose(txn-> ModelStore.insertModelAsync(model, txn).thenApply(r -> txn.commitAsync()).thenApply(r->{
 				CheckoutResult result = new CheckoutResult(true);

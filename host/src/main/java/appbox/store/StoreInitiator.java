@@ -81,33 +81,35 @@ public final class StoreInitiator {
     }
 
     private static EntityModel createCheckoutModel() throws Exception{
-        var model = new EntityModel(IdUtil.SYS_CHECKOUT_MODEL_ID, "Checkout", true, false);
+        var model = new EntityModel(IdUtil.SYS_CHECKOUT_MODEL_ID, "Checkout");
+        model.bindToSysStore(true, false);
         var nodeTypeId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
         var targetId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
         var developerId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
         var developerNameId     = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
         var versionId     = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
-        var nodeTypeFiled = new DataFieldModel(model, "NodeType", DataFieldType.Byte, false, false);
+        var nodeTypeFiled = new DataFieldModel(model, "NodeType", DataFieldType.Byte, false);
         model.addSysMember(nodeTypeFiled, nodeTypeId);
 
-        var targetIdFiled = new DataFieldModel(model, "TargetId", DataFieldType.String, false, false);
+        var targetIdFiled = new DataFieldModel(model, "TargetId", DataFieldType.String, false);
         targetIdFiled.setLength(100);
         model.addSysMember(targetIdFiled, targetId);
 
-        var developerIdFiled = new DataFieldModel(model, "DeveloperId", DataFieldType.Guid, false, false);
+        var developerIdFiled = new DataFieldModel(model, "DeveloperId", DataFieldType.Guid, false);
         model.addSysMember(developerIdFiled, developerId);
 
-        var developerNameFiled = new DataFieldModel(model, "DeveloperName", DataFieldType.String, false, false);
+        var developerNameFiled = new DataFieldModel(model, "DeveloperName", DataFieldType.String, false);
         developerNameFiled.setLength(100);
         model.addSysMember(developerNameFiled, developerNameId);
 
-        var versionFiled = new DataFieldModel(model, "Version", DataFieldType.Int, false, false);
+        var versionFiled = new DataFieldModel(model, "Version", DataFieldType.Int, false);
         model.addSysMember(versionFiled, versionId);
         return model;
     }
 
     private static EntityModel createStagedModel() throws Exception{
-        var model = new EntityModel(IdUtil.SYS_STAGED_MODEL_ID, "StagedModel", true, false);
+        var model = new EntityModel(IdUtil.SYS_STAGED_MODEL_ID, "StagedModel");
+        model.bindToSysStore(true, false);
         var typeId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
         var modelId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
         var developerId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -129,7 +131,8 @@ public final class StoreInitiator {
     }
 
     private static EntityModel createOrgUnitModel() throws Exception{
-        var model = new EntityModel(IdUtil.SYS_ORGUNIT_MODEL_ID, "OrgUnit", true, false);
+        var model = new EntityModel(IdUtil.SYS_ORGUNIT_MODEL_ID, "OrgUnit");
+        model.bindToSysStore(true, false);
         var nameId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
         var baseId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
         var baseTypeId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -151,7 +154,8 @@ public final class StoreInitiator {
     }
 
     private static EntityModel createWorkgroupModel() throws Exception{
-        var model = new EntityModel(IdUtil.SYS_WORKGROUP_MODEL_ID, "Workgroup", true, false);
+        var model = new EntityModel(IdUtil.SYS_WORKGROUP_MODEL_ID, "Workgroup");
+        model.bindToSysStore(true, false);
 
         var nameId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
         var CHECKOUT_NODETYPE_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -188,7 +192,8 @@ public final class StoreInitiator {
         var accountId  = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
         var passwordId = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-        var model = new EntityModel(IdUtil.SYS_EMPLOEE_MODEL_ID, "Emploee", true, false);
+        var model = new EntityModel(IdUtil.SYS_EMPLOEE_MODEL_ID, "Emploee");
+        model.bindToSysStore(true, false);
 
         //Members
         var name = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
@@ -216,7 +221,8 @@ public final class StoreInitiator {
     }
 
     private static EntityModel createEnterpriseModel() throws Exception {
-        var model = new EntityModel(IdUtil.SYS_ENTERPRISE_MODEL_ID, "Enterprise", true, false);
+        var model = new EntityModel(IdUtil.SYS_ENTERPRISE_MODEL_ID, "Enterprise");
+        model.bindToSysStore(true, false);
 
         //Members
         var name = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
@@ -256,10 +262,6 @@ public final class StoreInitiator {
         var defaultEnterprise = new Enterprise();
         defaultEnterprise.setName("AppBoxFuture");
         return EntityStore.insertEntityAsync(defaultEnterprise, txn);
-    }
-
-    public static void main(String args[]){
-        StoreInitiator.initAsync();
     }
 
 }

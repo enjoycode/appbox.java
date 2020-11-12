@@ -178,7 +178,4 @@ public final class EntityRefModel extends EntityMemberModel {
     }
     //endregion
 
-    public List<Long> getRefModelIds() {
-        return refModelIds;
-    }
 }
