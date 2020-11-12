@@ -63,16 +63,24 @@ public final class EntityStore { //TODO: rename to SysStore
     //TODO:*** Insert/Update/Delete本地索引及数据通过BatchCommand优化，减少RPC次数
 
     public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn) {
+        return insertEntityAsync(entity, txn, false);
+    }
+
+    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn, boolean overrideIfExists) {
         //TODO:考虑自动新建事务, 分区已存在且模型没有索引没有关系则可以不需要事务
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");
         //TODO:判断模型运行时及持久化状态
         var model = entity.model(); //肯定存在，不需要RuntimeContext.Current.GetEntityModel
         //暂不允许没有成员的插入操作
-        //if (model.Members.Count == 0)
-        //    throw new RuntimeException("Entity[{model.Name}] has no member");
+        if (model.getMembers().size() == 0)
+            throw new RuntimeException("Entity[{model.Name}] has no member");
+        //暂不允许override非MVCC的记录
+        if (overrideIfExists && model.sysStoreOptions().isMVCC())
+            throw new RuntimeException("Can't override exists with MVCC");
+        var app = RuntimeContext.current().getApplicationModel(model.appId());
 
-        var                     app = RuntimeContext.current().getApplicationModel(model.appId());
+        //根据是否分区定位
         CompletableFuture<Long> getRaftGroupIdTask;
         if (model.sysStoreOptions().hasPartitionKeys()) {
             throw new RuntimeException("未实现");
@@ -94,7 +102,7 @@ public final class EntityStore { //TODO: rename to SysStore
             var req = new KVInsertEntityRequest(entity, model, txn.id()); //TODO: refs
             req.raftGroupId      = raftGroupId;
             req.schemaVersion    = model.sysStoreOptions().schemaVersion();
-            req.overrideIfExists = false;
+            req.overrideIfExists = overrideIfExists;
             return SysStoreApi.execKVInsertAsync(req);
         }).thenAccept(res -> {
             if (res.errorCode != 0) {

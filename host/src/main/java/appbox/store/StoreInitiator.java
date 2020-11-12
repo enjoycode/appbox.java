@@ -109,7 +109,7 @@ public final class StoreInitiator {
 
     private static EntityModel createStagedModel() throws Exception{
         var model = new EntityModel(IdUtil.SYS_STAGED_MODEL_ID, "StagedModel");
-        model.bindToSysStore(true, false);
+        model.bindToSysStore(false, false); //非MVCC
         var typeId     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
         var modelId     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
         var developerId     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);

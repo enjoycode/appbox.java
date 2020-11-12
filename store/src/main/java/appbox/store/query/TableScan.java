@@ -22,6 +22,18 @@ public final class TableScan<T extends SysEntity> extends KVScan {
         _clazz = clazz;
     }
 
+    //region ====skip & take methods====
+    public TableScan<T> skip(int rows) {
+        this.skip = rows;
+        return this;
+    }
+
+    public TableScan<T> take(int rows) {
+        this.take = rows;
+        return this;
+    }
+    //endregion
+
     //region ====where methods====
     public TableScan<T> where(Expression filter) {
         this.filter = filter;
