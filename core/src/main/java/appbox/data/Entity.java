@@ -35,6 +35,8 @@ public abstract class Entity implements IBinSerializable {
             writeMember(m.memberId(), bs, IEntityMemberWriter.SF_NONE);
         }
         bs.writeShort((short) 0); //end write members
+
+        //TODO:写入扩展信息
     }
 
     @Override
@@ -54,6 +56,8 @@ public abstract class Entity implements IBinSerializable {
             }
             readMember(memberId, bs, IEntityMemberReader.SF_NONE);
         }
+
+        //TODO:读取扩展信息
     }
 
     /**

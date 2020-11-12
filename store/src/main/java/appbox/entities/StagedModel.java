@@ -1,6 +1,8 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
+import appbox.expressions.KVFieldExpression;
+import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
@@ -13,6 +15,10 @@ public class StagedModel extends SysEntity {
     public static final short MODEL_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short DEVELOPER_ID = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short DATA_ID      = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
+
+    public static final KVFieldExpression TYPE      = new KVFieldExpression(TYPE_ID, DataFieldModel.DataFieldType.Byte);
+    public static final KVFieldExpression MODEL     = new KVFieldExpression(MODEL_ID, DataFieldModel.DataFieldType.String);
+    public static final KVFieldExpression DEVELOPER = new KVFieldExpression(DEVELOPER_ID, DataFieldModel.DataFieldType.Guid);
 
     private byte   _type;
     private String _modelId;
