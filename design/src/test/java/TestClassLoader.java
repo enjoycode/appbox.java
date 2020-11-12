@@ -1,4 +1,3 @@
-import appbox.utils.DiskClassLoader;
 import appbox.utils.DynamicClassFactory;
 import appbox.utils.MyClassLoader;
 import appbox.utils.JavaCompilerUtil;

@@ -17,7 +17,7 @@ public class DynamicClassFactory {
      * class的缓存
      */
     private static Map<String, byte[]> classPool = new HashMap<>();
-
+    //查看class类结构: javap -verbose Hello.class
     public static byte[] getClassByte(String className) {
         String fullName="com/model/"+className;
 

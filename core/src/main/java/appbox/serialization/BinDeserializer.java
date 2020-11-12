@@ -124,6 +124,11 @@ public final class BinDeserializer implements IEntityMemberReader {
     public int readIntMember(int flags) throws Exception {
         return readInt();
     }
+
+    @Override
+    public byte readByteMember(int flags) throws Exception {
+        return readByte();
+    }
     //endregion
 
 }
