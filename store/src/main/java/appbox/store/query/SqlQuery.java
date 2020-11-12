@@ -13,19 +13,17 @@ import appbox.store.expressions.SqlSelectItemExpression;
 import com.github.jasync.sql.db.RowData;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlSelectQuery {
 
-    public final  EntityExpression                         t;
-    private final Class<T>                                 _clazz;
-    private       QueryPurpose                             _purpose;
-    private       Expression                               _filter;
-    private       HashMap<String, SqlSelectItemExpression> _selects;
+    public final  EntityExpression              t;
+    private final Class<T>                      _clazz;
+    private       QueryPurpose                  _purpose;
+    private       Expression                    _filter;
+    private       List<SqlSelectItemExpression> _selects;
 
     public SqlQuery(long modelId, Class<T> clazz) {
         t      = new EntityExpression(modelId, this);
@@ -39,8 +37,8 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     public Expression getFilter() { return _filter;}
 
     @Override
-    public Collection<SqlSelectItemExpression> getSelects() {
-        return _selects == null ? null : _selects.values();
+    public List<SqlSelectItemExpression> getSelects() {
+        return _selects;
     }
 
     //region ====Where Methods====
@@ -69,10 +67,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //region ====Select Methods====
     public void addSelect(SqlSelectItemExpression item) {
         if (_selects == null)
-            _selects = new HashMap<>();
+            _selects = new ArrayList<>();
 
         item.owner = this;
-        _selects.put(item.aliasName, item);
+        _selects.add(item);
     }
 
     public CompletableFuture<List<T>> toListAsync() {
@@ -134,7 +132,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
                         extendsFlag = _clazz.isInstance(obj) ? 1 : 0;
                     }
                     if (extendsFlag == 1) { //如果是扩展类，则填充本身成员
-                        fillEntity((SqlEntity)obj, model, rowReader);
+                        fillEntity((SqlEntity) obj, model, rowReader);
                     }
                     list.add(obj);
                 }

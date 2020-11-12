@@ -72,7 +72,7 @@ public class TestSqlStore {
     public void testQueryToExpand() throws Exception {
         var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
         var list = q.toListAsync(r -> new ELog(){
-            final String extName = "Ext" + r.getString(1);
+            final String extName = "Ext" + r.getString(1); //扩展的字段
         }, q.t.m("Id"), q.t.m("Name"), q.t.m("Address")).get();
         assertNotNull(list);
     }
