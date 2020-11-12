@@ -14,12 +14,9 @@ public class StagedModel extends SysEntity {
     public static final short DEVELOPER_ID = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short DATA_ID      = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    private byte _type;
-
+    private byte   _type;
     private String _modelId;
-
-    private UUID _developerId;
-
+    private UUID   _developerId;
     private byte[] _data;
 
     public StagedModel() {
@@ -31,7 +28,7 @@ public class StagedModel extends SysEntity {
     }
 
     public void setType(byte value) {
-        if(value!=_type) {
+        if (value != _type) {
             this._type = value;
             onPropertyChanged(TYPE_ID);
         }
@@ -42,7 +39,7 @@ public class StagedModel extends SysEntity {
     }
 
     public void setModelId(String value) {
-        if(!value.equals(_modelId)) {
+        if (!value.equals(_modelId)) {
             this._modelId = value;
             onPropertyChanged(MODEL_ID);
         }
@@ -53,7 +50,7 @@ public class StagedModel extends SysEntity {
     }
 
     public void setDeveloperId(UUID value) {
-        if(!value.equals(_developerId)) {
+        if (!value.equals(_developerId)) {
             this._developerId = value;
             onPropertyChanged(DEVELOPER_ID);
         }
@@ -64,7 +61,7 @@ public class StagedModel extends SysEntity {
     }
 
     public void setData(byte[] value) {
-        if(!value.equals(_data)) {
+        if (!value.equals(_data)) {
             this._data = value;
             onPropertyChanged(DATA_ID);
         }
@@ -90,13 +87,13 @@ public class StagedModel extends SysEntity {
     public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
         switch (id) {
             case TYPE_ID:
-                _type=bs.readByteMember(flags); break;
+                _type = bs.readByteMember(flags); break;
             case MODEL_ID:
-                _modelId=bs.readStringMember(flags); break;
+                _modelId = bs.readStringMember(flags); break;
             case DEVELOPER_ID:
-                _developerId=bs.readUUIDMember(flags); break;
+                _developerId = bs.readUUIDMember(flags); break;
             case DATA_ID:
-                _data=bs.readBinaryMember(flags); break;
+                _data = bs.readBinaryMember(flags); break;
             default:
                 throw new Exception("unknown member");
         }

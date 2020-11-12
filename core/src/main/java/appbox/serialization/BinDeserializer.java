@@ -86,14 +86,13 @@ public final class BinDeserializer implements IEntityMemberReader {
         return _stream.readNativeVariant();
     }
 
+    public byte[] readByteArray() throws Exception {
+        return _stream.readByteArray();
+    }
+
     public String readString() throws Exception {
         return _stream.readString();
     }
-
-    public byte[] readBinary() throws Exception {
-        return null;
-    }
-
 
     public void read(byte[] buffer, int offset, int count) throws Exception {
         _stream.read(buffer, offset, count);
@@ -112,28 +111,28 @@ public final class BinDeserializer implements IEntityMemberReader {
     @Override
     public String readStringMember(int flags) throws Exception {
         if (flags == 0)
-            return readString();
+            return _stream.readString();
         int size  = flags >>> 8; //TODO:优化读utf8
         var bytes = new byte[size];
-        read(bytes, 0, size);
+        _stream.read(bytes, 0, size);
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
     @Override
     public boolean readBoolMemeber(int flags) throws Exception {
         if (flags == 0)
-            return readBool();
+            return _stream.readBool();
         return (flags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;
     }
 
     @Override
     public int readIntMember(int flags) throws Exception {
-        return readInt();
+        return _stream.readInt();
     }
 
     @Override
     public byte readByteMember(int flags) throws Exception {
-        return readByte();
+        return _stream.readByte();
     }
 
     @Override
@@ -143,9 +142,11 @@ public final class BinDeserializer implements IEntityMemberReader {
 
     @Override
     public byte[] readBinaryMember(int flags) throws Exception {
+        if (flags == 0)
+            return _stream.readByteArray();
         int size  = flags >>> 8;
         var bytes = new byte[size];
-        read(bytes, 0, size);
+        _stream.read(bytes, 0, size);
         return bytes;
     }
 

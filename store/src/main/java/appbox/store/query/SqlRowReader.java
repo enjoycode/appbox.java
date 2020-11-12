@@ -52,12 +52,12 @@ public final class SqlRowReader implements IEntityMemberReader {
 
     @Override
     public UUID readUUIDMember(int flags) throws Exception {
-        return new UUID(rowData.getLong(flags), rowData.getLong(flags));
+        var uuidString = rowData.getString(flags); //暂从字符串转回，待检查
+        return UUID.fromString(uuidString);
     }
 
     @Override
     public byte[] readBinaryMember(int flags) throws Exception {
-        String s=rowData.getString(flags);
-        return s.getBytes();
+        return (byte[]) rowData.get(flags);
     }
 }

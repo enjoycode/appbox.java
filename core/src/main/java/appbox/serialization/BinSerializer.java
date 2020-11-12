@@ -198,24 +198,24 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     public void writeMember(short id, String value, byte flags) throws Exception {
         if (flags != 0) {
             if (value != null) {
-                writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
                 //TODO:优化写utf8,另判断长度超出范围
                 var bytes = value.getBytes(StandardCharsets.UTF_8);
                 writeStoreVarLen(bytes.length);
-                write(bytes);
+                _stream.write(bytes, 0, bytes.length);
             } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
-                writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
             }
         } else if (value != null) {
-            writeShort(id);
-            writeString(value);
+            _stream.writeShort(id);
+            _stream.writeString(value);
         }
     }
 
     @Override
     public void writeMember(short id, int value, byte flags) throws Exception {
-        writeShort(flags == 0 ? id : (short) (id | 4));
-        writeInt(value);
+        _stream.writeShort(flags == 0 ? id : (short) (id | 4));
+        _stream.writeInt(value);
     }
 
     @Override
@@ -223,20 +223,41 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         if (value.isPresent()) {
             writeMember(id, value.get(), flags);
         } else if (flags != 0 && (flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
-            writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+            _stream.writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
         }
     }
 
     @Override
     public void writeMember(short id, UUID value, byte flags) throws Exception {
-        _stream.writeLong(value.getMostSignificantBits());
-        _stream.writeLong(value.getLeastSignificantBits());
+        if (flags != 0) {
+            if (value != null) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_16_LEN_FLAG));
+                _stream.writeLong(value.getMostSignificantBits());
+                _stream.writeLong(value.getLeastSignificantBits());
+            } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+            }
+        } else if (value != null) {
+            _stream.writeShort(id);
+            _stream.writeLong(value.getMostSignificantBits());
+            _stream.writeLong(value.getLeastSignificantBits());
+        }
     }
 
     @Override
-    public void writeMember(short id, byte[] data, byte flags) throws Exception {
-        writeStoreVarLen(data.length);
-        write(data);
+    public void writeMember(short id, byte[] value, byte flags) throws Exception {
+        if (flags != 0) {
+            if (value != null) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
+                writeStoreVarLen(value.length);
+                _stream.write(value, 0, value.length);
+            } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+            }
+        } else if (value != null) {
+            _stream.writeShort(id);
+            _stream.writeByteArray(value);
+        }
     }
 
     //endregion

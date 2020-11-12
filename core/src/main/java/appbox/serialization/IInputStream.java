@@ -74,6 +74,15 @@ public interface IInputStream {
         return data;
     }
 
+    /** 读取带长度信息的字节数组 */
+    default byte[] readByteArray() throws Exception {
+        int len = readVariant();
+        if (len < 0) return null;
+        var bytes = new byte[len];
+        read(bytes, 0, len);
+        return bytes;
+    }
+
     default String readString() throws Exception {
         int len = readVariant();
         if (len == -1) {
