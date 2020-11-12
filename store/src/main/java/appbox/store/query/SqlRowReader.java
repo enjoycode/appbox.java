@@ -43,4 +43,9 @@ public final class SqlRowReader implements IEntityMemberReader {
     public int readIntMember(int flags) throws Exception {
         return rowData.getInt(flags);
     }
+
+    @Override
+    public byte readByteMember(int flags) throws Exception {
+        return rowData.getByte(flags);
+    }
 }

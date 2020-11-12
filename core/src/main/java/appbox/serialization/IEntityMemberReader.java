@@ -11,4 +11,5 @@ public interface IEntityMemberReader {
 
     int readIntMember(int flags) throws Exception;
 
+    byte readByteMember(int flags) throws Exception;
 }
