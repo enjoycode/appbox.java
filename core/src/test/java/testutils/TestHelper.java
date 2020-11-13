@@ -15,7 +15,7 @@ public final class TestHelper {
     public static EntityModel makeEntityModel() {
         try {
             var nameId = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
-            var model  = new EntityModel(IdUtil.SYS_EMPLOEE_MODEL_ID, "Emploee", true, false);
+            var model  = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Emploee");
             var name   = new DataFieldModel(model, "Name", DataFieldModel.DataFieldType.String, false, false);
             model.addSysMember(name, nameId);
             var ui_name = new SysIndexModel(model, "UI_Name", true,

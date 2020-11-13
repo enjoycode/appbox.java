@@ -6,6 +6,7 @@ import appbox.utils.IdUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -257,6 +258,26 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         } else if (value != null) {
             _stream.writeShort(id);
             _stream.writeByteArray(value);
+        }
+    }
+
+    @Override
+    public void writeMember(short id, boolean male, byte flags) throws Exception {
+        _stream.writeBool(male);
+    }
+
+    @Override
+    public void writeMember(short id, Date value, byte flags) throws Exception {
+        if (flags != 0) {
+            if (value != null) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
+                _stream.writeLong(value.getTime());
+            } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+            }
+        } else if (value != null) {
+            _stream.writeShort(id);
+            _stream.writeLong(value.getTime());
         }
     }
 

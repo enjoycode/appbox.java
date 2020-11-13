@@ -4,6 +4,7 @@ import appbox.cache.ObjectPool;
 import appbox.utils.IdUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.UUID;
 
 public final class BinDeserializer implements IEntityMemberReader {
@@ -148,6 +149,11 @@ public final class BinDeserializer implements IEntityMemberReader {
         var bytes = new byte[size];
         _stream.read(bytes, 0, size);
         return bytes;
+    }
+
+    @Override
+    public Date readDateMember(int flags) throws Exception {
+        return new Date(_stream.readLong());
     }
 
     //endregion
