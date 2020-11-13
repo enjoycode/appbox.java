@@ -5,10 +5,7 @@ import appbox.serialization.IEntityMemberWriter;
 import com.github.jasync.sql.db.Connection;
 import com.github.jasync.sql.db.QueryResult;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /** 仅用于包装Sql命令及相应的参数 */
@@ -86,6 +83,19 @@ final class DbCommand implements IEntityMemberWriter {
     @Override
     public void writeMember(short id, byte[] value, byte flags) throws Exception {
         addParameter(value);
+    }
+
+    @Override
+    public void writeMember(short id, boolean value, byte flags) throws Exception {
+        addParameter(value);
+    }
+
+    @Override
+    public void writeMember(short id, Date value, byte flags) throws Exception {
+        if (value != null)
+            addParameter(String.valueOf(value.getTime())); //暂转换为字符串，待检查
+        else
+            addParameter(null);
     }
 
     //endregion
