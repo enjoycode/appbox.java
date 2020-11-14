@@ -69,7 +69,7 @@ public final class StoreInitiator {
                                 .thenCompose(r -> ModelStore.insertModelAsync(checkoutModel, txn))
                                 .thenCompose(r -> createServiceModel("TestService", 1, null, txn))
                                 .thenCompose(r -> insertEntities(txn))
-                                .thenApply(r -> txn.commitAsync())
+                                .thenCompose(r -> txn.commitAsync())
                                 .thenApply(r -> true));
             } catch (Exception e) {
                 Log.error(e.getMessage());

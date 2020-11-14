@@ -1,5 +1,7 @@
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CompletableFuture;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestJava {
@@ -49,6 +51,25 @@ public class TestJava {
 
         sb.replace(0, 5, "");
         assertEquals("a", sb.toString());
+    }
+
+    private CompletableFuture<Void> insertTask() {
+        CompletableFuture<Void> future =
+                CompletableFuture.failedFuture(new RuntimeException("OOPS!"));
+        return future.whenComplete((r, ex) -> {
+            if (ex != null) {
+                System.out.println(ex.getMessage());
+            }
+        });
+    }
+
+    @Test
+    void testFutureException() {
+        try {
+            insertTask().get();
+        } catch (Exception ex) {
+            System.out.println("任务失败: " + ex.getMessage());
+        }
     }
 
 }
