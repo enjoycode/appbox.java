@@ -1,5 +1,6 @@
 package appbox.serialization;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,4 +19,8 @@ public interface IEntityMemberWriter {
     void writeMember(short id, UUID value, byte flags) throws Exception;
 
     void writeMember(short id, byte[] data, byte flags) throws Exception;
+
+    void writeMember(short id, boolean male, byte flags) throws Exception;
+
+    void writeMember(short id, Date birthday, byte flags) throws Exception;
 }

@@ -3,6 +3,7 @@ package appbox.store.query;
 import appbox.serialization.IEntityMemberReader;
 import com.github.jasync.sql.db.RowData;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ public final class SqlRowReader implements IEntityMemberReader {
     }
 
     @Override
-    public boolean readBoolMemeber(int flags) throws Exception {
+    public boolean readBoolMember(int flags) throws Exception {
         return rowData.getBoolean(flags);
     }
 
@@ -59,5 +60,10 @@ public final class SqlRowReader implements IEntityMemberReader {
     @Override
     public byte[] readBinaryMember(int flags) throws Exception {
         return (byte[]) rowData.get(flags);
+    }
+
+    @Override
+    public Date readDateMember(int flags) throws Exception {
+        return new Date(rowData.getLong(flags));
     }
 }
