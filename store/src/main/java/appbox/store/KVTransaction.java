@@ -66,6 +66,15 @@ public final class KVTransaction implements IKVTransaction, AutoCloseable {
         });
     }
 
+    /**
+     * 用于CompletableFuture.whenComplete时检测是否异常自动回滚事务
+     * @param ex 不为null则回滚事务
+     */
+    void rollbackOnException(Throwable ex) {
+        if (ex != null)
+            rollback();
+    }
+
     @Override
     public void close() throws Exception {
         rollback();

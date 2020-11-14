@@ -62,21 +62,36 @@ public final class EntityStore { //TODO: rename to SysStore
     //region ====实体及索引相关操作====
     //TODO:*** Insert/Update/Delete本地索引及数据通过BatchCommand优化，减少RPC次数
 
+    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity) {
+        return insertEntityAsync(entity, false);
+    }
+
+    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, boolean overrideExists) {
+        return KVTransaction.beginAsync()
+                .thenCompose(txn -> insertEntityAsync(entity, txn, overrideExists)
+                        .thenCompose(r -> txn.commitAsync()));
+    }
+
     public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn) {
         return insertEntityAsync(entity, txn, false);
     }
 
-    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn, boolean overrideIfExists) {
+    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn, boolean overrideExists) {
         //TODO:考虑自动新建事务, 分区已存在且模型没有索引没有关系则可以不需要事务
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");
+        return insertEntityInternal(entity, txn, overrideExists)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
+    private static CompletableFuture<Void> insertEntityInternal(SysEntity entity, KVTransaction txn, boolean overrideExists) {
         //TODO:判断模型运行时及持久化状态
         var model = entity.model(); //肯定存在，不需要RuntimeContext.Current.GetEntityModel
         //暂不允许没有成员的插入操作
         if (model.getMembers().size() == 0)
             throw new RuntimeException("Entity[{model.Name}] has no member");
         //暂不允许override非MVCC的记录
-        if (overrideIfExists && model.sysStoreOptions().isMVCC())
+        if (overrideExists && model.sysStoreOptions().isMVCC())
             throw new RuntimeException("Can't override exists with MVCC");
         var app = RuntimeContext.current().getApplicationModel(model.appId());
 
@@ -102,7 +117,7 @@ public final class EntityStore { //TODO: rename to SysStore
             var req = new KVInsertEntityRequest(entity, model, txn.id()); //TODO: refs
             req.raftGroupId      = raftGroupId;
             req.schemaVersion    = model.sysStoreOptions().schemaVersion();
-            req.overrideIfExists = overrideIfExists;
+            req.overrideIfExists = overrideExists;
             return SysStoreApi.execKVInsertAsync(req);
         }).thenAccept(res -> {
             if (res.errorCode != 0) {
