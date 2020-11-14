@@ -1,7 +1,12 @@
 package appbox.design.services;
 
+import appbox.entities.StagedModel;
+import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
+import appbox.store.EntityStore;
+import appbox.store.KVTransaction;
+import appbox.store.query.TableScan;
 import appbox.utils.IdUtil;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +21,7 @@ public final class StagedService {
         public final byte value;
 
         StagedType(int value) {
-            this.value = (byte)value;
+            this.value = (byte) value;
         }
     }
 
@@ -24,7 +29,23 @@ public final class StagedService {
         var         developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
         EntityModel model       = RuntimeContext.current().getModel(IdUtil.SYS_STAGED_MODEL_ID);
 
-        throw new RuntimeException("未实现");
+        String modelIdString = Long.toUnsignedString(modelId); //转换为字符串
+
+        //TODO:暂采用先读取再插入的方式，待实现KVUpsert后改写
+        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
+        q.where(StagedModel.TYPE.eq(type.value)
+                .and(StagedModel.MODEL.eq(modelIdString))
+                .and(StagedModel.DEVELOPER.eq(developerId))
+        );
+        return q.toListAsync().thenApply(list -> {
+            if (list.size() > 1) Log.warn("Detected multi row");
+            StagedModel stagedItem = list.size() > 0 ? list.get(0) : new StagedModel();
+            stagedItem.setType(type.value);
+            stagedItem.setModelId(modelIdString);
+            stagedItem.setDeveloperId(developerId);
+            stagedItem.setData(data);
+            return stagedItem;
+        }).thenCompose(item -> EntityStore.insertEntityAsync(item, true));
     }
 
 }
