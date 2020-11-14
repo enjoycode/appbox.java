@@ -3,6 +3,8 @@ import appbox.entities.Enterprise;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
+import appbox.store.EntityStore;
+import appbox.store.KVTransaction;
 import appbox.store.KVTxnId;
 import appbox.store.SysStoreApi;
 import appbox.store.query.TableScan;
@@ -37,6 +39,14 @@ public class TestSysStore {
         //TODO: storeReceive
     }
 
+    private static KVInsertDataRequire makeInsertDataCommand(KVTxnId txnId) {
+        var cmd = new KVInsertDataRequire(txnId);
+        cmd.raftGroupId = 0;
+        cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
+        cmd.data        = new byte[]{65, 66, 67, 68};
+        return cmd;
+    }
+
     @Test
     public void testKVInsertCommand() throws ExecutionException, InterruptedException {
         final KVTxnId txnId = new KVTxnId();
@@ -44,11 +54,7 @@ public class TestSysStore {
         var fut = SysStoreApi.beginTxnAsync() //启动事务
                 .thenCompose(res -> {
                     txnId.copyFrom(res.txnId);
-                    var cmd = new KVInsertDataRequire(txnId);
-                    cmd.raftGroupId = 0;
-                    cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
-                    cmd.data        = new byte[]{65, 66, 67, 68};
-                    return SysStoreApi.execKVInsertAsync(cmd); //执行Insert命令
+                    return SysStoreApi.execKVInsertAsync(makeInsertDataCommand(txnId)); //执行Insert命令
                 })
                 .thenCompose(res -> SysStoreApi.commitTxnAsync(txnId)); //递交事务
 
@@ -108,6 +114,24 @@ public class TestSysStore {
         q.where(Enterprise.NAME.eq("AppBoxFuture"));
         var list = q.toListAsync().get();
         assertNotNull(list);
+    }
+
+    /** 测试异常时自动回滚事务 */
+    @Test
+    public void testAutoRollbackTxnOnException() throws Exception {
+        var txn  = KVTransaction.beginAsync().get();
+        var obj = new Enterprise();
+        obj.setName("Future Studio");
+
+        var batch = EntityStore.insertEntityAsync(obj, txn)
+                .thenCompose(r -> EntityStore.insertEntityAsync(obj, txn)) //重复插入相同主键引发异常
+                .thenCompose(r -> txn.commitAsync());
+
+        try {
+            batch.get();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
 }
