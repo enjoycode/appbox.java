@@ -31,7 +31,9 @@ public final class ModelStore {
         var req = new KVInsertModelRequire(txn.id());
         req.model = model;
 
-        return SysStoreApi.execKVInsertAsync(req).thenAccept(ModelStore::checkStoreError);
+        return SysStoreApi.execKVInsertAsync(req)
+                .thenAccept(ModelStore::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
     //region ====模型代码及Assembly相关操作====
@@ -45,7 +47,9 @@ public final class ModelStore {
         req.modelId  = modelId;
         req.codeData = codeData;
 
-        return SysStoreApi.execKVInsertAsync(req).thenAccept(ModelStore::checkStoreError);
+        return SysStoreApi.execKVInsertAsync(req)
+                .thenAccept(ModelStore::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
     /**
