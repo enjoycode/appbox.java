@@ -5,13 +5,13 @@ import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
-public class WorkgroupModel extends SysEntity {
+public class Workgroup extends SysEntity {
 
     public static final short NAME_ID     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short CHECKOUT_NODETYPE_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short CHECKOUT_TARGETID_ID     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    public WorkgroupModel() {
+    public Workgroup() {
         super(IdUtil.SYS_WORKGROUP_MODEL_ID);
     }
 

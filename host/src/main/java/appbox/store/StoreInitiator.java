@@ -84,21 +84,21 @@ public final class StoreInitiator {
         var model = new EntityModel(IdUtil.SYS_CHECKOUT_MODEL_ID, "Checkout");
         model.bindToSysStore(true, false);
         var nodeTypeFiled = new DataFieldModel(model, "NodeType", DataFieldType.Byte, false);
-        model.addSysMember(nodeTypeFiled, CheckoutModel.NODE_TYPE_ID);
+        model.addSysMember(nodeTypeFiled, Checkout.NODE_TYPE_ID);
 
         var targetIdFiled = new DataFieldModel(model, "TargetId", DataFieldType.String, false);
         targetIdFiled.setLength(100);
-        model.addSysMember(targetIdFiled, CheckoutModel.TARGET_ID);
+        model.addSysMember(targetIdFiled, Checkout.TARGET_ID);
 
         var developerIdFiled = new DataFieldModel(model, "DeveloperId", DataFieldType.Guid, false);
-        model.addSysMember(developerIdFiled, CheckoutModel.DEVELOPER_ID);
+        model.addSysMember(developerIdFiled, Checkout.DEVELOPER_ID);
 
         var developerNameFiled = new DataFieldModel(model, "DeveloperName", DataFieldType.String, false);
         developerNameFiled.setLength(100);
-        model.addSysMember(developerNameFiled, CheckoutModel.DEVELOPER_NAME_ID);
+        model.addSysMember(developerNameFiled, Checkout.DEVELOPER_NAME_ID);
 
         var versionFiled = new DataFieldModel(model, "Version", DataFieldType.Int, false);
-        model.addSysMember(versionFiled, CheckoutModel.VERSION_ID);
+        model.addSysMember(versionFiled, Checkout.VERSION_ID);
         return model;
     }
 
@@ -126,13 +126,13 @@ public final class StoreInitiator {
         model.bindToSysStore(true, false);
         var nameFiled = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
         nameFiled.setLength(100);
-        model.addSysMember(nameFiled, OrgunitModel.NAME_ID);
+        model.addSysMember(nameFiled, Orgunit.NAME_ID);
 
         var baseFiled = new DataFieldModel(model, "BaseId", DataFieldType.Guid, false, false);
-        model.addSysMember(baseFiled, OrgunitModel.BASE_ID);
+        model.addSysMember(baseFiled, Orgunit.BASE_ID);
 
         var baseTypeFiled = new DataFieldModel(model, "BaseType", DataFieldType.Byte, false, false);
-        model.addSysMember(baseTypeFiled, OrgunitModel.BASE_TYPE_ID);
+        model.addSysMember(baseTypeFiled, Orgunit.BASE_TYPE_ID);
 
         //var Base = new EntityRefModel(model, "Base",
         //        new List<ulong>() { Consts.SYS_ENTERPRISE_MODEL_ID, Consts.SYS_WORKGROUP_MODEL_ID, Consts.SYS_EMPLOEE_MODEL_ID },
@@ -147,15 +147,15 @@ public final class StoreInitiator {
 
         var nameFiled = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
         nameFiled.setLength(50);
-        model.addSysMember(nameFiled, WorkgroupModel.NAME_ID);
+        model.addSysMember(nameFiled, Workgroup.NAME_ID);
 
         //indexes
         var ui_nodeType_targetId = new SysIndexModel(model, "UI_NodeType_TargetId", false,
                 new FieldWithOrder[]
                         {
-                                new FieldWithOrder(WorkgroupModel.CHECKOUT_NODETYPE_ID),
-                                new FieldWithOrder(WorkgroupModel.CHECKOUT_TARGETID_ID)
-                        },new short[]{WorkgroupModel.CHECKOUT_NODETYPE_ID,WorkgroupModel.CHECKOUT_TARGETID_ID});
+                                new FieldWithOrder(Workgroup.CHECKOUT_NODETYPE_ID),
+                                new FieldWithOrder(Workgroup.CHECKOUT_TARGETID_ID)
+                        },new short[]{Workgroup.CHECKOUT_NODETYPE_ID, Workgroup.CHECKOUT_TARGETID_ID});
         model.sysStoreOptions().addSysIndex(model, ui_nodeType_targetId, (byte) ((1 << IdUtil.INDEXID_UNIQUE_OFFSET) | (1 << 2)));
         return model;
     }
@@ -175,15 +175,15 @@ public final class StoreInitiator {
 
         //Members
         var name = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
-        model.addSysMember(name, EmployeeModel.NAME_ID);
+        model.addSysMember(name, Employee.NAME_ID);
         var male = new DataFieldModel(model, "Male", DataFieldType.Bool, false, false);
-        model.addSysMember(male, EmployeeModel.MALE_ID);
+        model.addSysMember(male, Employee.MALE_ID);
         var birthday = new DataFieldModel(model, "Birthday", DataFieldType.DateTime, false, false);
-        model.addSysMember(birthday, EmployeeModel.BIRTHDAY_ID);
+        model.addSysMember(birthday, Employee.BIRTHDAY_ID);
         var account = new DataFieldModel(model, "Account", DataFieldType.String, true, false);
-        model.addSysMember(account, EmployeeModel.ACCOUNT_ID);
+        model.addSysMember(account, Employee.ACCOUNT_ID);
         var password = new DataFieldModel(model, "Password", DataFieldType.Binary, true, false);
-        model.addSysMember(password, EmployeeModel.PASSWORD_ID);
+        model.addSysMember(password, Employee.PASSWORD_ID);
 
         //TODO:
         //var orgunits = new EntitySetModel(model, "OrgUnits", IdUtil.SYS_ORGUNIT_MODEL_ID, Consts.ORGUNIT_BASE_ID);
@@ -191,8 +191,8 @@ public final class StoreInitiator {
 
         //Indexes
         var ui_account = new SysIndexModel(model, "UI_Account", true,
-                new FieldWithOrder[]{new FieldWithOrder(EmployeeModel.ACCOUNT_ID)},
-                new short[]{EmployeeModel.PASSWORD_ID});
+                new FieldWithOrder[]{new FieldWithOrder(Employee.ACCOUNT_ID)},
+                new short[]{Employee.PASSWORD_ID});
         model.sysStoreOptions().addSysIndex(model, ui_account, (byte) ((1 << IdUtil.INDEXID_UNIQUE_OFFSET) | (1 << 2)));
 
         return model;

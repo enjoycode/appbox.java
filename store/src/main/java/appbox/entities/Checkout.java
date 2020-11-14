@@ -7,7 +7,7 @@ import appbox.utils.IdUtil;
 
 import java.util.UUID;
 
-public class CheckoutModel extends SysEntity {
+public class Checkout extends SysEntity {
 
     public static final short NODE_TYPE_ID     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short TARGET_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -15,7 +15,7 @@ public class CheckoutModel extends SysEntity {
     public static final short DEVELOPER_NAME_ID     = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short VERSION_ID     = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    public CheckoutModel() {
+    public Checkout() {
         super(IdUtil.SYS_CHECKOUT_MODEL_ID);
     }
 

@@ -7,7 +7,7 @@ import appbox.utils.IdUtil;
 
 import java.util.Date;
 
-public class EmployeeModel extends SysEntity {
+public class Employee extends SysEntity {
 
     public static final short NAME_ID     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short MALE_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -81,7 +81,7 @@ public class EmployeeModel extends SysEntity {
         }
     }
 
-    public EmployeeModel(long modelId) {
+    public Employee(long modelId) {
         super(IdUtil.SYS_EMPLOYEE_MODEL_ID);
     }
 

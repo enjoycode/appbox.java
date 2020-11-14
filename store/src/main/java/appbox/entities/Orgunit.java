@@ -7,13 +7,13 @@ import appbox.utils.IdUtil;
 
 import java.util.UUID;
 
-public class OrgunitModel extends SysEntity {
+public class Orgunit extends SysEntity {
 
     public static final short NAME_ID     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short BASE_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short BASE_TYPE_ID     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    public OrgunitModel() {
+    public Orgunit() {
         super(IdUtil.SYS_ORGUNIT_MODEL_ID);
     }
 

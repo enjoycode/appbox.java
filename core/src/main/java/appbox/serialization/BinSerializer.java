@@ -270,6 +270,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_BOOL_FALSE_FLAG));
             }
         }else {
+            _stream.writeShort(id);
             _stream.writeBool(value);
         }
     }
