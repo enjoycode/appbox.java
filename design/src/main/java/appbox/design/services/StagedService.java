@@ -58,18 +58,18 @@ public final class StagedService {
 
         var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
 
-        //var q = new TableScan(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
-        //q.where(StagedModel.TYPE.eq(StagedType.SourceCode.value)
-        //                .and(StagedModel.MODEL.eq(serviceModelId))
-        //                .and(StagedModel.DEVELOPER.eq(developerID)));
-
-        var q = new SqlQuery(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
-        q.where(q.t.m("DeveloperId").eq(developerID))
-                .andWhere(q.t.m("ModelId").eq(String.valueOf(serviceModelId)))
-                .andWhere(q.t.m("Type").eq (StagedType.SourceCode.value));
+        var q = new TableScan(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
+        q.where(StagedModel.TYPE.eq(StagedType.SourceCode.value)
+                        .and(StagedModel.MODEL.eq(Long.toUnsignedString(serviceModelId)))
+                        .and(StagedModel.DEVELOPER.eq(developerID)));
 
         var         list        = (List<StagedModel>)q.toListAsync().get();
-        ServiceCode serviceCode =ModelCodeUtil.decodeServiceCode(list.get(0).getData());
-        return CompletableFuture.completedFuture(serviceCode.sourceCode);
+        if(list.size()>0){
+            ServiceCode serviceCode =ModelCodeUtil.decodeServiceCode(list.get(0).getData());
+            return CompletableFuture.completedFuture(serviceCode.sourceCode);
+        }else{
+            return CompletableFuture.completedFuture(null);
+        }
+
     }
 }
