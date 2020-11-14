@@ -262,15 +262,23 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, boolean male, byte flags) throws Exception {
-        _stream.writeBool(male);
+    public void writeMember(short id, boolean value, byte flags) throws Exception {
+        if (flags != 0) {
+            if(value){
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_BOOL_TRUE_FLAG));
+            }else{
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_BOOL_FALSE_FLAG));
+            }
+        }else {
+            _stream.writeBool(value);
+        }
     }
 
     @Override
     public void writeMember(short id, Date value, byte flags) throws Exception {
         if (flags != 0) {
             if (value != null) {
-                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
+                _stream.writeShort((short) (id | 8));
                 _stream.writeLong(value.getTime());
             } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));

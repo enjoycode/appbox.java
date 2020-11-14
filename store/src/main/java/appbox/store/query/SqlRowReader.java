@@ -37,7 +37,7 @@ public final class SqlRowReader implements IEntityMemberReader {
     }
 
     @Override
-    public boolean readBoolMemeber(int flags) throws Exception {
+    public boolean readBoolMember(int flags) throws Exception {
         return rowData.getBoolean(flags);
     }
 

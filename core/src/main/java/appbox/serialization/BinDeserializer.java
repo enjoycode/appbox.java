@@ -120,7 +120,7 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     @Override
-    public boolean readBoolMemeber(int flags) throws Exception {
+    public boolean readBoolMember(int flags) throws Exception {
         if (flags == 0)
             return _stream.readBool();
         return (flags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;

@@ -10,7 +10,7 @@ public interface IEntityMemberReader {
 
     String readStringMember(int flags) throws Exception;
 
-    boolean readBoolMemeber(int flags) throws Exception;
+    boolean readBoolMember(int flags) throws Exception;
 
     int readIntMember(int flags) throws Exception;
 

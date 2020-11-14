@@ -109,7 +109,7 @@ public class EmployeeModel extends SysEntity {
             case NAME_ID:
                 _name = bs.readStringMember(flags); break;
             case MALE_ID:
-                _male = bs.readBoolMemeber(flags); break;
+                _male = bs.readBoolMember(flags); break;
             case BIRTHDAY_ID:
                 _birthday = bs.readDateMember(flags); break;
             case ACCOUNT_ID:
