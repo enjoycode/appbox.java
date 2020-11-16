@@ -5,9 +5,13 @@ import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
 
 /**
- * 通用的无返回数据的存储命令响应
+ * 通用的存储命令响应
  */
 public final class KVCommandResponse extends StoreResponse {
+
+    private byte[] results;
+
+    public byte[] getResults() { return results; }
 
     @Override
     public byte MessageType() {
@@ -23,5 +27,8 @@ public final class KVCommandResponse extends StoreResponse {
     public void readFrom(BinDeserializer bs) throws Exception {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
+        if (errorCode == 0) {
+            results = bs.readRemaining();
+        }
     }
 }

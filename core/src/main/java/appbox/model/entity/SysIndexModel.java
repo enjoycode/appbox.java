@@ -62,6 +62,8 @@ public final class SysIndexModel extends IndexModelBase {
         _state  = owner.persistentState() == PersistentState.Detached ? SysIndexState.Ready : SysIndexState.Building;
     }
 
+    public boolean isGlobal() { return _global; }
+
     //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) throws Exception {

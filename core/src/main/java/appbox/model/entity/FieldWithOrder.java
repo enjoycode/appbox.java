@@ -6,7 +6,7 @@ import appbox.serialization.BinSerializer;
 /**
  * 带排序标记的字段
  */
-public final class FieldWithOrder {
+public final class FieldWithOrder { //TODO: rename to OrderedField
 
     public short   memberId;
     public boolean orderByDesc;

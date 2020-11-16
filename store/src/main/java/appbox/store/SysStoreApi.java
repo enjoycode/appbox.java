@@ -7,7 +7,6 @@ import appbox.channel.IMessageChannel;
 import appbox.channel.messages.*;
 import appbox.runtime.RuntimeContext;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -117,7 +116,7 @@ public final class SysStoreApi {
         return makeTaskAndSendRequest(cmd, new KVCommandResponse());
     }
 
-    public static CompletableFuture<KVCommandResponse> execKVDeleteAsync(KVDeleteRequire cmd) {
+    public static CompletableFuture<KVCommandResponse> execKVDeleteAsync(KVDeleteRequest cmd) {
         return makeTaskAndSendRequest(cmd, new KVCommandResponse());
     }
     //endregion

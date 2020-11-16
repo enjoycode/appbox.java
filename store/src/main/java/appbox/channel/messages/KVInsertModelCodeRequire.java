@@ -14,8 +14,8 @@ public final class KVInsertModelCodeRequire extends KVInsertRequire {
 
         raftGroupId      = KeyUtil.META_RAFTGROUP_ID;
         schemaVersion    = 0;
-        dataCF           = -1;
-        overrideIfExists = true;
+        dataCF         = -1;
+        overrideExists = true;
     }
 
     @Override

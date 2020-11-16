@@ -20,6 +20,8 @@ public final class KeyUtil {
     public static final byte PARTCF_GLOBAL_INDEX_FLAG = 0x11;
     public static final byte PARTCF_PART_INDEX_FLAG   = 0x12;
 
+    public static final byte INDEXCF_INDEX = 6;
+
     public static final int ENTITY_KEY_SIZE = 16;
 
     public static void writeAppKey(BinSerializer bs, int appId, boolean withSize) throws Exception {
@@ -42,9 +44,10 @@ public final class KeyUtil {
         bs.writeLongBE(modelId);
     }
 
-    public static void writeEntityKey(BinSerializer bs, EntityId id) throws Exception {
+    public static void writeEntityKey(BinSerializer bs, EntityId id, boolean withSize) throws Exception {
         //TODO: write appStoreId + tableId
-        bs.writeNativeVariant(16); //注意按无符号写入key长度
+        if (withSize)
+            bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
     }
 

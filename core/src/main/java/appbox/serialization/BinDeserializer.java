@@ -52,11 +52,15 @@ public final class BinDeserializer implements IEntityMemberReader {
         _stream.skip(size);
     }
 
-    /**
-     * 读剩余字节
-     */
+    /** 读剩余字节，没有返回null */
     public byte[] readRemaining() throws Exception {
-        var data = new byte[_stream.remaining()]; _stream.read(data, 0, data.length); return data;
+        int left = _stream.remaining();
+        if (left <= 0) {
+            return null;
+        }
+        var data = new byte[left];
+        _stream.read(data, 0, data.length);
+        return data;
     }
 
     public boolean readBool() throws Exception {

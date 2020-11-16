@@ -10,7 +10,7 @@ import appbox.serialization.IBinSerializable;
  * 系统存储及Sql存储的索引模型基类
  */
 public abstract class IndexModelBase implements IBinSerializable {
-    protected final EntityModel owner;          //不需要序列化
+    public final EntityModel owner;          //不需要序列化
 
     private byte             _indexId;
     private String           _name;
@@ -40,6 +40,16 @@ public abstract class IndexModelBase implements IBinSerializable {
     public PersistentState persistentState() {
         return _persistentState;
     }
+
+    public FieldWithOrder[] fields() { return _fields; }
+
+    public boolean hasStoringFields() { return _storingFields != null && _storingFields.length > 0; }
+
+    public short[] storingFields() { return _storingFields; }
+
+    public byte indexId() { return _indexId; }
+
+    public boolean unique() { return _unique; }
     //endregion
 
     //region ====Design Methods====

@@ -1,8 +1,7 @@
 package appbox.store;
 
-import appbox.channel.messages.KVGetPartitionRequest;
-import appbox.channel.messages.KVGetPartitionResponse;
-import appbox.channel.messages.KVInsertEntityRequest;
+import appbox.channel.messages.*;
+import appbox.data.EntityId;
 import appbox.data.SysEntity;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
@@ -40,7 +39,8 @@ public final class EntityStore { //TODO: rename to SysStore
      * 获取或创建全局表的RaftGroupId
      * @param txn 如果为null,则表示不需要创建
      */
-    public static CompletableFuture<Long> getOrCreateGlobalTablePartition(ApplicationModel app, EntityModel model, IKVTransaction txn) {
+    public static CompletableFuture<Long> getOrCreateGlobalTablePartition(
+            ApplicationModel app, EntityModel model, IKVTransaction txn) {
         var partitionInfo = new PartitionInfo(5, model.sysStoreOptions().tableFlags());
         partitionInfo.encodeGlobalTablePartitionKey(app.getAppStoreId(), model.tableId());
 
@@ -62,6 +62,7 @@ public final class EntityStore { //TODO: rename to SysStore
     //region ====实体及索引相关操作====
     //TODO:*** Insert/Update/Delete本地索引及数据通过BatchCommand优化，减少RPC次数
 
+    //region ----Insert----
     public static CompletableFuture<Void> insertEntityAsync(SysEntity entity) {
         return insertEntityAsync(entity, false);
     }
@@ -111,20 +112,67 @@ public final class EntityStore { //TODO: rename to SysStore
             entity.id().initRaftGroupId(raftGroupId);
 
             //TODO:判断有无强制外键引用，有则先处理
-            //TODO:插入索引，注意变更后可能已添加或删除了索引会报错
-
+            //插入索引，注意模型变更后可能已添加或删除了索引会报错
+            return insertIndexesAsync(entity, model, txn);
+        }).thenCompose(r -> {
             //插入数据
             var req = new KVInsertEntityRequest(entity, model, txn.id()); //TODO: refs
-            req.raftGroupId      = raftGroupId;
-            req.schemaVersion    = model.sysStoreOptions().schemaVersion();
-            req.overrideIfExists = overrideExists;
+            req.overrideExists = overrideExists;
             return SysStoreApi.execKVInsertAsync(req);
-        }).thenAccept(res -> {
-            if (res.errorCode != 0) {
-                throw new SysStoreException(res.errorCode);
-            }
-        });
+        }).thenAccept(StoreResponse::checkStoreError);
     }
+    //endregion insert
+
+    //region ----Delete----
+    public static CompletableFuture<Void> deleteEntityAsync(EntityModel model, EntityId id, KVTransaction txn) {
+        if (txn == null)
+            throw new RuntimeException("Must enlist transaction");
+        if (id == null || model == null)
+            throw new IllegalArgumentException();
+
+        //注意删除前先处理本事务挂起的外键引用，以防止同一事务删除引用后再删除引用目标失败(eg:同一事务删除订单明细，删除引用的订单)
+        //await txn.ExecPendingRefs();
+
+        var app = RuntimeContext.current().getApplicationModel(model.appId());
+        //先获取强制外键引用
+        //var refs = model.GetEntityRefsWithFKConstraint();
+
+        //删除数据
+        var req = new KVDeleteEntityRequest(txn.id(), id, model);
+        return SysStoreApi.execKVDeleteAsync(req)
+                .thenAccept(res -> {
+                    //TODO://删除索引并扣减引用计数
+                });
+    }
+    //endregion delete
+
+    //region ----Index----
+
+    private static CompletableFuture<Void> insertIndexesAsync(SysEntity entity, EntityModel model, KVTransaction txn) {
+        if (!model.sysStoreOptions().hasIndexes()) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        //TODO:并发插入索引，暂顺序处理，可考虑先处理惟一索引
+        //TODO:暂只处理分区本地索引
+        CompletableFuture<KVCommandResponse> fut = null;
+        for (var idx : model.sysStoreOptions().getIndexes()) {
+            if (idx.isGlobal()) {
+                throw new RuntimeException("未实现");
+            }
+
+            var req = new KVInsertIndexRequest(txn.id(), entity, idx);
+            if (fut == null)
+                fut = SysStoreApi.execKVInsertAsync(req);
+            else
+                fut = fut.thenCompose(r -> SysStoreApi.execKVInsertAsync(req));
+        }
+
+        return fut.thenAccept(StoreResponse::checkStoreError);
+    }
+
+    //endregion index
+
     //endregion
 
 }

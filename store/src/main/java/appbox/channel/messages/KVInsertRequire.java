@@ -13,7 +13,7 @@ public abstract class KVInsertRequire implements IMessage {
     public        long    raftGroupId;
     public        int     schemaVersion;
     protected     byte    dataCF;
-    public        boolean overrideIfExists;
+    public        boolean overrideExists;
 
     public KVInsertRequire(KVTxnId txnId) {
         this.txnId.copyFrom(txnId);
@@ -32,7 +32,7 @@ public abstract class KVInsertRequire implements IMessage {
         bs.writeLong(raftGroupId);
         bs.writeInt(schemaVersion);
         bs.writeByte(dataCF);
-        bs.writeBool(overrideIfExists);
+        bs.writeBool(overrideExists);
     }
 
     @Override

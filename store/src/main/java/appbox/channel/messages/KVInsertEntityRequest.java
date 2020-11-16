@@ -15,7 +15,10 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
     public KVInsertEntityRequest(SysEntity entity, EntityModel model, KVTxnId txnId) {
         super(txnId);
 
-        dataCF  = -1;
+        dataCF        = -1;
+        raftGroupId   = entity.id().raftGroupId();
+        schemaVersion = model.sysStoreOptions().schemaVersion();
+
         _entity = entity;
         _model  = model;
     }
@@ -25,7 +28,7 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeEntityKey(bs, _entity.id());
+        KeyUtil.writeEntityKey(bs, _entity.id(), true);
         //refs //TODO:
         bs.writeVariant(0);
         //data

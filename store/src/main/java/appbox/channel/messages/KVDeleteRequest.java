@@ -1,32 +1,22 @@
 package appbox.channel.messages;
 
-import appbox.cache.ObjectPool;
 import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
 import appbox.store.KVTxnId;
 
-public final class KVDeleteRequire implements IMessage {
-    //region ====ObjectPool====
-    private static final ObjectPool<KVDeleteRequire> pool = new ObjectPool<>(KVDeleteRequire::new, 32);
+public abstract class KVDeleteRequest implements IMessage {
 
-    public static KVDeleteRequire rentFromPool() {
-        return pool.rent();
+    protected final KVTxnId txnId         = new KVTxnId();
+    protected       long    raftGroupId   = 0;
+    protected       int     schemaVersion = 0;
+    protected       byte    dataCF        = -1;
+    protected       boolean returnExists  = false;
+
+    public KVDeleteRequest(KVTxnId txnId) {
+        this.txnId.copyFrom(txnId);
     }
-
-    public static void backToPool(KVDeleteRequire obj) {
-        pool.back(obj);
-    }
-    //endregion
-
-    public final KVTxnId txnId = new KVTxnId();
-    public       long    raftGroupId;
-    public       int     schemaVersion;
-    public       byte    dataCF;
-    public       boolean returnExists;
-    public       byte[]  key;
-    public       byte[]  refs;
 
     @Override
     public byte MessageType() {
@@ -43,8 +33,7 @@ public final class KVDeleteRequire implements IMessage {
         bs.writeByte(dataCF);
         bs.writeBool(returnExists);
 
-        bs.writeByteArray(key);
-        bs.writeByteArray(refs);
+        //子类写入refs及不带长度信息的Key
     }
 
     @Override

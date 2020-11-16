@@ -11,18 +11,12 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class ModelStore {
 
-    private static <T extends StoreResponse> void checkStoreError(T response) throws SysStoreException {
-        if (response.errorCode != 0) {
-            throw new SysStoreException(response.errorCode);
-        }
-    }
-
     /**
      * 创建新的应用，成功返回应用对应的存储Id
      */
     public static CompletableFuture<Byte> createApplicationAsync(ApplicationModel app) {
         return SysStoreApi.metaNewAppAsync(app).thenApply(r -> {
-            checkStoreError(r);
+            r.checkStoreError();
             return r.appId;
         });
     }
@@ -32,7 +26,7 @@ public final class ModelStore {
         req.model = model;
 
         return SysStoreApi.execKVInsertAsync(req)
-                .thenAccept(ModelStore::checkStoreError)
+                .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
@@ -48,7 +42,7 @@ public final class ModelStore {
         req.codeData = codeData;
 
         return SysStoreApi.execKVInsertAsync(req)
-                .thenAccept(ModelStore::checkStoreError)
+                .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 

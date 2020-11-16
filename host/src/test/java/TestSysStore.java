@@ -64,16 +64,12 @@ public class TestSysStore {
 
     @Test
     public void testKVDeleteCommand() throws ExecutionException, InterruptedException {
-        var cmd = new KVDeleteRequire();
-        cmd.raftGroupId = 0;
-        cmd.dataCF      = -1;
-        cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
+        var txn = SysStoreApi.beginTxnAsync().get();
+        var cmd = new KVDeleteDataRequest(txn.txnId);
+        cmd.key = new byte[]{65, 66, 67, 68}; //ABCD
 
-        var fut = SysStoreApi.beginTxnAsync()
-                .thenCompose(res -> {
-                    cmd.txnId.copyFrom(res.txnId);
-                    return SysStoreApi.execKVDeleteAsync(cmd);
-                }).thenCompose(res -> SysStoreApi.commitTxnAsync(cmd.txnId));
+        var fut = SysStoreApi.execKVDeleteAsync(cmd)
+                .thenCompose(res -> SysStoreApi.commitTxnAsync(txn.txnId));
 
         var res = fut.get();
         assertEquals(0, res.errorCode);
@@ -119,7 +115,7 @@ public class TestSysStore {
     /** 测试异常时自动回滚事务 */
     @Test
     public void testAutoRollbackTxnOnException() throws Exception {
-        var txn  = KVTransaction.beginAsync().get();
+        var txn = KVTransaction.beginAsync().get();
         var obj = new Enterprise();
         obj.setName("Future Studio");
 

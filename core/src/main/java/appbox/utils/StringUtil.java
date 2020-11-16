@@ -38,4 +38,60 @@ public final class StringUtil {
         }
         return new String(ch);
     }
+
+    /** 获取utf8编码长度 */
+    public static int getUtf8Size(String value) throws Exception {
+        if (value == null | value.length() == 0)
+            return 0;
+
+        //TODO:能否判断底层是否单字节编码，这样可以直接返回长度
+
+        int size = 0;
+        int  srcPos = 0;
+        int  srcLen = value.length();
+        char c, d;
+        int  uc, ip;
+        while (srcPos < srcLen) {
+            c = value.charAt(srcPos++);
+            if (c < 0x80) {
+                // Have at most seven bits
+                size++;
+            } else if (c < 0x800) {
+                // 2 bytes, 11 bits
+                size += 2;
+            } else if (Character.isSurrogate(c)) {
+                ip = srcPos - 1;
+                if (Character.isHighSurrogate(c)) {
+                    if (srcLen - ip < 2) {
+                        uc = -1;
+                    } else {
+                        d = value.charAt(ip + 1);
+                        if (Character.isLowSurrogate(d)) {
+                            uc = Character.toCodePoint(c, d);
+                        } else {
+                            throw new Exception();
+                        }
+                    }
+                } else {
+                    if (Character.isLowSurrogate(c)) {
+                        throw new Exception();
+                    } else {
+                        uc = c;
+                    }
+                }
+
+                if (uc < 0) {
+                    size ++;
+                } else {
+                    size += 4;
+                    srcPos++; // 2 chars
+                }
+            } else {
+                // 3 bytes, 16 bits
+                size += 3;
+            }
+        }
+
+        return size;
+    }
 }
