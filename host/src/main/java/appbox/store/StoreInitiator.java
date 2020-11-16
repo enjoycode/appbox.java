@@ -174,15 +174,15 @@ public final class StoreInitiator {
         model.bindToSysStore(true, false);
 
         //Members
-        var name = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
+        var name = new DataFieldModel(model, "Name", DataFieldType.String, false);
         model.addSysMember(name, Employee.NAME_ID);
-        var male = new DataFieldModel(model, "Male", DataFieldType.Bool, false, false);
+        var male = new DataFieldModel(model, "Male", DataFieldType.Bool, false);
         model.addSysMember(male, Employee.MALE_ID);
-        var birthday = new DataFieldModel(model, "Birthday", DataFieldType.DateTime, false, false);
+        var birthday = new DataFieldModel(model, "Birthday", DataFieldType.DateTime, true);
         model.addSysMember(birthday, Employee.BIRTHDAY_ID);
-        var account = new DataFieldModel(model, "Account", DataFieldType.String, true, false);
+        var account = new DataFieldModel(model, "Account", DataFieldType.String, true);
         model.addSysMember(account, Employee.ACCOUNT_ID);
-        var password = new DataFieldModel(model, "Password", DataFieldType.Binary, true, false);
+        var password = new DataFieldModel(model, "Password", DataFieldType.Binary, true);
         model.addSysMember(password, Employee.PASSWORD_ID);
 
         //TODO:

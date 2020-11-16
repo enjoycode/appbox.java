@@ -17,7 +17,7 @@ public final class KVDeleteEntityRequest extends KVDeleteRequest {
 
         raftGroupId   = id.raftGroupId();
         schemaVersion = model.sysStoreOptions().schemaVersion();
-        returnExists  = model.sqlStoreOptions().hasIndexes() /*|| refs != null*/; //TODO:****
+        returnExists  = model.sysStoreOptions().hasIndexes() /*|| refs != null*/; //TODO:****
         dataCF        = -1;
     }
 

@@ -125,6 +125,14 @@ public final class EntityStore { //TODO: rename to SysStore
     //endregion insert
 
     //region ----Delete----
+    public static CompletableFuture<Void> deleteEntityAsync(SysEntity entity) {
+        if (entity == null)
+            throw new IllegalArgumentException();
+        return KVTransaction.beginAsync()
+                .thenCompose(txn -> deleteEntityAsync(entity.model(), entity.id(), txn)
+                        .thenCompose(r -> txn.commitAsync()));
+    }
+
     public static CompletableFuture<Void> deleteEntityAsync(EntityModel model, EntityId id, KVTransaction txn) {
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");

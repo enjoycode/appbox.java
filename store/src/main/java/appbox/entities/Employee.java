@@ -81,7 +81,7 @@ public class Employee extends SysEntity {
         }
     }
 
-    public Employee(long modelId) {
+    public Employee() {
         super(IdUtil.SYS_EMPLOYEE_MODEL_ID);
     }
 

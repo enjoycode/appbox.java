@@ -1,4 +1,5 @@
 import appbox.channel.messages.*;
+import appbox.entities.Employee;
 import appbox.entities.Enterprise;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
@@ -130,4 +131,18 @@ public class TestSysStore {
         }
     }
 
+    /** 测试带二级索引的实体 */
+    @Test
+    public void testEntityWithIndex() throws Exception {
+        var emp = new Employee();
+        emp.setName("Rick");
+        emp.setMale(true);
+        emp.setAccount("aaaa");
+        emp.setPassword(new byte[] {1,2,3,4});
+
+        //insert
+        EntityStore.insertEntityAsync(emp).get();
+        //delete
+        EntityStore.deleteEntityAsync(emp).get();
+    }
 }
