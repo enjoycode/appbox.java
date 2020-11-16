@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.channel.KVRowReader;
 import appbox.channel.messages.*;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
@@ -127,6 +128,11 @@ public final class EntityStore { //TODO: rename to SysStore
     public static CompletableFuture<Void> deleteEntityAsync(EntityModel model, EntityId id, KVTransaction txn) {
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");
+        return deleteEntityInternal(model, id, txn)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
+    private static CompletableFuture<Void> deleteEntityInternal(EntityModel model, EntityId id, KVTransaction txn) {
         if (id == null || model == null)
             throw new IllegalArgumentException();
 
@@ -139,10 +145,16 @@ public final class EntityStore { //TODO: rename to SysStore
 
         //删除数据
         var req = new KVDeleteEntityRequest(txn.id(), id, model);
-        return SysStoreApi.execKVDeleteAsync(req)
-                .thenAccept(res -> {
-                    //TODO://删除索引并扣减引用计数
-                });
+        return SysStoreApi.execKVDeleteAsync(req).thenCompose(res -> {
+            res.checkStoreError();
+
+            //删除索引
+            KVRowReader stored = null;
+            if (model.sysStoreOptions().hasIndexes() /*or refs*/) {
+                stored = new KVRowReader(res.getResults());
+            }
+            return deleteIndexesAsync(id, stored, model, txn);
+        }); //TODO:扣减引用计数
     }
     //endregion delete
 
@@ -165,7 +177,29 @@ public final class EntityStore { //TODO: rename to SysStore
             if (fut == null)
                 fut = SysStoreApi.execKVInsertAsync(req);
             else
-                fut = fut.thenCompose(r -> SysStoreApi.execKVInsertAsync(req));
+                fut = fut.thenCompose(r -> { r.checkStoreError(); return SysStoreApi.execKVInsertAsync(req);});
+        }
+
+        return fut.thenAccept(StoreResponse::checkStoreError);
+    }
+
+    private static CompletableFuture<Void> deleteIndexesAsync(EntityId id, KVRowReader stored,
+                                                              EntityModel model, KVTransaction txn) {
+        if (!model.sysStoreOptions().hasIndexes()) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        CompletableFuture<KVCommandResponse> fut = null;
+        for (var idx : model.sysStoreOptions().getIndexes()) {
+            if (idx.isGlobal()) {
+                throw new RuntimeException("未实现");
+            }
+
+            var req = new KVDeleteIndexRequest(txn.id(), id, stored, idx);
+            if (fut == null)
+                fut = SysStoreApi.execKVDeleteAsync(req);
+            else
+                fut = fut.thenCompose(r -> { r.checkStoreError(); return SysStoreApi.execKVDeleteAsync(req);});
         }
 
         return fut.thenAccept(StoreResponse::checkStoreError);

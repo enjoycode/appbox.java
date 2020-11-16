@@ -4,9 +4,9 @@ import appbox.channel.KVRowReader;
 import appbox.data.EntityId;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.BinSerializer;
-import appbox.serialization.IEntityMemberWriter;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
+import appbox.utils.IdUtil;
 
 public final class KVDeleteIndexRequest extends KVDeleteRequest {
 
@@ -42,10 +42,8 @@ public final class KVDeleteIndexRequest extends KVDeleteRequest {
         //写入各字段, 注意MemberId写入排序标记
         for (var field : _indexModel.fields()) {
             //惟一索引但字段不具备值的处理, 暂 id | null flag
-            var flags = IEntityMemberWriter.SF_STORE | IEntityMemberWriter.SF_WRITE_NULL;
-            if (field.orderByDesc)
-                flags |= IEntityMemberWriter.SF_ORDER_BY_DESC; //TODO: only need this flag
-            _stored.writeMember(field.memberId, bs, (byte) flags);
+            var flags = field.orderByDesc ? (1 << IdUtil.MEMBERID_ORDER_OFFSET) : 0;
+            _stored.writeMember(field.memberId, bs, (byte) flags); //暂只需要OrderByFlag
         }
         //写入非惟一索引的EntityId的第二部分
         if (!_indexModel.unique()) {
