@@ -6,10 +6,16 @@ import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
 import appbox.store.EntityStore;
 import appbox.store.KVTransaction;
+import appbox.store.ServiceCode;
+import appbox.store.query.SqlQuery;
 import appbox.store.query.TableScan;
+import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public final class StagedService {
     enum StagedType {
@@ -48,4 +54,22 @@ public final class StagedService {
         }).thenCompose(item -> EntityStore.insertEntityAsync(item, true));
     }
 
+    private static CompletableFuture<String> loadServiceCode(long serviceModelId) throws ExecutionException, InterruptedException, IOException {
+
+        var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
+
+        var q = new TableScan(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
+        q.where(StagedModel.TYPE.eq(StagedType.SourceCode.value)
+                        .and(StagedModel.MODEL.eq(Long.toUnsignedString(serviceModelId)))
+                        .and(StagedModel.DEVELOPER.eq(developerID)));
+
+        var         list        = (List<StagedModel>)q.toListAsync().get();
+        if(list.size()>0){
+            ServiceCode serviceCode =ModelCodeUtil.decodeServiceCode(list.get(0).getData());
+            return CompletableFuture.completedFuture(serviceCode.sourceCode);
+        }else{
+            return CompletableFuture.completedFuture(null);
+        }
+
+    }
 }
