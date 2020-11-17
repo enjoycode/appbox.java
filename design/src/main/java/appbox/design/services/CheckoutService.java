@@ -19,40 +19,39 @@ import java.util.concurrent.CompletableFuture;
 public final class CheckoutService
 {
 
-	/** 
+	/**
 	 签出指定节点
-	*/
+	 */
 	public static CompletableFuture<CheckoutResult> checkoutAsync(List<CheckoutInfo> checkoutInfos)
 	{
 		if (checkoutInfos == null || checkoutInfos.isEmpty())	{
 			return null;
 		}
 		try{
+			CheckoutResult result = new CheckoutResult(true);
 			//尝试向存储插入签出信息
 			EntityModel model = RuntimeContext.current().getModel(IdUtil.SYS_CHECKOUT_MODEL_ID);
 			return KVTransaction.beginAsync()
-					.thenCompose(txn-> ModelStore.insertModelAsync(model, txn)
-					.thenRun(()->{
-						for(CheckoutInfo info :checkoutInfos){
-							var obj = new Checkout();
-							obj.setNodeType(info.getNodeType().value);
-							obj.setTargetId(info.getTargetID());
-							obj.setDeveloperId(info.getDeveloperOuid());
-							obj.setDeveloperName(info.getDeveloperName());
-							obj.setVersion(info.getVersion());
-							EntityStore.insertEntityAsync(obj,txn);
-						}
-					}).thenCompose(r -> txn.commitAsync())
-					.thenCompose(r->{
-						return ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).getTargetID())); })
+					.thenCompose(txn-> ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).getTargetID()))
+							.thenCompose(r->{
+								if(r.version()!=checkoutInfos.get(0).getVersion()){
+									result.setModelWithNewVersion(r);
+								}
+								return null;
+							})
+							.thenCompose(r->{
+								for(CheckoutInfo info :checkoutInfos){
+									var obj = new Checkout();
+									obj.setNodeType(info.getNodeType().value);
+									obj.setTargetId(info.getTargetID());
+									obj.setDeveloperId(info.getDeveloperOuid());
+									obj.setDeveloperName(info.getDeveloperName());
+									obj.setVersion(info.getVersion());
+									EntityStore.insertEntityAsync(obj,txn);
+								}
+								return null;
+							}).thenApply(r->{txn.commitAsync();return result;})
 
-					.thenApply(r->{
-						CheckoutResult result = new CheckoutResult(true);
-						if(r.version()!=checkoutInfos.get(0).getVersion()){
-							result.setModelWithNewVersion(r);
-						}
-						return result;
-					})
 					);
 
 		}catch (Exception e) {
@@ -62,9 +61,9 @@ public final class CheckoutService
 
 	}
 
-	/** 
+	/**
 	 用于DesignTree加载时
-	*/
+	 */
 	public static CompletableFuture<Map<String,CheckoutInfo>> loadAllAsync(){
 		var map = new HashMap<String, CheckoutInfo>();
 		var q = new TableScan<>(IdUtil.SYS_CHECKOUT_MODEL_ID,Checkout.class);
