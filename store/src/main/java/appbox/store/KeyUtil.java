@@ -69,4 +69,11 @@ public final class KeyUtil {
         bs.writeByte((byte) (p2 >>> 8));
     }
 
+    /** 合并编码AppId + 模型TableId(大字节序) */
+    public static int encodeTableId(byte appId, int modelTableId) {
+        //TODO:待测
+        int tableId = Integer.reverseBytes(modelTableId);
+        return tableId | (appId << 24);
+    }
+
 }

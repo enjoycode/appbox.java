@@ -20,6 +20,8 @@ public interface IEntityMemberWriter {
 
     void writeMember(short id, Optional<Integer> value, byte flags) throws Exception;
 
+    void writeMember(short id, long value, byte flags) throws Exception;
+
     void writeMember(short id, UUID value, byte flags) throws Exception;
 
     void writeMember(short id, byte[] data, byte flags) throws Exception;

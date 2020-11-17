@@ -83,6 +83,11 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
+    public void writeMember(short id, long value, byte flags) throws Exception {
+        addParameter(value);
+    }
+
+    @Override
     public void writeMember(short id, UUID value, byte flags) throws Exception {
         if (value != null)
             addParameter(value.toString()); //暂转换为字符串，待检查

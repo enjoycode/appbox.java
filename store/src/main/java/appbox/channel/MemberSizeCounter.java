@@ -39,6 +39,11 @@ public final class MemberSizeCounter implements IEntityMemberWriter {
     }
 
     @Override
+    public void writeMember(short id, long value, byte flags) throws Exception {
+        size += 2 + 8;
+    }
+
+    @Override
     public void writeMember(short id, UUID value, byte flags) throws Exception {
         size += 2;
         if (value != null)
