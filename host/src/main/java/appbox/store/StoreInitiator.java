@@ -6,9 +6,7 @@ import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
-import appbox.model.entity.DataFieldModel;
-import appbox.model.entity.FieldWithOrder;
-import appbox.model.entity.SysIndexModel;
+import appbox.model.entity.*;
 import appbox.runtime.RuntimeContext;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.utils.ModelCodeUtil;
@@ -17,6 +15,8 @@ import appbox.utils.IdUtil;
 import static appbox.model.entity.DataFieldModel.DataFieldType;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,12 +33,12 @@ public final class StoreInitiator {
             try {
                 //新建EntityModels
                 var enterpriseModel = createEnterpriseModel();
-                var employeeModel    = createEmployeeModel();
-                
+                var employeeModel   = createEmployeeModel();
+
                 var workgroupModel = createWorkgroupModel();
-                var orgunitModel = createOrgUnitModel();
-                var stagedModel = createStagedModel();
-                var checkoutModel = createCheckoutModel();
+                var orgunitModel   = createOrgUnitModel();
+                var stagedModel    = createStagedModel();
+                var checkoutModel  = createCheckoutModel();
 
                 //新建默认组织
 
@@ -55,7 +55,6 @@ public final class StoreInitiator {
                 ctx.injectModel(orgunitModel);
                 ctx.injectModel(stagedModel);
                 ctx.injectModel(checkoutModel);
-
 
 
                 //开始事务保存
@@ -80,7 +79,7 @@ public final class StoreInitiator {
         });
     }
 
-    private static EntityModel createCheckoutModel() throws Exception{
+    private static EntityModel createCheckoutModel() throws Exception {
         var model = new EntityModel(IdUtil.SYS_CHECKOUT_MODEL_ID, "Checkout");
         model.bindToSysStore(true, false);
         var nodeTypeFiled = new DataFieldModel(model, "NodeType", DataFieldType.Byte, false);
@@ -102,7 +101,7 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static EntityModel createStagedModel() throws Exception{
+    private static EntityModel createStagedModel() throws Exception {
         var model = new EntityModel(IdUtil.SYS_STAGED_MODEL_ID, "StagedModel");
         model.bindToSysStore(false, false); //非MVCC
 
@@ -121,27 +120,44 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static EntityModel createOrgUnitModel() throws Exception{
+    private static EntityModel createOrgUnitModel() throws Exception {
         var model = new EntityModel(IdUtil.SYS_ORGUNIT_MODEL_ID, "OrgUnit");
         model.bindToSysStore(true, false);
-        var nameFiled = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
-        nameFiled.setLength(100);
-        model.addSysMember(nameFiled, Orgunit.NAME_ID);
 
-        var baseFiled = new DataFieldModel(model, "BaseId", DataFieldType.Guid, false, false);
-        model.addSysMember(baseFiled, Orgunit.BASE_ID);
+        var name = new DataFieldModel(model, "Name", DataFieldType.String, false);
+        name.setLength(100);
+        model.addSysMember(name, Orgunit.NAME_ID);
 
-        var baseTypeFiled = new DataFieldModel(model, "BaseType", DataFieldType.Byte, false, false);
-        model.addSysMember(baseTypeFiled, Orgunit.BASE_TYPE_ID);
+        var baseId = new DataFieldModel(model, "BaseId", DataFieldType.EntityId, false, true);
+        model.addSysMember(baseId, Orgunit.BASEID_ID);
 
-        //var Base = new EntityRefModel(model, "Base",
-        //        new List<ulong>() { Consts.SYS_ENTERPRISE_MODEL_ID, Consts.SYS_WORKGROUP_MODEL_ID, Consts.SYS_EMPLOEE_MODEL_ID },
-        //        new ushort[] { baseId.MemberId }, baseType.MemberId);
-        //model.AddSysMember(Base, Consts.ORGUNIT_BASE_ID);
+        var baseType = new DataFieldModel(model, "BaseType", DataFieldType.Long, false, true);
+        model.addSysMember(baseType, Orgunit.BASE_TYPE_ID);
+
+        List<Long> refModelIds = new ArrayList<Long>() {{
+            add(IdUtil.SYS_ENTERPRISE_MODEL_ID);
+            add(IdUtil.SYS_WORKGROUP_MODEL_ID);
+            add(IdUtil.SYS_EMPLOYEE_MODEL_ID);
+        }};
+        var base = new EntityRefModel(model, "Base", refModelIds,
+                new short[]{baseId.memberId()}, baseType.memberId(), true);
+        model.addSysMember(base, Orgunit.BASE_ID);
+
+        var parentId = new DataFieldModel(model, "ParentId", DataFieldType.EntityId, true, true);
+        model.addSysMember(parentId, Orgunit.PARENTID_ID);
+
+        var parent = new EntityRefModel(model, "Parent", IdUtil.SYS_ORGUNIT_MODEL_ID,
+                new short[] {parentId.memberId() }, true);
+        parent.setAllowNull(true);
+        model.addSysMember(parent, Orgunit.PARENT_ID);
+
+        var childs = new EntitySetModel(model, "Childs", IdUtil.SYS_ORGUNIT_MODEL_ID, parent.memberId());
+        model.addSysMember(childs, Orgunit.CHILDS_ID);
+
         return model;
     }
 
-    private static EntityModel createWorkgroupModel() throws Exception{
+    private static EntityModel createWorkgroupModel() throws Exception {
         var model = new EntityModel(IdUtil.SYS_WORKGROUP_MODEL_ID, "Workgroup");
         model.bindToSysStore(true, false);
 
@@ -155,7 +171,7 @@ public final class StoreInitiator {
                         {
                                 new FieldWithOrder(Workgroup.CHECKOUT_NODETYPE_ID),
                                 new FieldWithOrder(Workgroup.CHECKOUT_TARGETID_ID)
-                        },new short[]{Workgroup.CHECKOUT_NODETYPE_ID, Workgroup.CHECKOUT_TARGETID_ID});
+                        }, new short[]{Workgroup.CHECKOUT_NODETYPE_ID, Workgroup.CHECKOUT_TARGETID_ID});
         model.sysStoreOptions().addSysIndex(model, ui_nodeType_targetId, (byte) ((1 << IdUtil.INDEXID_UNIQUE_OFFSET) | (1 << 2)));
         return model;
     }
