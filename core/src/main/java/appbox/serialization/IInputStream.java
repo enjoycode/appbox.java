@@ -7,6 +7,11 @@ public interface IInputStream {
      */
     int remaining();
 
+    /** 是否流内有剩余字节 */
+    default boolean hasRemaining() {
+        return remaining() > 0;
+    }
+
     byte readByte() throws Exception;
 
     void read(byte[] dest, int offset, int count) throws Exception;

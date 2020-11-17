@@ -157,11 +157,7 @@ public final class EntityStore { //TODO: rename to SysStore
             res.checkStoreError();
 
             //删除索引
-            KVRowReader stored = null;
-            if (model.sysStoreOptions().hasIndexes() /*or refs*/) {
-                stored = new KVRowReader(res.getResults());
-            }
-            return deleteIndexesAsync(id, stored, model, txn);
+            return deleteIndexesAsync(id, res.getResults(), model, txn);
         }); //TODO:扣减引用计数
     }
     //endregion delete
@@ -191,7 +187,7 @@ public final class EntityStore { //TODO: rename to SysStore
         return fut.thenAccept(StoreResponse::checkStoreError);
     }
 
-    private static CompletableFuture<Void> deleteIndexesAsync(EntityId id, KVRowReader stored,
+    private static CompletableFuture<Void> deleteIndexesAsync(EntityId id, byte[] stored,
                                                               EntityModel model, KVTransaction txn) {
         if (!model.sysStoreOptions().hasIndexes()) {
             return CompletableFuture.completedFuture(null);

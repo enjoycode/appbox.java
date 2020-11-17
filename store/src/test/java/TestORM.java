@@ -1,3 +1,5 @@
+import appbox.expressions.EntityBaseExpression;
+
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.BiFunction;
@@ -6,6 +8,8 @@ import java.util.function.BiPredicate;
 
 public class TestORM {
     public abstract class EntityBase {}
+
+    public abstract class IndexBase<T extends EntityBase> {}
 
     public class Product extends EntityBase {
         public int    id;
@@ -17,6 +21,20 @@ public class TestORM {
         public Product product;
         public int     quantity;
         public int     unitPrice;
+
+        public class UI_ProductId extends IndexBase<OrderItem> {
+            public int productId;
+
+            public int getQuantity() {return 0;}
+        }
+    }
+
+    public class KVIndexGet<E extends EntityBase, T extends IndexBase<E>> {
+        public void where(Predicate<T> filter) {}
+
+        public T toIndexRow() { return null; }
+
+        public E toEntity() { return null; }
     }
 
     public class SqlQuery<T extends EntityBase> {
@@ -35,7 +53,7 @@ public class TestORM {
         }
     }
 
-    public void test() {
+    public void testSqlQuery() {
         var q = new SqlQuery<OrderItem>();
         q.where(t -> t.productId == 1 && t.unitPrice >= 100);
 
@@ -48,7 +66,7 @@ public class TestORM {
         });
 
         var expandList = q.toList(o -> new OrderItem() {
-           String productName = o.product.name;
+            String productName = o.product.name;
         });
 
         var list = q.toList(o -> new Object() {
@@ -60,4 +78,10 @@ public class TestORM {
         }
     }
 
+    public void testIndexGet() {
+        var q = new KVIndexGet<OrderItem, OrderItem.UI_ProductId>();
+        q.where(t -> t.productId == 1);
+        var r1 = q.toIndexRow();
+        var r2 = q.toEntity();
+    }
 }

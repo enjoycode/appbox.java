@@ -1,6 +1,9 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
+import appbox.data.SysUniqueIndex;
+import appbox.expressions.KVFieldExpression;
+import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
@@ -9,21 +12,22 @@ import java.util.Date;
 
 public class Employee extends SysEntity {
 
+    public static final long MODELID = IdUtil.SYS_EMPLOYEE_MODEL_ID;
+
     public static final short NAME_ID     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short MALE_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short BIRTHDAY_ID = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short ACCOUNT_ID  = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short PASSWORD_ID = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    private String _name;
+    public static final KVFieldExpression ACCOUNT  = new KVFieldExpression(ACCOUNT_ID, DataFieldModel.DataFieldType.String);
+    public static final KVFieldExpression PASSWORD = new KVFieldExpression(PASSWORD_ID, DataFieldModel.DataFieldType.Binary);
 
+    private String  _name;
     private boolean _male;
-
-    private Date _birthday;
-
-    private String _account;
-
-    private byte[] _password;
+    private Date    _birthday;
+    private String  _account;
+    private byte[]  _password;
 
     public String getName() {
         return _name;
@@ -41,7 +45,7 @@ public class Employee extends SysEntity {
     }
 
     public void setMale(boolean male) {
-        if (male!=_male) {
+        if (male != _male) {
             this._male = male;
             onPropertyChanged(MALE_ID);
         }
@@ -81,9 +85,7 @@ public class Employee extends SysEntity {
         }
     }
 
-    public Employee() {
-        super(IdUtil.SYS_EMPLOYEE_MODEL_ID);
-    }
+    public Employee() { super(MODELID);}
 
     @Override
     public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
@@ -118,6 +120,34 @@ public class Employee extends SysEntity {
                 _password = bs.readBinaryMember(flags); break;
             default:
                 throw new Exception("unknown member");
+        }
+    }
+
+    //====二级索引====
+    public static final class UI_Account extends SysUniqueIndex<Employee> {
+        public static final byte INDEXID = (byte) ((1 << IdUtil.INDEXID_UNIQUE_OFFSET) | (1 << 2));
+
+        private String _account;
+        private byte[] _password;
+
+        public String getAccount() {
+            return _account;
+        }
+
+        public byte[] getPassword() {
+            return _password;
+        }
+
+        @Override
+        public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+            switch (id) {
+                case ACCOUNT_ID:
+                    _account = bs.readStringMember(flags); break;
+                case PASSWORD_ID:
+                    _password = bs.readBinaryMember(flags); break;
+                default:
+                    throw new Exception("unknown member");
+            }
         }
     }
 }

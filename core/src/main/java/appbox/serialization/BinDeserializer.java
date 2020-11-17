@@ -52,6 +52,10 @@ public final class BinDeserializer implements IEntityMemberReader {
         _stream.skip(size);
     }
 
+    public boolean hasRemaining() {
+        return _stream.hasRemaining();
+    }
+
     /** 读剩余字节，没有返回null */
     public byte[] readRemaining() throws Exception {
         int left = _stream.remaining();

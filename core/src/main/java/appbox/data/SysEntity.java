@@ -1,6 +1,6 @@
 package appbox.data;
 
-public abstract class SysEntity extends Entity {
+public abstract class SysEntity extends Entity implements IKVRow {
     private final EntityId _id = new EntityId();
 
     public SysEntity(long modelId) {
