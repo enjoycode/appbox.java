@@ -36,7 +36,7 @@ public final class KVInsertIndexRequest extends KVInsertRequire {
         for (var field : _indexModel.fields()) {
             _entity.writeMember(field.memberId, sizeCounter, IEntityMemberWriter.SF_NONE); //flags无意义
         }
-        bs.writeVariant(sizeCounter.getSize());
+        bs.writeNativeVariant(6 + 1 + sizeCounter.getSize());
         //写入EntityId's RaftGroupId
         _entity.id().writePart1(bs);
         //写入IndexId
@@ -44,10 +44,10 @@ public final class KVInsertIndexRequest extends KVInsertRequire {
         //写入各字段, 注意MemberId写入排序标记
         for (var field : _indexModel.fields()) {
             //惟一索引但字段不具备值的处理, 暂 id | null flag
-            var flags = IEntityMemberWriter.SF_STORE | IEntityMemberWriter.SF_WRITE_NULL;
+            byte flags = IEntityMemberWriter.SF_STORE | IEntityMemberWriter.SF_WRITE_NULL;
             if (field.orderByDesc)
                 flags |= IEntityMemberWriter.SF_ORDER_BY_DESC;
-            _entity.writeMember(field.memberId, bs, (byte) flags);
+            _entity.writeMember(field.memberId, bs, flags);
         }
         //写入非惟一索引的EntityId的第二部分
         if (!_indexModel.unique()) {
