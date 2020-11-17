@@ -27,16 +27,7 @@ public final class KVScanTableRequest extends KVScanRequest {
         //暂没有CreateTime谓词使用前缀匹配方式
         bs.writeNativeVariant(KeyUtil.ENTITY_KEY_SIZE - 10); //BeginKeySize
         //写入分区前缀，与EntityId.initRaftGroupId一致
-        //前32位
-        int p1 = (int) (raftGroupId >>> 12);
-        bs.writeByte((byte) (p1 & 0xFF));
-        bs.writeByte((byte) (p1 >>> 8));
-        bs.writeByte((byte) (p1 >>> 16));
-        bs.writeByte((byte) (p1 >>> 24));
-        //后12位　<< 4
-        short p2 = (short) ((raftGroupId & 0xFFF) << 4);
-        bs.writeByte((byte) (p2 & 0xFF));
-        bs.writeByte((byte) (p2 >>> 8));
+        KeyUtil.writeRaftGroupId(bs, raftGroupId);
 
         bs.writeNativeVariant(0); //EndKeySize
 

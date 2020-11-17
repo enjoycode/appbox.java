@@ -22,7 +22,7 @@ public final class KVInsertModelRequire extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeModelKey(bs, model.id());
+        KeyUtil.writeModelKey(bs, model.id(), true);
         //refs
         bs.writeVariant(0);
         //data

@@ -32,14 +32,18 @@ public final class KeyUtil {
         bs.writeIntBE(appId);
     }
 
-    public static void writeModelKey(BinSerializer bs, long modelId) throws Exception {
-        bs.writeNativeVariant(9); //注意按无符号写入key长度
+    public static void writeModelKey(BinSerializer bs, long modelId, boolean withSize) throws Exception {
+        if (withSize) {
+            bs.writeNativeVariant(9); //注意按无符号写入key长度
+        }
         bs.writeByte(KeyUtil.METACF_MODEL_PREFIX);
         bs.writeLongBE(modelId); //暂大字节序写入
     }
 
-    public static void writeModelCodeKey(BinSerializer bs, long modelId) throws Exception {
-        bs.writeNativeVariant(9); //注意按无符号写入key长度
+    public static void writeModelCodeKey(BinSerializer bs, long modelId, boolean withSize) throws Exception {
+        if (withSize) {
+            bs.writeNativeVariant(9); //注意按无符号写入key长度
+        }
         bs.writeByte(KeyUtil.METACF_MODEL_CODE_PREFIX);
         bs.writeLongBE(modelId);
     }
@@ -49,6 +53,20 @@ public final class KeyUtil {
         if (withSize)
             bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
+    }
+
+    public static void writeRaftGroupId(BinSerializer bs, long raftGroupId) throws Exception {
+        //与EntityId.initRaftGroupId一致
+        //前32位
+        int p1 = (int) (raftGroupId >>> 12);
+        bs.writeByte((byte) (p1 & 0xFF));
+        bs.writeByte((byte) (p1 >>> 8));
+        bs.writeByte((byte) (p1 >>> 16));
+        bs.writeByte((byte) (p1 >>> 24));
+        //后12位　<< 4
+        short p2 = (short) ((raftGroupId & 0xFFF) << 4);
+        bs.writeByte((byte) (p2 & 0xFF));
+        bs.writeByte((byte) (p2 >>> 8));
     }
 
 }
