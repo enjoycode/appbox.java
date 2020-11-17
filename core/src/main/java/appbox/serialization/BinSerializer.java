@@ -1,6 +1,7 @@
 package appbox.serialization;
 
 import appbox.cache.ObjectPool;
+import appbox.data.EntityId;
 import appbox.utils.IdUtil;
 
 import java.io.IOException;
@@ -242,6 +243,21 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
             _stream.writeShort(id);
             _stream.writeLong(value.getMostSignificantBits());
             _stream.writeLong(value.getLeastSignificantBits());
+        }
+    }
+
+    @Override
+    public void writeMember(short id, EntityId value, byte flags) throws Exception {
+        if (flags != 0) {
+            if (value != null) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_16_LEN_FLAG));
+                value.writeTo(this);
+            } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+                _stream.writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
+            }
+        } else if (value != null) {
+            _stream.writeShort(id);
+            value.writeTo(this);
         }
     }
 

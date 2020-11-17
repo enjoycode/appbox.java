@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.data.EntityId;
 import appbox.logging.Log;
 import appbox.serialization.IEntityMemberWriter;
 import com.github.jasync.sql.db.Connection;
@@ -49,6 +50,15 @@ final class DbCommand implements IEntityMemberWriter {
 
     //region ====IEntityMemberWriter====
     //注意构建更新命令时需要写入null成员
+
+    @Override
+    public void writeMember(short id, EntityId value, byte flags) throws Exception {
+        if (value != null)
+            addParameter(value.toString()); //暂转换为字符串，待检查
+        else
+            addParameter(null);
+    }
+
     @Override
     public void writeMember(short id, String value, byte flags) throws Exception {
         if (value != null) {
