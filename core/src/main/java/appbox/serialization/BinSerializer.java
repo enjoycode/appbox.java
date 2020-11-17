@@ -230,6 +230,12 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
+    public void writeMember(short id, long value, byte flags) throws Exception {
+        _stream.writeShort(flags == 0 ? id : (short) (id | 8));
+        _stream.writeLong(value);
+    }
+
+    @Override
     public void writeMember(short id, UUID value, byte flags) throws Exception {
         if (flags != 0) {
             if (value != null) {
@@ -280,12 +286,12 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     @Override
     public void writeMember(short id, boolean value, byte flags) throws Exception {
         if (flags != 0) {
-            if(value){
+            if (value) {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_BOOL_TRUE_FLAG));
-            }else{
+            } else {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_BOOL_FALSE_FLAG));
             }
-        }else {
+        } else {
             _stream.writeShort(id);
             _stream.writeBool(value);
         }

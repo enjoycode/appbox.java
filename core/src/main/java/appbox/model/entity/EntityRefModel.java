@@ -93,6 +93,10 @@ public final class EntityRefModel extends EntityMemberModel {
 
     public List<Long> getRefModelIds() { return refModelIds; }
 
+    public short[] getFKMemberIds() { return fkMemberIds; }
+
+    public short getTypeMemberId() { return typeMemberId; }
+
     @Override
     public EntityMemberType type() {
         return EntityMemberType.EntityRef;

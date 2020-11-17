@@ -7,12 +7,17 @@ import appbox.data.SysEntity;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.entity.EntityRefModel;
+import appbox.serialization.IEntityMemberWriter;
+import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class KVTransaction implements IKVTransaction, AutoCloseable {
+public final class KVTransaction implements IKVTransaction, IEntityMemberWriter, AutoCloseable {
     static final class RefFromItem {
         EntityId targetEntityId;
         long     fromRaftGroupId;
@@ -23,6 +28,8 @@ public final class KVTransaction implements IKVTransaction, AutoCloseable {
     private final KVTxnId                _txnId  = new KVTxnId();
     private final AtomicInteger          _status = new AtomicInteger(0);
     private       ArrayList<RefFromItem> _refs;
+    private       EntityId               _tempTargetId;
+    private       long                   _tempTypeModelId;
 
     private KVTransaction() {
     }
@@ -59,6 +66,7 @@ public final class KVTransaction implements IKVTransaction, AutoCloseable {
 
     public void rollback() {
         if (_status.compareAndExchange(0, 2) != 0) {
+            Log.debug("Transaction has commit or rollback.");
             return;
         }
 
@@ -79,14 +87,100 @@ public final class KVTransaction implements IKVTransaction, AutoCloseable {
     }
 
     /** 增减外键引用计数值 */
-    void addEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity, int diff) {
+    void addEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity, int diff) throws Exception {
         assert diff != 0;
         assert fromEntity.id().raftGroupId() != 0;
 
+        synchronized (this) {
+            fromEntity.writeMember(entityRef.getFKMemberIds()[0], this, IEntityMemberWriter.SF_NONE);
+            if (_tempTargetId == null)
+                return;
+            long targetModelId;
+            if (entityRef.isAggregationRef()) {
+                fromEntity.writeMember(entityRef.getTypeMemberId(), this, IEntityMemberWriter.SF_NONE);
+                targetModelId = _tempTypeModelId;
+            } else {
+                targetModelId = entityRef.getRefModelIds().get(0);
+            }
+            var targetAppId = IdUtil.getAppIdFromModelId(targetModelId);
+            int fromTableId = KeyUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
+
+            if (_refs == null) {
+                var item = new RefFromItem();
+                item.targetEntityId  = _tempTargetId;
+                item.fromTableId     = fromTableId;
+                item.fromRaftGroupId = fromEntity.id().raftGroupId();
+                item.diff            = diff;
+                _refs                = new ArrayList<>() {{ add(item);}};
+            } else {
+                for (var it : _refs) {
+                    if (it.targetEntityId.equals(_tempTargetId)
+                            && it.fromRaftGroupId == fromEntity.id().raftGroupId()) {
+                        it.diff += diff;
+                        return;
+                    }
+                }
+                //not found here
+                var item = new RefFromItem();
+                item.targetEntityId  = _tempTargetId;
+                item.fromTableId     = fromTableId;
+                item.fromRaftGroupId = fromEntity.id().raftGroupId();
+                item.diff            = diff;
+                _refs.add(item);
+            }
+        }
     }
 
     @Override
     public void close() throws Exception {
         rollback();
     }
+
+    //region ====IEntityMemberWriter 实现此接口仅为获取引用目标的EntityId或类型====
+    @Override
+    public void writeMember(short id, EntityId value, byte flags) throws Exception {
+        _tempTargetId = value; //maybe null
+    }
+
+    @Override
+    public void writeMember(short id, long value, byte flags) throws Exception {
+        _tempTypeModelId = value;
+    }
+
+    @Override
+    public void writeMember(short id, String value, byte flags) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, int value, byte flags) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, Optional<Integer> value, byte flags) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, UUID value, byte flags) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, byte[] data, byte flags) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, boolean male, byte flags) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, Date value, byte flags) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+    //endregion
+
 }
