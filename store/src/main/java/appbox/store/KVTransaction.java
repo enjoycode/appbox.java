@@ -3,7 +3,10 @@ package appbox.store;
 //TODO:外键引用处理考虑在存储层实现，因为可能需要实现跨进程序列化传输事务
 
 import appbox.data.EntityId;
+import appbox.data.SysEntity;
 import appbox.logging.Log;
+import appbox.model.ApplicationModel;
+import appbox.model.entity.EntityRefModel;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -13,13 +16,13 @@ public final class KVTransaction implements IKVTransaction, AutoCloseable {
     static final class RefFromItem {
         EntityId targetEntityId;
         long     fromRaftGroupId;
-        int      fromTableId; //注意已包含AppStoreId且按大字节序编码
+        int      fromTableId;       //注意已包含AppStoreId且按大字节序编码
         int      diff;
     }
 
     private final KVTxnId                _txnId  = new KVTxnId();
     private final AtomicInteger          _status = new AtomicInteger(0);
-    private final ArrayList<RefFromItem> _refs   = new ArrayList<>();
+    private       ArrayList<RefFromItem> _refs;
 
     private KVTransaction() {
     }
@@ -73,6 +76,13 @@ public final class KVTransaction implements IKVTransaction, AutoCloseable {
     void rollbackOnException(Throwable ex) {
         if (ex != null)
             rollback();
+    }
+
+    /** 增减外键引用计数值 */
+    void addEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity, int diff) {
+        assert diff != 0;
+        assert fromEntity.id().raftGroupId() != 0;
+
     }
 
     @Override

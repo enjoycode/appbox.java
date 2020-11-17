@@ -1,5 +1,6 @@
 package appbox.channel;
 
+import appbox.data.EntityId;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.StringUtil;
 
@@ -14,8 +15,17 @@ public final class MemberSizeCounter implements IEntityMemberWriter {
     public int getSize() { return size; }
 
     @Override
+    public void writeMember(short id, EntityId value, byte flags) throws Exception {
+        size += 2;
+        if (value != null)
+            size += 16;
+    }
+
+    @Override
     public void writeMember(short id, String value, byte flags) throws Exception {
-        size += 2 + 3 + StringUtil.getUtf8Size(value);
+        size += 2;
+        if (value != null)
+            size += 3 + StringUtil.getUtf8Size(value);
     }
 
     @Override
@@ -30,7 +40,9 @@ public final class MemberSizeCounter implements IEntityMemberWriter {
 
     @Override
     public void writeMember(short id, UUID value, byte flags) throws Exception {
-        size += 2 + 16;
+        size += 2;
+        if (value != null)
+            size += 16;
     }
 
     @Override
@@ -46,7 +58,9 @@ public final class MemberSizeCounter implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, Date birthday, byte flags) throws Exception {
-        size += 2 + 8;
+    public void writeMember(short id, Date value, byte flags) throws Exception {
+        size += 2;
+        if (value != null)
+            size += 8;
     }
 }
