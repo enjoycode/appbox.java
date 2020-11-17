@@ -8,6 +8,7 @@ import appbox.store.EntityStore;
 import appbox.store.KVTransaction;
 import appbox.store.KVTxnId;
 import appbox.store.SysStoreApi;
+import appbox.store.query.IndexGet;
 import appbox.store.query.TableScan;
 import appbox.utils.IdUtil;
 import org.junit.jupiter.api.AfterAll;
@@ -137,12 +138,22 @@ public class TestSysStore {
         var emp = new Employee();
         emp.setName("Rick");
         emp.setMale(true);
-        emp.setAccount("aaaa");
-        emp.setPassword(new byte[] {1,2,3,4});
+        emp.setAccount("cccc");
+        emp.setPassword(new byte[]{1, 2, 3, 4});
 
         //insert
         EntityStore.insertEntityAsync(emp).get();
         //delete
         EntityStore.deleteEntityAsync(emp).get();
     }
+
+    /** 测试通过惟一索引查找 */
+    @Test
+    public void testIndexGet() throws Exception {
+        var q = new IndexGet<>(Employee.UI_Account.class);
+        q.where(Employee.ACCOUNT, "cccc");
+        var row = q.toIndexRowAsync().get();
+        assertNotNull(row);
+    }
+
 }

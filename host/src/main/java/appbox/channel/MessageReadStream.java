@@ -51,6 +51,11 @@ public final class MessageReadStream implements IInputStream {
     }
 
     @Override
+    public boolean hasRemaining() {
+        return left() > 0 || NativeSmq.getMsgNext(_curChunk) != Pointer.NULL;
+    }
+
+    @Override
     public int remaining() {
         var remaining = left();
         var temp      = NativeSmq.getMsgNext(_curChunk);

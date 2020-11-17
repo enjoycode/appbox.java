@@ -12,9 +12,9 @@ public final class KVDeleteIndexRequest extends KVDeleteRequest {
 
     private final EntityId      _entityId;
     private final SysIndexModel _indexModel;
-    private final KVRowReader   _stored;
+    private final byte[]        _stored;        //删除实体时返回的现存储的版本
 
-    public KVDeleteIndexRequest(KVTxnId txnId, EntityId entityId, KVRowReader stored, SysIndexModel indexModel) {
+    public KVDeleteIndexRequest(KVTxnId txnId, EntityId entityId, byte[] stored, SysIndexModel indexModel) {
         super(txnId);
 
         _entityId   = entityId;
@@ -43,7 +43,7 @@ public final class KVDeleteIndexRequest extends KVDeleteRequest {
         for (var field : _indexModel.fields()) {
             //惟一索引但字段不具备值的处理, 暂 id | null flag
             var flags = field.orderByDesc ? (1 << IdUtil.MEMBERID_ORDER_OFFSET) : 0;
-            _stored.writeMember(field.memberId, bs, (byte) flags); //暂只需要OrderByFlag
+            KVRowReader.writeMember(_stored, field.memberId, bs, (byte) flags); //暂只需要OrderByFlag
         }
         //写入非惟一索引的EntityId的第二部分
         if (!_indexModel.unique()) {

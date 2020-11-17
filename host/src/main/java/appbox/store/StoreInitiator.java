@@ -193,7 +193,7 @@ public final class StoreInitiator {
         var ui_account = new SysIndexModel(model, "UI_Account", true,
                 new FieldWithOrder[]{new FieldWithOrder(Employee.ACCOUNT_ID)},
                 new short[]{Employee.PASSWORD_ID});
-        model.sysStoreOptions().addSysIndex(model, ui_account, (byte) ((1 << IdUtil.INDEXID_UNIQUE_OFFSET) | (1 << 2)));
+        model.sysStoreOptions().addSysIndex(model, ui_account, Employee.UI_Account.INDEXID);
 
         return model;
     }

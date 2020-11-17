@@ -1,9 +1,9 @@
 package appbox.channel.messages;
 
+import appbox.channel.KVRowReader;
 import appbox.data.SysEntity;
 import appbox.serialization.BinDeserializer;
 import appbox.store.KeyUtil;
-import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,42 +35,7 @@ public final class KVScanTableResponse<T extends SysEntity> extends KVScanRespon
                 result.add(obj);
                 obj.id().readFrom(bs);
                 //开始读取当前行的各个字段
-                var   valueSize = bs.readNativeVariant(); //Row's value size
-                int   readSize  = 0;
-                short fieldId   = 0; //存储的字段标识
-                short memberId  = 0; //转换后的成员标识
-                byte  dataLenFlag;
-                while (readSize < valueSize) {
-                    //读取Id及LenFlag
-                    fieldId     = bs.readShort();
-                    readSize += 2;
-                    memberId    = (short) (fieldId & IdUtil.MEMBERID_MASK); //由存储格式转换
-                    dataLenFlag = (byte) (fieldId & IdUtil.MEMBERID_LENFLAG_MASK);
-                    //根据标志进行相应的读取，另null值不需要处理
-                    switch (dataLenFlag) {
-                        case IdUtil.STORE_FIELD_VAR_FLAG:
-                            int varSize = bs.readStoreVarLen();
-                            obj.readMember(memberId, bs, (varSize << 8) | 1);
-                            readSize += varSize + 3;
-                            break;
-                        case IdUtil.STORE_FIELD_BOOL_TRUE_FLAG:
-                            obj.readMember(memberId, bs, IdUtil.STORE_FIELD_BOOL_TRUE_FLAG);
-                            break;
-                        case IdUtil.STORE_FIELD_BOOL_FALSE_FLAG:
-                            obj.readMember(memberId, bs, IdUtil.STORE_FIELD_BOOL_FALSE_FLAG);
-                            break;
-                        case IdUtil.STORE_FIELD_16_LEN_FLAG:
-                            obj.readMember(memberId, bs, IdUtil.STORE_FIELD_16_LEN_FLAG);
-                            readSize += 16;
-                            break;
-                        case IdUtil.STORE_FIELD_NULL_FLAG: //null不需要读取
-                            break;
-                        default:
-                            obj.readMember(memberId, bs, dataLenFlag);
-                            readSize += dataLenFlag;
-                            break;
-                    }
-                }
+                KVRowReader.readFields(bs, obj);
             }
         }
     }
