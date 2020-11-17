@@ -2,11 +2,15 @@ package appbox.design.services;
 
 import appbox.design.common.CheckoutInfo;
 import appbox.design.common.CheckoutResult;
+import appbox.design.tree.DesignNodeType;
+import appbox.entities.Checkout;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
+import appbox.store.EntityStore;
 import appbox.store.KVTransaction;
 import appbox.store.ModelStore;
+import appbox.store.query.TableScan;
 import appbox.utils.IdUtil;
 
 import java.util.*;
@@ -26,108 +30,76 @@ public final class CheckoutService
 		try{
 			//尝试向存储插入签出信息
 			EntityModel model = RuntimeContext.current().getModel(IdUtil.SYS_CHECKOUT_MODEL_ID);
-			//TODO set model/batch insert
-			return KVTransaction.beginAsync().thenCompose(txn-> ModelStore.insertModelAsync(model, txn).thenApply(r -> txn.commitAsync()).thenApply(r->{
-				CheckoutResult result = new CheckoutResult(true);
-				if (checkoutInfos.get(0).getIsSingleModel())
-				{
-					//var storedModel = await ModelStore.LoadModelAsync(Long.parseLong(checkoutInfos.get(0).getTargetID()));
-					//if (storedModel.Version != checkoutInfos.get(0).getVersion())
-					//{
-					//	result.setModelWithNewVersion(storedModel);
-					//}
-				}
-				return result;}));
+			return KVTransaction.beginAsync()
+					.thenCompose(txn-> ModelStore.insertModelAsync(model, txn)
+					.thenRun(()->{
+						for(CheckoutInfo info :checkoutInfos){
+							var obj = new Checkout();
+							obj.setNodeType(info.getNodeType().value);
+							obj.setTargetId(info.getTargetID());
+							obj.setDeveloperId(info.getDeveloperOuid());
+							obj.setDeveloperName(info.getDeveloperName());
+							obj.setVersion(info.getVersion());
+							EntityStore.insertEntityAsync(obj,txn);
+						}
+					}).thenCompose(r -> txn.commitAsync())
+					.thenCompose(r->{
+						return ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).getTargetID())); })
+
+					.thenApply(r->{
+						CheckoutResult result = new CheckoutResult(true);
+						if(r.version()!=checkoutInfos.get(0).getVersion()){
+							result.setModelWithNewVersion(r);
+						}
+						return result;
+					})
+					);
 
 		}catch (Exception e) {
 			Log.error(e.getMessage());
 			return CompletableFuture.completedFuture(new CheckoutResult(false));
 		}
-	//检查签出单个模型时，存储有无新版本
 
 	}
 
 	/** 
 	 用于DesignTree加载时
 	*/
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-//ORIGINAL LINE: internal static async Task<Dictionary<string, CheckoutInfo>> LoadAllAsync()
-/*	public static Task<HashMap<String, CheckoutInfo>> LoadAllAsync()
-	{
-		HashMap<String, CheckoutInfo> list = new HashMap<String, CheckoutInfo>();
-//C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-//#if FUTURE
-		TableScan q = new TableScan(Consts.SYS_CHECKOUT_MODEL_ID);
-//#else
-		SqlQuery q = new SqlQuery(Consts.SYS_CHECKOUT_MODEL_ID);
-//#endif
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent to implicit typing in Java:
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-		var res = await q.ToListAsync();
-		if (res != null)
-		{
-			for (int i = 0; i < res.size(); i++)
-			{
-//C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-//ORIGINAL LINE: var info = new CheckoutInfo((DesignNodeType)res[i].GetByte(Consts.CHECKOUT_NODETYPE_ID), res[i].GetString(Consts.CHECKOUT_TARGETID_ID), (uint)res[i].GetInt32(Consts.CHECKOUT_VERSION_ID), res[i].GetString(Consts.CHECKOUT_DEVELOPERNAME_ID), res[i].GetGuid(Consts.CHECKOUT_DEVELOPERID_ID));
-				CheckoutInfo info = new CheckoutInfo(DesignNodeType.forValue(res[i].GetByte(Consts.CHECKOUT_NODETYPE_ID)), res[i].GetString(Consts.CHECKOUT_TARGETID_ID), (int)res[i].GetInt32(Consts.CHECKOUT_VERSION_ID), res[i].GetString(Consts.CHECKOUT_DEVELOPERNAME_ID), res[i].GetGuid(Consts.CHECKOUT_DEVELOPERID_ID));
-				list.put(info.GetKey(), info);
+	public static CompletableFuture<Map<String,CheckoutInfo>> loadAllAsync(){
+		var map = new HashMap<String, CheckoutInfo>();
+		var q = new TableScan<>(IdUtil.SYS_CHECKOUT_MODEL_ID,Checkout.class);
+		return q.toListAsync().thenApply(res->{
+			if(res!=null&&res.size()>0){
+				for(Checkout checkout:res){
+					CheckoutInfo info = new CheckoutInfo(DesignNodeType.forValue(checkout.getNodeType()), checkout.getTargetId(), checkout.getVersion(), checkout.getDeveloperName(), checkout.getDeveloperId());
+					map.put(info.getKey(), info);
+				}
 			}
-		}
-
-		return list;
+			return map;
+		});
 	}
 
-	*//**
-	 签入当前用户所有已签出项
-	*//*
-//C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by C# to Java Converter:
-	public static async Task CheckinAsync(
-//C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-//#if FUTURE
-//C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by C# to Java Converter:
-		private Transaction txn
-//#else
-//C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by C# to Java Converter:
-		private System.Data.Common.DbTransaction txn
-//#endif
-//C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by C# to Java Converter:
-	   private ) { var devId = RuntimeContext.getCurrent().getCurrentSession().getLeafOrgUnitID(); var model = await RuntimeContext.getCurrent().<EntityModel>GetModelAsync(Consts.SYS_CHECKOUT_MODEL_ID);
+	/**
+	 * 签入当前用户所有已签出项
+	 */
+	public static CompletableFuture<Void> checkInAsync(){
+		return KVTransaction.beginAsync().thenCompose(txn->{
 
-		//TODO:***** Use DeleteCommand(join txn), 暂临时使用查询再删除
-//C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-//#if FUTURE
-		private TableScan q = new TableScan(Consts.SYS_CHECKOUT_MODEL_ID);
-		q.Filter(appbox.Expressions.KVFieldExpression.OpEquality(q.GetGuid(Consts.CHECKOUT_DEVELOPERID_ID), devId));
-//#else
-		private SqlQuery q = new SqlQuery(Consts.SYS_CHECKOUT_MODEL_ID);
-//C# TO JAVA CONVERTER TODO TASK: There is no Java equivalent to LINQ queries:
-		q.Where(q.T["DeveloperId"] == devId);
-//#endif
+			var devId = RuntimeContext.current().currentSession().leafOrgUnitId();
+			var model = (EntityModel)RuntimeContext.current().getModel(IdUtil.SYS_CHECKOUT_MODEL_ID);
 
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent to implicit typing in Java:
-		private var list = await q.ToListAsync();
+			var q = new TableScan<>(IdUtil.SYS_CHECKOUT_MODEL_ID,Checkout.class);
+			q.where(Checkout.DEVELOPER.eq(devId));
+			return q.toListAsync().thenApply(res->{
+				if(res!=null){
+					for (Checkout checkout: res)
+					{
+						EntityStore.deleteEntityAsync(model, checkout.id(), txn);
+					}
+				}
+				return null;
+			}).thenCompose(r -> txn.commitAsync());
+		});
+	}
 
-		private private if ()
-		{
-			return if (null);
-		}
-
-//C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
-//ORIGINAL LINE: if (list != null)
-		private private if (list!)
-		{
-			for (int i = 0; i < list.size(); i++)
-			{
-//C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-//#if FUTURE
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-				await EntityStore.DeleteEntityAsync(model, list[i].Id, txn);
-//#else
-//C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-				await SqlStore.getDefault().DeleteAsync(list[i], txn);
-//#endif
-			}
-		}
-}*/
 }

@@ -1,6 +1,8 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
+import appbox.expressions.KVFieldExpression;
+import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
@@ -14,6 +16,8 @@ public class Checkout extends SysEntity {
     public static final short DEVELOPER_ID     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short DEVELOPER_NAME_ID     = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short VERSION_ID     = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
+
+    public static final KVFieldExpression DEVELOPER = new KVFieldExpression(DEVELOPER_ID, DataFieldModel.DataFieldType.Guid);
 
     public Checkout() {
         super(IdUtil.SYS_CHECKOUT_MODEL_ID);
