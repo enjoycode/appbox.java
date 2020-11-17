@@ -23,7 +23,7 @@ public final class KVInsertModelCodeRequire extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeModelCodeKey(bs, modelId);
+        KeyUtil.writeModelCodeKey(bs, modelId, true);
         //refs
         bs.writeVariant(0);
         //data

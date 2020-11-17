@@ -16,10 +16,9 @@ public final class KVGetPartitionRequest extends KVGetRequest {
     public void writeTo(BinSerializer bs) throws Exception {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
-        bs.writeNativeVariant(partitionInfo.key.length); //key长度
-        bs.write(partitionInfo.key); //key数据
         bs.writeByte(KeyUtil.PARTCF_INDEX);    //dataCF
         bs.writeLong(0);      //timestamp
+        bs.write(partitionInfo.key); //key
     }
 
 }
