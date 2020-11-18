@@ -146,7 +146,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //endregion
 
     //region ====Fetch Entity Methods====
-    private static void fillEntity(SqlEntity entity, EntityModel model, SqlRowReader row) throws Exception {
+    private static void fillEntity(SqlEntity entity, EntityModel model, SqlRowReader row) {
         //填充实体成员
         for (int i = 0; i < row.columns.size(); i++) {
             fillMember(model, entity, row.columns.get(i), row, i);
@@ -155,7 +155,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     }
 
     private static void fillMember(
-            EntityModel model, SqlEntity entity, String path, SqlRowReader row, int clIndex) throws Exception {
+            EntityModel model, SqlEntity entity, String path, SqlRowReader row, int clIndex) {
         if (row.isNull(clIndex))
             return;
 

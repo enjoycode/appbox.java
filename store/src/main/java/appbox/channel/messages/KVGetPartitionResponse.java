@@ -6,7 +6,7 @@ public final class KVGetPartitionResponse extends KVGetResponse {
     public long raftGroupId;
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 

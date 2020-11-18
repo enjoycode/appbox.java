@@ -79,7 +79,7 @@ public final class StoreInitiator {
         });
     }
 
-    private static EntityModel createCheckoutModel() throws Exception {
+    private static EntityModel createCheckoutModel() {
         var model = new EntityModel(IdUtil.SYS_CHECKOUT_MODEL_ID, "Checkout");
         model.bindToSysStore(true, false);
         var nodeTypeFiled = new DataFieldModel(model, "NodeType", DataFieldType.Byte, false);
@@ -101,7 +101,7 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static EntityModel createStagedModel() throws Exception {
+    private static EntityModel createStagedModel() {
         var model = new EntityModel(IdUtil.SYS_STAGED_MODEL_ID, "StagedModel");
         model.bindToSysStore(false, false); //非MVCC
 
@@ -120,7 +120,7 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static EntityModel createOrgUnitModel() throws Exception {
+    private static EntityModel createOrgUnitModel() {
         var model = new EntityModel(IdUtil.SYS_ORGUNIT_MODEL_ID, "OrgUnit");
         model.bindToSysStore(true, false);
 
@@ -147,7 +147,7 @@ public final class StoreInitiator {
         model.addSysMember(parentId, Orgunit.PARENTID_ID);
 
         var parent = new EntityRefModel(model, "Parent", IdUtil.SYS_ORGUNIT_MODEL_ID,
-                new short[] {parentId.memberId() }, true);
+                new short[]{parentId.memberId()}, true);
         parent.setAllowNull(true);
         model.addSysMember(parent, Orgunit.PARENT_ID);
 
@@ -157,7 +157,7 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static EntityModel createWorkgroupModel() throws Exception {
+    private static EntityModel createWorkgroupModel() {
         var model = new EntityModel(IdUtil.SYS_WORKGROUP_MODEL_ID, "Workgroup");
         model.bindToSysStore(true, false);
 
@@ -185,7 +185,7 @@ public final class StoreInitiator {
         });
     }
 
-    private static EntityModel createEmployeeModel() throws Exception {
+    private static EntityModel createEmployeeModel() {
         var model = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Emploee");
         model.bindToSysStore(true, false);
 
@@ -214,7 +214,7 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static EntityModel createEnterpriseModel() throws Exception {
+    private static EntityModel createEnterpriseModel() {
         var model = new EntityModel(IdUtil.SYS_ENTERPRISE_MODEL_ID, "Enterprise");
         model.bindToSysStore(true, false);
 

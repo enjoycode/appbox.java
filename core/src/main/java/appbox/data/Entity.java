@@ -22,7 +22,7 @@ public abstract class Entity implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public final void writeTo(BinSerializer bs) throws Exception {
+    public final void writeTo(BinSerializer bs) {
         bs.writeLong(_modelId);
 
         if (this instanceof SysEntity) {
@@ -40,7 +40,7 @@ public abstract class Entity implements IBinSerializable {
     }
 
     @Override
-    public final void readFrom(BinDeserializer bs) throws Exception {
+    public final void readFrom(BinDeserializer bs) {
         _modelId = bs.readLong();
 
         if (this instanceof SysEntity) {
@@ -64,12 +64,12 @@ public abstract class Entity implements IBinSerializable {
      * 写入成员，由IEntityMemberWriter及flags决定写入格式
      * @param flags 写入目标格式标记
      */
-    public abstract void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception;
+    public abstract void writeMember(short id, IEntityMemberWriter bs, byte flags);
 
     /**
      * 读取指定成员Id的成员值
      * @param flags 读取格式标记
      */
-    public abstract void readMember(short id, IEntityMemberReader bs, int flags) throws Exception;
+    public abstract void readMember(short id, IEntityMemberReader bs, int flags);
     //endregion
 }

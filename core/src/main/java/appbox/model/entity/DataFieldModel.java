@@ -28,7 +28,7 @@ public final class DataFieldModel extends EntityMemberModel {
             this.value = (byte) value;
         }
 
-        public static DataFieldType fromValue(byte v) throws Exception {
+        public static DataFieldType fromValue(byte v) {
             for (DataFieldType item : DataFieldType.values()) {
                 if (item.value == v) {
                     return item;
@@ -113,7 +113,7 @@ public final class DataFieldModel extends EntityMemberModel {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         bs.writeByte(_dataType.value, 1);
@@ -135,7 +135,7 @@ public final class DataFieldModel extends EntityMemberModel {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         super.readFrom(bs);
 
         int propIndex;

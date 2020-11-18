@@ -16,13 +16,13 @@ public final class KVEndTxnRequire implements IMessage {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         txnId.writeTo(bs);
         bs.writeByte(action);
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
 }

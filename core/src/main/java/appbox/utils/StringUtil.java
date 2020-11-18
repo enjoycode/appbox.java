@@ -40,7 +40,7 @@ public final class StringUtil {
     }
 
     /** 获取utf8编码长度 */
-    public static int getUtf8Size(String value) throws Exception {
+    public static int getUtf8Size(String value) {
         if (value == null | value.length() == 0)
             return 0;
 
@@ -69,12 +69,12 @@ public final class StringUtil {
                         if (Character.isLowSurrogate(d)) {
                             uc = Character.toCodePoint(c, d);
                         } else {
-                            throw new Exception();
+                            throw new RuntimeException();
                         }
                     }
                 } else {
                     if (Character.isLowSurrogate(c)) {
-                        throw new Exception();
+                        throw new RuntimeException();
                     } else {
                         uc = c;
                     }

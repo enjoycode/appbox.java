@@ -78,7 +78,7 @@ public abstract class TypeSerializer {
         this.creator     = creator;
     }
 
-    public abstract void write(BinSerializer bs, Object value) throws Exception;
+    public abstract void write(BinSerializer bs, Object value);
 
-    public abstract Object read(BinDeserializer bs, Object value) throws Exception;
+    public abstract Object read(BinDeserializer bs, Object value);
 }

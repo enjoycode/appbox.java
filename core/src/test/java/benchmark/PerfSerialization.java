@@ -19,7 +19,7 @@ import testutils.TestHelper;
 public class PerfSerialization {
 
     @Benchmark
-    public void perfSerialization() throws Exception {
+    public void perfSerialization() {
         var model = TestHelper.makeEntityModel();
 
         //serialize

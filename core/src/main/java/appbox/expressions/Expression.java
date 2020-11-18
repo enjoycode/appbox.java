@@ -25,12 +25,12 @@ public abstract class Expression implements IBinSerializable/*TODO:移至需要�
     public abstract void toCode(StringBuilder sb, String preTabs);
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
 }

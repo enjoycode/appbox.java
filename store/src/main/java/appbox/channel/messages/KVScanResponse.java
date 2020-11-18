@@ -1,9 +1,6 @@
 package appbox.channel.messages;
 
 import appbox.channel.MessageType;
-import appbox.model.ApplicationModel;
-import appbox.model.ModelBase;
-import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 
 public abstract class KVScanResponse extends StoreResponse {
@@ -17,7 +14,7 @@ public abstract class KVScanResponse extends StoreResponse {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         throw new UnsupportedOperationException();
     }
 

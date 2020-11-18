@@ -24,12 +24,12 @@ public final class PrimitiveExpression extends Expression {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.serialize(value);
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
 }

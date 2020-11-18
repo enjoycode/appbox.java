@@ -15,9 +15,9 @@ public final class TestHelper {
     public static EntityModel makeEntityModel() {
         try {
             var nameId = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
-            var model  = new EntityModel(IdUtil.SYS_EMPLOEE_MODEL_ID, "Emploee");
+            var model  = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Emploee");
             model.bindToSysStore(true, false);
-            var name   = new DataFieldModel(model, "Name", DataFieldModel.DataFieldType.String, false, false);
+            var name = new DataFieldModel(model, "Name", DataFieldModel.DataFieldType.String, false, false);
             model.addSysMember(name, nameId);
             var ui_name = new SysIndexModel(model, "UI_Name", true,
                     new FieldWithOrder[]{new FieldWithOrder(nameId)}, null);
@@ -28,13 +28,13 @@ public final class TestHelper {
         }
     }
 
-    public static void serializeTo(Object obj, BytesOutputStream output) throws Exception {
+    public static void serializeTo(Object obj, BytesOutputStream output) {
         var bs = BinSerializer.rentFromPool(output);
         bs.serialize(obj);
         BinSerializer.backToPool(bs);
     }
 
-    public static Object deserializeFrom(BytesInputStream input) throws Exception {
+    public static Object deserializeFrom(BytesInputStream input) {
         var bs  = BinDeserializer.rentFromPool(input);
         var res = bs.deserialize();
         BinDeserializer.backToPool(bs);

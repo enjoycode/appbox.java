@@ -7,7 +7,7 @@ public final class KVScanModelsResponse extends KVScanResponse {
     public ModelBase[] models;
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 

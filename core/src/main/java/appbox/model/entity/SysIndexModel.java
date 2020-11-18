@@ -30,7 +30,7 @@ public final class SysIndexModel extends IndexModelBase {
             this.value = value;
         }
 
-        static SysIndexState fromValue(byte value) throws Exception {
+        static SysIndexState fromValue(byte value) {
             switch (value) {
                 case 0:
                     return Ready;
@@ -66,7 +66,7 @@ public final class SysIndexModel extends IndexModelBase {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         bs.writeBool(_global, 1);
@@ -75,7 +75,7 @@ public final class SysIndexModel extends IndexModelBase {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         super.readFrom(bs);
 
         int propIndex;

@@ -39,7 +39,7 @@ public final class InvokeResponse implements IMessage {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         //注意不要改变写入顺序
         bs.writeInt(reqId);
         bs.writeShort(shard);
@@ -48,7 +48,7 @@ public final class InvokeResponse implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId  = bs.readInt();
         shard  = bs.readShort();
         error  = bs.readByte();

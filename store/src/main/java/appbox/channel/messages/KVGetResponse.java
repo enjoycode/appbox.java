@@ -11,8 +11,8 @@ public abstract class KVGetResponse extends StoreResponse {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
-        throw new RuntimeException("Not supported.");
+    public void writeTo(BinSerializer bs) {
+        throw new UnsupportedOperationException();
     }
 
 }

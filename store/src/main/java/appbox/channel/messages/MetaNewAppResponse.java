@@ -14,12 +14,12 @@ public final class MetaNewAppResponse extends StoreResponse {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
 
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         appId     = bs.readByte();

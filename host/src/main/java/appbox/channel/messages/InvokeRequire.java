@@ -58,26 +58,26 @@ public final class InvokeRequire implements IMessage {
     }
 
     private void clearArgs() {
-        for (int i = 0; i < args.size(); i++) {
-            InvokeArg.pool.back(args.get(i));
+        for (InvokeArg arg : args) {
+            InvokeArg.pool.back(arg);
         }
         args.clear();
     }
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeShort(shard);
         bs.writeLong(sessionId);
         bs.writeString(service);
         bs.writeVariant(args.size());
-        for (int i = 0; i < args.size(); i++) {
-            args.get(i).writeTo(bs);
+        for (InvokeArg arg : args) {
+            arg.writeTo(bs);
         }
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         shard     = bs.readShort();
         sessionId = bs.readLong();
         service   = bs.readString();

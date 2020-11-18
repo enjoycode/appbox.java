@@ -53,17 +53,17 @@ public abstract class IndexModelBase implements IBinSerializable {
     //endregion
 
     //region ====Design Methods====
-    public void canAddTo(EntityModel owner) throws RuntimeException {
+    public void canAddTo(EntityModel owner) {
         if (this.owner != owner) {
             throw new RuntimeException();
         }
     }
 
-    public void initIndexId(byte id) throws Exception {
+    public void initIndexId(byte id) {
         if (_indexId == 0) {
             _indexId = id;
         } else {
-            throw new Exception("Index's id has init.");
+            throw new RuntimeException("Index's id has init.");
         }
     }
 
@@ -80,7 +80,7 @@ public abstract class IndexModelBase implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeByte(_indexId, 2);
         bs.writeString(_name, 3);
         bs.writeBool(_unique, 4);
@@ -109,7 +109,7 @@ public abstract class IndexModelBase implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         int propIndex;
         do {
             propIndex = bs.readVariant();

@@ -27,13 +27,13 @@ public final class KVFieldExpression extends Expression {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeShort(fieldId);
         bs.writeByte(fieldType.value);
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
 }

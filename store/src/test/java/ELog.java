@@ -33,7 +33,7 @@ public class ELog extends SqlEntity {
     public void setAddress(String value) { _address = value; }
 
     @Override
-    public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
+    public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
         switch (id) {
             case ID_ID:
                 bs.writeMember(id, _id, flags); break;
@@ -42,12 +42,12 @@ public class ELog extends SqlEntity {
             case ADDR_ID:
                 bs.writeMember(id, _address, flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 
     @Override
-    public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+    public void readMember(short id, IEntityMemberReader bs, int flags) {
         switch (id) {
             case ID_ID:
                 _id = bs.readIntMember(flags); break;
@@ -56,7 +56,7 @@ public class ELog extends SqlEntity {
             case ADDR_ID:
                 _address = bs.readStringMember(flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 }

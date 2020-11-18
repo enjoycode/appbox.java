@@ -15,7 +15,7 @@ public enum PersistentState {
         value = v;
     }
 
-    public static PersistentState fromValue(byte v) throws Exception {
+    public static PersistentState fromValue(byte v) {
         switch (v) {
             case 0:
                 return PersistentState.Detached;
@@ -26,7 +26,7 @@ public enum PersistentState {
             case 3:
                 return PersistentState.Deleted;
             default:
-                throw new Exception("Unknown PersistentState value: " + v);
+                throw new RuntimeException("Unknown PersistentState value: " + v);
         }
     }
 }

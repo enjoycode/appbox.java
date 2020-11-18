@@ -30,7 +30,7 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
 
     }
 
@@ -130,7 +130,7 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
      * 序列化并发送消息，如果序列化异常标记消息为错误状态仍旧发送,接收端根据消息类型是请求还是响应作不同处理
      */
     @Override
-    public <T extends IMessage> void sendMessage(int id, T msg) throws Exception {
+    public <T extends IMessage> void sendMessage(int id, T msg) {
         byte flag     = MessageFlag.None;
         long sourceId = 0; //TODO:fix
 

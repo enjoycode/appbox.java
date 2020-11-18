@@ -85,7 +85,7 @@ public class Checkout extends SysEntity {
     }
 
     @Override
-    public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
+    public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
         switch (id) {
             case NODE_TYPE_ID:
                 bs.writeMember(id, _nodeType, flags); break;
@@ -98,12 +98,12 @@ public class Checkout extends SysEntity {
             case VERSION_ID:
                 bs.writeMember(id, _version, flags);break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 
     @Override
-    public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+    public void readMember(short id, IEntityMemberReader bs, int flags) {
         switch (id) {
             case NODE_TYPE_ID:
                 _nodeType = bs.readByteMember(flags); break;
@@ -116,7 +116,7 @@ public class Checkout extends SysEntity {
             case VERSION_ID:
                 _version = bs.readByteMember(flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 }

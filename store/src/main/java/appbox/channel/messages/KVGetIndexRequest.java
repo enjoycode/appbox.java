@@ -22,7 +22,7 @@ public final class KVGetIndexRequest extends KVGetRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeInt(0);                     //ReqId占位
         bs.writeLong(_raftGroupId);               //raftGroupId
         bs.writeByte(KeyUtil.INDEXCF_INDEX);      //dataCF

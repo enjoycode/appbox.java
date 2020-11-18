@@ -8,6 +8,7 @@ import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
+import java.util.Arrays;
 import java.util.Date;
 
 public class Employee extends SysEntity {
@@ -79,7 +80,7 @@ public class Employee extends SysEntity {
     }
 
     public void setPassword(byte[] password) {
-        if (!password.equals(_password)) {
+        if (!Arrays.equals(password, _password)) {
             this._password = password;
             onPropertyChanged(PASSWORD_ID);
         }
@@ -88,7 +89,7 @@ public class Employee extends SysEntity {
     public Employee() { super(MODELID);}
 
     @Override
-    public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
+    public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
         switch (id) {
             case NAME_ID:
                 bs.writeMember(id, _name, flags); break;
@@ -101,12 +102,12 @@ public class Employee extends SysEntity {
             case PASSWORD_ID:
                 bs.writeMember(id, _password, flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 
     @Override
-    public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+    public void readMember(short id, IEntityMemberReader bs, int flags) {
         switch (id) {
             case NAME_ID:
                 _name = bs.readStringMember(flags); break;
@@ -119,7 +120,7 @@ public class Employee extends SysEntity {
             case PASSWORD_ID:
                 _password = bs.readBinaryMember(flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 
@@ -139,14 +140,14 @@ public class Employee extends SysEntity {
         }
 
         @Override
-        public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+        public void readMember(short id, IEntityMemberReader bs, int flags) {
             switch (id) {
                 case ACCOUNT_ID:
                     _account = bs.readStringMember(flags); break;
                 case PASSWORD_ID:
                     _password = bs.readBinaryMember(flags); break;
                 default:
-                    throw new Exception("unknown member");
+                    throw new RuntimeException("unknown member");
             }
         }
     }

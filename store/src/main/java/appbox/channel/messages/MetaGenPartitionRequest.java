@@ -23,17 +23,17 @@ public final class MetaGenPartitionRequest implements IMessage {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         //txnId
         txnId.writeTo(bs);
         //raftType flags
         bs.writeByte(partitionInfo.flags);
         //partcf key, 不需要写入长度
-        bs.write(partitionInfo.key);
+        bs.write(partitionInfo.key, 0, partitionInfo.key.length);
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
 }

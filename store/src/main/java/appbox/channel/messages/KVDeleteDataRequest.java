@@ -17,7 +17,7 @@ public final class KVDeleteDataRequest extends KVDeleteRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         //refs

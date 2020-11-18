@@ -32,38 +32,38 @@ public final class SqlRowReader implements IEntityMemberReader {
     //====以下用于填充实体，其中flags是列序号====
 
     @Override
-    public String readStringMember(int flags) throws Exception {
+    public String readStringMember(int flags) {
         return rowData.getString(flags);
     }
 
     @Override
-    public boolean readBoolMember(int flags) throws Exception {
+    public boolean readBoolMember(int flags) {
         return rowData.getBoolean(flags);
     }
 
     @Override
-    public int readIntMember(int flags) throws Exception {
+    public int readIntMember(int flags) {
         return rowData.getInt(flags);
     }
 
     @Override
-    public byte readByteMember(int flags) throws Exception {
+    public byte readByteMember(int flags) {
         return rowData.getByte(flags);
     }
 
     @Override
-    public UUID readUUIDMember(int flags) throws Exception {
+    public UUID readUUIDMember(int flags) {
         var uuidString = rowData.getString(flags); //暂从字符串转回，待检查
         return UUID.fromString(uuidString);
     }
 
     @Override
-    public byte[] readBinaryMember(int flags) throws Exception {
+    public byte[] readBinaryMember(int flags) {
         return (byte[]) rowData.get(flags);
     }
 
     @Override
-    public Date readDateMember(int flags) throws Exception {
+    public Date readDateMember(int flags) {
         return new Date(rowData.getLong(flags));
     }
 }

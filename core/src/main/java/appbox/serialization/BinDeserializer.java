@@ -25,15 +25,16 @@ public final class BinDeserializer implements IEntityMemberReader {
 
     private IInputStream _stream;
 
-    public Object deserialize() throws Exception {
+    public Object deserialize() {
         var payloadType = _stream.readByte(); if (payloadType == PayloadType.Null) return null;
         else if (payloadType == PayloadType.BooleanTrue) return Boolean.TRUE;
         else if (payloadType == PayloadType.BooleanFalse) return Boolean.FALSE;
-        else if (payloadType == PayloadType.ObjectRef) throw new Exception("TODO");
+        else if (payloadType == PayloadType.ObjectRef) throw new RuntimeException("TODO");
 
-        TypeSerializer serializer = null; if (payloadType == PayloadType.ExtKnownType) throw new Exception("TODO");
+        TypeSerializer serializer = null;
+        if (payloadType == PayloadType.ExtKnownType) throw new RuntimeException("TODO");
         else serializer = TypeSerializer.getSerializer(payloadType);
-        if (serializer == null) throw new Exception("待实现未知类型反序列化");
+        if (serializer == null) throw new RuntimeException("待实现未知类型反序列化");
 
         //读取附加类型信息并创建实例
         if (serializer.creator == null && payloadType != PayloadType.Array //非数组类型
@@ -48,7 +49,7 @@ public final class BinDeserializer implements IEntityMemberReader {
         }
     }
 
-    public void skip(int size) throws Exception {
+    public void skip(int size) {
         _stream.skip(size);
     }
 
@@ -57,7 +58,7 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     /** 读剩余字节，没有返回null */
-    public byte[] readRemaining() throws Exception {
+    public byte[] readRemaining() {
         int left = _stream.remaining();
         if (left <= 0) {
             return null;
@@ -67,50 +68,50 @@ public final class BinDeserializer implements IEntityMemberReader {
         return data;
     }
 
-    public boolean readBool() throws Exception {
+    public boolean readBool() {
         return _stream.readBool();
     }
 
-    public byte readByte() throws Exception {
+    public byte readByte() {
         return _stream.readByte();
     }
 
-    public short readShort() throws Exception {
+    public short readShort() {
         return _stream.readShort();
     }
 
-    public int readInt() throws Exception {
+    public int readInt() {
         return _stream.readInt();
     }
 
-    public long readLong() throws Exception {
+    public long readLong() {
         return _stream.readLong();
     }
 
-    public int readVariant() throws Exception {
+    public int readVariant() {
         return _stream.readVariant();
     }
 
-    public int readNativeVariant() throws Exception {
+    public int readNativeVariant() {
         return _stream.readNativeVariant();
     }
 
-    public byte[] readByteArray() throws Exception {
+    public byte[] readByteArray() {
         return _stream.readByteArray();
     }
 
-    public String readString() throws Exception {
+    public String readString() {
         return _stream.readString();
     }
 
-    public void read(byte[] buffer, int offset, int count) throws Exception {
+    public void read(byte[] buffer, int offset, int count) {
         _stream.read(buffer, offset, count);
     }
 
     //region ====IEntityMemberReader====
 
     /** 读取与存储一致的3字节长度(小字节序) */
-    public int readStoreVarLen() throws Exception {
+    public int readStoreVarLen() {
         var byte1 = (int) readByte();
         var byte2 = (int) readByte();
         var byte3 = (int) readByte();
@@ -118,7 +119,7 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     @Override
-    public String readStringMember(int flags) throws Exception {
+    public String readStringMember(int flags) {
         if (flags == 0)
             return _stream.readString();
         int size  = flags >>> 8; //TODO:优化读utf8
@@ -128,29 +129,29 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     @Override
-    public boolean readBoolMember(int flags) throws Exception {
+    public boolean readBoolMember(int flags) {
         if (flags == 0)
             return _stream.readBool();
         return (flags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;
     }
 
     @Override
-    public int readIntMember(int flags) throws Exception {
+    public int readIntMember(int flags) {
         return _stream.readInt();
     }
 
     @Override
-    public byte readByteMember(int flags) throws Exception {
+    public byte readByteMember(int flags) {
         return _stream.readByte();
     }
 
     @Override
-    public UUID readUUIDMember(int flags) throws Exception {
+    public UUID readUUIDMember(int flags) {
         return new UUID(_stream.readLong(), _stream.readLong());
     }
 
     @Override
-    public byte[] readBinaryMember(int flags) throws Exception {
+    public byte[] readBinaryMember(int flags) {
         if (flags == 0)
             return _stream.readByteArray();
         int size  = flags >>> 8;
@@ -160,7 +161,7 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     @Override
-    public Date readDateMember(int flags) throws Exception {
+    public Date readDateMember(int flags) {
         return new Date(_stream.readLong());
     }
 

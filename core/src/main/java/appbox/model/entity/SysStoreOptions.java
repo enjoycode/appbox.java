@@ -95,7 +95,7 @@ public final class SysStoreOptions implements IEntityStoreOption {
     /**
      * only for StoreInitiator
      */
-    public void addSysIndex(EntityModel owner, SysIndexModel index, byte id) throws Exception {
+    public void addSysIndex(EntityModel owner, SysIndexModel index, byte id) {
         owner.checkDesignMode();
         index.canAddTo(owner);
 
@@ -137,7 +137,7 @@ public final class SysStoreOptions implements IEntityStoreOption {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeBool(_isMVCC, 1);
         bs.writeBool(_orderByDesc, 2);
         bs.writeInt(_schemaVersion, 3);
@@ -170,7 +170,7 @@ public final class SysStoreOptions implements IEntityStoreOption {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         int propIndex;
         do {
             propIndex = bs.readVariant();

@@ -19,12 +19,12 @@ public final class KVCommandResponse extends StoreResponse {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         if (errorCode == 0) {

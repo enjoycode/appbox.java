@@ -11,7 +11,7 @@ public final class KVGetModelCodeRequest extends KVGetRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeByte((byte) -1);    //dataCF

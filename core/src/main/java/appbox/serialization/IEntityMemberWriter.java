@@ -12,21 +12,21 @@ public interface IEntityMemberWriter {
     byte SF_WRITE_NULL    = 2;
     byte SF_ORDER_BY_DESC = 4;
 
-    void writeMember(short id, EntityId value, byte flags) throws Exception;
+    void writeMember(short id, EntityId value, byte flags);
 
-    void writeMember(short id, String value, byte flags) throws Exception;
+    void writeMember(short id, String value, byte flags);
 
-    void writeMember(short id, int value, byte flags) throws Exception;
+    void writeMember(short id, int value, byte flags);
 
-    void writeMember(short id, Optional<Integer> value, byte flags) throws Exception;
+    void writeMember(short id, Optional<Integer> value, byte flags);
 
-    void writeMember(short id, long value, byte flags) throws Exception;
+    void writeMember(short id, long value, byte flags);
 
-    void writeMember(short id, UUID value, byte flags) throws Exception;
+    void writeMember(short id, UUID value, byte flags);
 
-    void writeMember(short id, byte[] data, byte flags) throws Exception;
+    void writeMember(short id, byte[] data, byte flags);
 
-    void writeMember(short id, boolean male, byte flags) throws Exception;
+    void writeMember(short id, boolean male, byte flags);
 
-    void writeMember(short id, Date value, byte flags) throws Exception;
+    void writeMember(short id, Date value, byte flags);
 }

@@ -12,7 +12,7 @@ public abstract class KVGetRequest implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
 

@@ -35,7 +35,7 @@ public final class BinaryExpression extends Expression {
             this.value = (byte) value;
         }
 
-        public static BinaryExpression.BinaryOperatorType fromValue(byte v) throws Exception {
+        public static BinaryExpression.BinaryOperatorType fromValue(byte v) {
             for (BinaryExpression.BinaryOperatorType item : BinaryExpression.BinaryOperatorType.values()) {
                 if (item.value == v) {
                     return item;
@@ -67,14 +67,14 @@ public final class BinaryExpression extends Expression {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.serialize(leftOperand);
         bs.writeByte(binaryType.value);
         bs.serialize(rightOperand);
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
 }

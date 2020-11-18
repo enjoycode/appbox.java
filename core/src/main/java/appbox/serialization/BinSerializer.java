@@ -32,7 +32,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     private BinSerializer() {
     }
 
-    public void serialize(Object obj, int fieldId) throws Exception {
+    public void serialize(Object obj, int fieldId) {
         _stream.writeVariant(fieldId);
         serialize(obj);
     }
@@ -40,7 +40,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     /**
      * 序列化对象，写入类型信息
      */
-    public void serialize(Object obj) throws Exception {
+    public void serialize(Object obj) {
         if (obj == null) {
             _stream.writeByte(PayloadType.Null);
             return;
@@ -55,7 +55,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         var type       = obj.getClass();
         var serializer = TypeSerializer.getSerializer(type);
         if (serializer == null) {
-            throw new Exception("暂未实现未知类型的反射序列化: " + type.getName());
+            throw new RuntimeException("暂未实现未知类型的反射序列化: " + type.getName());
         }
 
         //TODO:是否已序列化过
@@ -76,38 +76,38 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         _stream.write(src, offset, count);
     }
 
-    public void writeBool(boolean value) throws Exception {
+    public void writeBool(boolean value) {
         _stream.writeBool(value);
     }
 
-    public void writeBool(boolean value, int fieldId) throws Exception {
+    public void writeBool(boolean value, int fieldId) {
         _stream.writeVariant(fieldId);
         _stream.writeBool(value);
     }
 
-    public void writeByte(byte value) throws Exception {
+    public void writeByte(byte value) {
         _stream.writeByte(value);
     }
 
-    public void writeByte(byte value, int fieldId) throws Exception {
+    public void writeByte(byte value, int fieldId) {
         _stream.writeVariant(fieldId);
         _stream.writeByte(value);
     }
 
-    public void writeShort(short value) throws Exception {
+    public void writeShort(short value) {
         _stream.writeShort(value);
     }
 
-    public void writeShort(short value, int fieldId) throws Exception {
+    public void writeShort(short value, int fieldId) {
         _stream.writeVariant(fieldId);
         _stream.writeShort(value);
     }
 
-    public void writeInt(int value) throws Exception {
+    public void writeInt(int value) {
         _stream.writeInt(value);
     }
 
-    public void writeInt(int value, int fieldId) throws Exception {
+    public void writeInt(int value, int fieldId) {
         _stream.writeVariant(fieldId);
         _stream.writeInt(value);
     }
@@ -115,18 +115,18 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     /**
      * 大字节序写入
      */
-    public void writeIntBE(int value) throws Exception {
+    public void writeIntBE(int value)  {
         _stream.writeByte((byte) (value >>> 24));
         _stream.writeByte((byte) (value >>> 16));
         _stream.writeByte((byte) (value >>> 8));
         _stream.writeByte((byte) (value));
     }
 
-    public void writeLong(long value) throws Exception {
+    public void writeLong(long value)  {
         _stream.writeLong(value);
     }
 
-    public void writeLong(long value, int fieldId) throws Exception {
+    public void writeLong(long value, int fieldId)  {
         _stream.writeVariant(fieldId);
         _stream.writeLong(value);
     }
@@ -134,7 +134,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     /**
      * 大字序写入
      */
-    public void writeLongBE(long value) throws Exception {
+    public void writeLongBE(long value) {
         _stream.writeByte((byte) (value >>> 56));
         _stream.writeByte((byte) (value >>> 48));
         _stream.writeByte((byte) (value >>> 40));
@@ -149,7 +149,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         _stream.writeVariant(value);
     }
 
-    public void writeVariant(int value, int fieldId) throws Exception {
+    public void writeVariant(int value, int fieldId) {
         _stream.writeVariant(fieldId);
         _stream.writeVariant(value);
     }
@@ -159,31 +159,27 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     /** 写入带长度信息的字节数组 */
-    public void writeByteArray(byte[] value) throws Exception {
+    public void writeByteArray(byte[] value) {
         _stream.writeByteArray(value);
     }
 
-    public void writeString(String value) throws Exception {
+    public void writeString(String value) {
         _stream.writeString(value);
     }
 
-    public void writeString(String value, int fieldId) throws Exception {
+    public void writeString(String value, int fieldId) {
         _stream.writeVariant(fieldId);
         _stream.writeString(value);
     }
 
-    public void finishWriteFields() throws Exception {
+    public void finishWriteFields() {
         _stream.writeVariant(0);
     }
 
     //region ===OutputStream====
     @Override
-    public void write(int i) throws IOException {
-        try {
-            writeByte((byte) i);
-        } catch (Exception e) {
-            throw new IOException(e.getMessage());
-        }
+    public void write(int i) {
+        writeByte((byte) i);
     }
     //endregion
 
@@ -197,7 +193,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, String value, byte flags) throws Exception {
+    public void writeMember(short id, String value, byte flags) {
         if (flags != 0) {
             if (value != null) {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
@@ -215,13 +211,13 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, int value, byte flags) throws Exception {
+    public void writeMember(short id, int value, byte flags) {
         _stream.writeShort(flags == 0 ? id : (short) (id | 4));
         _stream.writeInt(value);
     }
 
     @Override
-    public void writeMember(short id, Optional<Integer> value, byte flags) throws Exception {
+    public void writeMember(short id, Optional<Integer> value, byte flags) {
         if (value.isPresent()) {
             writeMember(id, value.get(), flags);
         } else if (flags != 0 && (flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
@@ -230,13 +226,13 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, long value, byte flags) throws Exception {
+    public void writeMember(short id, long value, byte flags) {
         _stream.writeShort(flags == 0 ? id : (short) (id | 8));
         _stream.writeLong(value);
     }
 
     @Override
-    public void writeMember(short id, UUID value, byte flags) throws Exception {
+    public void writeMember(short id, UUID value, byte flags) {
         if (flags != 0) {
             if (value != null) {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_16_LEN_FLAG));
@@ -253,7 +249,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, EntityId value, byte flags) throws Exception {
+    public void writeMember(short id, EntityId value, byte flags) {
         if (flags != 0) {
             if (value != null) {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_16_LEN_FLAG));
@@ -268,7 +264,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, byte[] value, byte flags) throws Exception {
+    public void writeMember(short id, byte[] value, byte flags) {
         if (flags != 0) {
             if (value != null) {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
@@ -284,7 +280,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, boolean value, byte flags) throws Exception {
+    public void writeMember(short id, boolean value, byte flags) {
         if (flags != 0) {
             if (value) {
                 _stream.writeShort((short) (id | IdUtil.STORE_FIELD_BOOL_TRUE_FLAG));
@@ -298,7 +294,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
-    public void writeMember(short id, Date value, byte flags) throws Exception {
+    public void writeMember(short id, Date value, byte flags) {
         if (flags != 0) {
             if (value != null) {
                 _stream.writeShort((short) (id | 8));

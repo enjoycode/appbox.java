@@ -24,7 +24,7 @@ public final class KeyUtil {
 
     public static final int ENTITY_KEY_SIZE = 16;
 
-    public static void writeAppKey(BinSerializer bs, int appId, boolean withSize) throws Exception {
+    public static void writeAppKey(BinSerializer bs, int appId, boolean withSize) {
         if (withSize) {
             bs.writeNativeVariant(5); //注意按无符号写入key长度
         }
@@ -32,7 +32,7 @@ public final class KeyUtil {
         bs.writeIntBE(appId);
     }
 
-    public static void writeModelKey(BinSerializer bs, long modelId, boolean withSize) throws Exception {
+    public static void writeModelKey(BinSerializer bs, long modelId, boolean withSize) {
         if (withSize) {
             bs.writeNativeVariant(9); //注意按无符号写入key长度
         }
@@ -40,7 +40,7 @@ public final class KeyUtil {
         bs.writeLongBE(modelId); //暂大字节序写入
     }
 
-    public static void writeModelCodeKey(BinSerializer bs, long modelId, boolean withSize) throws Exception {
+    public static void writeModelCodeKey(BinSerializer bs, long modelId, boolean withSize) {
         if (withSize) {
             bs.writeNativeVariant(9); //注意按无符号写入key长度
         }
@@ -48,14 +48,14 @@ public final class KeyUtil {
         bs.writeLongBE(modelId);
     }
 
-    public static void writeEntityKey(BinSerializer bs, EntityId id, boolean withSize) throws Exception {
+    public static void writeEntityKey(BinSerializer bs, EntityId id, boolean withSize) {
         //TODO: write appStoreId + tableId
         if (withSize)
             bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
     }
 
-    public static void writeRaftGroupId(BinSerializer bs, long raftGroupId) throws Exception {
+    public static void writeRaftGroupId(BinSerializer bs, long raftGroupId) {
         //与EntityId.initRaftGroupId一致
         //前32位
         int p1 = (int) (raftGroupId >>> 12);
@@ -71,9 +71,8 @@ public final class KeyUtil {
 
     /** 合并编码AppId + 模型TableId(大字节序) */
     public static int encodeTableId(byte appId, int modelTableId) {
-        //TODO:待测
         int tableId = Integer.reverseBytes(modelTableId);
-        return tableId | (appId << 24);
+        return tableId | appId; //注意在低位，写入时反转
     }
 
 }

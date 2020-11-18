@@ -9,7 +9,6 @@ import appbox.store.query.TableScan;
 import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public final class StagedService {
@@ -52,21 +51,16 @@ public final class StagedService {
     private static CompletableFuture<String> loadServiceCode(long serviceModelId) {
         var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
 
-        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
+        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
         q.where(StagedModel.TYPE.eq(StagedType.SourceCode.value)
-                        .and(StagedModel.MODEL.eq(Long.toUnsignedString(serviceModelId)))
-                        .and(StagedModel.DEVELOPER.eq(developerID)));
+                .and(StagedModel.MODEL.eq(Long.toUnsignedString(serviceModelId)))
+                .and(StagedModel.DEVELOPER.eq(developerID)));
 
         return q.toListAsync().thenApply(res -> {
             if (res == null || res.size() <= 0)
                 return null;
 
-            try {
-                return ModelCodeUtil.decodeServiceCode(res.get(0).getData()).sourceCode;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
+            return ModelCodeUtil.decodeServiceCode(res.get(0).getData()).sourceCode;
         });
     }
 }

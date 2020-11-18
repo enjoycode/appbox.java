@@ -16,7 +16,7 @@ public interface IHostMessageChannel extends IMessageChannel {
     /**
      * 反序列化至指定类型的消息，注意消息缓存块由调用者释放
      */
-    static <T extends IMessage> void deserialize(T msg, Pointer first) throws Exception { //TODO: NO Exception
+    static <T extends IMessage> void deserialize(T msg, Pointer first) {
         var stream = MessageReadStream.rentFromPool(first);
         var reader = BinDeserializer.rentFromPool(stream);
         try {

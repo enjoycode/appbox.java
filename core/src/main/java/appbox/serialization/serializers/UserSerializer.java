@@ -13,12 +13,12 @@ public final class UserSerializer extends TypeSerializer { //TODO: rename to Kno
     }
 
     @Override
-    public void write(BinSerializer bs, Object value) throws Exception {
+    public void write(BinSerializer bs, Object value) {
         ((IBinSerializable) value).writeTo(bs);
     }
 
     @Override
-    public Object read(BinDeserializer bs, Object value) throws Exception {
+    public Object read(BinDeserializer bs, Object value) {
         ((IBinSerializable) value).readFrom(bs);
         return value;
     }
