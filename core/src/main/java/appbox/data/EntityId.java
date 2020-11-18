@@ -4,6 +4,7 @@ import appbox.runtime.RuntimeContext;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class EntityId {
@@ -31,6 +32,10 @@ public final class EntityId {
         //时间戳部分２，小字节序
         _data[7] = (byte) (timestamp >>> 40);
         _data[6] = (byte) (timestamp >>> 32);
+    }
+
+    public EntityId(byte[] data, int offset) {
+        System.arraycopy(data, offset, _data, 0, 16);
     }
 
     /**
@@ -93,12 +98,7 @@ public final class EntityId {
             return false;
         }
         var t = (EntityId) obj;
-        for (int i = 0; i < 16; i++) {
-            if (t._data[i] != this._data[i]) {
-                return false;
-            }
-        }
-        return true;
+        return Arrays.equals(t._data, this._data);
     }
 
     public void writeTo(BinSerializer bs) {

@@ -25,6 +25,7 @@ public final class MessageType {
     public static final byte KVGetResponse      = 35;
     public static final byte KVScanRequest      = 36;
     public static final byte KVScanResponse     = 37;
+    public static final byte KVAddRefRequest    = 38;
 
     public static final byte ExitReadLoop = -128;
 }

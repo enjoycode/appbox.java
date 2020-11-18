@@ -119,6 +119,10 @@ public final class SysStoreApi {
     public static CompletableFuture<KVCommandResponse> execKVDeleteAsync(KVDeleteRequest cmd) {
         return makeTaskAndSendRequest(cmd, new KVCommandResponse());
     }
+
+    public static CompletableFuture<KVCommandResponse> execKVAddRefAsync(KVAddRefRequest cmd) {
+        return makeTaskAndSendRequest(cmd, new KVCommandResponse());
+    }
     //endregion
 
     //region ====ReadIndex====
