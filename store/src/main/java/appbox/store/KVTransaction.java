@@ -2,6 +2,9 @@ package appbox.store;
 
 //TODO:外键引用处理考虑在存储层实现，因为可能需要实现跨进程序列化传输事务
 
+import appbox.channel.KVRowReader;
+import appbox.channel.messages.KVAddRefRequest;
+import appbox.channel.messages.StoreResponse;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
 import appbox.logging.Log;
@@ -18,18 +21,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class KVTransaction implements IKVTransaction, IEntityMemberWriter, AutoCloseable {
-    static final class RefFromItem {
-        EntityId targetEntityId;
-        long     fromRaftGroupId;
-        int      fromTableId;       //注意已包含AppStoreId且按大字节序编码
-        int      diff;
-    }
-
-    private final KVTxnId                _txnId  = new KVTxnId();
-    private final AtomicInteger          _status = new AtomicInteger(0);
-    private       ArrayList<RefFromItem> _refs;
-    private       EntityId               _tempTargetId;
-    private       long                   _tempTypeModelId;
+    private final KVTxnId                    _txnId  = new KVTxnId();
+    private final AtomicInteger              _status = new AtomicInteger(0);
+    private       ArrayList<KVAddRefRequest> _refs;
+    private       EntityId                   _tempTargetId; //外键引用的目标实体标识
+    //private       long                       _tempTypeModelId;
 
     private KVTransaction() {
     }
@@ -39,6 +35,7 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
         return _txnId;
     }
 
+    //region ====begin & commit & rollback====
     public static CompletableFuture<KVTransaction> beginAsync(/*TODO: isoLevel*/) {
         return SysStoreApi.beginTxnAsync().thenApply(res -> {
             if (res.errorCode != 0) {
@@ -56,12 +53,10 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
             throw new RuntimeException("KVTransaction has committed or rollback");
         }
 
-        //TODO:递交前先处理挂起的外键引用
-        return SysStoreApi.commitTxnAsync(_txnId).thenAccept(r -> {
-            if (r.errorCode != 0) {
-                throw new SysStoreException(r.errorCode);
-            }
-        });
+        //递交前先处理挂起的外键引用
+        return execPendingRefs()
+                .thenCompose(r -> SysStoreApi.commitTxnAsync(_txnId))
+                .thenAccept(StoreResponse::checkStoreError);
     }
 
     public void rollback() {
@@ -85,56 +80,89 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
         if (ex != null)
             rollback();
     }
+    //endregion
 
-    /** 增减外键引用计数值 */
-    void addEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity, int diff) {
-        assert diff != 0;
+    //region ====外键引用相关====
+
+    /** 减少外键引用计数值 (Update or Delete) */
+    void decEntityRef(EntityRefModel entityRef, ApplicationModel fromApp,
+                      EntityId fromEntityId, byte[] rowData) {
+        assert fromEntityId.raftGroupId() != 0;
+
+        synchronized (this) {
+            _tempTargetId = KVRowReader.readEntityId(rowData, entityRef.getFKMemberIds()[0]);
+            if (_tempTargetId == null)
+                return;
+            int fromTableId = KeyUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
+
+            addEntityRefInternal(_tempTargetId, fromEntityId.raftGroupId(), fromTableId, -1);
+        }
+    }
+
+    /** 增加外键引用计数值 (Insert时) */
+    void incEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity) {
         assert fromEntity.id().raftGroupId() != 0;
 
         synchronized (this) {
             fromEntity.writeMember(entityRef.getFKMemberIds()[0], this, IEntityMemberWriter.SF_NONE);
             if (_tempTargetId == null)
                 return;
-            long targetModelId;
-            if (entityRef.isAggregationRef()) {
-                fromEntity.writeMember(entityRef.getTypeMemberId(), this, IEntityMemberWriter.SF_NONE);
-                targetModelId = _tempTypeModelId;
-            } else {
-                targetModelId = entityRef.getRefModelIds().get(0);
-            }
-            var targetAppId = IdUtil.getAppIdFromModelId(targetModelId);
             int fromTableId = KeyUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
 
-            var found = false;
-            if (_refs == null) {
-                _refs = new ArrayList<>();
-            } else {
-                for (var it : _refs) {
-                    if (it.targetEntityId.equals(_tempTargetId)
-                            && it.fromRaftGroupId == fromEntity.id().raftGroupId()) {
-                        it.diff += diff;
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) {
-                var item = new RefFromItem();
-                item.targetEntityId  = _tempTargetId;
-                item.fromTableId     = fromTableId;
-                item.fromRaftGroupId = fromEntity.id().raftGroupId();
-                item.diff            = diff;
-                _refs.add(item);
-            }
-        } //synchronized
+            addEntityRefInternal(_tempTargetId, fromEntity.id().raftGroupId(), fromTableId, 1);
+        }
     }
 
+    private void addEntityRefInternal(EntityId targetEntityId, long fromRaftGroupId, int fromTableId, int diff) {
+        var found = false;
+        if (_refs == null) {
+            _refs = new ArrayList<>();
+        } else {
+            for (var it : _refs) {
+                if (it.targetEntityId.equals(targetEntityId) && it.fromRaftGroupId == fromRaftGroupId) {
+                    it.addDiff(diff);
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) {
+            var item = new KVAddRefRequest(_txnId, targetEntityId, fromRaftGroupId, fromTableId, diff);
+            _refs.add(item);
+        }
+    }
+
+    /** 处理缓存的外键引用，执行后清空 */
+    CompletableFuture<Void> execPendingRefs() {
+        if (_refs == null || _refs.size() <= 0) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        CompletableFuture<Void> task = null;
+        for (var r : _refs) {
+            if (r.getDiff() == 0) //可能会抵消为0
+                continue;
+
+            if (task == null) {
+                task = SysStoreApi.execKVAddRefAsync(r)
+                        .thenAccept(StoreResponse::checkStoreError);
+            } else {
+                task = task.thenCompose(res -> SysStoreApi.execKVAddRefAsync(r))
+                        .thenAccept(StoreResponse::checkStoreError);
+            }
+        }
+
+        _refs.clear(); //别忘了清空
+        return task;
+    }
+    //endregion
+
     @Override
-    public void close(){
+    public void close() {
         rollback();
     }
 
-    //region ====IEntityMemberWriter 实现此接口仅为获取引用目标的EntityId或类型====
+    //region ====IEntityMemberWriter 实现此接口仅为获取引用目标的EntityId或聚合类型====
     @Override
     public void writeMember(short id, EntityId value, byte flags) {
         _tempTargetId = value; //maybe null
@@ -142,7 +170,7 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
 
     @Override
     public void writeMember(short id, long value, byte flags) {
-        _tempTypeModelId = value;
+        throw new UnsupportedOperationException();
     }
 
     @Override

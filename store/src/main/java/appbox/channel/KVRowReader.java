@@ -7,15 +7,15 @@ import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.utils.IdUtil;
 
+import java.util.function.BiConsumer;
+
+/** 用于读写存储层返回的原始数据 */
 public final class KVRowReader {
 
     private KVRowReader() {}
 
-    /**
-     * 将存储返回的成员值读出并写入，主要用于Update or Delete entity后更新索引
-     * @param flags (1 << IdUtil.MEMBERID_ORDER_OFFSET) 或者 0
-     */
-    public static void writeMember(byte[] rowData, short id, BinSerializer bs, byte flags) {
+    /** 从存储原始数据中找出指定成员的位置及大小(包括可变长度的3字节长度) */
+    private static void findMember(byte[] rowData, short id, BiConsumer<Integer, Integer> action) {
         int   cur       = 0;
         short fieldId   = 0;
         int   fieldSize = 0; //包含可变长度信息
@@ -43,8 +43,7 @@ public final class KVRowReader {
             }
 
             if ((fieldId & IdUtil.MEMBERID_MASK) == id) {
-                bs.writeShort((short) (fieldId | flags));   //重新写入带排序标记的memberId
-                bs.write(rowData, cur + 2, fieldSize);
+                action.accept(cur, fieldSize);
                 return;
             }
 
@@ -52,7 +51,35 @@ public final class KVRowReader {
         }
 
         //here not found
-        bs.writeShort((short) (id | flags | IdUtil.STORE_FIELD_NULL_FLAG));   //重新写入带排序标记的memberId
+        action.accept(-1, 0);
+    }
+
+    /** 从原始数据中读取指定成员的EntityId，不存在返回null */
+    public static EntityId readEntityId(byte[] rowData, short id) {
+        final EntityId[] res = {null};
+        findMember(rowData, id, (cur, fieldSize) -> {
+            assert fieldSize == 16 || fieldSize == 0;
+            if (fieldSize == 16) {
+                res[0] = new EntityId(rowData, cur + 2);
+            }
+        });
+        return res[0];
+    }
+
+    /**
+     * 将存储返回的成员值读出并写入，主要用于Update or Delete entity后更新索引
+     * @param flags (1 << IdUtil.MEMBERID_ORDER_OFFSET) 或者 0
+     */
+    public static void writeMember(byte[] rowData, short id, BinSerializer bs, byte flags) {
+        findMember(rowData, id, (cur, fieldSize) -> {
+            if (cur < 0) { //未找到
+                bs.writeShort((short) (id | flags | IdUtil.STORE_FIELD_NULL_FLAG));   //重新写入带排序标记的memberId
+            } else {
+                var fieldId = (short) (rowData[cur] | (rowData[cur + 1] << 8));
+                bs.writeShort((short) (fieldId | flags));   //重新写入带排序标记的memberId
+                bs.write(rowData, cur + 2, fieldSize);
+            }
+        });
     }
 
     /** 专用于读取从存储返回的行数据 */

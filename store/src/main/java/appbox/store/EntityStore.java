@@ -1,6 +1,5 @@
 package appbox.store;
 
-import appbox.channel.KVRowReader;
 import appbox.channel.messages.*;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
@@ -105,6 +104,8 @@ public final class EntityStore { //TODO: rename to SysStore
             getRaftGroupIdTask = getOrCreateGlobalTablePartition(app, model, txn);
         }
 
+        var refsWithFK = model.getEntityRefsWithFKConstraint();
+
         return getRaftGroupIdTask.thenCompose(raftGroupId -> {
             if (raftGroupId == 0)
                 throw new RuntimeException("Can't get or create partition.");
@@ -112,12 +113,18 @@ public final class EntityStore { //TODO: rename to SysStore
             //设置EntityId's raftGroupId
             entity.id().initRaftGroupId(raftGroupId);
 
-            //TODO:判断有无强制外键引用，有则先处理
+            //判断有无强制外键引用，有则先处理
+            if (refsWithFK != null) {
+                for (var rm : refsWithFK) {
+                    txn.incEntityRef(rm, app, entity);
+                }
+            }
+
             //插入索引，注意模型变更后可能已添加或删除了索引会报错
             return insertIndexesAsync(entity, model, txn);
         }).thenCompose(r -> {
             //插入数据
-            var req = new KVInsertEntityRequest(entity, model, txn.id()); //TODO: refs
+            var req = new KVInsertEntityRequest(entity, model, refsWithFK, txn.id());
             req.overrideExists = overrideExists;
             return SysStoreApi.execKVInsertAsync(req);
         }).thenAccept(StoreResponse::checkStoreError);
@@ -144,21 +151,28 @@ public final class EntityStore { //TODO: rename to SysStore
         if (id == null || model == null)
             throw new IllegalArgumentException();
 
+        var app        = RuntimeContext.current().getApplicationModel(model.appId());
+        var refsWithFK = model.getEntityRefsWithFKConstraint();
+
         //注意删除前先处理本事务挂起的外键引用，以防止同一事务删除引用后再删除引用目标失败(eg:同一事务删除订单明细，删除引用的订单)
-        //await txn.ExecPendingRefs();
+        return txn.execPendingRefs().thenCompose(r -> {
+            //删除数据 TODO:参数控制返回索引字段的值，用于生成索引键，暂返回全部字段
+            var req = new KVDeleteEntityRequest(txn.id(), id, model, refsWithFK);
+            return SysStoreApi.execKVDeleteAsync(req).thenCompose(res -> {
+                res.checkStoreError();
 
-        var app = RuntimeContext.current().getApplicationModel(model.appId());
-        //先获取强制外键引用
-        //var refs = model.GetEntityRefsWithFKConstraint();
-
-        //删除数据
-        var req = new KVDeleteEntityRequest(txn.id(), id, model);
-        return SysStoreApi.execKVDeleteAsync(req).thenCompose(res -> {
-            res.checkStoreError();
-
-            //删除索引
-            return deleteIndexesAsync(id, res.getResults(), model, txn);
-        }); //TODO:扣减引用计数
+                //删除索引
+                return deleteIndexesAsync(id, res.getResults(), model, txn)
+                        .thenAccept(rr -> {
+                            //扣减引用计数
+                            if (refsWithFK != null) {
+                                for (var rm : refsWithFK) {
+                                    txn.decEntityRef(rm, app, id, res.getResults());
+                                }
+                            }
+                        });
+            });
+        });
     }
     //endregion delete
 
@@ -171,7 +185,7 @@ public final class EntityStore { //TODO: rename to SysStore
 
         //TODO:并发插入索引，暂顺序处理，可考虑先处理惟一索引
         //TODO:暂只处理分区本地索引
-        CompletableFuture<KVCommandResponse> fut = null;
+        CompletableFuture<Void> fut = null;
         for (var idx : model.sysStoreOptions().getIndexes()) {
             if (idx.isGlobal()) {
                 throw new RuntimeException("未实现");
@@ -179,12 +193,13 @@ public final class EntityStore { //TODO: rename to SysStore
 
             var req = new KVInsertIndexRequest(txn.id(), entity, idx);
             if (fut == null)
-                fut = SysStoreApi.execKVInsertAsync(req);
+                fut = SysStoreApi.execKVInsertAsync(req)
+                        .thenAccept(StoreResponse::checkStoreError);
             else
-                fut = fut.thenCompose(r -> { r.checkStoreError(); return SysStoreApi.execKVInsertAsync(req);});
+                fut = fut.thenCompose(r -> SysStoreApi.execKVInsertAsync(req))
+                        .thenAccept(StoreResponse::checkStoreError);
         }
-
-        return fut.thenAccept(StoreResponse::checkStoreError);
+        return fut;
     }
 
     private static CompletableFuture<Void> deleteIndexesAsync(EntityId id, byte[] stored,
@@ -193,7 +208,7 @@ public final class EntityStore { //TODO: rename to SysStore
             return CompletableFuture.completedFuture(null);
         }
 
-        CompletableFuture<KVCommandResponse> fut = null;
+        CompletableFuture<Void> fut = null;
         for (var idx : model.sysStoreOptions().getIndexes()) {
             if (idx.isGlobal()) {
                 throw new RuntimeException("未实现");
@@ -201,12 +216,13 @@ public final class EntityStore { //TODO: rename to SysStore
 
             var req = new KVDeleteIndexRequest(txn.id(), id, stored, idx);
             if (fut == null)
-                fut = SysStoreApi.execKVDeleteAsync(req);
+                fut = SysStoreApi.execKVDeleteAsync(req)
+                        .thenAccept(StoreResponse::checkStoreError);
             else
-                fut = fut.thenCompose(r -> { r.checkStoreError(); return SysStoreApi.execKVDeleteAsync(req);});
+                fut = fut.thenCompose(r -> SysStoreApi.execKVDeleteAsync(req))
+                        .thenAccept(StoreResponse::checkStoreError);
         }
-
-        return fut.thenAccept(StoreResponse::checkStoreError);
+        return fut;
     }
 
     //endregion index
