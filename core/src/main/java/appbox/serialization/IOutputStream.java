@@ -10,19 +10,19 @@ public interface IOutputStream {
         writeByte(value ? (byte) 1 : (byte) 0);
     }
 
-    default void writeShort(short value) throws Exception {
+    default void writeShort(short value) {
         writeByte((byte) (value & 0xFF));
         writeByte((byte) ((value >> 8) & 0xFF));
     }
 
-    default void writeInt(int value) throws Exception {
+    default void writeInt(int value) {
         writeByte((byte) (value & 0xFF));
         writeByte((byte) ((value >> 8) & 0xFF));
         writeByte((byte) ((value >> 16) & 0xFF));
         writeByte((byte) ((value >> 24) & 0xFF));
     }
 
-    default void writeLong(long value) throws Exception {
+    default void writeLong(long value) {
         writeByte((byte) (value & 0xFF));
         writeByte((byte) ((value >> 8) & 0xFF));
         writeByte((byte) ((value >> 16) & 0xFF));
@@ -55,7 +55,7 @@ public interface IOutputStream {
     /**
      * 写入带长度信息的字节数组
      */
-    default void writeByteArray(byte[] value) throws Exception {
+    default void writeByteArray(byte[] value) {
         if (value == null) {
             writeVariant(-1);
         } else {
@@ -69,7 +69,7 @@ public interface IOutputStream {
     /**
      * 写入带长度信息(字符数)且Utf8编码的字符串
      */
-    default void writeString(String value) throws Exception {
+    default void writeString(String value) {
         if (value == null) {
             writeVariant(-1);
         } else if (value.isEmpty()) {
@@ -80,7 +80,7 @@ public interface IOutputStream {
         }
     }
 
-    private void writeUtf8(String value) throws Exception {
+    private void writeUtf8(String value) {
         int  srcPos = 0;
         int  srcLen = value.length();
         char c, d;
@@ -104,12 +104,12 @@ public interface IOutputStream {
                         if (Character.isLowSurrogate(d)) {
                             uc = Character.toCodePoint(c, d);
                         } else {
-                            throw new Exception();
+                            throw new RuntimeException("utf8 code error");
                         }
                     }
                 } else {
                     if (Character.isLowSurrogate(c)) {
-                        throw new Exception();
+                        throw new RuntimeException("utf8 code error");
                     } else {
                         uc = c;
                     }

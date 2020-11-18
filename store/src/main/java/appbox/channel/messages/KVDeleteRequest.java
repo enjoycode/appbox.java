@@ -25,7 +25,7 @@ public abstract class KVDeleteRequest implements IMessage {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         txnId.writeTo(bs);
 
         bs.writeLong(raftGroupId);
@@ -37,7 +37,7 @@ public abstract class KVDeleteRequest implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
     //endregion

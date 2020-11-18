@@ -29,21 +29,26 @@ public final class JsonResult implements IBinSerializable {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
-        //直接写Json
-        if (result instanceof IJsonSerializable) {
-            var out        = new OutputStreamWriter(bs);
-            var jsonWriter = new JSONWriter(out);
-            ((IJsonSerializable) result).writeToJson(jsonWriter);
-            jsonWriter.close();
-            return;
-        }
+    public void writeTo(BinSerializer bs) {
+        try {
+            //直接写Json
+            if (result instanceof IJsonSerializable) {
+                var out        = new OutputStreamWriter(bs);
+                var jsonWriter = new JSONWriter(out);
+                ((IJsonSerializable) result).writeToJson(jsonWriter);
+                jsonWriter.close();
+                return;
+            }
 
-        JSON.writeJSONString(bs, StandardCharsets.UTF_8, result, config, null, null, JSON.DEFAULT_GENERATE_FEATURE);
+            JSON.writeJSONString(bs, StandardCharsets.UTF_8, result,
+                    config, null, null, JSON.DEFAULT_GENERATE_FEATURE);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
-        throw new RuntimeException("Not supported.");
+    public void readFrom(BinDeserializer bs) {
+        throw new UnsupportedOperationException();
     }
 }

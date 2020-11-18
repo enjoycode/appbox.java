@@ -46,7 +46,7 @@ public final class ApplicationModel implements IBinSerializable {
 
     //region ====IBinSerializable====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeInt(_id, 1);
         bs.writeVariant(_devModelIdSeq, 2);
         bs.writeString(_owner, 3);
@@ -55,7 +55,7 @@ public final class ApplicationModel implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         int fieldId;
         do {
             fieldId = bs.readVariant();
@@ -75,7 +75,7 @@ public final class ApplicationModel implements IBinSerializable {
                 case 0:
                     break;
                 default:
-                    throw new Exception("Unknown field id: " + fieldId);
+                    throw new RuntimeException("Unknown field id: " + fieldId);
             }
         } while (fieldId != 0);
     }

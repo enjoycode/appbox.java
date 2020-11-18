@@ -87,7 +87,7 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
     }
 
     /** 增减外键引用计数值 */
-    void addEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity, int diff) throws Exception {
+    void addEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity, int diff) {
         assert diff != 0;
         assert fromEntity.id().raftGroupId() != 0;
 
@@ -105,22 +105,20 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
             var targetAppId = IdUtil.getAppIdFromModelId(targetModelId);
             int fromTableId = KeyUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
 
+            var found = false;
             if (_refs == null) {
-                var item = new RefFromItem();
-                item.targetEntityId  = _tempTargetId;
-                item.fromTableId     = fromTableId;
-                item.fromRaftGroupId = fromEntity.id().raftGroupId();
-                item.diff            = diff;
-                _refs                = new ArrayList<>() {{ add(item);}};
+                _refs = new ArrayList<>();
             } else {
                 for (var it : _refs) {
                     if (it.targetEntityId.equals(_tempTargetId)
                             && it.fromRaftGroupId == fromEntity.id().raftGroupId()) {
                         it.diff += diff;
-                        return;
+                        found = true;
+                        break;
                     }
                 }
-                //not found here
+            }
+            if (!found) {
                 var item = new RefFromItem();
                 item.targetEntityId  = _tempTargetId;
                 item.fromTableId     = fromTableId;
@@ -128,57 +126,57 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
                 item.diff            = diff;
                 _refs.add(item);
             }
-        }
+        } //synchronized
     }
 
     @Override
-    public void close() throws Exception {
+    public void close(){
         rollback();
     }
 
     //region ====IEntityMemberWriter 实现此接口仅为获取引用目标的EntityId或类型====
     @Override
-    public void writeMember(short id, EntityId value, byte flags) throws Exception {
+    public void writeMember(short id, EntityId value, byte flags) {
         _tempTargetId = value; //maybe null
     }
 
     @Override
-    public void writeMember(short id, long value, byte flags) throws Exception {
+    public void writeMember(short id, long value, byte flags) {
         _tempTypeModelId = value;
     }
 
     @Override
-    public void writeMember(short id, String value, byte flags) throws Exception {
+    public void writeMember(short id, String value, byte flags) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void writeMember(short id, int value, byte flags) throws Exception {
+    public void writeMember(short id, int value, byte flags) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void writeMember(short id, Optional<Integer> value, byte flags) throws Exception {
+    public void writeMember(short id, Optional<Integer> value, byte flags) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void writeMember(short id, UUID value, byte flags) throws Exception {
+    public void writeMember(short id, UUID value, byte flags) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void writeMember(short id, byte[] data, byte flags) throws Exception {
+    public void writeMember(short id, byte[] data, byte flags) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void writeMember(short id, boolean male, byte flags) throws Exception {
+    public void writeMember(short id, boolean male, byte flags) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void writeMember(short id, Date value, byte flags) throws Exception {
+    public void writeMember(short id, Date value, byte flags) {
         throw new UnsupportedOperationException();
     }
     //endregion

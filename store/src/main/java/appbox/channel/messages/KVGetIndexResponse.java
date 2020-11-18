@@ -16,13 +16,17 @@ public final class KVGetIndexResponse<T extends IKVRow> extends KVGetResponse {
     public T getRow() { return _indexRow; }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 
         if (errorCode == 0 && bs.hasRemaining()) {
             //创建索引对象实例
-            _indexRow = _indexClass.getDeclaredConstructor().newInstance();
+            try {
+                _indexRow = _indexClass.getDeclaredConstructor().newInstance();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
             //读取索引字段
             KVRowReader.readFields(bs, _indexRow);
         }

@@ -52,7 +52,7 @@ final class DbCommand implements IEntityMemberWriter {
     //注意构建更新命令时需要写入null成员
 
     @Override
-    public void writeMember(short id, EntityId value, byte flags) throws Exception {
+    public void writeMember(short id, EntityId value, byte flags) {
         if (value != null)
             addParameter(value.toString()); //暂转换为字符串，待检查
         else
@@ -60,7 +60,7 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, String value, byte flags) throws Exception {
+    public void writeMember(short id, String value, byte flags) {
         if (value != null) {
             addParameter(value);
         } else if ((flags & IEntityMemberWriter.SF_WRITE_NULL) == IEntityMemberWriter.SF_WRITE_NULL) {
@@ -69,12 +69,12 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, int value, byte flags) throws Exception {
+    public void writeMember(short id, int value, byte flags) {
         addParameter(value);
     }
 
     @Override
-    public void writeMember(short id, Optional<Integer> value, byte flags) throws Exception {
+    public void writeMember(short id, Optional<Integer> value, byte flags) {
         if (value.isPresent()) {
             addParameter(value.get());
         } else if ((flags & IEntityMemberWriter.SF_WRITE_NULL) == IEntityMemberWriter.SF_WRITE_NULL) {
@@ -83,12 +83,12 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, long value, byte flags) throws Exception {
+    public void writeMember(short id, long value, byte flags) {
         addParameter(value);
     }
 
     @Override
-    public void writeMember(short id, UUID value, byte flags) throws Exception {
+    public void writeMember(short id, UUID value, byte flags) {
         if (value != null)
             addParameter(value.toString()); //暂转换为字符串，待检查
         else
@@ -96,17 +96,17 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, byte[] value, byte flags) throws Exception {
+    public void writeMember(short id, byte[] value, byte flags) {
         addParameter(value);
     }
 
     @Override
-    public void writeMember(short id, boolean value, byte flags) throws Exception {
+    public void writeMember(short id, boolean value, byte flags) {
         addParameter(value);
     }
 
     @Override
-    public void writeMember(short id, Date value, byte flags) throws Exception {
+    public void writeMember(short id, Date value, byte flags) {
         if (value != null)
             addParameter(String.valueOf(value.getTime())); //暂转换为字符串，待检查
         else

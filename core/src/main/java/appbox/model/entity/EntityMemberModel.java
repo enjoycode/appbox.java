@@ -77,17 +77,17 @@ public abstract class EntityMemberModel implements IBinSerializable {
     //endregion
 
     //region ====Design Methods====
-    public final void canAddTo(EntityModel owner) throws RuntimeException {
+    public final void canAddTo(EntityModel owner) {
         if (this.owner != owner) {
-            throw new RuntimeException();
+            throw new RuntimeException("Owns by other");
         }
     }
 
-    public final void initMemberId(short id) throws Exception {
+    public final void initMemberId(short id) {
         if (_memberId == 0) {
             _memberId = id;
         } else {
-            throw new Exception("MemberId has init.");
+            throw new RuntimeException("MemberId has init.");
         }
     }
 
@@ -111,7 +111,7 @@ public abstract class EntityMemberModel implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeBool(_allowNull, 2);
         bs.writeString(_name, 3);
         bs.writeShort(_memberId, 4);
@@ -128,7 +128,7 @@ public abstract class EntityMemberModel implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         int propIndex;
         do {
             propIndex = bs.readVariant();

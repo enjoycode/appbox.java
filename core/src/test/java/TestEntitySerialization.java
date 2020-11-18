@@ -34,7 +34,7 @@ public class TestEntitySerialization {
         }
 
         @Override
-        public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
+        public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
             switch (id) {
                 case 1:
                     bs.writeMember(id, name, flags);
@@ -43,12 +43,12 @@ public class TestEntitySerialization {
                     bs.writeMember(id, age, flags);
                     break;
                 default:
-                    throw new Exception("unknown member");
+                    throw new RuntimeException("unknown member");
             }
         }
 
         @Override
-        public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+        public void readMember(short id, IEntityMemberReader bs, int flags) {
             switch (id) {
                 case 1:
                     name = bs.readStringMember(flags);
@@ -57,13 +57,13 @@ public class TestEntitySerialization {
                     age = bs.readIntMember(flags);
                     break;
                 default:
-                    throw new Exception("unknown member");
+                    throw new RuntimeException("unknown member");
             }
         }
     }
 
     @Test
-    public void test1() throws Exception {
+    public void test1() {
         var ctx = new MockRuntimeContext();
         RuntimeContext.init(ctx, (short) 10421);
 

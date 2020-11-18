@@ -18,12 +18,12 @@ public final class BytesInputStream implements IInputStream {
     }
 
     @Override
-    public byte readByte() throws Exception {
+    public byte readByte() {
         return data[pos++];
     }
 
     @Override
-    public void read(byte[] dest, int offset, int count) throws Exception {
+    public void read(byte[] dest, int offset, int count) {
         System.arraycopy(data, pos, dest, offset, count);
         pos += count;
     }

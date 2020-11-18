@@ -10,15 +10,15 @@ import java.util.List;
 
 public final class KVScanTableResponse<T extends SysEntity> extends KVScanResponse {
 
-    public  List<T>  result;
-    private Class<T> clazz;
+    public        List<T>  result;
+    private final Class<T> clazz;
 
     public KVScanTableResponse(Class<T> clazz) {
         this.clazz = clazz;
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 
@@ -31,7 +31,12 @@ public final class KVScanTableResponse<T extends SysEntity> extends KVScanRespon
                 var keySize = bs.readNativeVariant(); //Row's key size
                 assert keySize == KeyUtil.ENTITY_KEY_SIZE;
                 //创建对象实例并从RowKey读取Id
-                var obj = clazz.getDeclaredConstructor().newInstance();
+                T obj = null;
+                try {
+                    obj = clazz.getDeclaredConstructor().newInstance();
+                } catch (Exception ex) {
+                    throw new RuntimeException("Can't create instance.");
+                }
                 result.add(obj);
                 obj.id().readFrom(bs);
                 //开始读取当前行的各个字段

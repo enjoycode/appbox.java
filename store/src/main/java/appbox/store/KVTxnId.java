@@ -19,14 +19,14 @@ public final class KVTxnId {
         isoLevel = from.isoLevel;
     }
 
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeLong(startTS);
         bs.writeShort(peerId);
         bs.writeShort(shardId);
         bs.writeByte(isoLevel);
     }
 
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         startTS  = bs.readLong();
         peerId   = bs.readShort();
         shardId  = bs.readShort();

@@ -8,7 +8,7 @@ public final class KVGetApplicationResponse extends KVGetResponse {
     public final ApplicationModel applicationModel = new ApplicationModel();
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 

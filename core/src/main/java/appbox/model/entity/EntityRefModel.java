@@ -19,7 +19,7 @@ public final class EntityRefModel extends EntityMemberModel {
             this.value = (byte) value;
         }
 
-        public static EntityRefModel.EntityRefActionRule fromValue(byte v) throws Exception {
+        public static EntityRefModel.EntityRefActionRule fromValue(byte v) {
             for (EntityRefModel.EntityRefActionRule item : EntityRefModel.EntityRefActionRule.values()) {
                 if (item.value == v) {
                     return item;
@@ -91,6 +91,10 @@ public final class EntityRefModel extends EntityMemberModel {
         return typeMemberId != 0;
     }
 
+    public boolean isReverse() { return isReverse; }
+
+    public boolean isForeignKeyConstraint() { return isForeignKeyConstraint; }
+
     public List<Long> getRefModelIds() { return refModelIds; }
 
     public short[] getFKMemberIds() { return fkMemberIds; }
@@ -118,7 +122,7 @@ public final class EntityRefModel extends EntityMemberModel {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         bs.writeBool(isReverse, 1);
@@ -143,7 +147,7 @@ public final class EntityRefModel extends EntityMemberModel {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         super.readFrom(bs);
 
         int propIndex;

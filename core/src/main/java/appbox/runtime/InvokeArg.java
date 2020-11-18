@@ -43,12 +43,12 @@ public final class InvokeArg {
         return (String) value;
     }
 
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         //TODO:暂简单实现，待优化
         bs.serialize(value);
     }
 
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         //TODO:暂简单实现，待优化
         value = bs.deserialize();
     }

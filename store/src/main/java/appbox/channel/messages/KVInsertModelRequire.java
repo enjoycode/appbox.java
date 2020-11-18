@@ -18,7 +18,7 @@ public final class KVInsertModelRequire extends KVInsertRequire {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         //key

@@ -24,12 +24,12 @@ public final class FieldWithOrder { //TODO: rename to OrderedField
         this.orderByDesc = orderByDesc;
     }
 
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeShort(memberId);
         bs.writeBool(orderByDesc);
     }
 
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         memberId    = bs.readShort();
         orderByDesc = bs.readBool();
     }

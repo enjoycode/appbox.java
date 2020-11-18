@@ -43,7 +43,7 @@ public abstract class SqlStore {
 
     public abstract CompletableFuture<DbTransaction> beginTransaction();
 
-    protected DbCommand buildInsertCommand(SqlEntity entity, EntityModel model) throws Exception {
+    protected DbCommand buildInsertCommand(SqlEntity entity, EntityModel model) {
         //注意目前实现仅插入非空的字段，并且不缓存命令
         var cmd = new DbCommand();
         var sb  = new StringBuilder(100);
@@ -84,7 +84,7 @@ public abstract class SqlStore {
     protected abstract DbCommand buildQuery(ISqlSelectQuery query);
 
     public final CompletableFuture<QueryResult> runQuery(ISqlSelectQuery query) {
-        var cmd = buildQuery(query);
+        var cmd        = buildQuery(query);
         var connFuture = openConnection();
         return connFuture.thenCompose(cmd::execQueryAsync)
                 .handle((res, ex) -> {
@@ -100,7 +100,7 @@ public abstract class SqlStore {
                 });
     }
 
-    public final CompletableFuture<Void> insertAsync(SqlEntity entity, DbTransaction txn) throws Exception {
+    public final CompletableFuture<Void> insertAsync(SqlEntity entity, DbTransaction txn) {
         if (entity == null)
             throw new IllegalArgumentException();
         //TODO:判断持久化状态

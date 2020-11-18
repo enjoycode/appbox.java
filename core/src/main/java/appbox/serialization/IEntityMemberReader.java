@@ -8,17 +8,17 @@ import java.util.UUID;
 public interface IEntityMemberReader {
     int SF_NONE = 0;
 
-    String readStringMember(int flags) throws Exception;
+    String readStringMember(int flags);
 
-    boolean readBoolMember(int flags) throws Exception;
+    boolean readBoolMember(int flags);
 
-    int readIntMember(int flags) throws Exception;
+    int readIntMember(int flags);
 
-    byte readByteMember(int flags) throws Exception;
+    byte readByteMember(int flags);
 
-    UUID readUUIDMember(int flags) throws Exception;
+    UUID readUUIDMember(int flags);
 
-    byte[] readBinaryMember(int flags) throws Exception;
+    byte[] readBinaryMember(int flags);
 
-    Date readDateMember(int flags) throws Exception;
+    Date readDateMember(int flags);
 }

@@ -39,7 +39,7 @@ public final class EntitySetModel extends EntityMemberModel {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         bs.writeLong(_refModelId, 1);
@@ -49,7 +49,7 @@ public final class EntitySetModel extends EntityMemberModel {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         super.readFrom(bs);
 
         int propIndex;

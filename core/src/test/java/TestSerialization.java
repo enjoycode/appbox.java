@@ -23,7 +23,7 @@ public class TestSerialization {
     }
 
     @Test
-    public void testStream() throws Exception {
+    public void testStream() {
         var output = new BytesOutputStream(8192);
         output.writeInt(0x0A0B0C0D);
         output.writeVariant(-1);
@@ -42,7 +42,7 @@ public class TestSerialization {
     }
 
     @Test
-    public void testLong() throws Exception {
+    public void testLong() {
         long v      = 0x5AD1CCF440BA7000L;
         var  output = new BytesOutputStream(8);
         output.writeLong(v);
@@ -52,7 +52,7 @@ public class TestSerialization {
     }
 
     @Test
-    public void testSerialization() throws Exception {
+    public void testSerialization() {
         var output = new BytesOutputStream(1024);
         TestHelper.serializeTo(12345, output);
 
@@ -61,7 +61,7 @@ public class TestSerialization {
     }
 
     @Test
-    public void testEntityModel() throws Exception {
+    public void testEntityModel() {
         var model = TestHelper.makeEntityModel();
 
         //serialize

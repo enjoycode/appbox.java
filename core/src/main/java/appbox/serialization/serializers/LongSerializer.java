@@ -13,12 +13,12 @@ public final class LongSerializer extends TypeSerializer {
     }
 
     @Override
-    public void write(BinSerializer bs, Object value) throws Exception {
+    public void write(BinSerializer bs, Object value) {
         bs.writeLong((long) value);
     }
 
     @Override
-    public Object read(BinDeserializer bs, Object value) throws Exception {
+    public Object read(BinDeserializer bs, Object value) {
         return bs.readLong();
     }
 }

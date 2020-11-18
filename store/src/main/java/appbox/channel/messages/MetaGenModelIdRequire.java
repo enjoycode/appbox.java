@@ -15,13 +15,13 @@ public final class MetaGenModelIdRequire implements IMessage {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeInt(appId);
         bs.writeBool(devLayer);
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
 
     }
 }

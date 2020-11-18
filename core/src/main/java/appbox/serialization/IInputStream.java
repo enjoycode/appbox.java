@@ -12,45 +12,45 @@ public interface IInputStream {
         return remaining() > 0;
     }
 
-    byte readByte() throws Exception;
+    byte readByte();
 
-    void read(byte[] dest, int offset, int count) throws Exception;
+    void read(byte[] dest, int offset, int count);
 
     /**
      * 跳过指定字节数
      */
-    default void skip(int size) throws Exception {
+    default void skip(int size) {
         for (int i = 0; i < size; i++) {
             readByte();
         }
     }
 
-    default boolean readBool() throws Exception {
+    default boolean readBool() {
         return readByte() == 1;
     }
 
-    default short readShort() throws Exception {
+    default short readShort() {
         return (short) (Byte.toUnsignedInt(readByte()) | Byte.toUnsignedInt(readByte()) << 8);
     }
 
-    default int readInt() throws Exception {
+    default int readInt() {
         return Byte.toUnsignedInt(readByte()) | Byte.toUnsignedInt(readByte()) << 8
                 | Byte.toUnsignedInt(readByte()) << 16 | Byte.toUnsignedInt(readByte()) << 24;
     }
 
-    default long readLong() throws Exception {
+    default long readLong() {
         return Byte.toUnsignedLong(readByte()) | Byte.toUnsignedLong(readByte()) << 8
                 | Byte.toUnsignedLong(readByte()) << 16 | Byte.toUnsignedLong(readByte()) << 24
                 | Byte.toUnsignedLong(readByte()) << 32 | Byte.toUnsignedLong(readByte()) << 40
                 | Byte.toUnsignedLong(readByte()) << 48 | Byte.toUnsignedLong(readByte()) << 56;
     }
 
-    default int readVariant() throws Exception {
+    default int readVariant() {
         int data = readNativeVariant();
         return -(data & 1) ^ ((data >>> 1) & 0x7fffffff);
     }
 
-    default int readNativeVariant() throws Exception {
+    default int readNativeVariant() {
         int data = readByte();
         if ((data & 0x80) == 0) {
             return data;
@@ -74,13 +74,13 @@ public interface IInputStream {
         num2 = readByte();
         data |= num2 << 0x1C;
         if ((num2 & 240) != 0) {
-            throw new Exception("out of range");
+            throw new RuntimeException("out of range");
         }
         return data;
     }
 
     /** 读取带长度信息的字节数组 */
-    default byte[] readByteArray() throws Exception {
+    default byte[] readByteArray() {
         int len = readVariant();
         if (len < 0) return null;
         var bytes = new byte[len];
@@ -88,7 +88,7 @@ public interface IInputStream {
         return bytes;
     }
 
-    default String readString() throws Exception {
+    default String readString() {
         int len = readVariant();
         if (len == -1) {
             return null;
@@ -99,7 +99,7 @@ public interface IInputStream {
         }
     }
 
-    private String readUtf8(int chars) throws Exception {
+    private String readUtf8(int chars) {
         var  dst = new char[chars]; //TODO:是否能优化
         int  dp  = 0;
         int  b1, b2, b3, b4, uc;
@@ -114,7 +114,7 @@ public interface IInputStream {
                 // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
                 b2 = readByte();
                 if ((b2 & 0xc0) != 0x80) // isNotContinuation(b2)
-                    throw new Exception();
+                    throw new RuntimeException("utf8 code error");
                 else
                     dst[dp++] = (char) (((b1 << 6) ^ b2) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
             } else if ((b1 >> 4) == -2) {
@@ -124,11 +124,11 @@ public interface IInputStream {
                 if ((b1 == (byte) 0xe0 && (b2 & 0xe0) == 0x80) //
                         || (b2 & 0xc0) != 0x80 //
                         || (b3 & 0xc0) != 0x80) { // isMalformed3(b1, b2, b3)
-                    throw new Exception();
+                    throw new RuntimeException("utf8 code error");
                 } else {
                     c = (char) ((b1 << 12) ^ (b2 << 6) ^ (b3 ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
                     if (c >= '\uD800' && c < ('\uDFFF' + 1))
-                        throw new Exception();
+                        throw new RuntimeException("utf8 code error");
                     else
                         dst[dp++] = c;
                 }
@@ -142,13 +142,13 @@ public interface IInputStream {
                         ||
                         // shortest form check
                         !Character.isSupplementaryCodePoint(uc)) {
-                    throw new Exception();
+                    throw new RuntimeException("utf8 code error");
                 } else {
                     dst[dp++] = Character.highSurrogate(uc);
                     dst[dp++] = Character.lowSurrogate(uc);
                 }
             } else {
-                throw new Exception();
+                throw new RuntimeException("utf8 code error");
             }
         }
 

@@ -104,7 +104,7 @@ public abstract class ModelBase implements IBinSerializable {
     //endregion
 
     //region ====Serialization====
-    public static ModelBase makeModelByType(byte type) throws Exception {
+    public static ModelBase makeModelByType(byte type) {
         if (type == ModelType.Entity.value) {
             return new EntityModel();
         } else if (type == ModelType.Service.value) {
@@ -114,7 +114,7 @@ public abstract class ModelBase implements IBinSerializable {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeLong(_id, 1);
         bs.writeString(_name, 2);
         bs.writeBool(_designMode, 3);
@@ -134,7 +134,7 @@ public abstract class ModelBase implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         int propIndex;
         do {
             propIndex = bs.readVariant();

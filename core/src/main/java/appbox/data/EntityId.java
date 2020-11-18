@@ -101,21 +101,21 @@ public final class EntityId {
         return true;
     }
 
-    public void writeTo(BinSerializer bs) throws Exception {
-        bs.write(_data);
+    public void writeTo(BinSerializer bs) {
+        bs.write(_data, 0, 16);
     }
 
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         bs.read(_data, 0, 16);
     }
 
     /** 仅用于系统存储写索引 */
-    public void writePart1(BinSerializer bs) throws Exception {
+    public void writePart1(BinSerializer bs) {
         bs.write(_data, 0, 6);
     }
 
     /** 仅用于系统存储写索引 */
-    public void writePart2(BinSerializer bs) throws Exception {
+    public void writePart2(BinSerializer bs) {
         bs.write(_data, 6, 10);
     }
 

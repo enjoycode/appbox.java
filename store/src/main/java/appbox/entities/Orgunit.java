@@ -61,7 +61,7 @@ public class Orgunit extends SysEntity {
     }
 
     @Override
-    public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
+    public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
         switch (id) {
             case NAME_ID:
                 bs.writeMember(id, _name, flags); break;
@@ -70,12 +70,12 @@ public class Orgunit extends SysEntity {
             case BASE_TYPE_ID:
                 bs.writeMember(id, _baseType, flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 
     @Override
-    public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+    public void readMember(short id, IEntityMemberReader bs, int flags) {
         switch (id) {
             case NAME_ID:
                 _name = bs.readStringMember(flags); break;
@@ -84,7 +84,7 @@ public class Orgunit extends SysEntity {
             case BASE_TYPE_ID:
                 _baseType = bs.readByteMember(flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 }

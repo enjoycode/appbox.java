@@ -27,7 +27,7 @@ public final class KVInsertIndexRequest extends KVInsertRequire {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         //key(需要长度信息)

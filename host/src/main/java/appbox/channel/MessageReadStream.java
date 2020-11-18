@@ -41,10 +41,10 @@ public final class MessageReadStream implements IInputStream {
         return _dataLen - _index;
     }
 
-    private void moveToNext() throws Exception {
+    private void moveToNext() {
         var next = NativeSmq.getMsgNext(_curChunk);
         if (next == Pointer.NULL) {
-            throw new Exception("Has no data to read.");
+            throw new RuntimeException("Has no data to read.");
         }
 
         reset(next);
@@ -67,7 +67,7 @@ public final class MessageReadStream implements IInputStream {
     }
 
     @Override
-    public byte readByte() throws Exception {
+    public byte readByte() {
         if (left() <= 0) {
             moveToNext();
         }
@@ -75,7 +75,7 @@ public final class MessageReadStream implements IInputStream {
     }
 
     @Override
-    public void read(byte[] dest, int offset, int count) throws Exception {
+    public void read(byte[] dest, int offset, int count) {
         var left = left();
         if (left > 0) {
             if (left >= count) {
@@ -93,7 +93,7 @@ public final class MessageReadStream implements IInputStream {
     }
 
     @Override
-    public short readShort() throws Exception {
+    public short readShort() {
         if (left() >= 2) {
             var res = _dataPtr.getShort(_index);
             _index += 2;

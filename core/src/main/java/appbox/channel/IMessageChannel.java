@@ -10,6 +10,6 @@ public interface IMessageChannel {
     /**
      * 序列化并发送消息
      */
-    <T extends IMessage> void sendMessage(int id, T msg) throws Exception;
+    <T extends IMessage> void sendMessage(int id, T msg);
 
 }

@@ -13,6 +13,6 @@ public abstract class SysIndex<T extends SysEntity> implements IKVRow {
         _targetId = targetId;
     }
 
-    public abstract void readMember(short id, IEntityMemberReader bs, int flags) throws Exception;
+    public abstract void readMember(short id, IEntityMemberReader bs, int flags);
 
 }

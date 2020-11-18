@@ -45,7 +45,7 @@ public final class ServiceModel extends ModelBase {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         bs.writeByte(_language.value, 2);
@@ -54,7 +54,7 @@ public final class ServiceModel extends ModelBase {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         super.readFrom(bs);
 
         int propIndex;

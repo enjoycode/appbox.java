@@ -38,7 +38,7 @@ public enum ExpressionType {
         this.value = (byte) value;
     }
 
-    public static ExpressionType fromValue(byte v) throws Exception {
+    public static ExpressionType fromValue(byte v) {
         for (ExpressionType item : ExpressionType.values()) {
             if (item.value == v) {
                 return item;

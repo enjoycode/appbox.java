@@ -7,7 +7,6 @@ import com.nixxcode.jvmbrotli.enc.BrotliOutputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -19,21 +18,19 @@ public final class ModelCodeUtil {
         BrotliLoader.isBrotliAvailable();
     }
 
-    private ModelCodeUtil() {
-    }
+    private ModelCodeUtil() {}
 
     /**
      * 压缩编码服务代码
-     *
      * @param isDeclare 是否仅声明代码(无实现)
      */
-    public static byte[] encodeServiceCode(String sourceCode, boolean isDeclare) throws IOException {
+    public static byte[] encodeServiceCode(String sourceCode, boolean isDeclare) {
         //TODO:判断少量代码不压缩
         var utf8data = sourceCode.getBytes(StandardCharsets.UTF_8);
         return encodeServiceCodeData(utf8data, isDeclare);
     }
 
-    public static byte[] encodeServiceCodeData(byte[] utf8CodeData, boolean isDeclare) throws IOException {
+    public static byte[] encodeServiceCodeData(byte[] utf8CodeData, boolean isDeclare) {
         var out = new ByteArrayOutputStream();
         //写入1字节压缩类型标记
         out.write(1);
@@ -41,14 +38,18 @@ public final class ModelCodeUtil {
         out.write(isDeclare ? 1 : 0);
 
         //再写入压缩的utf8
-        var brotli = new BrotliOutputStream(out);
-        brotli.write(utf8CodeData);
-        brotli.close();
+        try {
+            var brotli = new BrotliOutputStream(out);
+            brotli.write(utf8CodeData);
+            brotli.close();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
 
         return out.toByteArray();
     }
 
-    public static ServiceCode decodeServiceCode(byte[] data) throws IOException {
+    public static ServiceCode decodeServiceCode(byte[] data) {
         var serviceCode = new ServiceCode();
 
         var input = new ByteArrayInputStream(data);
@@ -56,9 +57,14 @@ public final class ModelCodeUtil {
         var compressType = input.read();
         serviceCode.isDeclare = input.read() == 1;
 
-        var brotli   = new BrotliInputStream(input);
-        var utf8data = brotli.readAllBytes();
-        serviceCode.sourceCode = new String(utf8data, StandardCharsets.UTF_8);
+        try {
+            var brotli   = new BrotliInputStream(input);
+            var utf8data = brotli.readAllBytes();
+            serviceCode.sourceCode = new String(utf8data, StandardCharsets.UTF_8);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
         return serviceCode;
     }
 

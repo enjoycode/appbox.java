@@ -5,7 +5,7 @@ import appbox.store.KeyUtil;
 
 public final class KVScanAppsRequest extends KVScanRequest {
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeNativeVariant(1); //BeginKeySize

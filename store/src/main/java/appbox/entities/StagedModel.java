@@ -74,7 +74,7 @@ public class StagedModel extends SysEntity {
     }
 
     @Override
-    public void writeMember(short id, IEntityMemberWriter bs, byte flags) throws Exception {
+    public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
         switch (id) {
             case TYPE_ID:
                 bs.writeMember(id, _type, flags); break;
@@ -85,12 +85,12 @@ public class StagedModel extends SysEntity {
             case DATA_ID:
                 bs.writeMember(id, _data, flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 
     @Override
-    public void readMember(short id, IEntityMemberReader bs, int flags) throws Exception {
+    public void readMember(short id, IEntityMemberReader bs, int flags) {
         switch (id) {
             case TYPE_ID:
                 _type = bs.readByteMember(flags); break;
@@ -101,7 +101,7 @@ public class StagedModel extends SysEntity {
             case DATA_ID:
                 _data = bs.readBinaryMember(flags); break;
             default:
-                throw new Exception("unknown member");
+                throw new RuntimeException("unknown member");
         }
     }
 }

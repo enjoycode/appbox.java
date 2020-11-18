@@ -8,7 +8,7 @@ public final class KVScanAppsResponse extends KVScanResponse {
     public ApplicationModel[] apps;
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 

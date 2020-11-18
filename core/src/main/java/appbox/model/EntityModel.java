@@ -35,6 +35,10 @@ public final class EntityModel extends ModelBase {
         return ModelType.Entity;
     }
 
+    public ArrayList<EntityMemberModel> getMembers() {
+        return _members;
+    }
+
     public SysStoreOptions sysStoreOptions() {
         return _storeOptions != null && _storeOptions instanceof SysStoreOptions ?
                 (SysStoreOptions) _storeOptions : null;
@@ -61,10 +65,10 @@ public final class EntityModel extends ModelBase {
         return null;
     }
 
-    public EntityMemberModel getMember(String name) throws Exception {
+    public EntityMemberModel getMember(String name) {
         var m = tryGetMember(name);
         if (m == null) {
-            throw new Exception("Member with name: " + name + " not exists");
+            throw new RuntimeException("Member with name: " + name + " not exists");
         }
         return m;
     }
@@ -136,7 +140,7 @@ public final class EntityModel extends ModelBase {
         }
     }
 
-    public void addMember(EntityMemberModel member, boolean byImport) throws Exception {
+    public void addMember(EntityMemberModel member, boolean byImport) {
         checkDesignMode();
         member.canAddTo(this);
 
@@ -145,7 +149,7 @@ public final class EntityModel extends ModelBase {
             var layer = ModelLayer.DEV;
             var seq   = layer == ModelLayer.DEV ? ++_devMemberIdSeq : ++_usrMemberIdSeq;
             if (seq >= MAX_MEMBER_ID) { //TODO:尝试找空的
-                throw new Exception("Member id out of range");
+                throw new RuntimeException("Member id out of range");
             }
             member.initMemberId(IdUtil.makeMemberId(layer, seq));
         }
@@ -161,7 +165,7 @@ public final class EntityModel extends ModelBase {
     /**
      * Only for StoreInitiator
      */
-    public void addSysMember(EntityMemberModel member, short id) throws Exception {
+    public void addSysMember(EntityMemberModel member, short id) {
         checkDesignMode();
         member.canAddTo(this);
 
@@ -181,8 +185,27 @@ public final class EntityModel extends ModelBase {
     }
     //endregion
 
+    //region ====Runtime Methods====
+
+    /** 获取具有外键约束的EntityRefModel集合 */
+    public List<EntityRefModel> getEntityRefsWithFKConstraint() {
+        List<EntityRefModel> list = null;
+        for (var m : _members) {
+            if (m.type() == EntityMemberType.EntityRef) {
+                var refModel = (EntityRefModel) m;
+                if (!refModel.isReverse() && refModel.isForeignKeyConstraint()) {
+                    if (list == null) list = new ArrayList<>();
+                    list.add(refModel);
+                }
+            }
+        }
+        return list;
+    }
+
+    //endregion
+
     //region ====Serialization====
-    private EntityMemberModel makeMemberByType(byte memberType) throws RuntimeException {
+    private EntityMemberModel makeMemberByType(byte memberType) {
         if (memberType == EntityMemberType.DataField.value) {
             return new DataFieldModel(this);
         } else if (memberType == EntityMemberType.EntityRef.value) {
@@ -193,7 +216,7 @@ public final class EntityModel extends ModelBase {
         throw new RuntimeException("Unknown EntityMember type: " + memberType);
     }
 
-    private IEntityStoreOption makeStoreOptionsByType(byte type) throws Exception {
+    private IEntityStoreOption makeStoreOptionsByType(byte type) {
         if (type == 1) {
             return new SysStoreOptions(this);
         } else if (type == 2) {
@@ -203,7 +226,7 @@ public final class EntityModel extends ModelBase {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         super.writeTo(bs);
 
         //写入成员集合
@@ -239,7 +262,7 @@ public final class EntityModel extends ModelBase {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         super.readFrom(bs);
 
         int propIndex;
@@ -275,7 +298,4 @@ public final class EntityModel extends ModelBase {
     }
     //endregion
 
-    public ArrayList<EntityMemberModel> getMembers() {
-        return _members;
-    }
 }

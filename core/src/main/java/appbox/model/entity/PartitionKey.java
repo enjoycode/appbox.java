@@ -27,7 +27,7 @@ public final class PartitionKey {
             this.value = value;
         }
 
-        public static PartitionKeyRule fromValue(byte v) throws Exception {
+        public static PartitionKeyRule fromValue(byte v) {
             switch (v) {
                 case 0:
                     return None;
@@ -36,7 +36,7 @@ public final class PartitionKey {
                 case 2:
                     return RangeOfDate;
                 default:
-                    throw new Exception("Unknown value");
+                    throw new RuntimeException("Unknown value");
             }
         }
     }
@@ -60,14 +60,14 @@ public final class PartitionKey {
     public int              ruleArgument;
 
     //region ====Serialization====
-    public void writeTo(BinSerializer bs) throws Exception {
+    public void writeTo(BinSerializer bs) {
         bs.writeShort(memberId);
         bs.writeBool(orderByDesc);
         bs.writeByte(rule.value);
         bs.writeVariant(ruleArgument);
     }
 
-    public void readFrom(BinDeserializer bs) throws Exception {
+    public void readFrom(BinDeserializer bs) {
         memberId     = bs.readShort();
         orderByDesc  = bs.readBool();
         rule         = PartitionKeyRule.fromValue(bs.readByte());

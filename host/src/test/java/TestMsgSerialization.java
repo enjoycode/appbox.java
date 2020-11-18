@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestMsgSerialization {
 
     @Test
-    public void testSerializationOfInvokeRequire() throws Exception {
+    public void testSerializationOfInvokeRequire() {
         var src = InvokeRequire.rentFromPool();
         src.shard   = 1;
         src.service = "sys.OrderService.SayHello";
