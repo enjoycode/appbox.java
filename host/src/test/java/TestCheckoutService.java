@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class TestCheckout {
+public class TestCheckoutService {
 
     private static SharedMemoryChannel channel;
 
@@ -43,9 +43,9 @@ public class TestCheckout {
 
     @Test
     public void checkoutAsync(){
-
+        UUID uuid=new UUID(-6038453433195871438l,-7082168417221633763l);
         List<CheckoutInfo> checkoutInfos =new ArrayList<>();
-        CheckoutInfo checkoutInfo=new CheckoutInfo(DesignNodeType.ApplicationNode,"1",1,"测试员",UUID.randomUUID());
+        CheckoutInfo checkoutInfo=new CheckoutInfo(DesignNodeType.ApplicationNode,"1",1,"测试员",uuid);
         checkoutInfos.add(checkoutInfo);
         CompletableFuture<CheckoutResult> res = null;
         try {
@@ -58,21 +58,10 @@ public class TestCheckout {
     }
 
     @Test
-    public void loadModelAsync(){
-        var res=ModelStore.loadModelAsync(Long.parseLong("1"));
-        try{
-            res.get();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-
-    @Test
     public void loadAllAsync(){
-        var res=CheckoutService.loadAllAsync();
+        var fu=CheckoutService.loadAllAsync();
         try{
-            res.get();
+            var res=fu.get();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -80,12 +69,20 @@ public class TestCheckout {
 
     @Test
     public void checkInAsync(){
-        var res=CheckoutService.checkInAsync();
+        var fu=CheckoutService.checkInAsync();
         try{
-            res.get();
+            var res=fu.get();
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    public static void main(String args[]){
+        UUID uuid=UUID.randomUUID();
+        long m=uuid.getMostSignificantBits();
+        long l=uuid.getLeastSignificantBits();
+        System.out.println(m);
+        System.out.println(l);
     }
 
 
