@@ -73,7 +73,7 @@ public final class ModelStore {
     public static CompletableFuture<ApplicationModel> loadApplicationAsync(int appId) {
         var req = new KVGetApplicationRequest(appId);
         return SysStoreApi.execKVGetAsync(req, new KVGetApplicationResponse())
-                .thenApply(r -> r.applicationModel);
+                .thenApply(KVGetApplicationResponse::getApplicationModel);
     }
 
     /**
@@ -91,7 +91,7 @@ public final class ModelStore {
     public static CompletableFuture<ModelBase> loadModelAsync(long modelId) {
         var req = new KVGetModelRequest(modelId);
         return SysStoreApi.execKVGetAsync(req, new KVGetModelResponse())
-                .thenApply(r -> r.model);
+                .thenApply(KVGetModelResponse::getModel);
     }
     //endregion
 

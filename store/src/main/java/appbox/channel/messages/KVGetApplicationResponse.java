@@ -5,7 +5,8 @@ import appbox.serialization.BinDeserializer;
 
 public final class KVGetApplicationResponse extends KVGetResponse {
 
-    public final ApplicationModel applicationModel = new ApplicationModel();
+    private ApplicationModel _applicationModel;
+    public ApplicationModel getApplicationModel() { return _applicationModel; }
 
     @Override
     public void readFrom(BinDeserializer bs) {
@@ -13,13 +14,17 @@ public final class KVGetApplicationResponse extends KVGetResponse {
         errorCode = bs.readInt();
 
         if (errorCode == 0) {
-            bs.readNativeVariant(); //跳过长度
-            var appStoreId = bs.readByte();
-            var devIdSeq   = bs.readInt();
-            var usrIdSeq   = bs.readInt();
-            applicationModel.readFrom(bs);
-            applicationModel.setAppStoreId(appStoreId);
-            applicationModel.setDevModelIdSeq(devIdSeq);
+            var size = bs.readNativeVariant(); //跳过长度
+            if (size > 0) {
+                var appStoreId = bs.readByte();
+                var devIdSeq   = bs.readInt();
+                var usrIdSeq   = bs.readInt();
+
+                _applicationModel = new ApplicationModel();
+                _applicationModel.readFrom(bs);
+                _applicationModel.setAppStoreId(appStoreId);
+                _applicationModel.setDevModelIdSeq(devIdSeq);
+            }
         }
     }
 }

@@ -5,7 +5,9 @@ import appbox.serialization.BinDeserializer;
 
 public final class KVGetModelResponse extends KVGetResponse {
 
-    public ModelBase model;
+    private ModelBase _model;
+
+    public ModelBase getModel() { return _model; }
 
     @Override
     public void readFrom(BinDeserializer bs) {
@@ -13,9 +15,11 @@ public final class KVGetModelResponse extends KVGetResponse {
         errorCode = bs.readInt();
 
         if (errorCode == 0) {
-            bs.readNativeVariant(); //跳过长度
-            model = ModelBase.makeModelByType(bs.readByte());
-            model.readFrom(bs);
+            var size = bs.readNativeVariant(); //跳过长度
+            if (size > 0) {
+                _model = ModelBase.makeModelByType(bs.readByte());
+                _model.readFrom(bs);
+            }
         }
     }
 }

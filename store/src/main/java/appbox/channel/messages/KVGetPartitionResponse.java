@@ -11,8 +11,10 @@ public final class KVGetPartitionResponse extends KVGetResponse {
         errorCode = bs.readInt();
 
         if (errorCode == 0) {
-            bs.readNativeVariant(); //跳过长度
-            raftGroupId = bs.readLong();
+            var size = bs.readNativeVariant(); //跳过长度
+            if (size > 0) {
+                raftGroupId = bs.readLong();
+            }
         }
     }
 }
