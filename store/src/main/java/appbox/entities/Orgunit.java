@@ -1,10 +1,13 @@
 package appbox.entities;
 
+import appbox.data.EntityId;
 import appbox.data.SysEntity;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Orgunit extends SysEntity {
@@ -21,11 +24,12 @@ public class Orgunit extends SysEntity {
         super(IdUtil.SYS_ORGUNIT_MODEL_ID);
     }
 
-    private String _name;
-
-    private UUID _baseId;
-
-    private byte _baseType;
+    private String        _name;
+    private UUID          _baseId;
+    private byte          _baseType;
+    private EntityId      _parentId;
+    private Orgunit       _parent;
+    private List<Orgunit> _childs;
 
     public String getName() {
         return _name;
@@ -58,6 +62,36 @@ public class Orgunit extends SysEntity {
             this._baseType = value;
             onPropertyChanged(BASE_TYPE_ID);
         }
+    }
+
+    public EntityId getParentId() { return _parentId; }
+
+    public void setParentId(EntityId value) {
+        if (!Objects.equals(_parentId, value)) {
+            _parentId = value;
+            _parent   = null;
+            onPropertyChanged(PARENTID_ID);
+        }
+    }
+
+    public Orgunit getParent() {
+        if (_parentId != null && _parent == null)
+            throw new RuntimeException("EntityRef hasn't loaded.");
+        return _parent;
+    }
+
+    public void setParent(Orgunit parent) {
+        if (parent == null) {
+            setParentId(null);
+        } else {
+            setParentId(parent.id());
+            _parent   = parent;
+        }
+    }
+
+    public List<Orgunit> getChilds() {
+        //TODO:判断持久化状态
+        return _childs;
     }
 
     @Override
