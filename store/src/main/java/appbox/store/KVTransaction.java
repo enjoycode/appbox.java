@@ -179,6 +179,11 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
     }
 
     @Override
+    public void writeMember(short id, byte value, byte flags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void writeMember(short id, int value, byte flags) {
         throw new UnsupportedOperationException();
     }

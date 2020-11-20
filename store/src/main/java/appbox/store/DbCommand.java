@@ -69,6 +69,11 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
+    public void writeMember(short id, byte value, byte flags) {
+        addParameter(value); //TODO:验证转换
+    }
+
+    @Override
     public void writeMember(short id, int value, byte flags) {
         addParameter(value);
     }

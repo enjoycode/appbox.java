@@ -211,6 +211,12 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     @Override
+    public void writeMember(short id, byte value, byte flags) {
+        _stream.writeShort(flags == 0 ? id : (short) (id | 1));
+        _stream.writeByte(value);
+    }
+
+    @Override
     public void writeMember(short id, int value, byte flags) {
         _stream.writeShort(flags == 0 ? id : (short) (id | 4));
         _stream.writeInt(value);

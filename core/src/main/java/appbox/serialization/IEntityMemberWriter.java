@@ -16,6 +16,8 @@ public interface IEntityMemberWriter {
 
     void writeMember(short id, String value, byte flags);
 
+    void writeMember(short id, byte value, byte flags);
+
     void writeMember(short id, int value, byte flags);
 
     void writeMember(short id, Optional<Integer> value, byte flags);

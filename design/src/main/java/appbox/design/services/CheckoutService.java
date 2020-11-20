@@ -23,45 +23,40 @@ public final class CheckoutService {
      */
     public static CompletableFuture<CheckoutResult> checkoutAsync(List<CheckoutInfo> checkoutInfos) {
         if (checkoutInfos == null || checkoutInfos.isEmpty()) {
-            return null;
+            return CompletableFuture.completedFuture(null);
         }
-        try {
-            //尝试向存储插入签出信息
-            KVTransaction.beginAsync().thenAccept(txn -> {
-                CompletableFuture future = null;
-                for (CheckoutInfo info : checkoutInfos) {
-                    var obj = new Checkout();
-                    obj.setNodeType(info.getNodeType().value);
-                    obj.setTargetId(info.getTargetID());
-                    obj.setDeveloperId(info.getDeveloperOuid());
-                    obj.setDeveloperName(info.getDeveloperName());
-                    obj.setVersion(info.getVersion());
-                    if (future == null) {
-                        future = EntityStore.insertEntityAsync(obj, txn);
-                    } else {
-                        future.thenCompose(r -> EntityStore.insertEntityAsync(obj, txn));
-                    }
+
+        return KVTransaction.beginAsync().thenCompose(txn -> {
+            CompletableFuture<Void> future = null;
+            for (CheckoutInfo info : checkoutInfos) {
+                var obj = new Checkout();
+                obj.setNodeType(info.getNodeType().value);
+                obj.setTargetId(info.getTargetID());
+                obj.setDeveloperId(info.getDeveloperOuid());
+                obj.setDeveloperName(info.getDeveloperName());
+                obj.setVersion(info.getVersion());
+                if (future == null) {
+                    future = EntityStore.insertEntityAsync(obj, txn);
+                } else {
+                    future = future.thenCompose(r -> EntityStore.insertEntityAsync(obj, txn));
                 }
-                future.thenCompose(r -> txn.commitAsync());
-            });
-
-            //检查签出单个模型时，存储有无新版本
-            CheckoutResult result = new CheckoutResult(true);
-            if (checkoutInfos.get(0).getIsSingleModel()) {
-                return ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).getTargetID())).thenApply(r -> {
-                    if (r.version() != checkoutInfos.get(0).getVersion()) {
-                        result.setModelWithNewVersion(r);
-                    }
-                    return result;
-                });
-            } else {
-                return CompletableFuture.completedFuture(result);
             }
-        } catch (Exception e) {
-            Log.error(e.getMessage());
-            return CompletableFuture.completedFuture(new CheckoutResult(false));
-        }
-
+            return future.thenCompose(r -> txn.commitAsync());
+        }).thenCompose(r -> {
+            //检查签出单个模型时，存储有无新版本
+            if (checkoutInfos.get(0).getIsSingleModel()) {
+                return ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).getTargetID()));
+            } else {
+                return CompletableFuture.completedFuture(null);
+            }
+        }).thenApply(r -> {
+            CheckoutResult result = new CheckoutResult(true);
+            if (r != null && r.version() != checkoutInfos.get(0).getVersion()) {
+                Log.debug("Checkout single model with new version.");
+                result.setModelWithNewVersion(r);
+            }
+            return result;
+        });
     }
 
     /**
@@ -74,7 +69,7 @@ public final class CheckoutService {
             if (res != null && res.size() > 0) {
                 for (Checkout checkout : res) {
                     CheckoutInfo info = new CheckoutInfo(DesignNodeType.forValue(checkout.getNodeType()), checkout.getTargetId(), checkout.getVersion()
-							, checkout.getDeveloperName(), checkout.getDeveloperId());
+                            , checkout.getDeveloperName(), checkout.getDeveloperId());
                     map.put(info.getKey(), info);
                 }
             }

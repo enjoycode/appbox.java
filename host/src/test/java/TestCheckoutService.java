@@ -3,17 +3,13 @@ import appbox.design.common.CheckoutInfo;
 import appbox.design.common.CheckoutResult;
 import appbox.design.services.CheckoutService;
 import appbox.design.tree.DesignNodeType;
-import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
 import appbox.server.runtime.HostRuntimeContext;
-import appbox.store.KVTransaction;
-import appbox.store.ModelStore;
-import appbox.store.StoreInitiator;
 import appbox.store.SysStoreApi;
-import appbox.utils.IdUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +26,6 @@ public class TestCheckoutService {
         channel = new SharedMemoryChannel("AppChannel");
         SysStoreApi.init(channel);
 
-        StoreInitiator.initAsync();
         CompletableFuture.runAsync(() -> {
             channel.startReceive();
         });
@@ -58,13 +53,9 @@ public class TestCheckoutService {
     }
 
     @Test
-    public void loadAllAsync(){
-        var fu=CheckoutService.loadAllAsync();
-        try{
-            var res=fu.get();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+    public void loadAllAsync() throws Exception{
+        var map = CheckoutService.loadAllAsync().get();
+        assertNotNull(map);
     }
 
     @Test
