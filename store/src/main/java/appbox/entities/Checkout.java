@@ -11,11 +11,11 @@ import java.util.UUID;
 
 public class Checkout extends SysEntity {
 
-    public static final short NODE_TYPE_ID     = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
-    public static final short TARGET_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
-    public static final short DEVELOPER_ID     = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
-    public static final short DEVELOPER_NAME_ID     = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
-    public static final short VERSION_ID     = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short NODE_TYPE_ID      = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short TARGET_ID         = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short DEVELOPER_ID      = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short DEVELOPER_NAME_ID = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short VERSION_ID        = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
 
     public static final KVFieldExpression DEVELOPER = new KVFieldExpression(DEVELOPER_ID, DataFieldModel.DataFieldType.Guid);
 
@@ -82,7 +82,7 @@ public class Checkout extends SysEntity {
     }
 
     public void setVersion(int value) {
-        if (value!=_version) {
+        if (value != _version) {
             this._version = value;
             onPropertyChanged(VERSION_ID);
         }
@@ -94,13 +94,13 @@ public class Checkout extends SysEntity {
             case NODE_TYPE_ID:
                 bs.writeMember(id, _nodeType, flags); break;
             case TARGET_ID:
-                bs.writeMember(id, _targetId, flags);break;
+                bs.writeMember(id, _targetId, flags); break;
             case DEVELOPER_ID:
-                bs.writeMember(id, _developerId, flags);break;
+                bs.writeMember(id, _developerId, flags); break;
             case DEVELOPER_NAME_ID:
-                bs.writeMember(id, _developerName, flags);break;
+                bs.writeMember(id, _developerName, flags); break;
             case VERSION_ID:
-                bs.writeMember(id, _version, flags);break;
+                bs.writeMember(id, _version, flags); break;
             default:
                 throw new RuntimeException("unknown member");
         }
@@ -118,7 +118,7 @@ public class Checkout extends SysEntity {
             case DEVELOPER_NAME_ID:
                 _developerName = bs.readStringMember(flags); break;
             case VERSION_ID:
-                _version = bs.readByteMember(flags); break;
+                _version = bs.readIntMember(flags); break;
             default:
                 throw new RuntimeException("unknown member");
         }
