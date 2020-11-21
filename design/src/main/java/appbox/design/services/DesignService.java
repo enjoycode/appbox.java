@@ -40,8 +40,6 @@ public final class DesignService implements IService {
         if (handler == null) {
             return CompletableFuture.failedFuture(new Exception("Unknown design request: " + method));
         }
-        System.out.println("method:"+method);
-        System.out.println("method args:"+args.toString());
 
         return handler.handle(designHub, args);
     }
