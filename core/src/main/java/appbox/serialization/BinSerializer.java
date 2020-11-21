@@ -4,7 +4,6 @@ import appbox.cache.ObjectPool;
 import appbox.data.EntityId;
 import appbox.utils.IdUtil;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -172,6 +171,15 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         _stream.writeString(value);
     }
 
+    public void writeUUID(UUID value) {
+        _stream.writeUUID(value);
+    }
+
+    public void writeUUID(UUID value, int fieldId) {
+        _stream.writeVariant(fieldId);
+        _stream.writeUUID(value);
+    }
+
     public void finishWriteFields() {
         _stream.writeVariant(0);
     }
@@ -313,6 +321,8 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
             _stream.writeLong(value.getTime());
         }
     }
+
+
 
     //endregion
 

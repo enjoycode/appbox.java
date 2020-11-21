@@ -104,6 +104,11 @@ public final class BinDeserializer implements IEntityMemberReader {
         return _stream.readString();
     }
 
+    public UUID readUUID() {
+        return  _stream.readUUID();
+    }
+
+
     public void read(byte[] buffer, int offset, int count) {
         _stream.read(buffer, offset, count);
     }

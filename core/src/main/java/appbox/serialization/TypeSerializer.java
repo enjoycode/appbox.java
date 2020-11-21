@@ -6,10 +6,7 @@ import appbox.expressions.KVFieldExpression;
 import appbox.expressions.PrimitiveExpression;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
-import appbox.serialization.serializers.IntSerializer;
-import appbox.serialization.serializers.LongSerializer;
-import appbox.serialization.serializers.StringSerializer;
-import appbox.serialization.serializers.UserSerializer;
+import appbox.serialization.serializers.*;
 
 import java.util.HashMap;
 import java.util.function.Supplier;
@@ -24,6 +21,7 @@ public abstract class TypeSerializer {
         registerKnownType(IntSerializer.instance);
         registerKnownType(LongSerializer.instance);
         registerKnownType(StringSerializer.instance);
+        registerKnownType(UUIDSerializer.instance);
 
         registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null/*不支持*/));
 
