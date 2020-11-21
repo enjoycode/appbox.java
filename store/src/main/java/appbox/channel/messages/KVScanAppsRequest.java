@@ -17,6 +17,5 @@ public final class KVScanAppsRequest extends KVScanRequest {
         bs.writeByte((byte) -1); //DataCF
         bs.writeBool(false); //IsMVCC TODO: remove it
         bs.writeBool(false); //ToIndexTarget
-        bs.writeBool(false); //HasFilter
     }
 }
