@@ -2,6 +2,7 @@ package appbox.channel.messages;
 
 import appbox.data.SysEntity;
 import appbox.model.EntityModel;
+import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IEntityMemberWriter;
@@ -50,7 +51,9 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
 
         //data
         for (var m : _model.getMembers()) {
-            _entity.writeMember(m.memberId(), bs, IEntityMemberWriter.SF_STORE);
+            if (m.type() == EntityMemberModel.EntityMemberType.DataField) {
+                _entity.writeMember(m.memberId(), bs, IEntityMemberWriter.SF_STORE);
+            }
         }
     }
 
