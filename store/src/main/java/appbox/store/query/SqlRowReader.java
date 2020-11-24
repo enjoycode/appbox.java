@@ -55,7 +55,7 @@ public final class SqlRowReader implements IEntityMemberReader {
 
     @Override
     public UUID readUUIDMember(int flags) {
-        var uuidString = rowData.getString(flags); //暂从字符串转回，待检查
+        var uuidString = rowData.getString(flags); //暂从字符串转回，TODO:待检查
         return UUID.fromString(uuidString);
     }
 
@@ -71,7 +71,6 @@ public final class SqlRowReader implements IEntityMemberReader {
 
     @Override
     public EntityId readEntityIdMember(int flags) {
-        byte[] arr= ByteBuffer.allocate(Long.SIZE / Byte.SIZE*2).putLong(rowData.getLong(flags)).putLong(rowData.getLong(flags)).array();
-        return new EntityId(arr,0);
+        throw new RuntimeException("未实现");
     }
 }

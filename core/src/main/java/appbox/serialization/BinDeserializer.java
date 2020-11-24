@@ -174,8 +174,9 @@ public final class BinDeserializer implements IEntityMemberReader {
 
     @Override
     public EntityId readEntityIdMember(int flags) {
-        byte[] arr=ByteBuffer.allocate(Long.SIZE / Byte.SIZE*2).putLong(_stream.readLong()).putLong(_stream.readLong()).array();
-        return new EntityId(arr,0);
+        var id = new EntityId();
+        id.readFrom(this);
+        return id;
     }
 
     //endregion
