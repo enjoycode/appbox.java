@@ -2,91 +2,45 @@ package appbox.design.common;
 
 import appbox.design.tree.DesignNodeType;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
  * 用于包装设计器向服务端发送的签出请求
  */
 public final class CheckoutInfo {
-    private DesignNodeType nodeType = DesignNodeType.values()[0];
-    private String         targetID;
-    private int            version;
-    private String         developerName;
-    private UUID           developerOuid;
+    public final DesignNodeType nodeType;
+    public final String         targetID;
+    public final int            version;
+    public final String         developerName;
+    public final UUID           developerOuid;
+    public final LocalDateTime  checkoutTime;
 
-    public CheckoutInfo() {
+    public CheckoutInfo(DesignNodeType nodeType, String targetID,
+                        int version, String developerName, UUID developerOuID) {
+        this(nodeType, targetID, version, developerName, developerOuID, LocalDateTime.now());
     }
 
-    public CheckoutInfo(DesignNodeType nodeType, String targetID, int version, String developerName, UUID developerOuID) {
-        setNodeType(nodeType);
-        setTargetID(targetID);
-        setVersion(version);
-        setDeveloperName(developerName);
-        setDeveloperOuid(developerOuID);
-        setCheckoutTime(java.time.LocalDateTime.now());
+    public CheckoutInfo(DesignNodeType nodeType, String targetID,
+                        int version, String developerName, UUID developerOuID, LocalDateTime checkoutTime) {
+        this.nodeType = nodeType;
+        this.targetID = targetID;
+        this.version = version;
+        this.developerName = developerName;
+        this.developerOuid = developerOuID;
+        this.checkoutTime = checkoutTime;
+    }
+
+    public boolean isSingleModel() {
+        return nodeType.value >= DesignNodeType.EntityModelNode.value;
     }
 
     public String getKey() {
-        return makeKey(getNodeType(), getTargetID());
+        return makeKey(nodeType, targetID);
     }
 
     public static String makeKey(DesignNodeType nodeType, String targetId) {
         return String.format("%1$s|%2$s", nodeType.value, targetId);
     }
 
-    //region ====Properties====
-    public DesignNodeType getNodeType() {
-        return nodeType;
-    }
-
-    private void setNodeType(DesignNodeType value) {
-        nodeType = value;
-    }
-
-    public boolean getIsSingleModel() {
-        return getNodeType().value >= DesignNodeType.EntityModelNode.value;
-    }
-
-    public String getTargetID() {
-        return targetID;
-    }
-
-    private void setTargetID(String value) {
-        targetID = value;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    private void setVersion(int value) {
-        version = value;
-    }
-
-    public String getDeveloperName() {
-        return developerName;
-    }
-
-    private void setDeveloperName(String value) {
-        developerName = value;
-    }
-
-    public UUID getDeveloperOuid() {
-        return developerOuid;
-    }
-
-    private void setDeveloperOuid(UUID value) {
-        developerOuid = value;
-    }
-
-    private java.time.LocalDateTime checkoutTime = java.time.LocalDateTime.MIN;
-
-    public java.time.LocalDateTime getCheckoutTime() {
-        return checkoutTime;
-    }
-
-    public void setCheckoutTime(java.time.LocalDateTime value) {
-        checkoutTime = value;
-    }
-    //endregion
 }

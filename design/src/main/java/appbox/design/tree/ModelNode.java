@@ -23,6 +23,10 @@ public final class ModelNode extends DesignNode {
         return _model;
     }
 
+    void setModel(ModelBase newModel) {
+        _model = newModel;
+    }
+
     @Override
     public String id() {
         return Long.toUnsignedString(_model.id());

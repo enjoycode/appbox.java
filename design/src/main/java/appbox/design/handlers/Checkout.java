@@ -1,6 +1,9 @@
 package appbox.design.handlers;
 
 import appbox.design.DesignHub;
+import appbox.design.tree.DesignNodeType;
+import appbox.design.tree.ModelNode;
+import appbox.logging.Log;
 import appbox.runtime.InvokeArg;
 
 import java.util.List;
@@ -13,7 +16,24 @@ public final class Checkout implements IRequestHandler {
      */
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        //TODO:暂简单实现
-        return CompletableFuture.completedFuture(false);
+        var nodeType = DesignNodeType.forValue((byte) args.get(0).getInt());
+        var nodeId   = args.get(1).getString();
+
+        var node = hub.designTree.findNode(nodeType, nodeId);
+        if (node == null)
+            return CompletableFuture.failedFuture(new RuntimeException("Can't find node"));
+
+        if (node instanceof ModelNode) {
+            var modelNode = (ModelNode) node;
+            var curVersion = modelNode.model().version();
+            return modelNode.checkout().thenApply(checkoutOK -> {
+                if (!checkoutOK)
+                    throw new RuntimeException("Can't checkout ModelNode:" + modelNode.model().name());
+                return curVersion != modelNode.model().version(); //返回True表示模型已变更，用于前端刷新
+            });
+        } else {
+            Log.warn("暂未实现签出其他类型节点");
+            return CompletableFuture.completedFuture(false);
+        }
     }
 }

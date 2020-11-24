@@ -6,6 +6,7 @@ import appbox.design.tree.DesignNodeType;
 import appbox.entities.Checkout;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
+import appbox.model.ModelBase;
 import appbox.runtime.RuntimeContext;
 import appbox.store.EntityStore;
 import appbox.store.KVTransaction;
@@ -30,11 +31,11 @@ public final class CheckoutService {
             CompletableFuture<Void> future = null;
             for (CheckoutInfo info : checkoutInfos) {
                 var obj = new Checkout();
-                obj.setNodeType(info.getNodeType().value);
-                obj.setTargetId(info.getTargetID());
-                obj.setDeveloperId(info.getDeveloperOuid());
-                obj.setDeveloperName(info.getDeveloperName());
-                obj.setVersion(info.getVersion());
+                obj.setNodeType(info.nodeType.value);
+                obj.setTargetId(info.targetID);
+                obj.setDeveloperId(info.developerOuid);
+                obj.setDeveloperName(info.developerName);
+                obj.setVersion(info.version);
                 if (future == null) {
                     future = EntityStore.insertEntityAsync(obj, txn);
                 } else {
@@ -44,18 +45,18 @@ public final class CheckoutService {
             return future.thenCompose(r -> txn.commitAsync());
         }).thenCompose(r -> {
             //检查签出单个模型时，存储有无新版本
-            if (checkoutInfos.get(0).getIsSingleModel()) {
-                return ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).getTargetID()));
+            if (checkoutInfos.get(0).isSingleModel()) {
+                return ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).targetID));
             } else {
                 return CompletableFuture.completedFuture(null);
             }
         }).thenApply(r -> {
-            CheckoutResult result = new CheckoutResult(true);
-            if (r != null && r.version() != checkoutInfos.get(0).getVersion()) {
+            ModelBase modelWithNewVersion = null;
+            if (r != null && r.version() != checkoutInfos.get(0).version) {
                 Log.debug("Checkout single model with new version.");
-                result.setModelWithNewVersion(r);
+                modelWithNewVersion = r;
             }
-            return result;
+            return new CheckoutResult(true, modelWithNewVersion);
         });
     }
 
