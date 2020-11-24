@@ -2,6 +2,7 @@ package appbox.entities;
 
 import appbox.data.SysEntity;
 import appbox.data.SysUniqueIndex;
+import appbox.exceptions.UnknownEntityMember;
 import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
@@ -102,7 +103,7 @@ public class Employee extends SysEntity {
             case PASSWORD_ID:
                 bs.writeMember(id, _password, flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(Employee.class, id);
         }
     }
 
@@ -120,7 +121,7 @@ public class Employee extends SysEntity {
             case PASSWORD_ID:
                 _password = bs.readBinaryMember(flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(Employee.class, id);
         }
     }
 
@@ -147,7 +148,7 @@ public class Employee extends SysEntity {
                 case PASSWORD_ID:
                     _password = bs.readBinaryMember(flags); break;
                 default:
-                    throw new RuntimeException("unknown member");
+                    throw new UnknownEntityMember(Employee.class, id);
             }
         }
     }

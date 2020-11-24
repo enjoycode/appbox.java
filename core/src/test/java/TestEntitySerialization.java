@@ -1,4 +1,5 @@
 import appbox.data.SysEntity;
+import appbox.exceptions.UnknownEntityMember;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
@@ -43,7 +44,7 @@ public class TestEntitySerialization {
                     bs.writeMember(id, age, flags);
                     break;
                 default:
-                    throw new RuntimeException("unknown member");
+                    throw new UnknownEntityMember(Emploee.class, id);
             }
         }
 
@@ -57,7 +58,7 @@ public class TestEntitySerialization {
                     age = bs.readIntMember(flags);
                     break;
                 default:
-                    throw new RuntimeException("unknown member");
+                    throw new UnknownEntityMember(Emploee.class, id);
             }
         }
     }

@@ -3,6 +3,7 @@ package appbox.entities;
 import appbox.data.EntityId;
 import appbox.data.PersistentState;
 import appbox.data.SysEntity;
+import appbox.exceptions.UnknownEntityMember;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
@@ -10,9 +11,8 @@ import appbox.utils.IdUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
-public class Orgunit extends SysEntity {
+public class OrgUnit2 extends SysEntity {
 
     public static final short NAME_ID      = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short BASEID_ID    = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -22,16 +22,16 @@ public class Orgunit extends SysEntity {
     public static final short PARENT_ID    = (short) (6 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short CHILDS_ID    = (short) (7 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    public Orgunit() {
+    public OrgUnit2() {
         super(IdUtil.SYS_ORGUNIT_MODEL_ID);
     }
 
     private String        _name;
     private EntityId      _baseId;
     private long          _baseType;
-    private EntityId      _parentId;
-    private Orgunit       _parent;
-    private List<Orgunit> _childs;
+    private EntityId       _parentId;
+    private OrgUnit2       _parent;
+    private List<OrgUnit2> _childs;
 
     public String getName() {
         return _name;
@@ -76,13 +76,13 @@ public class Orgunit extends SysEntity {
         }
     }
 
-    public Orgunit getParent() {
+    public OrgUnit2 getParent() {
         if (_parentId != null && _parent == null)
             throw new RuntimeException("EntityRef hasn't loaded.");
         return _parent;
     }
 
-    public void setParent(Orgunit parent) {
+    public void setParent(OrgUnit2 parent) {
         if (parent == null) {
             setParentId(null);
         } else {
@@ -91,7 +91,7 @@ public class Orgunit extends SysEntity {
         }
     }
 
-    public List<Orgunit> getChilds() {
+    public List<OrgUnit2> getChilds() {
         if (_childs == null) {
             if (persistentState() == PersistentState.Detached) {
                 _childs = new ArrayList<>();
@@ -115,7 +115,7 @@ public class Orgunit extends SysEntity {
             case PARENTID_ID:
                 bs.writeMember(id, _parentId, flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(OrgUnit2.class, id);
         }
     }
 
@@ -131,7 +131,7 @@ public class Orgunit extends SysEntity {
             case PARENTID_ID:
                 _parentId = bs.readEntityIdMember(flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(OrgUnit2.class, id);
         }
     }
 }

@@ -127,13 +127,13 @@ public final class StoreInitiator {
 
         var name = new DataFieldModel(model, "Name", DataFieldType.String, false);
         name.setLength(100);
-        model.addSysMember(name, Orgunit.NAME_ID);
+        model.addSysMember(name, OrgUnit2.NAME_ID);
 
         var baseId = new DataFieldModel(model, "BaseId", DataFieldType.EntityId, false, true);
-        model.addSysMember(baseId, Orgunit.BASEID_ID);
+        model.addSysMember(baseId, OrgUnit2.BASEID_ID);
 
         var baseType = new DataFieldModel(model, "BaseType", DataFieldType.Long, false, true);
-        model.addSysMember(baseType, Orgunit.BASE_TYPE_ID);
+        model.addSysMember(baseType, OrgUnit2.BASE_TYPE_ID);
 
         List<Long> refModelIds = new ArrayList<Long>() {{
             add(IdUtil.SYS_ENTERPRISE_MODEL_ID);
@@ -142,18 +142,18 @@ public final class StoreInitiator {
         }};
         var base = new EntityRefModel(model, "Base", refModelIds,
                 new short[]{baseId.memberId()}, baseType.memberId(), true);
-        model.addSysMember(base, Orgunit.BASE_ID);
+        model.addSysMember(base, OrgUnit2.BASE_ID);
 
         var parentId = new DataFieldModel(model, "ParentId", DataFieldType.EntityId, true, true);
-        model.addSysMember(parentId, Orgunit.PARENTID_ID);
+        model.addSysMember(parentId, OrgUnit2.PARENTID_ID);
 
         var parent = new EntityRefModel(model, "Parent", IdUtil.SYS_ORGUNIT_MODEL_ID,
                 new short[]{parentId.memberId()}, true);
         parent.setAllowNull(true);
-        model.addSysMember(parent, Orgunit.PARENT_ID);
+        model.addSysMember(parent, OrgUnit2.PARENT_ID);
 
         var childs = new EntitySetModel(model, "Childs", IdUtil.SYS_ORGUNIT_MODEL_ID, parent.memberId());
-        model.addSysMember(childs, Orgunit.CHILDS_ID);
+        model.addSysMember(childs, OrgUnit2.CHILDS_ID);
 
         return model;
     }
@@ -162,19 +162,11 @@ public final class StoreInitiator {
         var model = new EntityModel(IdUtil.SYS_WORKGROUP_MODEL_ID, "Workgroup");
         model.bindToSysStore(true, false);
 
-        var nameFiled = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
+        var nameFiled = new DataFieldModel(model, "Name", DataFieldType.String, false);
         nameFiled.setLength(50);
         model.addSysMember(nameFiled, Workgroup.NAME_ID);
 
-        //indexes
-        var ui_nodeType_targetId = new SysIndexModel(model, "UI_NodeType_TargetId", false,
-                new FieldWithOrder[]
-                        {
-                                new FieldWithOrder(Workgroup.CHECKOUT_NODETYPE_ID),
-                                new FieldWithOrder(Workgroup.CHECKOUT_TARGETID_ID)
-                        }, new short[]{Workgroup.CHECKOUT_NODETYPE_ID, Workgroup.CHECKOUT_TARGETID_ID});
-        model.sysStoreOptions().addSysIndex(model, ui_nodeType_targetId, (byte) ((1 << IdUtil.INDEXID_UNIQUE_OFFSET) | (1 << 2)));
-        return model;
+       return model;
     }
 
     private static CompletableFuture<ApplicationModel> createAppAsync() {
@@ -228,7 +220,8 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static CompletableFuture<Boolean> createServiceModel(String name, long idIndex, UUID folderId, KVTransaction txn) {
+    private static CompletableFuture<Boolean> createServiceModel(
+            String name, long idIndex, UUID folderId, KVTransaction txn) {
         var modelId = ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
                 | ((long) ModelType.Service.value << IdUtil.MODELID_TYPE_OFFSET)
                 | (idIndex << IdUtil.MODELID_SEQ_OFFSET);
@@ -276,28 +269,29 @@ public final class StoreInitiator {
         var itdept = new Workgroup();
         itdept.setName("IT Dept");
 
-        var entou = new Orgunit();
+        var entou = new OrgUnit2();
         entou.setName(defaultEnterprise.getName());
         entou.setBaseType(IdUtil.SYS_ENTERPRISE_MODEL_ID);
         entou.setBaseId(defaultEnterprise.id());
 
-        var itdeptou = new Orgunit();
+        var itdeptou = new OrgUnit2();
         itdeptou.setName(itdept.getName());
         itdeptou.setBaseType(IdUtil.SYS_WORKGROUP_MODEL_ID);
         itdeptou.setBaseId(itdept.id());
         itdeptou.setParent(entou);
 
-        var adminou = new Orgunit();
+        var adminou = new OrgUnit2();
         adminou.setName(admin.getName());
         adminou.setBaseId(admin.id());
         adminou.setBaseType(IdUtil.SYS_EMPLOYEE_MODEL_ID);
         adminou.setParent(itdeptou);
 
-        var testou = new Orgunit();
+        var testou = new OrgUnit2();
         testou.setName(test.getName());
         testou.setBaseId(test.id());
         testou.setBaseType(IdUtil.SYS_EMPLOYEE_MODEL_ID);
         testou.setParent(itdeptou);
+
         return EntityStore.insertEntityAsync(defaultEnterprise, txn)
                 .thenCompose(r->EntityStore.insertEntityAsync(admin, txn))
                 .thenCompose(r->EntityStore.insertEntityAsync(test, txn))

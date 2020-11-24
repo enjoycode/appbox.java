@@ -1,12 +1,14 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
+import appbox.exceptions.UnknownEntityMember;
 import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 public class StagedModel extends SysEntity {
@@ -67,7 +69,7 @@ public class StagedModel extends SysEntity {
     }
 
     public void setData(byte[] value) {
-        if (!value.equals(_data)) {
+        if (!Arrays.equals(value, _data)) {
             this._data = value;
             onPropertyChanged(DATA_ID);
         }
@@ -85,7 +87,7 @@ public class StagedModel extends SysEntity {
             case DATA_ID:
                 bs.writeMember(id, _data, flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(StagedModel.class, id);
         }
     }
 
@@ -101,7 +103,7 @@ public class StagedModel extends SysEntity {
             case DATA_ID:
                 _data = bs.readBinaryMember(flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(StagedModel.class, id);
         }
     }
 }

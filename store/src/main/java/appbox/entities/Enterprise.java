@@ -1,6 +1,7 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
+import appbox.exceptions.UnknownEntityMember;
 import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
@@ -51,7 +52,7 @@ public final class Enterprise extends SysEntity {
             case ADDRESS_ID:
                 bs.writeMember(id, _address, flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(Enterprise.class, id);
         }
     }
 
@@ -63,7 +64,7 @@ public final class Enterprise extends SysEntity {
             case ADDRESS_ID:
                 _address = bs.readStringMember(flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(Enterprise.class, id);
         }
     }
 }

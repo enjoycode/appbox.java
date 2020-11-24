@@ -1,6 +1,7 @@
 package appbox.entities;
 
 import appbox.data.SysEntity;
+import appbox.exceptions.UnknownEntityMember;
 import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
@@ -102,7 +103,7 @@ public class Checkout extends SysEntity {
             case VERSION_ID:
                 bs.writeMember(id, _version, flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(Checkout.class, id);
         }
     }
 
@@ -120,7 +121,7 @@ public class Checkout extends SysEntity {
             case VERSION_ID:
                 _version = bs.readIntMember(flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(Checkout.class, id);
         }
     }
 }

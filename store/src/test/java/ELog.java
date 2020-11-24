@@ -1,4 +1,5 @@
 import appbox.data.SqlEntity;
+import appbox.exceptions.UnknownEntityMember;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
@@ -42,7 +43,7 @@ public class ELog extends SqlEntity {
             case ADDR_ID:
                 bs.writeMember(id, _address, flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(ELog.class, id);
         }
     }
 
@@ -56,7 +57,7 @@ public class ELog extends SqlEntity {
             case ADDR_ID:
                 _address = bs.readStringMember(flags); break;
             default:
-                throw new RuntimeException("unknown member");
+                throw new UnknownEntityMember(ELog.class, id);
         }
     }
 }
