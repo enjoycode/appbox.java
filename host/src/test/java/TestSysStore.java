@@ -1,6 +1,7 @@
 import appbox.channel.messages.*;
 import appbox.entities.Employee;
 import appbox.entities.Enterprise;
+import appbox.entities.OrgUnit;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
@@ -154,6 +155,19 @@ public class TestSysStore {
         q.where(Employee.ACCOUNT, "cccc");
         var row = q.toIndexRowAsync().get();
         assertNotNull(row);
+    }
+
+    @Test
+    public void testToTreePath() throws Exception {
+        var q = new TableScan<>(IdUtil.SYS_ORGUNIT_MODEL_ID, OrgUnit.class);
+        q.where(OrgUnit.NAME.eq("Admin"));
+        var list = q.toListAsync().get();
+        var admin = list.get(0);
+        assertNotNull(admin);
+
+        var treePath = EntityStore.loadTreePathAsync(OrgUnit.class,
+                admin.id(), OrgUnit::getParentId, OrgUnit::getName).get();
+        assertNotNull(treePath);
     }
 
 }

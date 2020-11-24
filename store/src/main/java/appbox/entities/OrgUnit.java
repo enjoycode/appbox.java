@@ -4,6 +4,8 @@ import appbox.data.EntityId;
 import appbox.data.PersistentState;
 import appbox.data.SysEntity;
 import appbox.exceptions.UnknownEntityMember;
+import appbox.expressions.KVFieldExpression;
+import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
@@ -21,6 +23,8 @@ public class OrgUnit extends SysEntity {
     public static final short PARENTID_ID  = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short PARENT_ID    = (short) (6 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short CHILDS_ID    = (short) (7 << IdUtil.MEMBERID_SEQ_OFFSET);
+
+    public static final KVFieldExpression NAME = new KVFieldExpression(NAME_ID, DataFieldModel.DataFieldType.String);
 
     public OrgUnit() {
         super(IdUtil.SYS_ORGUNIT_MODEL_ID);
