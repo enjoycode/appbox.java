@@ -1,7 +1,7 @@
 package appbox.store.query;
 
-import appbox.channel.messages.KVScanTableRequest;
-import appbox.channel.messages.KVScanTableResponse;
+import appbox.channel.messages.KVScanEntityRequest;
+import appbox.channel.messages.KVScanEntityResponse;
 import appbox.data.SysEntity;
 import appbox.expressions.Expression;
 import appbox.model.EntityModel;
@@ -42,12 +42,12 @@ public final class TableScan<T extends SysEntity> extends KVScan {
     //endregion
 
     //region ====toXXX methods====
-    private CompletableFuture<KVScanTableResponse<T>> execPartScanAsync(long raftGroupId, int skip, int take) {
+    private CompletableFuture<KVScanEntityResponse<T>> execPartScanAsync(long raftGroupId, int skip, int take) {
         if (raftGroupId == 0)
-            return CompletableFuture.completedFuture(new KVScanTableResponse<>(null));
+            return CompletableFuture.completedFuture(new KVScanEntityResponse<>(null));
 
-        var req = new KVScanTableRequest(raftGroupId, skip, take, filter);
-        return SysStoreApi.execKVScanAsync(req, new KVScanTableResponse<>(_clazz));
+        var req = new KVScanEntityRequest(raftGroupId, skip, take, filter);
+        return SysStoreApi.execKVScanAsync(req, new KVScanEntityResponse<>(_clazz));
     }
 
     public CompletableFuture<List<T>> toListAsync(/*ITransaction txn*/) {
