@@ -18,6 +18,8 @@ public interface IEntityMemberReader {
 
     byte readByteMember(int flags);
 
+    long readLongMember(int flags);
+
     UUID readUUIDMember(int flags);
 
     byte[] readBinaryMember(int flags);

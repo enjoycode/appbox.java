@@ -153,6 +153,11 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     @Override
+    public long readLongMember(int flags) {
+        return _stream.readLong();
+    }
+
+    @Override
     public UUID readUUIDMember(int flags) {
         return new UUID(_stream.readLong(), _stream.readLong());
     }
