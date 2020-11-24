@@ -1,11 +1,13 @@
 package appbox.entities;
 
 import appbox.data.EntityId;
+import appbox.data.PersistentState;
 import appbox.data.SysEntity;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -85,12 +87,19 @@ public class Orgunit extends SysEntity {
             setParentId(null);
         } else {
             setParentId(parent.id());
-            _parent   = parent;
+            _parent = parent;
         }
     }
 
     public List<Orgunit> getChilds() {
-        //TODO:判断持久化状态
+        if (_childs == null) {
+            if (persistentState() == PersistentState.Detached) {
+                _childs = new ArrayList<>();
+            } else {
+                throw new RuntimeException("EntitySet hasn't loaded.");
+            }
+        }
+
         return _childs;
     }
 
@@ -103,6 +112,8 @@ public class Orgunit extends SysEntity {
                 bs.writeMember(id, _baseId, flags); break;
             case BASE_TYPE_ID:
                 bs.writeMember(id, _baseType, flags); break;
+            //case PARENTID_ID:
+            //    bs.writeMember(id, _parentId, flags); break;
             default:
                 throw new RuntimeException("unknown member");
         }
@@ -117,6 +128,8 @@ public class Orgunit extends SysEntity {
                 _baseId = bs.readUUIDMember(flags); break;
             case BASE_TYPE_ID:
                 _baseType = bs.readByteMember(flags); break;
+            //case PARENTID_ID:
+            //    _parentId = bs.readEntityIdMember(flags); break;
             default:
                 throw new RuntimeException("unknown member");
         }

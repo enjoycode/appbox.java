@@ -16,10 +16,6 @@ public abstract class Entity implements IBinSerializable {
         return RuntimeContext.current().getModel(_modelId);
     }
 
-    protected void onPropertyChanged(short memberId) {
-        //TODO:
-    }
-
     //region ====Serialization====
     @Override
     public final void writeTo(BinSerializer bs) {
