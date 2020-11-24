@@ -72,7 +72,19 @@ public final class EntityId {
     }
 
     public UUID toUUID() {
-        throw new RuntimeException("未实现");
+        long msb = 0L;
+        long lsb = 0L;
+
+        int i;
+        for (i = 0; i < 8; ++i) {
+            msb = msb << 8 | (long) (_data[i] & 255);
+        }
+
+        for (i = 8; i < 16; ++i) {
+            lsb = lsb << 8 | (long) (_data[i] & 255);
+        }
+
+        return new UUID(msb, lsb);
     }
 
     @Override
