@@ -16,6 +16,7 @@ import appbox.utils.IdUtil;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class CheckoutService {
 
@@ -64,7 +65,7 @@ public final class CheckoutService {
      * 用于DesignTree加载时
      */
     public static CompletableFuture<Map<String, CheckoutInfo>> loadAllAsync() {
-        var map = new HashMap<String, CheckoutInfo>();
+        var map = new ConcurrentHashMap<String, CheckoutInfo>();
         var q   = new TableScan<>(IdUtil.SYS_CHECKOUT_MODEL_ID, Checkout.class);
         return q.toListAsync().thenApply(res -> {
             if (res != null && res.size() > 0) {
@@ -88,22 +89,24 @@ public final class CheckoutService {
 
         var q = new TableScan<>(IdUtil.SYS_CHECKOUT_MODEL_ID, Checkout.class);
         q.where(Checkout.DEVELOPER.eq(devId));
-        return KVTransaction.beginAsync().thenCompose(txn->q.toListAsync().thenCompose(res ->{
-            CompletableFuture future = null;
-            if (res != null&&res.size()>0) {
-                for (Checkout checkout : res) {
-                    if (future == null) {
-                        future = EntityStore.deleteEntityAsync(model, checkout.id(), txn);
-                    } else {
-                        future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, checkout.id(), txn));
-                    }
+        return q.toListAsync().thenCompose(res->{
+                if (res != null&&res.size()>0){
+                    return KVTransaction.beginAsync().thenCompose(txn ->{
+                        CompletableFuture future=null;
+                        for (Checkout checkout : res) {
+                            if (future == null) {
+                                future = EntityStore.deleteEntityAsync(model, checkout.id(), txn);
+                            } else {
+                                future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, checkout.id(), txn));
+                            }
+                        }
+                        return future;
+                    });
+                }else{
+                    return CompletableFuture.completedFuture(null);
                 }
-                future = future.thenCompose(r -> txn.commitAsync());
-            }else{
-                future = CompletableFuture.completedFuture(null);
             }
-            return future;
-        }));
+        );
 
     }
 
