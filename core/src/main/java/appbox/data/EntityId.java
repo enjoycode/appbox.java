@@ -5,6 +5,7 @@ import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class EntityId {
@@ -68,6 +69,10 @@ public final class EntityId {
         short p2 = (short) ((raftGroupId & 0xFFF) << 4);
         _data[4] = (byte) (p2 & 0xFF);
         _data[5] = (byte) (p2 >>> 8);
+    }
+
+    public UUID toUUID() {
+        throw new RuntimeException("未实现");
     }
 
     @Override

@@ -3,12 +3,16 @@ package appbox.store;
 import appbox.channel.messages.*;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
+import appbox.data.TreeNodePath;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
 import appbox.store.caching.MetaCaches;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public final class EntityStore { //TODO: rename to SysStore
 
@@ -226,6 +230,50 @@ public final class EntityStore { //TODO: rename to SysStore
     }
 
     //endregion index
+
+    //endregion
+
+    //region ====Load Methods====
+
+    /** 从存储根据Id加载单个Entity实例 */
+    public static <T extends SysEntity> CompletableFuture<T> loadAsync(Class<T> clazz, EntityId id) {
+        var req = new KVGetEntityRequest(id);
+        return SysStoreApi.execKVGetAsync(req, new KVGetEntityResponse<>(clazz))
+                .thenApply(KVGetEntityResponse::getEntity);
+    }
+
+    public static <T extends SysEntity> CompletableFuture<TreeNodePath> loadTreePathAsync(
+            Class<T> clazz, EntityId leafId,
+            Function<T, EntityId> parentGetter, Function<T, String> textGetter) {
+        //TODO:*****暂简单实现(需要快照事务读，另外考虑存储引擎实现一次加载)
+
+        return loadAsync(clazz, leafId).thenCompose(leaf -> {
+            if (leaf == null)
+                return CompletableFuture.completedFuture(null);
+
+            var list = new ArrayList<TreeNodePath.TreeNodeInfo>();
+            return loopLoadTreeNode(leaf, list, parentGetter, textGetter)
+                    .thenApply(r -> {
+                        var nodes = new TreeNodePath.TreeNodeInfo[list.size()];
+                        return new TreeNodePath(list.toArray(nodes));
+                    });
+        });
+    }
+
+    private static <T extends SysEntity> CompletableFuture<Void> loopLoadTreeNode(T node,
+                                                                                  List<TreeNodePath.TreeNodeInfo> list,
+                                                                                  Function<T, EntityId> parentGetter,
+                                                                                  Function<T, String> textGetter) {
+        var newNode = new TreeNodePath.TreeNodeInfo(node.id().toUUID(), textGetter.apply(node));
+        list.add(newNode);
+
+        var parentId = parentGetter.apply(node);
+        if (parentId == null)
+            return CompletableFuture.completedFuture(null);
+
+        return loadAsync((Class<T>) node.getClass(), parentId)
+                .thenCompose(parent -> loopLoadTreeNode(parent, list, parentGetter, textGetter));
+    }
 
     //endregion
 

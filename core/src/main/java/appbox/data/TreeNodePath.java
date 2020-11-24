@@ -7,7 +7,7 @@ import java.util.UUID;
  */
 public final class TreeNodePath {
     //region ====TreeNodeInfo====
-    public final class TreeNodeInfo {
+    public static final class TreeNodeInfo {
         public final UUID id;
         public final String text;
 
