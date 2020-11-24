@@ -5,14 +5,14 @@ import appbox.serialization.BinSerializer;
 import appbox.store.KeyUtil;
 
 /** 扫描表分区请求 */
-public final class KVScanTableRequest extends KVScanRequest {
+public final class KVScanEntityRequest extends KVScanRequest {
     private final long       raftGroupId;
     private final int        skip;
     private final int        take;
     private final Expression filter;
     //TODO:1.事务标识或只读事务的时间戳;2.CreateTime谓词定位
 
-    public KVScanTableRequest(long raftGroupId, int skip, int take, Expression filter) {
+    public KVScanEntityRequest(long raftGroupId, int skip, int take, Expression filter) {
         this.raftGroupId = raftGroupId;
         this.skip        = skip;
         this.take        = take;

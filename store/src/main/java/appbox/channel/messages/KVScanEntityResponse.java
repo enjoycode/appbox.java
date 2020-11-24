@@ -8,12 +8,12 @@ import appbox.store.KeyUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class KVScanTableResponse<T extends SysEntity> extends KVScanResponse {
+public final class KVScanEntityResponse<T extends SysEntity> extends KVScanResponse {
 
     public        List<T>  result;
     private final Class<T> clazz;
 
-    public KVScanTableResponse(Class<T> clazz) {
+    public KVScanEntityResponse(Class<T> clazz) {
         this.clazz = clazz;
     }
 
