@@ -71,6 +71,6 @@ public final class SqlRowReader implements IEntityMemberReader {
 
     @Override
     public EntityId readEntityIdMember(int flags) {
-        throw new RuntimeException("未实现");
+        throw new UnsupportedOperationException();
     }
 }
