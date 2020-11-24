@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class OrgUnit2 extends SysEntity {
+public class OrgUnit extends SysEntity {
 
     public static final short NAME_ID      = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short BASEID_ID    = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -22,16 +22,16 @@ public class OrgUnit2 extends SysEntity {
     public static final short PARENT_ID    = (short) (6 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short CHILDS_ID    = (short) (7 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    public OrgUnit2() {
+    public OrgUnit() {
         super(IdUtil.SYS_ORGUNIT_MODEL_ID);
     }
 
     private String        _name;
     private EntityId      _baseId;
     private long          _baseType;
-    private EntityId       _parentId;
-    private OrgUnit2       _parent;
-    private List<OrgUnit2> _childs;
+    private EntityId      _parentId;
+    private OrgUnit       _parent;
+    private List<OrgUnit> _childs;
 
     public String getName() {
         return _name;
@@ -76,13 +76,13 @@ public class OrgUnit2 extends SysEntity {
         }
     }
 
-    public OrgUnit2 getParent() {
+    public OrgUnit getParent() {
         if (_parentId != null && _parent == null)
             throw new RuntimeException("EntityRef hasn't loaded.");
         return _parent;
     }
 
-    public void setParent(OrgUnit2 parent) {
+    public void setParent(OrgUnit parent) {
         if (parent == null) {
             setParentId(null);
         } else {
@@ -91,7 +91,7 @@ public class OrgUnit2 extends SysEntity {
         }
     }
 
-    public List<OrgUnit2> getChilds() {
+    public List<OrgUnit> getChilds() {
         if (_childs == null) {
             if (persistentState() == PersistentState.Detached) {
                 _childs = new ArrayList<>();
@@ -115,7 +115,7 @@ public class OrgUnit2 extends SysEntity {
             case PARENTID_ID:
                 bs.writeMember(id, _parentId, flags); break;
             default:
-                throw new UnknownEntityMember(OrgUnit2.class, id);
+                throw new UnknownEntityMember(OrgUnit.class, id);
         }
     }
 
@@ -131,7 +131,7 @@ public class OrgUnit2 extends SysEntity {
             case PARENTID_ID:
                 _parentId = bs.readEntityIdMember(flags); break;
             default:
-                throw new UnknownEntityMember(OrgUnit2.class, id);
+                throw new UnknownEntityMember(OrgUnit.class, id);
         }
     }
 }
