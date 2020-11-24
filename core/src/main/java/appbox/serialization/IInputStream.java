@@ -1,5 +1,7 @@
 package appbox.serialization;
 
+import java.util.UUID;
+
 public interface IInputStream {
 
     /**
@@ -43,6 +45,10 @@ public interface IInputStream {
                 | Byte.toUnsignedLong(readByte()) << 16 | Byte.toUnsignedLong(readByte()) << 24
                 | Byte.toUnsignedLong(readByte()) << 32 | Byte.toUnsignedLong(readByte()) << 40
                 | Byte.toUnsignedLong(readByte()) << 48 | Byte.toUnsignedLong(readByte()) << 56;
+    }
+
+    default UUID readUUID(){
+        return new UUID(readLong(),readLong());
     }
 
     default int readVariant() {

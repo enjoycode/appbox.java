@@ -1,5 +1,7 @@
 package appbox.serialization;
 
+import java.util.UUID;
+
 public interface IOutputStream {
 
     void writeByte(byte value);
@@ -31,6 +33,11 @@ public interface IOutputStream {
         writeByte((byte) ((value >> 40) & 0xFF));
         writeByte((byte) ((value >> 48) & 0xFF));
         writeByte((byte) ((value >> 56) & 0xFF));
+    }
+
+    default void writeUUID(UUID value) {
+        writeLong(value.getMostSignificantBits());
+        writeLong(value.getLeastSignificantBits());
     }
 
     default void writeVariant(int value) {

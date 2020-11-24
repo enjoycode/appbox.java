@@ -3,6 +3,7 @@ import appbox.design.common.CheckoutInfo;
 import appbox.design.common.CheckoutResult;
 import appbox.design.services.CheckoutService;
 import appbox.design.tree.DesignNodeType;
+import appbox.logging.Log;
 import appbox.runtime.RuntimeContext;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;
@@ -37,35 +38,25 @@ public class TestCheckoutService {
     }
 
     @Test
-    public void checkoutAsync(){
+    public void checkoutAsync() throws Exception{
         UUID uuid=new UUID(-6038453433195871438l,-7082168417221633763l);
         List<CheckoutInfo> checkoutInfos =new ArrayList<>();
-        CheckoutInfo checkoutInfo=new CheckoutInfo(DesignNodeType.ApplicationNode,"1",1,"测试员",uuid);
+        CheckoutInfo checkoutInfo=new CheckoutInfo(DesignNodeType.ApplicationNode,"2",1,"测试员",uuid);
         checkoutInfos.add(checkoutInfo);
-        CompletableFuture<CheckoutResult> res = null;
-        try {
-            res = CheckoutService.checkoutAsync(checkoutInfos);
-            var b=res.get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        var res = CheckoutService.checkoutAsync(checkoutInfos).get();
+        assertNotNull(res);
     }
 
     @Test
     public void loadAllAsync() throws Exception{
         var map = CheckoutService.loadAllAsync().get();
+        Log.debug("size:"+map.size());
         assertNotNull(map);
     }
 
     @Test
-    public void checkInAsync(){
-        var fu=CheckoutService.checkInAsync();
-        try{
-            var res=fu.get();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+    public void checkInAsync() throws Exception{
+        var fu=CheckoutService.checkInAsync().get();
     }
 
     public static void main(String args[]){
