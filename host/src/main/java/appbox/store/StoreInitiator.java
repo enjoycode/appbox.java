@@ -16,6 +16,7 @@ import static appbox.model.entity.DataFieldModel.DataFieldType;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -253,9 +254,58 @@ public final class StoreInitiator {
 
     /** insert default entities */
     private static CompletableFuture<Void> insertEntities(KVTransaction txn) {
+
+        //新建默认组织
         var defaultEnterprise = new Enterprise();
         defaultEnterprise.setName("AppBoxFuture");
-        return EntityStore.insertEntityAsync(defaultEnterprise, txn);
+        //新建默认系统管理员及测试账号
+        var admin = new Employee();
+        admin.setName("Admin");
+        admin.setAccount("Admin");
+        admin.setPassword(new byte[0]);//todo 加密工具类
+        admin.setMale(true);
+        admin.setBirthday(new Date());
+
+        var test = new Employee();
+        test.setName("Test");
+        test.setAccount("Test");
+        test.setPassword(new byte[0]);//todo 加密工具类
+        test.setMale(false);
+        test.setBirthday(new Date());
+        //新建默认组织单元
+        var itdept = new Workgroup();
+        itdept.setName("IT Dept");
+
+        var entou = new Orgunit();
+        entou.setName(defaultEnterprise.getName());
+        entou.setBaseType(IdUtil.SYS_ENTERPRISE_MODEL_ID);
+        entou.setBaseId(defaultEnterprise.id());
+
+        var itdeptou = new Orgunit();
+        itdeptou.setName(itdept.getName());
+        itdeptou.setBaseType(IdUtil.SYS_WORKGROUP_MODEL_ID);
+        itdeptou.setBaseId(itdept.id());
+        itdeptou.setParent(entou);
+
+        var adminou = new Orgunit();
+        adminou.setName(admin.getName());
+        adminou.setBaseId(admin.id());
+        adminou.setBaseType(IdUtil.SYS_EMPLOYEE_MODEL_ID);
+        adminou.setParent(itdeptou);
+
+        var testou = new Orgunit();
+        testou.setName(test.getName());
+        testou.setBaseId(test.id());
+        testou.setBaseType(IdUtil.SYS_EMPLOYEE_MODEL_ID);
+        testou.setParent(itdeptou);
+        return EntityStore.insertEntityAsync(defaultEnterprise, txn)
+                .thenCompose(r->EntityStore.insertEntityAsync(admin, txn))
+                .thenCompose(r->EntityStore.insertEntityAsync(test, txn))
+                .thenCompose(r->EntityStore.insertEntityAsync(itdept, txn))
+                .thenCompose(r->EntityStore.insertEntityAsync(entou, txn))
+                .thenCompose(r->EntityStore.insertEntityAsync(itdeptou, txn))
+                .thenCompose(r->EntityStore.insertEntityAsync(adminou, txn))
+                .thenCompose(r->EntityStore.insertEntityAsync(testou, txn));
     }
 
 }
