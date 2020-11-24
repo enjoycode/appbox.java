@@ -54,6 +54,11 @@ public final class SqlRowReader implements IEntityMemberReader {
     }
 
     @Override
+    public long readLongMember(int flags) {
+        return rowData.getLong(flags);
+    }
+
+    @Override
     public UUID readUUIDMember(int flags) {
         var uuidString = rowData.getString(flags); //暂从字符串转回，TODO:待检查
         return UUID.fromString(uuidString);
