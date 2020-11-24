@@ -1,5 +1,6 @@
 package appbox.channel;
 
+import appbox.data.EntityId;
 import appbox.data.TreeNodePath;
 import appbox.design.DesignHub;
 import appbox.design.IDeveloperSession;
@@ -7,18 +8,20 @@ import appbox.design.IDeveloperSession;
 import java.util.UUID;
 
 public final class WebSession implements IDeveloperSession {
-    private final long      _id;
-    private final String    _name;
-    private       DesignHub _designHub;
+    private final long         _id;
+    private       DesignHub    _designHub;
+    public final EntityId employeeId;
+    public final  TreeNodePath treePath;
 
-    public WebSession(long id, String name) {
-        _id   = id;
-        _name = name;
+    public WebSession(long id, TreeNodePath path, EntityId employeeId) {
+        _id      = id;
+        treePath = path;
+        this.employeeId = employeeId;
     }
 
     @Override
     public String name() {
-        return _name;
+        return treePath.getAt(0).text;
     }
 
     @Override
@@ -48,12 +51,12 @@ public final class WebSession implements IDeveloperSession {
 
     @Override
     public UUID leafOrgUnitId() {
-        return null;
+        return this.employeeId == null ? treePath.getAt(1).id : treePath.getAt(0).id;
     }
 
     @Override
     public UUID emploeeId() {
-        return null;
+        return employeeId.toUUID();
     }
 
     @Override

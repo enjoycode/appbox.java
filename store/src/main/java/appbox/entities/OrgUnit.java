@@ -24,7 +24,8 @@ public class OrgUnit extends SysEntity {
     public static final short PARENT_ID    = (short) (6 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short CHILDS_ID    = (short) (7 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    public static final KVFieldExpression NAME = new KVFieldExpression(NAME_ID, DataFieldModel.DataFieldType.String);
+    public static final KVFieldExpression NAME   = new KVFieldExpression(NAME_ID, DataFieldModel.DataFieldType.String);
+    public static final KVFieldExpression BASEID = new KVFieldExpression(BASEID_ID, DataFieldModel.DataFieldType.EntityId);
 
     public OrgUnit() {
         super(IdUtil.SYS_ORGUNIT_MODEL_ID);
