@@ -27,8 +27,8 @@ public class Orgunit extends SysEntity {
     }
 
     private String        _name;
-    private UUID          _baseId;
-    private byte          _baseType;
+    private EntityId      _baseId;
+    private long          _baseType;
     private EntityId      _parentId;
     private Orgunit       _parent;
     private List<Orgunit> _childs;
@@ -44,22 +44,22 @@ public class Orgunit extends SysEntity {
         }
     }
 
-    public UUID getBaseId() {
+    public EntityId getBaseId() {
         return _baseId;
     }
 
-    public void setBaseId(UUID value) {
+    public void setBaseId(EntityId value) {
         if (!value.equals(_baseId)) {
             this._baseId = value;
             onPropertyChanged(BASEID_ID);
         }
     }
 
-    public byte getBaseType() {
+    public long getBaseType() {
         return _baseType;
     }
 
-    public void setBaseType(byte value) {
+    public void setBaseType(long value) {
         if (value != _baseType) {
             this._baseType = value;
             onPropertyChanged(BASE_TYPE_ID);
@@ -125,9 +125,9 @@ public class Orgunit extends SysEntity {
             case NAME_ID:
                 _name = bs.readStringMember(flags); break;
             case BASEID_ID:
-                _baseId = bs.readUUIDMember(flags); break;
+                _baseId = bs.readEntityIdMember(flags); break;
             case BASE_TYPE_ID:
-                _baseType = bs.readByteMember(flags); break;
+                _baseType = bs.readLongMember(flags); break;
             case PARENTID_ID:
                 _parentId = bs.readEntityIdMember(flags); break;
             default:
