@@ -112,8 +112,8 @@ public class Orgunit extends SysEntity {
                 bs.writeMember(id, _baseId, flags); break;
             case BASE_TYPE_ID:
                 bs.writeMember(id, _baseType, flags); break;
-            //case PARENTID_ID:
-            //    bs.writeMember(id, _parentId, flags); break;
+            case PARENTID_ID:
+                bs.writeMember(id, _parentId, flags); break;
             default:
                 throw new RuntimeException("unknown member");
         }
@@ -128,8 +128,8 @@ public class Orgunit extends SysEntity {
                 _baseId = bs.readUUIDMember(flags); break;
             case BASE_TYPE_ID:
                 _baseType = bs.readByteMember(flags); break;
-            //case PARENTID_ID:
-            //    _parentId = bs.readEntityIdMember(flags); break;
+            case PARENTID_ID:
+                _parentId = bs.readEntityIdMember(flags); break;
             default:
                 throw new RuntimeException("unknown member");
         }

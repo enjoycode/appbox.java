@@ -1,8 +1,10 @@
 package appbox.store.query;
 
+import appbox.data.EntityId;
 import appbox.serialization.IEntityMemberReader;
 import com.github.jasync.sql.db.RowData;
 
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -65,5 +67,11 @@ public final class SqlRowReader implements IEntityMemberReader {
     @Override
     public Date readDateMember(int flags) {
         return new Date(rowData.getLong(flags));
+    }
+
+    @Override
+    public EntityId readEntityIdMember(int flags) {
+        byte[] arr= ByteBuffer.allocate(Long.SIZE / Byte.SIZE*2).putLong(rowData.getLong(flags)).putLong(rowData.getLong(flags)).array();
+        return new EntityId(arr,0);
     }
 }

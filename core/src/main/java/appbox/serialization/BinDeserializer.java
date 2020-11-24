@@ -1,8 +1,10 @@
 package appbox.serialization;
 
 import appbox.cache.ObjectPool;
+import appbox.data.EntityId;
 import appbox.utils.IdUtil;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
@@ -168,6 +170,12 @@ public final class BinDeserializer implements IEntityMemberReader {
     @Override
     public Date readDateMember(int flags) {
         return new Date(_stream.readLong());
+    }
+
+    @Override
+    public EntityId readEntityIdMember(int flags) {
+        byte[] arr=ByteBuffer.allocate(Long.SIZE / Byte.SIZE*2).putLong(_stream.readLong()).putLong(_stream.readLong()).array();
+        return new EntityId(arr,0);
     }
 
     //endregion
