@@ -8,7 +8,6 @@ import com.alibaba.fastjson.JSONWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 public abstract class DesignNode implements Comparable<DesignNode>, IJsonSerializable {
 
@@ -101,7 +100,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     /**
      * 目前仅支持签出ModelRootNode及ModelNode
      */
-    public CompletableFuture<Boolean> checkout() throws ExecutionException, InterruptedException //TODO:考虑加入参数允许签出所有下属节点
+    public CompletableFuture<Boolean> checkout() //TODO:考虑加入参数允许签出所有下属节点
     {
         //判断是否已签出或者能否签出
         if (!getAllowCheckout()) {
@@ -112,34 +111,28 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         }
 
         //调用签出服务
-        List<CheckoutInfo> infos = new ArrayList<CheckoutInfo>();
-        //CheckoutInfo info = new CheckoutInfo(getNodeType(), getCheckoutInfoTargetID(), getVersion(), getDesignTree().getDesignHub().getSession().getName(), getDesignTree().getDesignHub().getSession().getLeafOrgUnitID());
-        CheckoutInfo info = new CheckoutInfo();
-        //TODO set param
+        List<CheckoutInfo> infos = new ArrayList<>();
+        CheckoutInfo info = new CheckoutInfo(nodeType(),
+                getCheckoutInfoTargetID(), version,
+                getDesignTree().designHub.session.name(),
+                getDesignTree().designHub.session.leafOrgUnitId());
         infos.add(info);
 
         return CheckoutService.checkoutAsync(infos).thenApply(r -> {
-            if (r.getSuccess()) {
+            if (r.success) {
                 //签出成功则将请求的签出信息添加至当前的已签出列表
                 getDesignTree().addCheckoutInfos(infos);
                 //如果签出的是单个模型，且具备更新的版本，则更新
-//C# TO JAVA CONVERTER TODO TASK: Java has no equivalent to C# pattern variables in 'is' expressions:
-//ORIGINAL LINE: if (this is ModelNode modelNode && result.ModelWithNewVersion != null)
-//            if (this instanceof ModelNode modelNode && result.getModelWithNewVersion() != null)
-//            {
-//                modelNode.Model = result.getModelWithNewVersion(); //替换旧模型
-////C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-//                await getDesignTree().getDesignHub().getTypeSystem().UpdateModelDocumentAsync(modelNode); //更新为新模型的RoslynDocument
-//            }
+                if (this instanceof ModelNode && r.modelWithNewVersion != null) {
+                    var modelNode = (ModelNode) this;
+                    modelNode.setModel(r.modelWithNewVersion); //替换旧模型
+                    getDesignTree().designHub.typeSystem.updateModelDocument(modelNode); //更新为新模型的虚拟代码
+                }
                 //更新当前节点的签出信息
                 setCheckoutInfo(infos.get(0));
-                return true;
-            } else {
-                return false;
             }
-
+            return r.success;
         });
-
     }
 
     private static DesignNode getRootNode(DesignNode current) {

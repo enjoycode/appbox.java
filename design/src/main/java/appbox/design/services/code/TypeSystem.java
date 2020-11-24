@@ -3,6 +3,7 @@ package appbox.design.services.code;
 import appbox.design.DesignHub;
 import appbox.design.jdt.ModelFile;
 import appbox.design.tree.ModelNode;
+import appbox.logging.Log;
 import appbox.model.ModelType;
 import org.eclipse.core.resources.IProject;
 
@@ -59,6 +60,11 @@ public final class TypeSystem {
             var file = typeFolder.getFile(fileName);
             file.create(null, true, null);
         }
+    }
+
+    /** 注意：服务模型也会更新，如不需要由调用者忽略 */
+    public void updateModelDocument(ModelNode node) {
+        Log.warn("暂未实现");
     }
 
     //region ====find XXX====

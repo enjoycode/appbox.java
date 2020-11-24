@@ -103,6 +103,17 @@ public final class DesignTree {
     //endregion
 
     //region ====Find Methods====
+
+    /** 用于前端传回的参数查找对应的设计节点 */
+    public DesignNode findNode(DesignNodeType type, String id) {
+        switch (type) {
+            case EntityModelNode: return findModelNode(ModelType.Entity, Long.parseUnsignedLong(id));
+            case ServiceModelNode: return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
+            default:
+                throw new RuntimeException("未实现");
+        }
+    }
+
     public ApplicationNode findApplicationNodeByName(String name) {
         for (DesignNode node : appRootNode.nodes.list) {
             if (((ApplicationNode) node).model.name().equals(name)) {
@@ -168,10 +179,10 @@ public final class DesignTree {
     //region ====Checkout Methods====
     //用于签出节点成功后添加签出信息列表
     public void addCheckoutInfos(List<CheckoutInfo> infos) {
-        for (int i = 0; i < infos.size(); i++) {
-            String key = CheckoutInfo.makeKey(infos.get(i).getNodeType(), infos.get(i).getTargetID());
+        for (CheckoutInfo info : infos) {
+            String key = CheckoutInfo.makeKey(info.nodeType, info.targetID);
             if (!_checkouts.containsKey(key)) {
-                _checkouts.put(key, infos.get(i));
+                _checkouts.put(key, info);
             }
         }
     }
@@ -189,21 +200,17 @@ public final class DesignTree {
      * @return
      */
     public List<EntityRefModel> findEntityRefModels(long targetEntityModelID) {
-        List result=new ArrayList();
-        List<ModelNode> ls=findNodesByType(ModelType.Entity);
+        List            result = new ArrayList();
+        List<ModelNode> ls     = findNodesByType(ModelType.Entity);
 
-        for (int i = 0; i < ls.size(); i++)
-        {
-            EntityModel model = (EntityModel)ls.get(i).model();
+        for (int i = 0; i < ls.size(); i++) {
+            EntityModel model = (EntityModel) ls.get(i).model();
             //注意：不能排除自身引用，主要指树状结构的实体
-            for (int j = 0; j < model.getMembers().size(); j++)
-            {
-                if (model.getMembers().get(j).type() == EntityMemberModel.EntityMemberType.EntityRef)
-                {
-                    EntityRefModel refMember = (EntityRefModel)model.getMembers().get(j);
+            for (int j = 0; j < model.getMembers().size(); j++) {
+                if (model.getMembers().get(j).type() == EntityMemberModel.EntityMemberType.EntityRef) {
+                    EntityRefModel refMember = (EntityRefModel) model.getMembers().get(j);
                     //注意不排除聚合引用
-                    for (int k = 0; k < refMember.getRefModelIds().size(); k++)
-                    {
+                    for (int k = 0; k < refMember.getRefModelIds().size(); k++) {
                         if (refMember.getRefModelIds().get(k) == targetEntityModelID)
                             result.add(refMember);
                     }
@@ -213,12 +220,10 @@ public final class DesignTree {
         return result;
     }
 
-    public List<ModelNode> findNodesByType(ModelType modelType)
-    {
+    public List<ModelNode> findNodesByType(ModelType modelType) {
         var list = new ArrayList<ModelNode>();
-        for (int i = 0; i < appRootNode.nodes.count(); i++)
-        {
-            var appNode = (ApplicationNode)appRootNode.nodes.get(i);
+        for (int i = 0; i < appRootNode.nodes.count(); i++) {
+            var appNode       = (ApplicationNode) appRootNode.nodes.get(i);
             var modelRootNode = appNode.findModelRootNode(modelType);
             list.addAll(modelRootNode.getAllModelNodes());
         }
