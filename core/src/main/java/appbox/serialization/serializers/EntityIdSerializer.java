@@ -13,12 +13,12 @@ public class EntityIdSerializer extends TypeSerializer {
 
     @Override
     public void write(BinSerializer bs, Object value) {
-        ((IBinSerializable) value).writeTo(bs);
+        ((EntityId) value).writeTo(bs);
     }
 
     @Override
     public Object read(BinDeserializer bs, Object value) {
-        ((IBinSerializable) value).readFrom(bs);
+        ((EntityId) value).readFrom(bs);
         return value;
     }
 }
