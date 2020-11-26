@@ -44,11 +44,11 @@ public final class SystemService implements IService {
         //根据账号索引查询
         var q = new IndexGet<>(Employee.UI_Account.class);
         q.where(Employee.ACCOUNT, req.u);
-        return q.toIndexRowAsync().thenApply(row -> {
+        return q.toIndexRowAsync().thenCompose(row -> {
             if (row == null) {
                 res.succeed = false;
                 res.error   = "User account not exists";
-                return new JsonResult(res);
+                return CompletableFuture.completedFuture(new JsonResult(res));
             }
 
             //TODO:验证密码
@@ -56,11 +56,11 @@ public final class SystemService implements IService {
             //TODO:****暂全表扫描获取Emploee对应的OrgUnits，待用Include EntitySet实现
             var q1 = new TableScan<>(IdUtil.SYS_ORGUNIT_MODEL_ID, OrgUnit.class);
             q1.where(OrgUnit.BASEID.eq(row.getTargetId()));
-            return q1.toListAsync().thenApply(ous -> {
+            return q1.toListAsync().thenCompose(ous -> {
                 if (ous == null || ous.size() == 0) {
                     res.succeed = false;
                     res.error   = "User must assign to OrgUnit";
-                    return new JsonResult(res);
+                    return CompletableFuture.completedFuture(new JsonResult(res));
                 }
 
                 return EntityStore.loadTreePathAsync(OrgUnit.class, ous.get(0).id(), OrgUnit::getParentId, OrgUnit::getName)
