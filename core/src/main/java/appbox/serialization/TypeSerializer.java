@@ -22,6 +22,7 @@ public abstract class TypeSerializer {
         registerKnownType(LongSerializer.instance);
         registerKnownType(StringSerializer.instance);
         registerKnownType(UUIDSerializer.instance);
+        registerKnownType(EntityIdSerializer.instance);
 
         registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null/*不支持*/));
 

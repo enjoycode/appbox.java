@@ -15,6 +15,7 @@ public final class PayloadType {
     public static final byte DateTime     = 15;
     public static final byte String       = 16;
     public static final byte Guid         = 17;
+    public static final byte EntityId         = 92;
 
     public static final byte Map   = 18;
     public static final byte Array = 19;
