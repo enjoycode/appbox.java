@@ -118,6 +118,11 @@ public final class EntityId {
         return Arrays.equals(t._data, this._data);
     }
 
+    /** 仅内部填充使用 */
+    public void copyFrom(EntityId from) {
+        System.arraycopy(from._data, 0, _data, 0, 16);
+    }
+
     public void writeTo(BinSerializer bs) {
         bs.write(_data, 0, 16);
     }

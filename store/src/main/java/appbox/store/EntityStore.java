@@ -238,7 +238,7 @@ public final class EntityStore { //TODO: rename to SysStore
     /** 从存储根据Id加载单个Entity实例 */
     public static <T extends SysEntity> CompletableFuture<T> loadAsync(Class<T> clazz, EntityId id) {
         var req = new KVGetEntityRequest(id);
-        return SysStoreApi.execKVGetAsync(req, new KVGetEntityResponse<>(clazz))
+        return SysStoreApi.execKVGetAsync(req, new KVGetEntityResponse<>(clazz, id))
                 .thenApply(KVGetEntityResponse::getEntity);
     }
 
