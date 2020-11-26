@@ -4,7 +4,6 @@ import appbox.cache.ObjectPool;
 import appbox.data.EntityId;
 import appbox.utils.IdUtil;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
@@ -107,7 +106,7 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     public UUID readUUID() {
-        return  _stream.readUUID();
+        return _stream.readUUID();
     }
 
 
@@ -168,7 +167,8 @@ public final class BinDeserializer implements IEntityMemberReader {
             return _stream.readByteArray();
         int size  = flags >>> 8;
         var bytes = new byte[size];
-        _stream.read(bytes, 0, size);
+        if (size > 0)
+            _stream.read(bytes, 0, size);
         return bytes;
     }
 
