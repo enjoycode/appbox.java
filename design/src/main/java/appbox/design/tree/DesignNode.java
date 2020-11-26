@@ -86,7 +86,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     /**
      * 节点签出信息的标识
      */
-    public String getCheckoutInfoTargetID() {
+    public String checkoutInfoTargetID() {
         return getText();
     }
 
@@ -116,7 +116,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         //调用签出服务
         List<CheckoutInfo> infos = new ArrayList<>();
         CheckoutInfo info = new CheckoutInfo(nodeType(),
-                getCheckoutInfoTargetID(), version,
+                checkoutInfoTargetID(), version,
                 getDesignTree().designHub.session.name(),
                 getDesignTree().designHub.session.leafOrgUnitId());
         infos.add(info);

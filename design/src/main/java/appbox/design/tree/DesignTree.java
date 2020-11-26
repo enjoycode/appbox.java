@@ -202,13 +202,13 @@ public final class DesignTree {
         //先判断是否新增的
         if (isNewNode) {
             node.setCheckoutInfo(new CheckoutInfo(node.nodeType(),
-                    node.getCheckoutInfoTargetID(), node.getVersion(),
+                    node.checkoutInfoTargetID(), node.getVersion(),
                     designHub.session.name(), designHub.session.leafOrgUnitId()));
             return;
         }
 
         //非新增的比对服务端的签出列表
-        var key      = CheckoutInfo.makeKey(node.nodeType(), node.getCheckoutInfoTargetID());
+        var key      = CheckoutInfo.makeKey(node.nodeType(), node.checkoutInfoTargetID());
         var checkout = _checkouts.get(key);
         if (checkout != null) {
             node.setCheckoutInfo(checkout);
