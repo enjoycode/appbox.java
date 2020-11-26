@@ -23,6 +23,16 @@ public final class StagedService {
         StagedType(int value) {
             this.value = (byte) value;
         }
+
+        public static StagedType from(byte value) {
+            switch (value) {
+                case 0: return Model;
+                case 1: return Folder;
+                case 2: return SourceCode;
+                case 3: return ViewRuntimeCode;
+                default: throw new RuntimeException();
+            }
+        }
     }
 
     private static CompletableFuture<Void> saveAsync(StagedType type, long modelId, byte[] data) {

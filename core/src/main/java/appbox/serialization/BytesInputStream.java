@@ -12,6 +12,11 @@ public final class BytesInputStream implements IInputStream {
         pos  = 0;
     }
 
+    public BytesInputStream(byte[] data) {
+        this.data = data;
+        pos = 0;
+    }
+
     @Override
     public int remaining() {
         return data.length - pos;

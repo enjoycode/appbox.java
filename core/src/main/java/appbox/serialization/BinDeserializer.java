@@ -21,6 +21,18 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
     //endregion
 
+    //region ====static helper====
+    public static Object deserialize(byte[] data) {
+        var stream = new BytesInputStream(data);
+        var bs = rentFromPool(stream);
+        try {
+            return bs.deserialize();
+        } finally {
+            backToPool(bs);
+        }
+    }
+    //endregion
+
     private BinDeserializer() {
     }
 
@@ -108,7 +120,6 @@ public final class BinDeserializer implements IEntityMemberReader {
     public UUID readUUID() {
         return _stream.readUUID();
     }
-
 
     public void read(byte[] buffer, int offset, int count) {
         _stream.read(buffer, offset, count);

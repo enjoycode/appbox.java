@@ -2,6 +2,7 @@ package appbox.design.tree;
 
 import appbox.design.common.CheckoutInfo;
 import appbox.design.DesignHub;
+import appbox.design.services.CheckoutService;
 import appbox.design.services.StagedItems;
 import appbox.model.*;
 import appbox.model.entity.EntityMemberModel;
@@ -66,9 +67,11 @@ public final class DesignTree {
         nodes.add(appRootNode);
 
         //TODO: 先加载签出信息及StagedModels
-        //TODO: 暂简单实现
+        return CheckoutService.loadAllAsync().thenCompose(checkouts -> {
+            _checkouts = checkouts;
 
-        return ModelStore.loadAllApplicationAsync().thenCompose(apps -> { //加载所有Apps
+            return ModelStore.loadAllApplicationAsync();
+        }).thenCompose(apps -> { //加载所有Apps
             for (ApplicationModel app : apps) {
                 appRootNode.nodes.add(new ApplicationNode(this, app));
             }
@@ -107,8 +110,10 @@ public final class DesignTree {
     /** 用于前端传回的参数查找对应的设计节点 */
     public DesignNode findNode(DesignNodeType type, String id) {
         switch (type) {
-            case EntityModelNode: return findModelNode(ModelType.Entity, Long.parseUnsignedLong(id));
-            case ServiceModelNode: return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
+            case EntityModelNode:
+                return findModelNode(ModelType.Entity, Long.parseUnsignedLong(id));
+            case ServiceModelNode:
+                return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
             default:
                 throw new RuntimeException("未实现");
         }
@@ -191,7 +196,30 @@ public final class DesignTree {
      * 给设计节点添加签出信息，如果已签出的模型节点则用本地存储替换原模型
      */
     protected void bindCheckoutInfo(DesignNode node, boolean isNewNode) {
-        //TODO:
+        //if (node.NodeType == DesignNodeType.FolderNode || !node.AllowCheckout)
+        //    throw new ArgumentException("不允许绑定签出信息: " + node.NodeType.ToString());
+
+        //先判断是否新增的
+        if (isNewNode) {
+            node.setCheckoutInfo(new CheckoutInfo(node.nodeType(),
+                    node.getCheckoutInfoTargetID(), node.getVersion(),
+                    designHub.session.name(), designHub.session.leafOrgUnitId()));
+            return;
+        }
+
+        //非新增的比对服务端的签出列表
+        var key      = CheckoutInfo.makeKey(node.nodeType(), node.getCheckoutInfoTargetID());
+        var checkout = _checkouts.get(key);
+        if (checkout != null) {
+            node.setCheckoutInfo(checkout);
+            if (node.isCheckoutByMe() && node instanceof ModelNode) { //如果是被当前用户签出的模型
+                var modelNode = (ModelNode) node;
+                //从staged加载修改中的模型进行替换
+                var stagedModel = staged.findModel(modelNode.model().id());
+                if (stagedModel != null)
+                    modelNode.setModel(stagedModel);
+            }
+        }
     }
 
     /**

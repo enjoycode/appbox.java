@@ -2,6 +2,7 @@ package appbox.design.tree;
 
 import appbox.design.common.CheckoutInfo;
 import appbox.design.services.CheckoutService;
+import appbox.runtime.RuntimeContext;
 import appbox.serialization.IJsonSerializable;
 import com.alibaba.fastjson.JSONWriter;
 
@@ -32,6 +33,8 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     public String getText() {
         return text;
     }
+
+    public int getVersion() { return version; }
 
     public final DesignNode getParent() {
         return parent;
@@ -90,10 +93,10 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     /**
      * 设计节点是否被当前用户签出
      */
-    public final boolean getIsCheckoutByMe() {
-        //todo getCurrent session
-        return false;
-        //return getCheckoutInfo() != null && getCheckoutInfo().getDeveloperOuid().equals(RuntimeContext.getCurrent().getCurrentSession().getLeafOrgUnitID());
+    public final boolean isCheckoutByMe() {
+        return _checkoutInfo != null
+                && _checkoutInfo.developerOuid.equals(
+                        RuntimeContext.current().currentSession().leafOrgUnitId());
     }
     //endregion
 
@@ -106,7 +109,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         if (!getAllowCheckout()) {
             return CompletableFuture.completedFuture(false);
         }
-        if (getIsCheckoutByMe()) {
+        if (isCheckoutByMe()) {
             return CompletableFuture.completedFuture(true);
         }
 
