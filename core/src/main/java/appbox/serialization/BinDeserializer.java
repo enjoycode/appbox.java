@@ -62,6 +62,11 @@ public final class BinDeserializer implements IEntityMemberReader {
         }
     }
 
+    public static Object deserialize(byte[] data,Object sa) {
+        //TODO
+        return null;
+    }
+
     public void skip(int size) {
         _stream.skip(size);
     }

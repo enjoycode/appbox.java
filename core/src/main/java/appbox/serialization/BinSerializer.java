@@ -2,11 +2,13 @@ package appbox.serialization;
 
 import appbox.cache.ObjectPool;
 import appbox.data.EntityId;
+import appbox.model.ModelFolder;
 import appbox.utils.IdUtil;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,6 +67,11 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
 
         //写入数据 TODO:先加入已序列化列表
         serializer.write(this, obj);
+    }
+
+    public static byte[] serialize(Object obj, boolean compress, Object sa){
+        //TODO
+        return null;
     }
 
     /**
@@ -322,6 +329,9 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         }
     }
 
+    public void writeList(List<?> childs, int fieldId) {
+        //todo
+    }
 
 
     //endregion
