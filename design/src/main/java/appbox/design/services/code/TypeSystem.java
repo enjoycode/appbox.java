@@ -88,6 +88,14 @@ public final class TypeSystem {
             return hub.designTree.findModelNodeByName(appNode.model.id(), ModelType.Service, fileName);
         }
     }
+
+    /** 找到服务模型对应的虚拟文件 */
+    public ModelFile findFileForServiceModel(String appName, String serviceName) {
+        var fileName    = String.format("%s.java", serviceName);
+        var projectName = String.format("%s_services_%s", appName, serviceName);
+        var project     = languageServer.jdtWorkspace.getRoot().getProject(projectName);
+        return (ModelFile) project.findMember(fileName);
+    }
     //endregion
 
 }
