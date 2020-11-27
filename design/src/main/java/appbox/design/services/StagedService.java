@@ -12,6 +12,7 @@ import appbox.store.KVTransaction;
 import appbox.store.query.TableScan;
 import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Quartet;
 
@@ -32,7 +33,8 @@ public final class StagedService {
                 .and(StagedModel.TYPE.eq(StagedType.SourceCode.value)));
 
         return q.toListAsync().thenCompose(r -> {
-            if (r == null || r.size() == 0) {
+
+            if (ObjectUtils.isEmpty(r)) {
                 return CompletableFuture.completedFuture(null);
             } else {
                 return CompletableFuture.completedFuture(r.get(0).getData());
@@ -86,11 +88,11 @@ public final class StagedService {
                 .and(StagedModel.MODEL.eq(Long.toUnsignedString(serviceModelId)))
                 .and(StagedModel.DEVELOPER.eq(developerID)));
 
-        return q.toListAsync().thenApply(r -> {
-            if (r == null || r.size() <= 0)
-                return null;
+        return q.toListAsync().thenCompose(r -> {
+            if (ObjectUtils.isEmpty(r))
+                return CompletableFuture.completedFuture(null);
 
-            return ModelCodeUtil.decodeServiceCode(r.get(0).getData()).sourceCode;
+            return CompletableFuture.completedFuture(ModelCodeUtil.decodeServiceCode(r.get(0).getData()).sourceCode);
         });
     }
 
@@ -148,7 +150,7 @@ public final class StagedService {
                 .and(StagedModel.MODEL.eq(Long.toUnsignedString(viewModelId)))
                 .and(StagedModel.DEVELOPER.eq(developerID)));
         return q.toListAsync().thenCompose(r -> {
-            if (r == null || r.size() == 0) {
+            if (ObjectUtils.isEmpty(r)) {
                 return CompletableFuture.completedFuture(null);
             } else {
                 String str=ModelCodeUtil.decodeViewRuntimeCode(r.get(0).getData());
@@ -205,7 +207,7 @@ public final class StagedService {
         var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
         q.where(StagedModel.DEVELOPER.eq(developerId));
         return q.toListAsync().thenCompose(res->{
-            if (res != null&&res.size()>0){
+            if (ObjectUtils.isNotEmpty(res)) {
                 return KVTransaction.beginAsync().thenCompose(txn ->{
                     CompletableFuture future=null;
                     for (StagedModel stagedModel : res) {
@@ -235,7 +237,7 @@ public final class StagedService {
                 .and(StagedModel.DEVELOPER.eq(developerId))
         );
         return q.toListAsync().thenCompose(res->{
-            if (res != null&&res.size()>0){
+            if (ObjectUtils.isNotEmpty(res)) {
                 return KVTransaction.beginAsync().thenCompose(txn ->{
                     CompletableFuture future=null;
                     for (StagedModel stagedModel : res) {
