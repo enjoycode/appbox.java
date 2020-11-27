@@ -161,7 +161,8 @@ public class ModelFolder implements IBinSerializable {
                     _parent = (ModelFolder)bs.deserialize();
                     break;
                 case 5:
-                    //_childs = bs.readList();
+                    //TODO readList
+                    _childs = (List<ModelFolder>) bs.readList();
                     break;
                 case 0:
                     break;

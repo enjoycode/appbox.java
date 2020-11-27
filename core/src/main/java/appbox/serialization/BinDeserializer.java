@@ -6,6 +6,7 @@ import appbox.utils.IdUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 public final class BinDeserializer implements IEntityMemberReader {
@@ -198,6 +199,11 @@ public final class BinDeserializer implements IEntityMemberReader {
         var id = new EntityId();
         id.readFrom(this);
         return id;
+    }
+
+    public List<?> readList() {
+        //TODO
+        return null;
     }
 
     //endregion
