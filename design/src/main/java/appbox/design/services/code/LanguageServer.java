@@ -137,9 +137,9 @@ public final class LanguageServer {
     }
     //endregion
 
-    public final  long                    sessionId;
-    private final ModelWorkspace          jdtWorkspace;
-    private final HashMap<Long, Document> openedFiles = new HashMap<>();
+    public final    long                    sessionId;
+    protected final ModelWorkspace          jdtWorkspace;
+    private final   HashMap<Long, Document> openedFiles = new HashMap<>();
 
     public Function<IPath, InputStream> loadFileDelegate; //仅用于测试环境
 

@@ -63,7 +63,7 @@ public final class ModelFile extends ModelResource implements IFile {
                     Files.createFile(file.toPath());
                 }
                 Files.copy(content, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                Log.debug("Write class file to: " + file.getAbsolutePath());
+                Log.debug("Create file: " + file.getAbsolutePath());
             } catch (IOException e) {
                 e.printStackTrace();
             }

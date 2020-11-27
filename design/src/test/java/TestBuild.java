@@ -1,13 +1,7 @@
+import appbox.design.jdt.JavaBuilderWrapper;
 import appbox.design.services.code.LanguageServer;
-import appbox.design.utils.ReflectUtil;
-import org.eclipse.core.internal.events.BuildContext;
-import org.eclipse.core.internal.events.InternalBuilder;
 import org.eclipse.core.internal.resources.BuildConfiguration;
-import org.eclipse.core.resources.IBuildConfiguration;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.internal.core.builder.JavaBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -18,21 +12,6 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBuild {
-
-    public class TestJavaBuilder extends JavaBuilder {
-        public TestJavaBuilder(IBuildConfiguration configuration) {
-            try {
-                ReflectUtil.setField(InternalBuilder.class, "buildConfiguration", this, configuration);
-                ReflectUtil.setField(InternalBuilder.class, "context", this, new BuildContext(configuration));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-
-        public void build() throws CoreException {
-            this.build(IncrementalProjectBuilder.FULL_BUILD, null, null);
-        }
-    }
 
     @Test
     public void testBuild() throws Exception {
@@ -53,7 +32,7 @@ public class TestBuild {
         file.create(null, true, null);
 
         var config = new BuildConfiguration(project);
-        var builder = new TestJavaBuilder(config);
+        var builder = new JavaBuilderWrapper(config);
         builder.build();
     }
 
