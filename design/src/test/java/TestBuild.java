@@ -27,7 +27,7 @@ public class TestBuild {
                 (path) -> new ByteArrayInputStream(finalTestCode.getBytes(StandardCharsets.UTF_8));
 
         var ls = new LanguageServer(loadDelegate);
-        var project = ls.createProject("testbuild", null, null);
+        var project = ls.createProject("testbuild", null);
         var file = project.getFile("Emploee.java");
         file.create(null, true, null);
 

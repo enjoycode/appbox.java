@@ -167,7 +167,7 @@ public final class LanguageServer {
      * @param name
      * @param deps 所依赖的内部项目列表，可为null
      */
-    public IProject createProject(String name, IProject[] deps, IPath outPath) throws Exception {
+    public IProject createProject(String name, IClasspathEntry[] deps) throws Exception {
         //TODO:check exists
         var project = jdtWorkspace.getRoot().getProject(name);
         project.create(null);
@@ -180,10 +180,6 @@ public final class LanguageServer {
         var javaProject = JavaCore.create(project);
         JVMConfigurator.configureJVMSettings(javaProject, JavaRuntime.getDefaultVMInstall());
 
-        //var buildPath = new IClasspathEntry[] {
-        //        JavaRuntime.getDefaultJREContainerEntry(),
-        //        JavaCore.newSourceEntry(project.getFullPath())
-        //};
         int buildPathCount = 2;
         if (deps != null) {
             buildPathCount += deps.length;
@@ -192,19 +188,15 @@ public final class LanguageServer {
         buildPath[0] = JavaRuntime.getDefaultJREContainerEntry();
         buildPath[1] = JavaCore.newSourceEntry(project.getFullPath());
         if (deps != null) {
-            for (int i = 0; i < deps.length; i++) {
-                buildPath[i + 2] = JavaCore.newProjectEntry(deps[i].getFullPath());
-            }
+            System.arraycopy(deps, 0, buildPath, 2, deps.length);
         }
 
         //TODO: 待检查setRawClasspath的referencedEntries参数
-        if (outPath == null)
-            outPath = project.getFullPath().append("bin");
+        var outPath = project.getFullPath().append("bin");
         perProjectInfo.setRawClasspath(buildPath, outPath, JavaModelStatus.VERIFIED_OK);
 
         return project;
     }
-
 
     //endregion
 
