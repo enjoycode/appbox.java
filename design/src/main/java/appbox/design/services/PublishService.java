@@ -8,7 +8,9 @@ import appbox.model.ServiceModel;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.jface.text.Document;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -35,24 +37,30 @@ public final class PublishService {
         var astParser = ASTParser.newParser(AST.JLS15);
         astParser.setSource(cu);
         astParser.setResolveBindings(true);
-        astParser.setStatementsRecovery(true); //?
-        var ast = astParser.createAST(null);
+        //astParser.setStatementsRecovery(true);
+        var astNode = astParser.createAST(null);
+        var astRewrite = ASTRewrite.create(astNode.getAST());
 
-        var serviceCodeGenerator = new ServiceCodeGenerator(hub, appName, model);
-        ast.accept(serviceCodeGenerator);
-        var runtimeCode       = serviceCodeGenerator.getResult();
-        var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
+        var serviceCodeGenerator = new ServiceCodeGenerator(hub, appName, model, astRewrite);
+        astNode.accept(serviceCodeGenerator);
 
-        //生成运行时临时Project并进行编译
-        var runtimeProject =
-                hub.typeSystem.languageServer.createProject(
-                        "runtime_" + Long.toUnsignedString(model.id()), null, null);
-        var runtimeFile = runtimeProject.getFile(vfile.getName());
-        runtimeFile.create(runtimeCodeStream, true, null);
+        var edits = astRewrite.rewriteAST();
+        var newdoc = new Document(cu.getSource());
+        edits.apply(newdoc);
 
-        var config  = new BuildConfiguration(runtimeProject);
-        var builder = new JavaBuilderWrapper(config);
-        builder.build();
+        //var runtimeCode       = serviceCodeGenerator.getResult();
+        //var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
+        //
+        ////生成运行时临时Project并进行编译
+        //var runtimeProject =
+        //        hub.typeSystem.languageServer.createProject(
+        //                "runtime_" + Long.toUnsignedString(model.id()), null, null);
+        //var runtimeFile = runtimeProject.getFile(vfile.getName());
+        //runtimeFile.create(runtimeCodeStream, true, null);
+        //
+        //var config  = new BuildConfiguration(runtimeProject);
+        //var builder = new JavaBuilderWrapper(config);
+        //builder.build();
 
         throw new RuntimeException("未实现");
     }
