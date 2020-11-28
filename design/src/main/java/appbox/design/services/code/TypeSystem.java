@@ -6,6 +6,8 @@ import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
 import appbox.model.ModelType;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.JavaCore;
 
 public final class TypeSystem {
 
@@ -25,7 +27,7 @@ public final class TypeSystem {
     public void init() {
         try {
             //创建实体、枚举等通用模型项目
-            modelsProject = languageServer.createProject("models", null, null);
+            modelsProject = languageServer.createProject("models", null);
             //TODO:创建服务代理项目
         } catch (Exception e) {
             e.printStackTrace();
@@ -42,7 +44,8 @@ public final class TypeSystem {
         if (model.modelType() == ModelType.Service) {
             //不再需要加载源码, 注意已签出先从Staged中加载
             var projectName = String.format("%s_services_%s", appName, model.name());
-            var project     = languageServer.createProject(projectName, new IProject[]{modelsProject}, null);
+            var project = languageServer.createProject(projectName,
+                    new IClasspathEntry[]{JavaCore.newProjectEntry(modelsProject.getFullPath())});
 
             var file = project.getFile(fileName);
             file.create(null, true, null);

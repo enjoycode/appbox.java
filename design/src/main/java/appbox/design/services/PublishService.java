@@ -5,7 +5,11 @@ import appbox.design.jdt.JavaBuilderWrapper;
 import appbox.design.services.code.ServiceCodeGenerator;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
+import appbox.runtime.IService;
 import org.eclipse.core.internal.resources.BuildConfiguration;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -38,29 +42,34 @@ public final class PublishService {
         astParser.setSource(cu);
         astParser.setResolveBindings(true);
         //astParser.setStatementsRecovery(true);
-        var astNode = astParser.createAST(null);
+        var astNode    = astParser.createAST(null);
         var astRewrite = ASTRewrite.create(astNode.getAST());
 
         var serviceCodeGenerator = new ServiceCodeGenerator(hub, appName, model, astRewrite);
         astNode.accept(serviceCodeGenerator);
+        serviceCodeGenerator.finish();
 
-        var edits = astRewrite.rewriteAST();
+        var edits  = astRewrite.rewriteAST();
         var newdoc = new Document(cu.getSource());
         edits.apply(newdoc);
 
-        //var runtimeCode       = serviceCodeGenerator.getResult();
-        //var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
-        //
-        ////生成运行时临时Project并进行编译
-        //var runtimeProject =
-        //        hub.typeSystem.languageServer.createProject(
-        //                "runtime_" + Long.toUnsignedString(model.id()), null, null);
-        //var runtimeFile = runtimeProject.getFile(vfile.getName());
-        //runtimeFile.create(runtimeCodeStream, true, null);
-        //
-        //var config  = new BuildConfiguration(runtimeProject);
-        //var builder = new JavaBuilderWrapper(config);
-        //builder.build();
+        var runtimeCode       = newdoc.get();
+        var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
+
+        //生成运行时临时Project并进行编译
+        var libAppBoxCorePath = new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        var libs = new IClasspathEntry[]{
+                JavaCore.newLibraryEntry(libAppBoxCorePath, null, null)
+        };
+        var runtimeProject =
+                hub.typeSystem.languageServer.createProject(
+                        "runtime_" + Long.toUnsignedString(model.id()), libs);
+        var runtimeFile = runtimeProject.getFile(vfile.getName());
+        runtimeFile.create(runtimeCodeStream, true, null);
+
+        var config  = new BuildConfiguration(runtimeProject);
+        var builder = new JavaBuilderWrapper(config);
+        builder.build();
 
         throw new RuntimeException("未实现");
     }
