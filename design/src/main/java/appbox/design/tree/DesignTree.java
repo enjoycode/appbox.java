@@ -103,6 +103,36 @@ public final class DesignTree {
             return CompletableFuture.completedFuture(true);
         });
     }
+
+    /** 仅用于测试 */
+    public void loadNodesForTest(ApplicationModel appModel, List<ModelBase> models) {
+        nodes.clear();
+        _checkouts = new HashMap<>();
+
+        storeRootNode = new DataStoreRootNode(this);
+        nodes.add(storeRootNode);
+        appRootNode = new ApplicationRootNode(this);
+        nodes.add(appRootNode);
+
+        appRootNode.nodes.add(new ApplicationNode(this, appModel));
+        var allModelNodes = new ArrayList<ModelNode>();
+        for (ModelBase m : models) {
+            if (m.modelType() == ModelType.DataStore) {
+                //TODO:
+            } else {
+                allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
+            }
+        }
+
+        //在所有节点加载完后创建模型对应的虚拟文件
+        try {
+            for (ModelNode n : allModelNodes) {
+                designHub.typeSystem.createModelDocument(n);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
     //endregion
 
     //region ====Find Methods====

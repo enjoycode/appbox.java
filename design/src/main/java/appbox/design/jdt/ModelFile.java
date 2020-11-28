@@ -5,6 +5,7 @@ import appbox.design.services.CodeGenService;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
+import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
 import appbox.store.ModelStore;
 import org.eclipse.core.internal.resources.ResourceStatus;
@@ -16,10 +17,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.content.IContentDescription;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -52,7 +50,7 @@ public final class ModelFile extends ModelResource implements IFile {
         //TODO:
         var     info  = workspace.createResource(this, updateFlags);
         boolean local = content != null;
-        if (local) { //目前仅适用于编译生成的class文件
+        if (local) { //目前仅适用于转译的服务代码及编译生成的class文件
             var file = this.getLocation().toFile();
             try {
                 if (!file.exists()) {
@@ -100,7 +98,17 @@ public final class ModelFile extends ModelResource implements IFile {
 
     @Override
     public InputStream getContents(boolean force) throws CoreException {
-        if (RuntimeContext.current() == null) { //仅用于单元测试
+        //暂简单判断是否转译的运行时服务代码
+        if (this.path.segment(0).startsWith("runtime_")) {
+            var file = this.getLocation().toFile();
+            try {
+                return new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (RuntimeContext.current() == null || RuntimeContext.current() instanceof MockRuntimeContext) { //仅用于单元测试
             return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
         }
 
@@ -112,11 +120,8 @@ public final class ModelFile extends ModelResource implements IFile {
             //TODO:其他类型处理
             if (modelNode.model().modelType() == ModelType.Entity) {
                 //通过CodeGenService生成虚拟代码
-                var testCode=CodeGenService.genEntityDummyCode((EntityModel)modelNode.model(),modelNode.appNode.model.name(),null);
-                //var testCode = "package sys.entities;\n";
-                //testCode += "public class " + modelNode.model().name();
-                //testCode += "{\npublic String getName() {return null;}\n";
-                //testCode += "public void setName(String value) {}\n}\n";
+                var testCode = CodeGenService.genEntityDummyCode(
+                        (EntityModel) modelNode.model(), modelNode.appNode.model.name(), null);
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
                 return new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {

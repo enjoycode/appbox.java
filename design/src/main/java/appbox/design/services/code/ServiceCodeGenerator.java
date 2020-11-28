@@ -2,6 +2,7 @@ package appbox.design.services.code;
 
 import appbox.design.DesignHub;
 import appbox.model.ServiceModel;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.internal.corext.dom.ASTFlattener;
 
@@ -14,6 +15,7 @@ public final class ServiceCodeGenerator extends ASTFlattener {
     /** 公开的服务方法集合 */
     private final List<MethodDeclaration> publicMethods = new ArrayList<>();
 
+    private int lines = 0;
     private final DesignHub    hub;
     private final String       appName;
     private final ServiceModel serviceModel;
@@ -22,6 +24,12 @@ public final class ServiceCodeGenerator extends ASTFlattener {
         this.hub          = hub;
         this.appName      = appName;
         this.serviceModel = serviceModel;
+    }
+
+    @Override
+    public void postVisit(ASTNode node) {
+
+        super.postVisit(node);
     }
 
     @Override

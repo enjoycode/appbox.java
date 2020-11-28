@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class MockRuntimeContext implements IRuntimeContext {
-    private       ApplicationModel           applicationModel;
+    private       ApplicationModel         applicationModel;
     private final HashMap<Long, ModelBase> models = new HashMap<>();
+    private       ISessionInfo             session;
 
     public void injectApplicationModel(ApplicationModel app) {
         applicationModel = app;
@@ -20,14 +21,20 @@ public final class MockRuntimeContext implements IRuntimeContext {
         models.putIfAbsent(model.id(), model);
     }
 
+    public void injectModels(List<ModelBase> models) {
+        for (var m : models) {
+            this.models.putIfAbsent(m.id(), m);
+        }
+    }
+
     @Override
     public ISessionInfo currentSession() {
-        return null;
+        return session;
     }
 
     @Override
     public void setCurrentSession(ISessionInfo session) {
-
+        this.session = session;
     }
 
     @Override
