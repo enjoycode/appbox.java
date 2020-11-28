@@ -2,15 +2,20 @@ package appbox.design.services;
 
 import appbox.design.DesignHub;
 import appbox.design.jdt.JavaBuilderWrapper;
+import appbox.design.services.code.ServiceCodeGenerator;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
 import org.eclipse.core.internal.resources.BuildConfiguration;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 public final class PublishService {
+
+    private PublishService() {}
 
     /**
      * 发布或调试时编译服务模型
@@ -27,16 +32,25 @@ public final class PublishService {
         //TODO:先检测虚拟代码错误
 
         //TODO:开始转换编译服务模型的运行时代码
-        var runtimeCode       = cu.toString();
+        var astParser = ASTParser.newParser(AST.JLS15);
+        astParser.setSource(cu);
+        astParser.setResolveBindings(true);
+        astParser.setStatementsRecovery(true); //?
+        var ast = astParser.createAST(null);
+
+        var serviceCodeGenerator = new ServiceCodeGenerator(hub, appName, model);
+        ast.accept(serviceCodeGenerator);
+        var runtimeCode       = serviceCodeGenerator.getResult();
         var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
 
         //生成运行时临时Project并进行编译
         var runtimeProject =
-                hub.typeSystem.languageServer.createProject("runtime", null, null);
-        var runtimeFile = runtimeProject.getFile("Service.java");
+                hub.typeSystem.languageServer.createProject(
+                        "runtime_" + Long.toUnsignedString(model.id()), null, null);
+        var runtimeFile = runtimeProject.getFile(vfile.getName());
         runtimeFile.create(runtimeCodeStream, true, null);
 
-        var config = new BuildConfiguration(runtimeProject);
+        var config  = new BuildConfiguration(runtimeProject);
         var builder = new JavaBuilderWrapper(config);
         builder.build();
 

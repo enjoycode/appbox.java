@@ -141,7 +141,7 @@ public final class LanguageServer {
     protected final ModelWorkspace          jdtWorkspace;
     private final   HashMap<Long, Document> openedFiles = new HashMap<>();
 
-    public Function<IPath, InputStream> loadFileDelegate; //仅用于测试环境
+    public Function<IPath, InputStream> loadFileDelegate; //仅用于测试环境 TODO: move to MockRuntimeContext
 
     public LanguageServer(long sessionId) {
         this.sessionId = sessionId;
@@ -153,7 +153,7 @@ public final class LanguageServer {
      * 仅用于单元测试
      * @param loadFileDelegate 委托加载指定路径的测试文件
      */
-    public LanguageServer(Function<IPath, InputStream> loadFileDelegate) {
+    public LanguageServer(Function<IPath, InputStream> loadFileDelegate) { //TODO: remove it
         sessionId                         = 0;
         jdtWorkspace                      = new ModelWorkspace(this);
         this.loadFileDelegate             = loadFileDelegate;
