@@ -33,10 +33,35 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     public void finish() {
-        //var body = TypeDeclaration.
+        //返回类型
+        var typeCompletableFuture =
+                ast.newSimpleType(ast.newName("java.util.concurrent.CompletableFuture"));
+        var returnType = ast.newParameterizedType(typeCompletableFuture);
+        returnType.typeArguments().add(ast.newSimpleType(ast.newName("Object")));
+
         var invokeMethod = ast.newMethodDeclaration();
         invokeMethod.setName(ast.newSimpleName("invokeAsync"));
-        invokeMethod.setReturnType2(ast.newSimpleType(ast.newName("java.util.concurrent.CompletableFuture")));
+        invokeMethod.setReturnType2(returnType);
+        invokeMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+
+        var para1 = ast.newSingleVariableDeclaration();
+        para1.setType(ast.newSimpleType(ast.newName("CharSequence")));
+        para1.setName(ast.newSimpleName("method"));
+        invokeMethod.parameters().add(para1);
+
+        var para2 = ast.newSingleVariableDeclaration();
+        var typeList = ast.newSimpleType(ast.newName("java.util.List"));
+        var type2 = ast.newParameterizedType(typeList);
+        type2.typeArguments().add(ast.newSimpleType(ast.newName("appbox.runtime.InvokeArg")));
+        para2.setType(type2);
+        para2.setName(ast.newSimpleName("args"));
+        invokeMethod.parameters().add(para2);
+
+        var body = ast.newBlock();
+        var returnStament = ast.newReturnStatement();
+        returnStament.setExpression(ast.newNullLiteral());
+        body.statements().add(returnStament);
+        invokeMethod.setBody(body);
 
         var listRewrite =
                 astRewrite.getListRewrite(_serviceTypeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
