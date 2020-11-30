@@ -19,8 +19,8 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jface.text.Document;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public final class PublishService {
 
@@ -81,8 +81,7 @@ public final class PublishService {
         //获取并压缩编译好的.class
         var classFile = runtimeProject.getFolder("bin")
                 .getFile(vfile.getName().replace(".java",".class"));
-        var fileStream = new FileInputStream(classFile.getLocation().toFile());
-        return BrotliUtil.compress(fileStream.readAllBytes());
+        return BrotliUtil.compress(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
 
         //TODO:***删除用于编译的临时Project及运行时服务代码
     }

@@ -12,7 +12,7 @@ import java.util.List;
 /** 用于生成运行时的服务代码 */
 public final class ServiceCodeGenerator extends GenericVisitor {
 
-    private TypeDeclaration _serviceTypeDeclaration;
+    private       TypeDeclaration         _serviceTypeDeclaration;
     /** 公开的服务方法集合 */
     private final List<MethodDeclaration> publicMethods = new ArrayList<>();
 
@@ -131,6 +131,12 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
             var invokeEx = ast.newMethodInvocation();
             invokeEx.setName(ast.newSimpleName(method.getName().getIdentifier()));
+            //处理参数
+            for (int i = 0; i < method.parameters().size(); i++) {
+                var para = makeInvokeArgsGet((SingleVariableDeclaration) method.parameters().get(i), i);
+                invokeEx.arguments().add(para);
+            }
+
             var castEx = ast.newMethodInvocation(); //暂全部转换为CompletableFuture<Object>
             castEx.setName(ast.newSimpleName("thenApply"));
             var castLambda = ast.newLambdaExpression();
@@ -146,7 +152,6 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             castEx.setExpression(invokeEx);
             castEx.arguments().add(castLambda);
 
-            //TODO:处理参数
             var returnSt = ast.newReturnStatement();
             returnSt.setExpression(castEx);
             switchSt.statements().add(returnSt);
@@ -174,6 +179,42 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         invokeMethod.setBody(body);
 
         return invokeMethod;
+    }
+
+    private MethodInvocation makeInvokeArgsGet(SingleVariableDeclaration para, int index) {
+        var argIndex      = ast.newNumberLiteral(Integer.toString(index));
+        var listGetMethod = ast.newMethodInvocation();
+        listGetMethod.setExpression(ast.newSimpleName("args"));
+        listGetMethod.setName(ast.newSimpleName("get"));
+        listGetMethod.arguments().add(argIndex);
+
+        var getMethod = ast.newMethodInvocation();
+        getMethod.setExpression(listGetMethod);
+
+        var paraType = para.getType();
+        if (paraType.isPrimitiveType()) {
+            var primitiveType = (PrimitiveType) paraType;
+            var typeCode      = primitiveType.getPrimitiveTypeCode();
+            if (typeCode == PrimitiveType.INT) {
+                getMethod.setName(ast.newSimpleName("getInt"));
+            } else if (typeCode == PrimitiveType.LONG) {
+                getMethod.setName(ast.newSimpleName("getLong"));
+            } else {
+                throw new RuntimeException("未实现");
+            }
+        } else if (paraType.isSimpleType()) {
+            var simpleType = (SimpleType) paraType;
+            var typeName   = simpleType.getName().getFullyQualifiedName();
+            if (typeName.equals("String")) {
+                getMethod.setName(ast.newSimpleName("getString"));
+            } else {
+                throw new RuntimeException("未实现");
+            }
+        } else {
+            throw new RuntimeException("未实现");
+        }
+
+        return getMethod;
     }
 
 }
