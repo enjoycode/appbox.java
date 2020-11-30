@@ -9,6 +9,8 @@ import appbox.utils.IdUtil;
 import org.eclipse.core.runtime.IPath;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 
@@ -31,7 +33,7 @@ public class TestServiceCodeGenerator {
         RuntimeContext.init(ctx, (short) 10421);
 
         var appModel = new ApplicationModel("appbox", "sys");
-        var models = new ArrayList<ModelBase>();
+        var models   = new ArrayList<ModelBase>();
         //生成测试服务模型
         var testServiceModel = new ServiceModel(makeServiceModelId(10), "TestService");
         models.add(testServiceModel);
@@ -48,7 +50,7 @@ public class TestServiceCodeGenerator {
 
         //测试转译服务代码
         var codeData = PublishService.compileService(hub, testServiceModel, null);
-
+        assertNotNull(codeData);
     }
 
 }

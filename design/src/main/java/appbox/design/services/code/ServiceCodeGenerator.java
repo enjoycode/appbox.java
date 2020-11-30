@@ -12,6 +12,7 @@ import java.util.List;
 /** 用于生成运行时的服务代码 */
 public final class ServiceCodeGenerator extends GenericVisitor {
 
+    private TypeDeclaration _serviceTypeDeclaration;
     /** 公开的服务方法集合 */
     private final List<MethodDeclaration> publicMethods = new ArrayList<>();
 
@@ -20,8 +21,6 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     private final ServiceModel serviceModel;
     private final ASTRewrite   astRewrite;
     private final AST          ast;
-
-    private TypeDeclaration _serviceTypeDeclaration;
 
     public ServiceCodeGenerator(DesignHub hub, String appName,
                                 ServiceModel serviceModel, ASTRewrite astRewrite) {
@@ -32,7 +31,65 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         this.ast          = astRewrite.getAST();
     }
 
+    //region ====visit methods====
+    @Override
+    public boolean visit(TypeDeclaration node) {
+        if (TypeHelper.isServiceClass(node, appName, serviceModel.name())) {
+            _serviceTypeDeclaration = node;
+
+            var serviceType = ast.newSimpleType(ast.newName("appbox.runtime.IService"));
+            //astRewrite.set(node, TypeDeclaration.SUPERCLASS_TYPE_PROPERTY, serviceType, null );
+            var listRewrite = astRewrite.getListRewrite(node, TypeDeclaration.SUPER_INTERFACE_TYPES_PROPERTY);
+            listRewrite.insertFirst(serviceType, null);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean visit(SimpleType node) {
+        //在这里转换虚拟类型为运行时类型
+        //if (node.getName().isSimpleName() && node.getName().getFullyQualifiedName().equals("String")) {
+        //    var newType = ast.newSimpleType(ast.newName("Object"));
+        //    astRewrite.replace(node, newType, null);
+        //}
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(MethodDeclaration node) {
+        //判断方法是否服务方法
+        if (TypeHelper.isServiceClass((TypeDeclaration) node.getParent(), appName, serviceModel.name())
+                && TypeHelper.isServiceMethod(node)) {
+            addAsServiceMethod(node);
+        }
+
+        return super.visit(node);
+    }
+    //endregion
+
+    /** 添加为服务方法,如果有重名抛异常 */
+    private void addAsServiceMethod(MethodDeclaration node) {
+        var exists = publicMethods.stream().filter(
+                m -> m.getName().getIdentifier().equals(node.getName().getIdentifier())).findAny();
+        if (exists.isPresent())
+            throw new RuntimeException("Service method has exists:" + node.getName().toString());
+
+        publicMethods.add(node);
+    }
+
+    /** 最后附加服务接口实现及使用的实体类 */
     public void finish() {
+        //附加IService.invokeAsync()
+        var invokeMethod = generateIServiceImplements();
+
+        var listRewrite =
+                astRewrite.getListRewrite(_serviceTypeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
+        listRewrite.insertLast(invokeMethod, null);
+    }
+
+    /** 生成实现IService的代码 */
+    private MethodDeclaration generateIServiceImplements() {
         //返回类型
         var typeCompletableFuture =
                 ast.newSimpleType(ast.newName("java.util.concurrent.CompletableFuture"));
@@ -49,49 +106,74 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         para1.setName(ast.newSimpleName("method"));
         invokeMethod.parameters().add(para1);
 
-        var para2 = ast.newSingleVariableDeclaration();
+        var para2    = ast.newSingleVariableDeclaration();
         var typeList = ast.newSimpleType(ast.newName("java.util.List"));
-        var type2 = ast.newParameterizedType(typeList);
+        var type2    = ast.newParameterizedType(typeList);
         type2.typeArguments().add(ast.newSimpleType(ast.newName("appbox.runtime.InvokeArg")));
         para2.setType(type2);
         para2.setName(ast.newSimpleName("args"));
         invokeMethod.parameters().add(para2);
 
         var body = ast.newBlock();
-        var returnStament = ast.newReturnStatement();
-        returnStament.setExpression(ast.newNullLiteral());
-        body.statements().add(returnStament);
+        //switch处理各公开方法
+        var methodToString = ast.newMethodInvocation(); //TODO:暂转换为method.toString()
+        methodToString.setName(ast.newSimpleName("toString"));
+        methodToString.setExpression(ast.newSimpleName("method"));
+        var switchSt = ast.newSwitchStatement();
+        switchSt.setExpression(methodToString);
+
+        for (var method : publicMethods) {
+            var methodName = ast.newStringLiteral();
+            methodName.setLiteralValue(method.getName().getIdentifier());
+            var caseSt = ast.newSwitchCase();
+            caseSt.expressions().add(methodName);
+            switchSt.statements().add(caseSt);
+
+            var invokeEx = ast.newMethodInvocation();
+            invokeEx.setName(ast.newSimpleName(method.getName().getIdentifier()));
+            var castEx = ast.newMethodInvocation(); //暂全部转换为CompletableFuture<Object>
+            castEx.setName(ast.newSimpleName("thenApply"));
+            var castLambda = ast.newLambdaExpression();
+            //castLambda.setParentheses(false);
+            var lambdaPara = ast.newVariableDeclarationFragment();
+            lambdaPara.setName(ast.newSimpleName("r"));
+            castLambda.parameters().add(lambdaPara);
+            var lambdaBody = ast.newCastExpression();
+            lambdaBody.setType(ast.newSimpleType(ast.newSimpleName("Object")));
+            lambdaBody.setExpression(ast.newSimpleName("r"));
+            castLambda.setBody(lambdaBody);
+
+            castEx.setExpression(invokeEx);
+            castEx.arguments().add(castLambda);
+
+            //TODO:处理参数
+            var returnSt = ast.newReturnStatement();
+            returnSt.setExpression(castEx);
+            switchSt.statements().add(returnSt);
+        }
+        //add switch default
+        var caseDefault = ast.newSwitchCase();
+        switchSt.statements().add(caseDefault);
+
+        var exceptionInfo = ast.newStringLiteral();
+        exceptionInfo.setLiteralValue("Unknown method");
+        var newException = ast.newClassInstanceCreation();
+        newException.setType(ast.newSimpleType(ast.newSimpleName("RuntimeException")));
+        newException.arguments().add(exceptionInfo);
+
+        var failedFuture = ast.newMethodInvocation();
+        failedFuture.setName(ast.newSimpleName("failedFuture"));
+        failedFuture.setExpression(ast.newName("java.util.concurrent.CompletableFuture"));
+        failedFuture.arguments().add(newException);
+
+        var returnExSt = ast.newReturnStatement();
+        returnExSt.setExpression(failedFuture);
+        switchSt.statements().add(returnExSt);
+
+        body.statements().add(switchSt);
         invokeMethod.setBody(body);
 
-        var listRewrite =
-                astRewrite.getListRewrite(_serviceTypeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-        listRewrite.insertLast(invokeMethod, null);
-    }
-
-    @Override
-    public boolean visit(TypeDeclaration node) {
-        _serviceTypeDeclaration = node;
-
-        var serviceType = ast.newSimpleType(ast.newName("appbox.runtime.IService"));
-        //astRewrite.set(node, TypeDeclaration.SUPERCLASS_TYPE_PROPERTY, serviceType, null );
-        var listRewrite = astRewrite.getListRewrite(node, TypeDeclaration.SUPER_INTERFACE_TYPES_PROPERTY);
-        listRewrite.insertFirst(serviceType, null);
-
-        return true;
-    }
-
-    @Override
-    public boolean visit(SimpleType node) {
-        if (node.getName().isSimpleName() && node.getName().getFullyQualifiedName().equals("String")) {
-            var newType = ast.newSimpleType(ast.newName("Object"));
-            astRewrite.replace(node, newType, null);
-        }
-        return super.visit(node);
-    }
-
-    @Override
-    public boolean visit(MethodDeclaration node) {
-        return super.visit(node);
+        return invokeMethod;
     }
 
 }

@@ -72,4 +72,15 @@ public class TestJava {
         }
     }
 
+    @Test
+    void testSwitchCharSeq() {
+        CharSequence name = "Rick";
+        switch (name.toString()) {
+            case "Rick":
+                System.out.println("Hit"); break;
+            default:
+                System.out.println("not"); break;
+        }
+    }
+
 }
