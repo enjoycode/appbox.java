@@ -48,7 +48,7 @@ public final class StagedService {
      * @return
      */
     public static CompletableFuture<Void> saveModelAsync(ModelBase model) {
-        var data = BinSerializer.serialize(model, false, null);
+        var data = BinSerializer.serialize(model, false);
         return saveAsync(StagedType.Model, String.valueOf(model.id()), data);
     }
 
@@ -60,7 +60,7 @@ public final class StagedService {
     public static CompletableFuture<Void> saveFolderAsync(ModelFolder folder) {
         if (folder.getParent() != null)
             throw new RuntimeException("仅允许保存模型类型的根目录");
-        var data = BinSerializer.serialize(folder, false, null);
+        var data = BinSerializer.serialize(folder, false);
         return saveAsync(StagedType.Folder, folder.getAppId() + "-" + folder.getTargetModelType().value /*不要使用folder.Id*/, data);
     }
 

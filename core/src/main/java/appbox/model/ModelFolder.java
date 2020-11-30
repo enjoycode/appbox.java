@@ -7,6 +7,10 @@ import appbox.serialization.IBinSerializable;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 模型的文件夹，每个应用的模型类型对应一个根文件夹
+ *
+ */
 public class ModelFolder implements IBinSerializable {
 
     private String _name;
@@ -162,7 +166,7 @@ public class ModelFolder implements IBinSerializable {
                     break;
                 case 5:
                     //TODO readList
-                    _childs = (List<ModelFolder>) bs.readList();
+                    _childs = (List<ModelFolder>) bs.readList(ModelFolder.class);
                     break;
                 case 0:
                     break;

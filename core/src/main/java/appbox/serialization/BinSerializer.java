@@ -4,17 +4,19 @@ import appbox.cache.ObjectPool;
 import appbox.data.EntityId;
 import appbox.model.ModelFolder;
 import appbox.utils.IdUtil;
+import org.checkerframework.checker.units.qual.A;
 
 import java.io.OutputStream;
+import java.lang.annotation.ElementType;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public final class BinSerializer extends OutputStream implements IEntityMemberWriter /*暂继承OutputStream方便写Json*/ {
     //region ====ObjectPool====
     private static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, 32);
+
+    //已经序列化或反序列化的对象实例列表
+    private List<Object> _objRefItems;
 
     public static BinSerializer rentFromPool(IOutputStream stream) {
         var obj = pool.rent();
@@ -59,19 +61,30 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
             throw new RuntimeException("暂未实现未知类型的反射序列化: " + type.getName());
         }
 
-        //TODO:是否已序列化过
+        if (checkNullOrSerialized(obj))
+            return;
 
         //写入类型信息
         _stream.writeByte(serializer.payloadType);
         //TODO:写入附加类型信息
-
-        //写入数据 TODO:先加入已序列化列表
+        addToObjectRefs(obj);
+        //写入数据
         serializer.write(this, obj);
     }
 
-    public static byte[] serialize(Object obj, boolean compress, Object sa){
-        //TODO
-        return null;
+    /**
+     *
+     * @param obj 需要压缩的对象
+     * @return
+     */
+    public static byte[] serialize(IBinSerializable  obj, boolean compress){
+        //TODO compress
+        var output = new BytesOutputStream(8192);
+        var os     = BinSerializer.rentFromPool(output);
+        obj.writeTo(os); //直接写
+        BinSerializer.backToPool(os);
+
+        return output.data;
     }
 
     /**
@@ -329,9 +342,82 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         }
     }
 
-    public void writeList(List<?> childs, int fieldId) {
-        //todo
+    public void writeList(List list, int fieldId) {
+        _stream.writeVariant(fieldId);
+        if (checkNullOrSerialized(list))
+            return;
+
+        addToObjectRefs(list);
+        write(list.size());
+        writeCollection(list);
     }
+
+    private void writeCollection(List list)
+    {
+        if (list.size() == 0)
+            return;
+
+        var type=list.get(0).getClass();
+        //尝试获取elementType有没有相应的序列化实现存在
+        var serializer = TypeSerializer.getSerializer(type);
+        if (serializer == null ||   type != String.class) //引用类型，注意：elementType == typeof(Object)没有序列化实现
+        {
+            for (int i = 0; i < list.size(); i++)
+            {
+                serialize(list.get(i));
+            }
+        }
+        else //值类型
+        {
+            for (int i = 0; i < list.size(); i++)
+            {
+                serializer.write(this, list.get(i));
+            }
+        }
+    }
+
+    private boolean checkNullOrSerialized(Object obj)
+    {
+        if (obj == null)
+        {
+            write(-1);
+            return true;
+        }
+
+        int index = indexOfObjectRefs(obj);
+        if (index > -1)
+        {
+            write(-2);
+            write(index);
+            return true;
+        }
+
+        //注意：不能在这里AddToObjectRefs(obj);
+        return false;
+    }
+
+    private void addToObjectRefs(Object obj)
+    {
+        if (_objRefItems == null)
+            _objRefItems = new ArrayList<>();
+
+        _objRefItems.add(obj);
+    }
+
+    private int indexOfObjectRefs(Object obj)
+    {
+        if (_objRefItems == null || _objRefItems.size() == 0)
+            return -1;
+
+        for (int i = 0; i < _objRefItems.size(); i++)
+        {
+            if (_objRefItems.get(i).equals(obj))
+                return i;
+        }
+        return -1;
+    }
+
+
 
 
     //endregion
