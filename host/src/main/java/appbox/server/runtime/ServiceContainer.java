@@ -47,6 +47,8 @@ public final class ServiceContainer {
         _mapLock.readLock().lock();
         var instance = _services.get(service);
         _mapLock.readLock().unlock();
+        if (instance != null)
+            return instance;
 
         //从模型存储加载,暂异步转同步
         _mapLock.writeLock().lock();
@@ -55,13 +57,15 @@ public final class ServiceContainer {
             var firstDotIndex   = serviceFullName.indexOf('.');
             var serviceName     = serviceFullName.substring(firstDotIndex + 1);
             var asmData         = ModelStore.loadServiceAssemblyAsync(serviceFullName).get(5, TimeUnit.SECONDS);
+            if (asmData == null)
+                throw new RuntimeException("Can't load assembly from ModelStore");
 
             var serviceClassLoader = new ServiceClassLoader();
             var clazz              = serviceClassLoader.loadServiceClass(serviceName, asmData);
             instance = (IService) clazz.getDeclaredConstructor().newInstance();
             _services.put(service, instance);
         } catch (Exception ex) {
-            Log.warn("Load service assembly error:" + ex.getMessage());
+            Log.warn("Load service assembly[" + service + "] error:" + ex.getMessage());
         } finally {
             _mapLock.writeLock().unlock();
         }
