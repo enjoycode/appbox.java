@@ -54,6 +54,17 @@ public final class ModelStore {
         return SysStoreApi.execKVGetAsync(req, new KVGetModelCodeResponse())
                 .thenApply(r -> (ServiceCode) r.sourceCode);
     }
+
+    /**
+     * 加载编译好的压缩的服务组件的字节码
+     * @param asmName eg:sys.HelloService
+     */
+    public static CompletableFuture<byte[]> loadServiceAssemblyAsync(String asmName) {
+        var req = new KVGetAssemblyRequest(true, asmName);
+        return SysStoreApi.execKVGetAsync(req, new KVGetAssemblyResponse())
+                .thenApply(KVGetAssemblyResponse::getAssemblyData);
+    }
+
     //endregion
 
     //region ====Read Methods====
