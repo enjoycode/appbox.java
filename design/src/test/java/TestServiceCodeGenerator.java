@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class TestServiceCodeGenerator {
@@ -51,6 +53,11 @@ public class TestServiceCodeGenerator {
         //测试转译服务代码
         var codeData = PublishService.compileService(hub, testServiceModel, null);
         assertNotNull(codeData);
+        //写入测试文件
+        var outPath = Path.of("/", "tmp", "appbox", "TestService.data");
+        Files.deleteIfExists(outPath);
+        Files.createFile(outPath);
+        Files.write(outPath, codeData);
     }
 
 }

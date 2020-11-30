@@ -11,6 +11,20 @@ import appbox.serialization.PayloadType;
 public final class InvokeArg {
     public static final ObjectPool<InvokeArg> pool = new ObjectPool<>(InvokeArg::new, 32);
 
+    //region ====static helpers====
+    public static InvokeArg from(String v) {
+        var arg = pool.rent();
+        arg.setValue(v);
+        return arg;
+    }
+
+    public static InvokeArg from(int v) {
+        var arg = pool.rent();
+        arg.setValue(v);
+        return arg;
+    }
+    //endregion
+
     private Object value;
     private byte   type; //常用类型简化
 
@@ -19,6 +33,11 @@ public final class InvokeArg {
 
     public void setValue(int v) {
         type  = PayloadType.Int32;
+        value = v;
+    }
+
+    public void setValue(String v) {
+        type = PayloadType.String;
         value = v;
     }
 
