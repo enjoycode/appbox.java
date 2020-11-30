@@ -1,4 +1,4 @@
-package appbox.utils;
+import appbox.utils.StringUtil;
 import org.objectweb.asm.*;
 
 import java.io.File;

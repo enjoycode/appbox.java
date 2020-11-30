@@ -1,5 +1,3 @@
-package appbox.utils;
-
 public class MyClassLoader extends ClassLoader{
 
     public MyClassLoader() {
