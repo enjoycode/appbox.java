@@ -1,12 +1,15 @@
 package appbox.server.runtime;
 
 import appbox.design.services.DesignService;
+import appbox.logging.Log;
 import appbox.runtime.IService;
 import appbox.server.services.SystemService;
 import appbox.server.services.TestService;
+import appbox.store.ModelStore;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -27,7 +30,6 @@ public final class ServiceContainer {
 
     /**
      * 注册服务
-     *
      * @param service eg: "sys.System"
      */
     private void registerService(CharSequence service, IService instance) {
@@ -39,14 +41,31 @@ public final class ServiceContainer {
     }
 
     /**
-     * 尝试根据名称获取服务实例，不存在返回Null
+     * 尝试根据名称获取服务实例，不存在或加载异常返回Null
      */
     public IService tryGet(CharSequence service) {
-        var lock = _mapLock.readLock();
-        lock.lock();
+        _mapLock.readLock().lock();
         var instance = _services.get(service);
-        lock.unlock();
-        //TODO:从模型存储加载
+        _mapLock.readLock().unlock();
+
+        //从模型存储加载,暂异步转同步
+        _mapLock.writeLock().lock();
+        try {
+            var serviceFullName = service.toString();
+            var firstDotIndex   = serviceFullName.indexOf('.');
+            var serviceName     = serviceFullName.substring(firstDotIndex + 1);
+            var asmData         = ModelStore.loadServiceAssemblyAsync(serviceFullName).get(5, TimeUnit.SECONDS);
+
+            var serviceClassLoader = new ServiceClassLoader();
+            var clazz              = serviceClassLoader.loadServiceClass(serviceName, asmData);
+            instance = (IService) clazz.getDeclaredConstructor().newInstance();
+            _services.put(service, instance);
+        } catch (Exception ex) {
+            Log.warn("Load service assembly error:" + ex.getMessage());
+        } finally {
+            _mapLock.writeLock().unlock();
+        }
+
         return instance;
     }
 
