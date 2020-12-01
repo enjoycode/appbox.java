@@ -4,6 +4,7 @@ import appbox.data.PersistentState;
 import appbox.design.services.StagedService.StagedType;
 import appbox.entities.StagedModel;
 import appbox.model.ModelBase;
+import appbox.model.ModelFolder;
 import appbox.serialization.BinDeserializer;
 
 import java.util.ArrayList;
@@ -65,20 +66,28 @@ public final class StagedItems {
     }
 
     /** 用挂起的文件夹更新从存储加载的文件夹 */
-    //public void UpdateFolders(List<ModelFolder> storedFolders) {
-    //    if (items == null) return;
-    //    for (int i = 0; i < items.length; i++) {
-    //        if (items[i] instanceof ModelFolder)
-    //        {
-    //            var index = storedFolders.FindIndex(t = > t.AppId == folder.AppId && t.TargetModelType == folder.TargetModelType)
-    //            ;
-    //            if (index < 0)
-    //                storedFolders.Add(folder);
-    //            else
-    //                storedFolders[index] = folder;
-    //        }
-    //    }
-    //}
+    public void updateFolders(List<ModelFolder> storedFolders)
+    {
+        if (items == null) return;
+        for (int i = 0; i < items.length; i++)
+        {
+            if (items[i] instanceof ModelFolder)
+            {
+                ModelFolder folder = (ModelFolder) items[i];
+                int         index  =-1;
+                for(ModelFolder t:storedFolders){
+                    if(t.getAppId()==folder.getAppId()&&t.getTargetModelType()==folder.getTargetModelType()){
+                        index=1;
+                    }
+                }
+                if(index < 0){
+                    storedFolders.add(folder);
+                }else{
+                    storedFolders.add(index,folder);
+                }
+            }
+        }
+    }
 
     /** 从存储加载的模型中移除已删除的 */
     public void removeDeletedModels(List<ModelBase> storedModels) {

@@ -11,6 +11,14 @@ public abstract class Expression implements IBinSerializable/*TODO:移至需要�
         return new BinaryExpression(this, new PrimitiveExpression(value), BinaryExpression.BinaryOperatorType.Equal);
     }
 
+    public BinaryExpression le(Object value) {
+        return new BinaryExpression(this, new PrimitiveExpression(value), BinaryExpression.BinaryOperatorType.LessOrEqual);
+    }
+
+    public BinaryExpression ge(Object value) {
+        return new BinaryExpression(this, new PrimitiveExpression(value), BinaryExpression.BinaryOperatorType.GreaterOrEqual);
+    }
+
     public BinaryExpression and(Expression right) {
         return new BinaryExpression(this, right, BinaryExpression.BinaryOperatorType.AndAlso);
     }
