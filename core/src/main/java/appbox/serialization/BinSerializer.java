@@ -2,21 +2,16 @@ package appbox.serialization;
 
 import appbox.cache.ObjectPool;
 import appbox.data.EntityId;
-import appbox.model.ModelFolder;
 import appbox.utils.IdUtil;
-import org.checkerframework.checker.units.qual.A;
 
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.lang.annotation.ElementType;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public final class BinSerializer extends OutputStream implements IEntityMemberWriter /*暂继承OutputStream方便写Json*/ {
     //region ====ObjectPool====
     private static final ObjectPool<BinSerializer> pool = new ObjectPool<>(BinSerializer::new, 32);
-
-    //已经序列化或反序列化的对象实例列表
-    private List<Object> _objRefItems;
 
     public static BinSerializer rentFromPool(IOutputStream stream) {
         var obj = pool.rent();
@@ -25,12 +20,32 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     }
 
     public static void backToPool(BinSerializer obj) {
-        obj._stream = null;
+        obj._stream      = null;
+        obj._objRefItems = null;
         pool.back(obj);
     }
     //endregion
 
+    //region ====static helper====
+    public static ByteArrayOutputStream serializeTo(Object obj, boolean compress) {
+        var output = new BytesOutputStream(1024);
+        var bs = BinSerializer.rentFromPool(output);
+        try {
+            bs.serialize(obj);
+        } finally {
+            BinSerializer.backToPool(bs);
+        }
+        return output;
+    }
+
+    public static byte[] serialize(IBinSerializable obj, boolean compress) {
+        return serializeTo(obj, compress).toByteArray();
+    }
+    //endregion
+
     private IOutputStream _stream;
+    //已经序列化或反序列化的对象实例列表
+    private List<Object>  _objRefItems;
 
     private BinSerializer() {
     }
@@ -61,8 +76,8 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
             throw new RuntimeException("暂未实现未知类型的反射序列化: " + type.getName());
         }
 
-        if (checkNullOrSerialized(obj))
-            return;
+        //if (checkNullOrSerialized(obj))
+        //    return;
 
         //写入类型信息
         _stream.writeByte(serializer.payloadType);
@@ -70,21 +85,6 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         addToObjectRefs(obj);
         //写入数据
         serializer.write(this, obj);
-    }
-
-    /**
-     *
-     * @param obj 需要压缩的对象
-     * @return
-     */
-    public static byte[] serialize(IBinSerializable  obj, boolean compress){
-        //TODO compress
-        var output = new BytesOutputStream(8192);
-        var os     = BinSerializer.rentFromPool(output);
-        obj.writeTo(os); //直接写
-        BinSerializer.backToPool(os);
-
-        return output.data;
     }
 
     /**
@@ -134,18 +134,18 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     /**
      * 大字节序写入
      */
-    public void writeIntBE(int value)  {
+    public void writeIntBE(int value) {
         _stream.writeByte((byte) (value >>> 24));
         _stream.writeByte((byte) (value >>> 16));
         _stream.writeByte((byte) (value >>> 8));
         _stream.writeByte((byte) (value));
     }
 
-    public void writeLong(long value)  {
+    public void writeLong(long value) {
         _stream.writeLong(value);
     }
 
-    public void writeLong(long value, int fieldId)  {
+    public void writeLong(long value, int fieldId) {
         _stream.writeVariant(fieldId);
         _stream.writeLong(value);
     }
@@ -352,41 +352,34 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         writeCollection(list);
     }
 
-    private void writeCollection(List list)
-    {
+    private void writeCollection(List list) {
         if (list.size() == 0)
             return;
 
-        var type=list.get(0).getClass();
+        var type = list.get(0).getClass();
         //尝试获取elementType有没有相应的序列化实现存在
         var serializer = TypeSerializer.getSerializer(type);
-        if (serializer == null ||   type != String.class) //引用类型，注意：elementType == typeof(Object)没有序列化实现
+        if (serializer == null || type != String.class) //引用类型，注意：elementType == typeof(Object)没有序列化实现
         {
-            for (int i = 0; i < list.size(); i++)
-            {
+            for (int i = 0; i < list.size(); i++) {
                 serialize(list.get(i));
             }
-        }
-        else //值类型
+        } else //值类型
         {
-            for (int i = 0; i < list.size(); i++)
-            {
+            for (int i = 0; i < list.size(); i++) {
                 serializer.write(this, list.get(i));
             }
         }
     }
 
-    private boolean checkNullOrSerialized(Object obj)
-    {
-        if (obj == null)
-        {
+    private boolean checkNullOrSerialized(Object obj) {
+        if (obj == null) {
             write(-1);
             return true;
         }
 
         int index = indexOfObjectRefs(obj);
-        if (index > -1)
-        {
+        if (index > -1) {
             write(-2);
             write(index);
             return true;
@@ -396,29 +389,23 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         return false;
     }
 
-    private void addToObjectRefs(Object obj)
-    {
+    private void addToObjectRefs(Object obj) {
         if (_objRefItems == null)
             _objRefItems = new ArrayList<>();
 
         _objRefItems.add(obj);
     }
 
-    private int indexOfObjectRefs(Object obj)
-    {
+    private int indexOfObjectRefs(Object obj) {
         if (_objRefItems == null || _objRefItems.size() == 0)
             return -1;
 
-        for (int i = 0; i < _objRefItems.size(); i++)
-        {
+        for (int i = 0; i < _objRefItems.size(); i++) {
             if (_objRefItems.get(i).equals(obj))
                 return i;
         }
         return -1;
     }
-
-
-
 
     //endregion
 

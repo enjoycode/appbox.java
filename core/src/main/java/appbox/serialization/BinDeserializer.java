@@ -22,7 +22,8 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     public static void backToPool(BinDeserializer obj) {
-        obj._stream = null; pool.back(obj);
+        obj._stream = null;
+        pool.back(obj);
     }
     //endregion
 

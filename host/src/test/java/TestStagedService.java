@@ -1,34 +1,35 @@
 import appbox.channel.SharedMemoryChannel;
 import appbox.design.MockDeveloperSession;
 import appbox.design.services.StagedService;
-import appbox.logging.Log;
-import appbox.model.ApplicationModel;
-import appbox.model.ModelBase;
+import appbox.entities.StagedModel;
 import appbox.model.ModelType;
-import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.SysStoreApi;
+import appbox.store.query.TableScan;
 import appbox.utils.IdUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class TestStagedService {
 
     private static SharedMemoryChannel channel;
 
-    private static final UUID devId =new UUID(-6038453433195871438l,-7082168417221633763l);
-
     @BeforeAll
     public static void init() {
-        RuntimeContext.init(new HostRuntimeContext(), (short) 1/*TODO: fix peerId*/);
+        RuntimeContext.init(new HostRuntimeContext(), (short) 10410);
         channel = new SharedMemoryChannel("AppChannel");
         SysStoreApi.init(channel);
+
+        //注入模拟会话
+        var session = new MockDeveloperSession();
+        RuntimeContext.current().setCurrentSession(session);
 
         CompletableFuture.runAsync(() -> {
             channel.startReceive();
@@ -48,70 +49,26 @@ public class TestStagedService {
     }
 
     @Test
-    public void loadCodeDataAsync() throws Exception{
-        var ctx = new MockRuntimeContext();
-        RuntimeContext.init(ctx, (short) 10421);
+    public void testLoadAllStaged() throws ExecutionException, InterruptedException {
+        var testServiceId = makeServiceModelId(1);
+        //var list = StagedService.loadStagedAsync(false).get();
+        //var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
+        var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
 
-        var appModel = new ApplicationModel("appbox", "sys");
-        var models = new ArrayList<ModelBase>();
-        ////生成测试服务模型
-        //var testServiceModel = new ServiceModel(makeServiceModelId(10), "TestService");
-        //models.add(testServiceModel);
-        ////注入测试模型
-        //ctx.injectApplicationModel(appModel);
-        //ctx.injectModels(models);
-
-        var session = new MockDeveloperSession();
-        ctx.setCurrentSession(session);
-        var res=StagedService.loadCodeDataAsync(IdUtil.SYS_CHECKOUT_MODEL_ID).get();
-        Log.debug("size:"+res.length);
+        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
+        q.where(StagedModel.TYPE.eq((byte) 2)
+                .and(StagedModel.MODEL.eq(Long.toUnsignedString(testServiceId)))
+                .and(StagedModel.DEVELOPER.eq(developerID)));
+        var list = q.toListAsync().get();
+        System.out.println(list == null);
     }
+
     @Test
-    public void saveModelAsync(){
-
+    public void testSaveAndLoadServiceCode() throws ExecutionException, InterruptedException {
+        var testServiceId = makeServiceModelId(1);
+        StagedService.saveServiceCodeAsync(testServiceId, "AAAA").get();
+        var code = StagedService.loadServiceCode(testServiceId).get();
+        assertEquals("AAAA", code);
     }
-    @Test
-    public void saveFolderAsync(){
-
-    }
-    @Test
-    public void saveServiceCodeAsync(){
-
-    }
-    @Test
-    public void loadServiceCode(){
-
-    }
-    @Test
-    public void saveReportCodeAsync(){
-
-    }
-    @Test
-    public void saveViewCodeAsync(){
-
-    }
-    @Test
-    public void saveViewRuntimeCodeAsync(){
-
-    }
-    @Test
-    public void loadViewRuntimeCode(){
-
-    }
-    @Test
-    public void loadStagedAsync(){
-
-    }
-    @Test
-    public void deleteStagedAsync(){
-
-    }
-    @Test
-    public void deleteModelAsync(){
-
-    }
-
-
-
 
 }

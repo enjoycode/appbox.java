@@ -39,7 +39,7 @@ public final class StagedService {
     /** 保存Staged模型 */
     public static CompletableFuture<Void> saveModelAsync(ModelBase model) {
         var data = BinSerializer.serialize(model, false);
-        return saveAsync(StagedType.Model, String.valueOf(model.id()), data);
+        return saveAsync(StagedType.Model, Long.toUnsignedString(model.id()), data);
     }
 
     /** 保存模型类型的根目录 */
