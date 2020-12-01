@@ -65,11 +65,10 @@ public final class StagedService {
                 .and(StagedModel.MODEL.eq(Long.toUnsignedString(serviceModelId)))
                 .and(StagedModel.DEVELOPER.eq(developerID)));
 
-        return q.toListAsync().thenCompose(r -> {
+        return q.toListAsync().thenApply(r -> {
             if (r == null || r.size() == 0)
-                return CompletableFuture.completedFuture(null);
-
-            return CompletableFuture.completedFuture(ModelCodeUtil.decodeServiceCode(r.get(0).getData()).sourceCode);
+                return null;
+            return ModelCodeUtil.decodeServiceCode(r.get(0).getData()).sourceCode;
         });
     }
 
