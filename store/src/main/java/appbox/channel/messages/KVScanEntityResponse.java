@@ -21,27 +21,26 @@ public final class KVScanEntityResponse<T extends SysEntity> extends KVScanRespo
     public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
+        checkStoreError();
 
-        if (errorCode == 0) {
-            skipped = bs.readInt();
-            length  = bs.readInt();
+        skipped = bs.readInt();
+        length  = bs.readInt();
 
-            result = new ArrayList<>(length);
-            for (int i = 0; i < length; i++) {
-                var keySize = bs.readNativeVariant(); //Row's key size
-                assert keySize == KeyUtil.ENTITY_KEY_SIZE;
-                //创建对象实例并从RowKey读取Id
-                T obj = null;
-                try {
-                    obj = clazz.getDeclaredConstructor().newInstance();
-                } catch (Exception ex) {
-                    throw new RuntimeException("Can't create instance.");
-                }
-                result.add(obj);
-                obj.id().readFrom(bs);
-                //开始读取当前行的各个字段
-                KVRowReader.readFields(bs, obj);
+        result = new ArrayList<>(length);
+        for (int i = 0; i < length; i++) {
+            var keySize = bs.readNativeVariant(); //Row's key size
+            assert keySize == KeyUtil.ENTITY_KEY_SIZE;
+            //创建对象实例并从RowKey读取Id
+            T obj = null;
+            try {
+                obj = clazz.getDeclaredConstructor().newInstance();
+            } catch (Exception ex) {
+                throw new RuntimeException("Can't create instance.");
             }
+            result.add(obj);
+            obj.id().readFrom(bs);
+            //开始读取当前行的各个字段
+            KVRowReader.readFields(bs, obj);
         }
     }
 

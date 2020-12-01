@@ -22,8 +22,9 @@ public final class KVGetEntityResponse<T extends SysEntity> extends KVGetRespons
     public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
+        checkStoreError();
 
-        if (errorCode == 0 && bs.hasRemaining()) {
+        if (bs.hasRemaining()) {
             //创建实体对象实例
             try {
                 entity = clazz.getDeclaredConstructor().newInstance();

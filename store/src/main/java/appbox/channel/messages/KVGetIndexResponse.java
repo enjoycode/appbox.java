@@ -19,8 +19,9 @@ public final class KVGetIndexResponse<T extends IKVRow> extends KVGetResponse {
     public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
+        checkStoreError();
 
-        if (errorCode == 0 && bs.hasRemaining()) {
+        if (bs.hasRemaining()) {
             //创建索引对象实例
             try {
                 _indexRow = _indexClass.getDeclaredConstructor().newInstance();
