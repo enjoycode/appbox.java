@@ -2,6 +2,7 @@ package appbox.design.jdt;
 
 import appbox.design.IDeveloperSession;
 import appbox.design.services.CodeGenService;
+import appbox.design.services.StagedService;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
@@ -112,7 +113,7 @@ public final class ModelFile extends ModelResource implements IFile {
             return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
         }
 
-        //TODO:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码
+        //注意:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码
         try {
             var hub = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
             //根据类型查找模型节点
@@ -125,7 +126,15 @@ public final class ModelFile extends ModelResource implements IFile {
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
                 return new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {
-                //TODO:直接加载为utf8 bytes,避免字符串转换
+                //TODO:**直接加载为utf8 bytes,避免字符串转换
+                if (modelNode.isCheckoutByMe()) {
+                    var stagedCode = StagedService.loadServiceCode(modelNode.model().id()).get();
+                    if (stagedCode != null) {
+                        Log.debug(String.format("Load model code[%s] from Staged.", this.getName()));
+                        return new ByteArrayInputStream(stagedCode.getBytes(StandardCharsets.UTF_8));
+                    }
+                }
+
                 var res = ModelStore.loadServiceCodeAsync(modelNode.model().id()).get();
                 Log.debug(String.format("Load model code[%s] from ModelStore.", this.getName()));
                 return new ByteArrayInputStream(res.sourceCode.getBytes(StandardCharsets.UTF_8));
