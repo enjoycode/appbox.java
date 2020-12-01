@@ -1,9 +1,10 @@
+package appbox.design;
+
 import appbox.data.TreeNodePath;
-import appbox.design.DesignHub;
-import appbox.design.IDeveloperSession;
 
 import java.util.UUID;
 
+/**仅用于测试*/
 public final class MockDeveloperSession implements IDeveloperSession {
 
     private final TreeNodePath _path;
