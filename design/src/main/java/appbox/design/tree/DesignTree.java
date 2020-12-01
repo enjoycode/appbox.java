@@ -66,9 +66,10 @@ public final class DesignTree {
         appRootNode = new ApplicationRootNode(this);
         nodes.add(appRootNode);
 
-        //TODO: 先加载签出信息及StagedModels
+        //先加载签出信息及StagedModels
         return CheckoutService.loadAllAsync().thenCompose(checkouts -> {
             _checkouts = checkouts;
+            staged = new StagedItems(null); //TODO:fix staged
 
             return ModelStore.loadAllApplicationAsync();
         }).thenCompose(apps -> { //加载所有Apps

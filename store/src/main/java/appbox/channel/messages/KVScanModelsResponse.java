@@ -1,5 +1,6 @@
 package appbox.channel.messages;
 
+import appbox.data.PersistentState;
 import appbox.model.ModelBase;
 import appbox.serialization.BinDeserializer;
 
@@ -21,6 +22,10 @@ public final class KVScanModelsResponse extends KVScanResponse {
                 bs.readNativeVariant(); //跳过Row's Value size;
                 models[i] = ModelBase.makeModelByType(bs.readByte());
                 models[i].readFrom(bs);
+                //处理变更状态
+                if (models[i].persistentState() != PersistentState.Unchnaged) {
+                    models[i].acceptChanges();
+                }
             }
         }
     }

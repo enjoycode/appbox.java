@@ -96,7 +96,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     public final boolean isCheckoutByMe() {
         return _checkoutInfo != null
                 && _checkoutInfo.developerOuid.equals(
-                        RuntimeContext.current().currentSession().leafOrgUnitId());
+                RuntimeContext.current().currentSession().leafOrgUnitId());
     }
     //endregion
 
@@ -171,7 +171,11 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
             nodes.writeToJson(writer);
         }
 
-        //TODO:签出信息
+        //签出信息
+        if (_checkoutInfo != null) {
+            writer.writeKey("CheckoutBy");
+            writer.writeValue(isCheckoutByMe() ? "Me" : _checkoutInfo.developerName);
+        }
 
         //写入子类成员
         writeJsonMembers(writer);
