@@ -4,8 +4,6 @@ plugins {
 
 dependencies {
     implementation 'com.alibaba:fastjson:1.2.73'
-    api 'org.apache.commons:commons-lang3:3.11'
-
 
     // This dependency is exported to consumers, that is to say found on their compile classpath.
     api 'org.apache.commons:commons-math3:3.6.1'

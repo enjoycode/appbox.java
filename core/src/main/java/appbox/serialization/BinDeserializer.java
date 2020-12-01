@@ -4,8 +4,6 @@ import appbox.cache.ObjectPool;
 import appbox.data.EntityId;
 import appbox.logging.Log;
 import appbox.utils.IdUtil;
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +29,7 @@ public final class BinDeserializer implements IEntityMemberReader {
     //region ====static helper====
     public static Object deserialize(byte[] data) {
         var stream = new BytesInputStream(data);
-        var bs = rentFromPool(stream);
+        var bs     = rentFromPool(stream);
         try {
             return bs.deserialize();
         } finally {
@@ -44,6 +42,8 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     private IInputStream _stream;
+    //已经序列化或反序列化的对象实例列表
+    private List<Object> _objRefItems;
 
     public Object deserialize() {
         var payloadType = _stream.readByte(); if (payloadType == PayloadType.Null) return null;
@@ -203,10 +203,10 @@ public final class BinDeserializer implements IEntityMemberReader {
     }
 
     public List<?> readList(Class clz) {
-        return readList(clz,null);
+        return readList(clz, null);
     }
 
-    public List<?> readList(Class clz,Supplier<List<?>> creator) {
+    public List<?> readList(Class clz, Supplier<List<?>> creator) {
         int count = readVariant();
         if (count == -1)
             return null;
@@ -219,20 +219,17 @@ public final class BinDeserializer implements IEntityMemberReader {
         return list;
     }
 
-    private void readCollection(Class clz, int count, List list)
-    {
+    private void readCollection(Class clz, int count, List list) {
         if (count == 0)
             return;
 
         var serializer = TypeSerializer.getSerializer(clz);
-        if (serializer == null ||  clz != String.class) //元素为引用类型
+        if (serializer == null || clz != String.class) //元素为引用类型
         {
-            for (int i = 0; i < count; i++)
-            {
+            for (int i = 0; i < count; i++) {
                 list.add(deserialize());
             }
-        }
-        else //元素为值类型
+        } else //元素为值类型
         {
             //TODO check
             //if (serializer.genericTypeCount > 0) //范型值类型
@@ -247,24 +244,21 @@ public final class BinDeserializer implements IEntityMemberReader {
             //else
             if (serializer.creator != null) //带有构造器的值类型
             {
-                for (int i = 0; i < count; i++)
-                {
-                    Object element =newInstance(clz);
+                for (int i = 0; i < count; i++) {
+                    Object element = newInstance(clz);
                     serializer.read(this, element);
                     list.add(deserialize());
                 }
-            }
-            else //其他值类型
+            } else //其他值类型
             {
-                for (int i = 0; i < count; i++)
-                {
+                for (int i = 0; i < count; i++) {
                     list.add(serializer.read(this, null));
                 }
             }
         }
     }
 
-    Object newInstance(Class clz){
+    Object newInstance(Class clz) {
         try {
             return clz.getDeclaredConstructor().newInstance();
         } catch (InstantiationException e) {
@@ -279,11 +273,7 @@ public final class BinDeserializer implements IEntityMemberReader {
         return null;
     }
 
-
-    //已经序列化或反序列化的对象实例列表
-    private List<Object> _objRefItems;
-    private void addToObjectRefs(Object obj)
-    {
+    private void addToObjectRefs(Object obj) {
         if (_objRefItems == null)
             _objRefItems = new ArrayList<>();
 
