@@ -50,10 +50,18 @@ public abstract class ModelBase implements IBinSerializable {
         return _name;
     }
 
+    public final void setName(String name) {
+        this._name = name;
+    }
+
     public abstract ModelType modelType();
 
     public final boolean designMode() {
         return _designMode;
+    }
+
+    public final void setDesignMode(boolean designMode) {
+        this._designMode = designMode;
     }
 
     public final int version() {
@@ -166,11 +174,4 @@ public abstract class ModelBase implements IBinSerializable {
     }
     //endregion
 
-    public void setDesignMode(boolean designMode) {
-        this._designMode = designMode;
-    }
-
-    public void setName(String name) {
-        this._name = name;
-    }
 }
