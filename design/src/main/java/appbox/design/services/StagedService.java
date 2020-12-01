@@ -12,11 +12,7 @@ import appbox.store.KVTransaction;
 import appbox.store.query.TableScan;
 import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.javatuples.Quartet;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -33,8 +29,7 @@ public final class StagedService {
                 .and(StagedModel.TYPE.eq(StagedType.SourceCode.value)));
 
         return q.toListAsync().thenCompose(r -> {
-
-            if (ObjectUtils.isEmpty(r)) {
+            if (r == null || r.size() == 0) {
                 return CompletableFuture.completedFuture(null);
             } else {
                 return CompletableFuture.completedFuture(r.get(0).getData());
@@ -89,79 +84,79 @@ public final class StagedService {
                 .and(StagedModel.DEVELOPER.eq(developerID)));
 
         return q.toListAsync().thenCompose(r -> {
-            if (ObjectUtils.isEmpty(r))
+            if (r == null || r.size() == 0)
                 return CompletableFuture.completedFuture(null);
 
             return CompletableFuture.completedFuture(ModelCodeUtil.decodeServiceCode(r.get(0).getData()).sourceCode);
         });
     }
 
-    public static CompletableFuture<Void> saveReportCodeAsync(long modelId, String code) {
-        var data = ModelCodeUtil.compressCode(code);
-        return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
-    }
+    //public static CompletableFuture<Void> saveReportCodeAsync(long modelId, String code) {
+    //    var data = ModelCodeUtil.compressCode(code);
+    //    return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
+    //}
+    //
+    //public static CompletableFuture<String> loadReportCodeAsync(long modelId) {
+    //    return loadCodeDataAsync(modelId).thenCompose(r -> {
+    //        if (r == null) {
+    //            return CompletableFuture.completedFuture(null);
+    //        } else {
+    //            return CompletableFuture.completedFuture(ModelCodeUtil.decompressCode(r));
+    //        }
+    //    });
+    //}
 
-    public static CompletableFuture<String> loadReportCodeAsync(long modelId) {
-        return loadCodeDataAsync(modelId).thenCompose(r -> {
-            if (r == null) {
-                return CompletableFuture.completedFuture(null);
-            } else {
-                return CompletableFuture.completedFuture(ModelCodeUtil.decompressCode(r));
-            }
-        });
-    }
+    ///**
+    // * 专用于保存视图模型代码
+    // * @param modelId
+    // * @param templateCode
+    // * @param scriptCode
+    // * @param styleCode
+    // * @return
+    // */
+    //public static CompletableFuture<Void> saveViewCodeAsync(long modelId, String templateCode, String scriptCode, String styleCode) {
+    //    var data = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
+    //    return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
+    //}
 
-    /**
-     * 专用于保存视图模型代码
-     * @param modelId
-     * @param templateCode
-     * @param scriptCode
-     * @param styleCode
-     * @return
-     */
-    public static CompletableFuture<Void> saveViewCodeAsync(long modelId, String templateCode, String scriptCode, String styleCode) {
-        var data = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
-        return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
-    }
-
-    public static CompletableFuture<Quartet<Boolean, String, String, String>> loadViewCodeAsync(long modelId) {
-        return loadCodeDataAsync(modelId).thenCompose(r -> {
-            if (r == null) {return CompletableFuture.completedFuture(Quartet.with(false, null, null, null));}
-            else {
-                Map res =ModelCodeUtil.decodeViewCode(r);
-                return CompletableFuture.completedFuture(Quartet.with(false, (String)res.get("templateCode"),(String) res.get("scriptCode"), (String)res.get("styleCode")));
-            }
-        });
-    }
-
-    public static CompletableFuture<Void> saveViewRuntimeCodeAsync(long modelId, String runtimeCode) {
-        if (StringUtils.isEmpty(runtimeCode)){
-            return CompletableFuture.completedFuture(null);
-        }else{
-            var data = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
-            return saveAsync(StagedType.ViewRuntimeCode, String.valueOf(modelId), data);
-        }
-    }
-
-    public static CompletableFuture<String> loadViewRuntimeCode(long viewModelId) {
-        var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
-        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
-        q.where(StagedModel.TYPE.eq(StagedType.ViewRuntimeCode.value)
-                .and(StagedModel.MODEL.eq(Long.toUnsignedString(viewModelId)))
-                .and(StagedModel.DEVELOPER.eq(developerID)));
-        return q.toListAsync().thenCompose(r -> {
-            if (ObjectUtils.isEmpty(r)) {
-                return CompletableFuture.completedFuture(null);
-            } else {
-                String str=ModelCodeUtil.decodeViewRuntimeCode(r.get(0).getData());
-                return CompletableFuture.completedFuture(str);
-            }
-        });
-    }
+    //public static CompletableFuture<Quartet<Boolean, String, String, String>> loadViewCodeAsync(long modelId) {
+    //    return loadCodeDataAsync(modelId).thenCompose(r -> {
+    //        if (r == null) {return CompletableFuture.completedFuture(Quartet.with(false, null, null, null));}
+    //        else {
+    //            Map res =ModelCodeUtil.decodeViewCode(r);
+    //            return CompletableFuture.completedFuture(Quartet.with(false, (String)res.get("templateCode"),(String) res.get("scriptCode"), (String)res.get("styleCode")));
+    //        }
+    //    });
+    //}
+    //
+    //public static CompletableFuture<Void> saveViewRuntimeCodeAsync(long modelId, String runtimeCode) {
+    //    if (StringUtils.isEmpty(runtimeCode)){
+    //        return CompletableFuture.completedFuture(null);
+    //    }else{
+    //        var data = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
+    //        return saveAsync(StagedType.ViewRuntimeCode, String.valueOf(modelId), data);
+    //    }
+    //}
+    //
+    //public static CompletableFuture<String> loadViewRuntimeCode(long viewModelId) {
+    //    var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
+    //    var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
+    //    q.where(StagedModel.TYPE.eq(StagedType.ViewRuntimeCode.value)
+    //            .and(StagedModel.MODEL.eq(Long.toUnsignedString(viewModelId)))
+    //            .and(StagedModel.DEVELOPER.eq(developerID)));
+    //    return q.toListAsync().thenCompose(r -> {
+    //        if (ObjectUtils.isEmpty(r)) {
+    //            return CompletableFuture.completedFuture(null);
+    //        } else {
+    //            String str=ModelCodeUtil.decodeViewRuntimeCode(r.get(0).getData());
+    //            return CompletableFuture.completedFuture(str);
+    //        }
+    //    });
+    //}
 
     public static CompletableFuture<Void> saveAsync(StagedType type, String modelIdString, byte[] data) {
-        var developerId   = RuntimeContext.current().currentSession().leafOrgUnitId();
-        EntityModel model = RuntimeContext.current().getModel(IdUtil.SYS_STAGED_MODEL_ID);
+        var         developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
+        EntityModel model       = RuntimeContext.current().getModel(IdUtil.SYS_STAGED_MODEL_ID);
 
         //String modelIdString = Long.toUnsignedString(modelId); //转换为字符串
 
@@ -186,14 +181,14 @@ public final class StagedService {
      * 加载挂起项目
      */
     public static CompletableFuture<StagedItems> loadStagedAsync(boolean onlyModelsAndFolders) {
-        var developerId   = RuntimeContext.current().currentSession().leafOrgUnitId();
-        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
+        var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
+        var q           = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
         if (onlyModelsAndFolders)
             q.where(StagedModel.TYPE.le(StagedType.Folder.value)
-                            .and(StagedModel.DEVELOPER.eq(developerId)));
+                    .and(StagedModel.DEVELOPER.eq(developerId)));
         else
             q.where(StagedModel.DEVELOPER.eq(developerId));
-        return q.toListAsync().thenApply(r-> new StagedItems(r));
+        return q.toListAsync().thenApply(r -> new StagedItems(r));
     }
 
     /**
@@ -201,15 +196,15 @@ public final class StagedService {
      * @return
      */
     public static CompletableFuture<Void> deleteStagedAsync() {
-        var developerId   = RuntimeContext.current().currentSession().leafOrgUnitId();
-        var model = (EntityModel)RuntimeContext.current().getModel(IdUtil.SYS_STAGED_MODEL_ID);
+        var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
+        var model       = (EntityModel) RuntimeContext.current().getModel(IdUtil.SYS_STAGED_MODEL_ID);
 
         var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
         q.where(StagedModel.DEVELOPER.eq(developerId));
-        return q.toListAsync().thenCompose(res->{
-            if (ObjectUtils.isNotEmpty(res)) {
-                return KVTransaction.beginAsync().thenCompose(txn ->{
-                    CompletableFuture future=null;
+        return q.toListAsync().thenCompose(res -> {
+            if (res != null && res.size() > 0) {
+                return KVTransaction.beginAsync().thenCompose(txn -> {
+                    CompletableFuture future = null;
                     for (StagedModel stagedModel : res) {
                         if (future == null) {
                             future = EntityStore.deleteEntityAsync(model, stagedModel.id(), txn);
@@ -219,7 +214,7 @@ public final class StagedService {
                     }
                     return future;
                 });
-            }else{
+            } else {
                 return CompletableFuture.completedFuture(null);
             }
         });
@@ -231,15 +226,15 @@ public final class StagedService {
      * @return
      */
     public static CompletableFuture<Void> deleteModelAsync(long modelId) {
-        var developerId   = RuntimeContext.current().currentSession().leafOrgUnitId();
-        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
+        var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
+        var q           = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
         q.where(StagedModel.MODEL.eq(Long.toUnsignedString(modelId))
                 .and(StagedModel.DEVELOPER.eq(developerId))
         );
-        return q.toListAsync().thenCompose(res->{
-            if (ObjectUtils.isNotEmpty(res)) {
-                return KVTransaction.beginAsync().thenCompose(txn ->{
-                    CompletableFuture future=null;
+        return q.toListAsync().thenCompose(res -> {
+            if (res != null && res.size() > 0) {
+                return KVTransaction.beginAsync().thenCompose(txn -> {
+                    CompletableFuture future = null;
                     for (StagedModel stagedModel : res) {
                         if (future == null) {
                             future = EntityStore.deleteEntityAsync(stagedModel);
@@ -249,7 +244,7 @@ public final class StagedService {
                     }
                     return future;
                 });
-            }else{
+            } else {
                 return CompletableFuture.completedFuture(null);
             }
         });
