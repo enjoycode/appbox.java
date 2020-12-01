@@ -44,10 +44,10 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         parent = value;
     }
 
-    public DesignTree getDesignTree() {
+    public DesignTree designTree() {
         DesignNode root = getRootNode(this);
         if (root instanceof ITopNode) {
-            return root.getDesignTree();
+            return root.designTree();
         }
         return null;
     }
@@ -117,19 +117,19 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         List<CheckoutInfo> infos = new ArrayList<>();
         CheckoutInfo info = new CheckoutInfo(nodeType(),
                 checkoutInfoTargetID(), version,
-                getDesignTree().designHub.session.name(),
-                getDesignTree().designHub.session.leafOrgUnitId());
+                designTree().designHub.session.name(),
+                designTree().designHub.session.leafOrgUnitId());
         infos.add(info);
 
         return CheckoutService.checkoutAsync(infos).thenApply(r -> {
             if (r.success) {
                 //签出成功则将请求的签出信息添加至当前的已签出列表
-                getDesignTree().addCheckoutInfos(infos);
+                designTree().addCheckoutInfos(infos);
                 //如果签出的是单个模型，且具备更新的版本，则更新
                 if (this instanceof ModelNode && r.modelWithNewVersion != null) {
                     var modelNode = (ModelNode) this;
                     modelNode.setModel(r.modelWithNewVersion); //替换旧模型
-                    getDesignTree().designHub.typeSystem.updateModelDocument(modelNode); //更新为新模型的虚拟代码
+                    designTree().designHub.typeSystem.updateModelDocument(modelNode); //更新为新模型的虚拟代码
                 }
                 //更新当前节点的签出信息
                 setCheckoutInfo(infos.get(0));

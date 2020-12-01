@@ -36,7 +36,7 @@ public final class ModelRootNode extends DesignNode {
      */
     protected ModelNode addModel(ModelBase model) {
         //注意：入参model可能被签出的本地替换掉，所以相关操作必须指向node.model()
-        var tree = getDesignTree();
+        var tree = designTree();
         var node = new ModelNode(model, tree.designHub);
         tree.bindCheckoutInfo(node, model.persistentState() == PersistentState.Detached);
 

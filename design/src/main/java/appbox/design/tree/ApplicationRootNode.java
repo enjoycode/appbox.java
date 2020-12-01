@@ -10,7 +10,7 @@ public final class ApplicationRootNode extends DesignNode implements ITopNode {
     }
 
     @Override
-    public DesignTree getDesignTree() {
+    public DesignTree designTree() {
         return designTree;
     }
 

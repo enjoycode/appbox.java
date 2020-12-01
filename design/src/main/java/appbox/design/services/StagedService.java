@@ -20,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class StagedService {
 
-
     public static CompletableFuture<byte[]> loadCodeDataAsync(long modelId) {
         var devId = RuntimeContext.current().currentSession().leafOrgUnitId();
         var q     = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
@@ -37,21 +36,13 @@ public final class StagedService {
         });
     }
 
-    /**
-     * 保存Staged模型
-     * @param model
-     * @return
-     */
+    /** 保存Staged模型 */
     public static CompletableFuture<Void> saveModelAsync(ModelBase model) {
         var data = BinSerializer.serialize(model, false);
         return saveAsync(StagedType.Model, String.valueOf(model.id()), data);
     }
 
-    /**
-     * 保存模型类型的根目录
-     * @param folder
-     * @return
-     */
+    /** 保存模型类型的根目录 */
     public static CompletableFuture<Void> saveFolderAsync(ModelFolder folder) {
         if (folder.getParent() != null)
             throw new RuntimeException("仅允许保存模型类型的根目录");
@@ -59,22 +50,13 @@ public final class StagedService {
         return saveAsync(StagedType.Folder, folder.getAppId() + "-" + folder.getTargetModelType().value /*不要使用folder.Id*/, data);
     }
 
-    /**
-     * 专用于保存服务模型代码
-     * @param modelId
-     * @param sourceCode
-     * @return
-     */
+    /** 专用于保存服务模型代码 */
     public static CompletableFuture<Void> saveServiceCodeAsync(long modelId, String sourceCode) {
         var data = ModelCodeUtil.encodeServiceCode(sourceCode, false);
-        return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
+        return saveAsync(StagedType.SourceCode, Long.toUnsignedString(modelId), data);
     }
 
-    /**
-     * 专用于加载服务模型代码
-     * @param serviceModelId
-     * @return
-     */
+    /** 专用于加载服务模型代码 */
     public static CompletableFuture<String> loadServiceCode(long serviceModelId) {
         var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
 
@@ -154,11 +136,8 @@ public final class StagedService {
     //    });
     //}
 
-    public static CompletableFuture<Void> saveAsync(StagedType type, String modelIdString, byte[] data) {
-        var         developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
-        EntityModel model       = RuntimeContext.current().getModel(IdUtil.SYS_STAGED_MODEL_ID);
-
-        //String modelIdString = Long.toUnsignedString(modelId); //转换为字符串
+    private static CompletableFuture<Void> saveAsync(StagedType type, String modelIdString, byte[] data) {
+        var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
 
         //TODO:暂采用先读取再插入的方式，待实现KVUpsert后改写
         var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
@@ -167,8 +146,8 @@ public final class StagedService {
                 .and(StagedModel.DEVELOPER.eq(developerId))
         );
         return q.toListAsync().thenApply(list -> {
-            if (list.size() > 1) Log.warn("Detected multi row");
-            StagedModel stagedItem = list.size() > 0 ? list.get(0) : new StagedModel();
+            if (list != null && list.size() > 1) Log.warn("Detected multi row");
+            StagedModel stagedItem = list != null && list.size() > 0 ? list.get(0) : new StagedModel();
             stagedItem.setType(type.value);
             stagedItem.setModelId(modelIdString);
             stagedItem.setDeveloperId(developerId);
@@ -179,6 +158,7 @@ public final class StagedService {
 
     /**
      * 加载挂起项目
+     * @param onlyModelsAndFolders true用于DesignTree加载; false用于发布时加载
      */
     public static CompletableFuture<StagedItems> loadStagedAsync(boolean onlyModelsAndFolders) {
         var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
@@ -188,13 +168,10 @@ public final class StagedService {
                     .and(StagedModel.DEVELOPER.eq(developerId)));
         else
             q.where(StagedModel.DEVELOPER.eq(developerId));
-        return q.toListAsync().thenApply(r -> new StagedItems(r));
+        return q.toListAsync().thenApply(StagedItems::new);
     }
 
-    /**
-     * 发布时删除当前会话下所有挂起
-     * @return
-     */
+    /** 发布时删除当前会话下所有挂起 */
     public static CompletableFuture<Void> deleteStagedAsync() {
         var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
         var model       = (EntityModel) RuntimeContext.current().getModel(IdUtil.SYS_STAGED_MODEL_ID);
@@ -220,11 +197,7 @@ public final class StagedService {
         });
     }
 
-    /**
-     * 删除挂起的模型及相关
-     * @param modelId
-     * @return
-     */
+    /** 删除挂起的模型及相关 */
     public static CompletableFuture<Void> deleteModelAsync(long modelId) {
         var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();
         var q           = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);

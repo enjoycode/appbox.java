@@ -23,7 +23,9 @@ public final class DesignService implements IService {
         put("CheckCode", new CheckCode());
         put("CloseDesigner", new CloseDesigner());
         put("GetEntityModel", new GetEntityModel());
+        put("SaveModel", new SaveModel());
     }};
+
     @Override
     public CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args) {
         if (!(RuntimeContext.current().currentSession() instanceof IDeveloperSession)) {

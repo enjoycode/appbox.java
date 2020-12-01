@@ -4,6 +4,7 @@ import appbox.design.common.CheckoutInfo;
 import appbox.design.DesignHub;
 import appbox.design.services.CheckoutService;
 import appbox.design.services.StagedItems;
+import appbox.design.services.StagedService;
 import appbox.model.*;
 import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
@@ -69,8 +70,9 @@ public final class DesignTree {
         //先加载签出信息及StagedModels
         return CheckoutService.loadAllAsync().thenCompose(checkouts -> {
             _checkouts = checkouts;
-            staged = new StagedItems(null); //TODO:fix staged
-
+            return StagedService.loadStagedAsync(true);
+        }).thenCompose(stagedItems -> {
+            staged = stagedItems;
             return ModelStore.loadAllApplicationAsync();
         }).thenCompose(apps -> { //加载所有Apps
             for (ApplicationModel app : apps) {

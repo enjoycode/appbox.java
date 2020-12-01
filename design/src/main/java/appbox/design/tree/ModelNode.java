@@ -1,10 +1,14 @@
 package appbox.design.tree;
 
+import appbox.data.PersistentState;
 import appbox.design.DesignHub;
+import appbox.design.services.StagedService;
 import appbox.model.ModelBase;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
 import com.alibaba.fastjson.JSONWriter;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 模型节点
@@ -73,4 +77,32 @@ public final class ModelNode extends DesignNode {
             writer.writeValue(((ServiceModel) _model).language().value);
         }
     }
+
+    /** 保存模型节点 */
+    public CompletableFuture<Void> saveAsync(Object[] modelInfos) {
+        if (!isCheckoutByMe()) {
+            return CompletableFuture.failedFuture(new RuntimeException("ModelNode has not checkout"));
+        }
+
+        //TODO:考虑事务保存模型及相关代码
+
+        return StagedService.saveModelAsync(_model).thenCompose(r -> {
+            //更新相关模型的内容
+            if (_model.persistentState() != PersistentState.Deleted) {
+                switch (_model.modelType()) {
+                    case Service: {
+                        //TODO:更新服务模型代理类
+                        //保存服务模型代码
+                        var doc = designTree().designHub.typeSystem.languageServer.findOpenedDocument(_model.id());
+                        return StagedService.saveServiceCodeAsync(_model.id(), doc.getContents());
+                    }
+                    default:
+                        return CompletableFuture.completedFuture(null);
+                }
+            } else {
+                return CompletableFuture.completedFuture(null);
+            }
+        });
+    }
+
 }

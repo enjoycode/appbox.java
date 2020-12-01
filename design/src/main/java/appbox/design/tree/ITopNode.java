@@ -1,5 +1,5 @@
 package appbox.design.tree;
 
 public interface ITopNode {
-    DesignTree getDesignTree();
+    DesignTree designTree();
 }
