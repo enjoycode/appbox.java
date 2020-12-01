@@ -19,6 +19,7 @@ public abstract class TypeSerializer {
     static {
         Log.debug("开始注册序列化器...");
         registerKnownType(IntSerializer.instance);
+        registerKnownType(ByteSerializer.instance);
         registerKnownType(LongSerializer.instance);
         registerKnownType(StringSerializer.instance);
         registerKnownType(UUIDSerializer.instance);
