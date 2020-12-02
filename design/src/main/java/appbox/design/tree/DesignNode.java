@@ -76,11 +76,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     }
 
     public void setCheckoutInfo(CheckoutInfo value) {
-        if (!value.equals(_checkoutInfo)) {
-            _checkoutInfo = value;
-            //this.OnPropertyChanged("CheckoutInfo");
-            //this.OnPropertyChanged("CheckoutImageVisibility");
-        }
+        _checkoutInfo = value;
     }
 
     /**
@@ -102,9 +98,9 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     /**
      * 目前仅支持签出ModelRootNode及ModelNode
+     * TODO:考虑加入参数允许签出所有下属节点
      */
-    public CompletableFuture<Boolean> checkout() //TODO:考虑加入参数允许签出所有下属节点
-    {
+    public CompletableFuture<Boolean> checkout() {
         //判断是否已签出或者能否签出
         if (!getAllowCheckout()) {
             return CompletableFuture.completedFuture(false);

@@ -108,7 +108,7 @@ public final class StagedItems {
         }
     }
 
-    static final class StagedSourceCode {
+    public static final class StagedSourceCode {
         public final long   ModelId;
         public final byte[] CodeData;
 
@@ -118,7 +118,7 @@ public final class StagedItems {
         }
     }
 
-    static final class StagedViewRuntimeCode {
+    public static final class StagedViewRuntimeCode {
         public final long   ModelId;
         public final byte[] CodeData;
 

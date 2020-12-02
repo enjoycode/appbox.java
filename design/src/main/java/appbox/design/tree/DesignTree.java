@@ -8,6 +8,7 @@ import appbox.design.services.StagedService;
 import appbox.model.*;
 import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
+import appbox.runtime.RuntimeContext;
 import appbox.store.ModelStore;
 import appbox.utils.IdUtil;
 
@@ -198,6 +199,39 @@ public final class DesignTree {
         }
         return modelRootNode.findModelNode(modelId);
     }
+
+    /** 查找所有引用指定模型标识的EntityRef Member集合 */
+    public List<EntityRefModel> findEntityRefModels(long targetEntityModelID) {
+        List<EntityRefModel> result = new ArrayList<>();
+        List<ModelNode>      ls     = findNodesByType(ModelType.Entity);
+
+        for (ModelNode l : ls) {
+            EntityModel model = (EntityModel) l.model();
+            //注意：不能排除自身引用，主要指树状结构的实体
+            for (int j = 0; j < model.getMembers().size(); j++) {
+                if (model.getMembers().get(j).type() == EntityMemberModel.EntityMemberType.EntityRef) {
+                    EntityRefModel refMember = (EntityRefModel) model.getMembers().get(j);
+                    //注意不排除聚合引用
+                    for (int k = 0; k < refMember.getRefModelIds().size(); k++) {
+                        if (refMember.getRefModelIds().get(k) == targetEntityModelID)
+                            result.add(refMember);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /** 查找指定类型的所有节点 */
+    public List<ModelNode> findNodesByType(ModelType modelType) {
+        var list = new ArrayList<ModelNode>();
+        for (int i = 0; i < appRootNode.nodes.count(); i++) {
+            var appNode       = (ApplicationNode) appRootNode.nodes.get(i);
+            var modelRootNode = appNode.findModelRootNode(modelType);
+            list.addAll(modelRootNode.getAllModelNodes());
+        }
+        return list;
+    }
     //endregion
 
     //region ====Find for Create====
@@ -255,38 +289,22 @@ public final class DesignTree {
         }
     }
 
-    /**
-     * 查找所有引用指定模型标识的EntityRef Member集合
-     */
-    public List<EntityRefModel> findEntityRefModels(long targetEntityModelID) {
-        List<EntityRefModel> result = new ArrayList<>();
-        List<ModelNode>      ls     = findNodesByType(ModelType.Entity);
-
-        for (ModelNode l : ls) {
-            EntityModel model = (EntityModel) l.model();
-            //注意：不能排除自身引用，主要指树状结构的实体
-            for (int j = 0; j < model.getMembers().size(); j++) {
-                if (model.getMembers().get(j).type() == EntityMemberModel.EntityMemberType.EntityRef) {
-                    EntityRefModel refMember = (EntityRefModel) model.getMembers().get(j);
-                    //注意不排除聚合引用
-                    for (int k = 0; k < refMember.getRefModelIds().size(); k++) {
-                        if (refMember.getRefModelIds().get(k) == targetEntityModelID)
-                            result.add(refMember);
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    public List<ModelNode> findNodesByType(ModelType modelType) {
-        var list = new ArrayList<ModelNode>();
+    /** 部署完后更新所有模型节点的状态，并移除待删除的节点 */
+    public void checkinAllNodes() {
+        //循环更新模型节点
         for (int i = 0; i < appRootNode.nodes.count(); i++) {
-            var appNode       = (ApplicationNode) appRootNode.nodes.get(i);
-            var modelRootNode = appNode.findModelRootNode(modelType);
-            list.addAll(modelRootNode.getAllModelNodes());
+            ((ApplicationRootNode) appRootNode.nodes.get(i)).checkinAllNodes();
         }
-        return list;
+
+        //刷新签出信息表，移除被自己签出的信息
+        var list = new ArrayList<String>();
+        for (var entry : _checkouts.entrySet()) {
+            if (entry.getValue().developerOuid == RuntimeContext.current().currentSession().leafOrgUnitId())
+                list.add(entry.getKey());
+        }
+        for (var key : list) {
+            _checkouts.remove(key);
+        }
     }
     //endregion
 
