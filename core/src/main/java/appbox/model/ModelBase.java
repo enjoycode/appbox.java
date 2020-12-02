@@ -86,6 +86,10 @@ public abstract class ModelBase implements IBinSerializable {
     //endregion
 
     //region ====Design Methods====
+    public void increaseVersion() {
+        _version += 1;
+    }
+
     public void checkDesignMode() throws RuntimeException {
         if (!designMode()) {
             throw new RuntimeException();

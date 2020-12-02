@@ -46,6 +46,10 @@ public final class SysStoreOptions implements IEntityStoreOption {
         return _schemaVersion;
     }
 
+    public int oldSchemaVersion() { return _oldSchemaVersion; }
+
+    public boolean hasSchemaChanged() { return _hasChangedSchema; }
+
     public boolean isMVCC() { return _isMVCC; }
 
     public boolean hasPartitionKeys() {

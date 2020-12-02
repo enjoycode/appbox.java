@@ -116,6 +116,10 @@ public final class SysStoreApi {
         return makeTaskAndSendRequest(cmd, new KVCommandResponse());
     }
 
+    public static CompletableFuture<KVCommandResponse> execKVUpdateAsync(KVUpdateRequest cmd) {
+        return makeTaskAndSendRequest(cmd, new KVCommandResponse());
+    }
+
     public static CompletableFuture<KVCommandResponse> execKVDeleteAsync(KVDeleteRequest cmd) {
         return makeTaskAndSendRequest(cmd, new KVCommandResponse());
     }

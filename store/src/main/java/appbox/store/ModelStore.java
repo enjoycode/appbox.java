@@ -1,10 +1,14 @@
 package appbox.store;
 
 import appbox.channel.messages.*;
+import appbox.logging.Log;
 import appbox.model.ApplicationModel;
+import appbox.model.EntityModel;
 import appbox.model.ModelBase;
+import appbox.model.ModelType;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * 模型存储实现
@@ -26,6 +30,33 @@ public final class ModelStore {
         return SysStoreApi.execKVInsertAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
+    public static CompletableFuture<Void> updateModelAsync(ModelBase model, KVTransaction txn,
+                                                           Function<Integer, ApplicationModel> getApp) {
+        //TODO:考虑先处理变更项但不提议变更命令，再保存AcceptChanges后的模型数据，最后事务提议变更命令
+        model.increaseVersion(); //先增加模型版本号
+        var req = new KVUpdateModelRequest(txn.id(), model);
+        return SysStoreApi.execKVUpdateAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex))
+                .thenCompose(r -> updateEntityModelAsync(model, txn));
+    }
+
+    private static CompletableFuture<Void> updateEntityModelAsync(ModelBase model, KVTransaction txn) {
+        if (model.modelType() != ModelType.Entity)
+            return CompletableFuture.completedFuture(null);
+
+        var entiyModel = (EntityModel) model;
+        //判断是否系统存储且结构已发生变更(Schema Changed)
+        if (entiyModel.sysStoreOptions() != null && entiyModel.sysStoreOptions().hasSchemaChanged()) {
+            Log.debug(String.format("Entity[%s] schema changed, %d -> %d", entiyModel.name()
+                    , entiyModel.sysStoreOptions().oldSchemaVersion()
+                    , entiyModel.sysStoreOptions().schemaVersion()));
+            throw new RuntimeException("未实现");
+        }
+
+        return CompletableFuture.completedFuture(null);
     }
 
     //region ====模型代码及Assembly相关操作====
