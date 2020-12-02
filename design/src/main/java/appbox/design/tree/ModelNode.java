@@ -23,6 +23,7 @@ public final class ModelNode extends DesignNode {
         text    = targetModel.name();
     }
 
+    //region ====Properties====
     public ModelBase model() {
         return _model;
     }
@@ -33,6 +34,11 @@ public final class ModelNode extends DesignNode {
 
     @Override
     public String id() {
+        return Long.toUnsignedString(_model.id());
+    }
+
+    @Override
+    public String checkoutInfoTargetID() {
         return Long.toUnsignedString(_model.id());
     }
 
@@ -59,6 +65,7 @@ public final class ModelNode extends DesignNode {
                 throw new RuntimeException("Unknow design node type.");
         }
     }
+    //endregion
 
     @Override
     protected void writeJsonMembers(JSONWriter writer) {
