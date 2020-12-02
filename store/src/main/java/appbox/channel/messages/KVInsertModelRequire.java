@@ -7,14 +7,16 @@ import appbox.store.KeyUtil;
 
 public final class KVInsertModelRequire extends KVInsertRequire {
 
-    public ModelBase model;
+    private final ModelBase model;
 
-    public KVInsertModelRequire(KVTxnId txnId) {
+    public KVInsertModelRequire(KVTxnId txnId, ModelBase model) {
         super(txnId);
 
-        raftGroupId = KeyUtil.META_RAFTGROUP_ID;
+        this.model = model;
+
+        raftGroupId   = KeyUtil.META_RAFTGROUP_ID;
         schemaVersion = 0;
-        dataCF = -1;
+        dataCF        = -1;
     }
 
     @Override

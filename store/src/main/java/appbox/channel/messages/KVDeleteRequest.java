@@ -19,7 +19,7 @@ public abstract class KVDeleteRequest implements IMessage {
     }
 
     @Override
-    public byte MessageType() {
+    public final byte MessageType() {
         return MessageType.KVDeleteRequire;
     }
 
@@ -37,7 +37,7 @@ public abstract class KVDeleteRequest implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public final void readFrom(BinDeserializer bs) {
         throw new UnsupportedOperationException();
     }
     //endregion

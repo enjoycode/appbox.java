@@ -22,9 +22,7 @@ public final class ModelStore {
     }
 
     public static CompletableFuture<Void> insertModelAsync(ModelBase model, KVTransaction txn) {
-        var req = new KVInsertModelRequire(txn.id());
-        req.model = model;
-
+        var req = new KVInsertModelRequire(txn.id(), model);
         return SysStoreApi.execKVInsertAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
