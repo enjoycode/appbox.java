@@ -52,12 +52,17 @@ public final class KeyUtil {
         bs.writeLongBE(modelId);
     }
 
-    public static void writeAssemblyKey(BinSerializer bs, boolean isService, String asmName) {
+    public static void writeAssemblyKey(BinSerializer bs, boolean isService, String asmName, boolean withSize) {
+        var data = asmName.getBytes(StandardCharsets.UTF_8);
+        if (withSize) {
+            bs.writeNativeVariant(data.length + 1);
+        }
+
         if (isService)
             bs.writeByte(METACF_SERVICE_ASSEMBLY_PREFIX);
         else
             bs.writeByte(METACF_VIEW_ASSEMBLY_PREFIX);
-        var data = asmName.getBytes(StandardCharsets.UTF_8);
+
         bs.write(data, 0, data.length);
     }
 
