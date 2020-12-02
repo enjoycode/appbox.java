@@ -43,6 +43,10 @@ public final class StagedItems {
         return items == null || items.length == 0;
     }
 
+    public Object[] getItems() {
+        return items;
+    }
+
     public ModelBase[] findNewModels() {
         var list = new ArrayList<ModelBase>();
         if (items != null) {
