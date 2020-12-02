@@ -214,7 +214,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     //region ====IEntityMemberWriter====
 
     /** 写入与存储一致的3字节长度(小字节序) */
-    private void writeStoreVarLen(int len) {
+    public void writeStoreVarLen(int len) {
         _stream.writeByte((byte) (len & 0xFF));
         _stream.writeByte((byte) ((len >>> 8) & 0xFF));
         _stream.writeByte((byte) ((len >>> 16) & 0xFF));

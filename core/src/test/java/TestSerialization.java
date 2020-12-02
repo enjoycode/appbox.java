@@ -15,7 +15,7 @@ public class TestSerialization {
         try {
             var bytes = s.getBytes(StandardCharsets.UTF_8);
             assertEquals(bytes.length, 4);
-            var d = new String(bytes, 0, bytes.length, "UTF-8");
+            var d = new String(bytes, 0, bytes.length, StandardCharsets.UTF_8);
             assertEquals(s, d);
         } catch (Exception e) {
             fail();
@@ -75,7 +75,20 @@ public class TestSerialization {
         TestHelper.serializeTo(outModel, output2);
         //assert
         assertEquals(output1.size(), output2.size());
-        assertArrayEquals(output1.data, output2.data);
+        assertArrayEquals(output1.toByteArray(), output2.toByteArray());
+    }
+
+    @Test
+    public void testStoreVarLen() {
+        int len = 154;
+        var out = new BytesOutputStream(8);
+        var bs = BinSerializer.rentFromPool(out);
+        bs.writeStoreVarLen(len);
+
+        var input = out.copyToInput();
+        var ds = BinDeserializer.rentFromPool(input);
+        int varSize = ds.readStoreVarLen();
+        assertEquals(len, varSize);
     }
 
 }

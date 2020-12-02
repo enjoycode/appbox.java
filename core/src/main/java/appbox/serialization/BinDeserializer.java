@@ -137,9 +137,9 @@ public final class BinDeserializer implements IEntityMemberReader {
 
     /** 读取与存储一致的3字节长度(小字节序) */
     public int readStoreVarLen() {
-        var byte1 = (int) readByte();
-        var byte2 = (int) readByte();
-        var byte3 = (int) readByte();
+        var byte1 = readByte() & 255;
+        var byte2 = readByte() & 255;
+        var byte3 = readByte() & 255;
         return byte3 << 16 | byte2 << 8 | byte1;
     }
 
