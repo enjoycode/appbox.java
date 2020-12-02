@@ -18,6 +18,6 @@ public final class KVGetAssemblyRequest extends KVGetRequest {
         bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeByte((byte) -1);    //dataCF
         bs.writeLong(0);      //timestamp
-        KeyUtil.writeAssemblyKey(bs, isService, asmName); //key
+        KeyUtil.writeAssemblyKey(bs, isService, asmName, false); //key
     }
 }
