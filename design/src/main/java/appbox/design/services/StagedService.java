@@ -180,7 +180,7 @@ public final class StagedService {
         return q.toListAsync().thenCompose(res -> {
             if (res != null && res.size() > 0) {
                 return KVTransaction.beginAsync().thenCompose(txn -> {
-                    CompletableFuture future = null;
+                    CompletableFuture<Void> future = null;
                     for (StagedModel stagedModel : res) {
                         if (future == null) {
                             future = EntityStore.deleteEntityAsync(model, stagedModel.id(), txn);
@@ -188,7 +188,7 @@ public final class StagedService {
                             future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, stagedModel.id(), txn));
                         }
                     }
-                    return future;
+                    return future.thenCompose(r -> txn.commitAsync());
                 });
             } else {
                 return CompletableFuture.completedFuture(null);
@@ -206,7 +206,7 @@ public final class StagedService {
         return q.toListAsync().thenCompose(res -> {
             if (res != null && res.size() > 0) {
                 return KVTransaction.beginAsync().thenCompose(txn -> {
-                    CompletableFuture future = null;
+                    CompletableFuture<Void> future = null;
                     for (StagedModel stagedModel : res) {
                         if (future == null) {
                             future = EntityStore.deleteEntityAsync(stagedModel);
@@ -214,7 +214,7 @@ public final class StagedService {
                             future = future.thenCompose(r -> EntityStore.deleteEntityAsync(stagedModel));
                         }
                     }
-                    return future;
+                    return future.thenCompose(r -> txn.commitAsync());
                 });
             } else {
                 return CompletableFuture.completedFuture(null);

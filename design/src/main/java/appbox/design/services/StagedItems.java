@@ -39,13 +39,17 @@ public final class StagedItems {
         }
     }
 
+    public boolean isEmpty() {
+        return items == null || items.length == 0;
+    }
+
     public ModelBase[] findNewModels() {
         var list = new ArrayList<ModelBase>();
         if (items != null) {
-            for (int i = 0; i < items.length; i++) {
-                if (items[i] instanceof ModelBase
-                        && ((ModelBase) items[i]).persistentState() == PersistentState.Detached) {
-                    list.add((ModelBase) items[i]);
+            for (Object item : items) {
+                if (item instanceof ModelBase
+                        && ((ModelBase) item).persistentState() == PersistentState.Detached) {
+                    list.add((ModelBase) item);
                 }
             }
         }
@@ -66,24 +70,21 @@ public final class StagedItems {
     }
 
     /** 用挂起的文件夹更新从存储加载的文件夹 */
-    public void updateFolders(List<ModelFolder> storedFolders)
-    {
+    public void updateFolders(List<ModelFolder> storedFolders) {
         if (items == null) return;
-        for (int i = 0; i < items.length; i++)
-        {
-            if (items[i] instanceof ModelFolder)
-            {
-                ModelFolder folder = (ModelFolder) items[i];
-                int         index  =-1;
-                for(ModelFolder t:storedFolders){
-                    if(t.getAppId()==folder.getAppId()&&t.getTargetModelType()==folder.getTargetModelType()){
-                        index=1;
+        for (Object item : items) {
+            if (item instanceof ModelFolder) {
+                ModelFolder folder = (ModelFolder) item;
+                int         index  = -1;
+                for (ModelFolder t : storedFolders) {
+                    if (t.getAppId() == folder.getAppId() && t.getTargetModelType() == folder.getTargetModelType()) {
+                        index = 1;
                     }
                 }
-                if(index < 0){
+                if (index < 0) {
                     storedFolders.add(folder);
-                }else{
-                    storedFolders.add(index,folder);
+                } else {
+                    storedFolders.add(index, folder);
                 }
             }
         }
@@ -94,10 +95,10 @@ public final class StagedItems {
         if (items == null || items.length == 0)
             return;
 
-        for (int i = 0; i < items.length; i++) {
-            if (items[i] instanceof ModelBase
-                    && ((ModelBase) items[i]).persistentState() == PersistentState.Deleted) {
-                var m = (ModelBase) items[i];
+        for (Object item : items) {
+            if (item instanceof ModelBase
+                    && ((ModelBase) item).persistentState() == PersistentState.Deleted) {
+                var m = (ModelBase) item;
                 storedModels.removeIf(t -> t.id() == m.id());
             }
         }

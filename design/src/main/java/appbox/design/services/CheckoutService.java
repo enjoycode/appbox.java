@@ -47,7 +47,7 @@ public final class CheckoutService {
         }).thenCompose(r -> {
             //检查签出单个模型时，存储有无新版本
             if (checkoutInfos.get(0).isSingleModel()) {
-                return ModelStore.loadModelAsync(Long.parseLong(checkoutInfos.get(0).targetID));
+                return ModelStore.loadModelAsync(Long.parseUnsignedLong(checkoutInfos.get(0).targetID));
             } else {
                 return CompletableFuture.completedFuture(null);
             }
@@ -84,28 +84,27 @@ public final class CheckoutService {
      */
     public static CompletableFuture<Void> checkInAsync() {
         var devId = RuntimeContext.current().currentSession().leafOrgUnitId();
-        //UUID devId=new UUID(-6038453433195871438l,-7082168417221633763l);//测试用
         var model = (EntityModel) RuntimeContext.current().getModel(IdUtil.SYS_CHECKOUT_MODEL_ID);
 
         var q = new TableScan<>(IdUtil.SYS_CHECKOUT_MODEL_ID, Checkout.class);
         q.where(Checkout.DEVELOPER.eq(devId));
-        return q.toListAsync().thenCompose(res->{
-                if (res != null&&res.size()>0){
-                    return KVTransaction.beginAsync().thenCompose(txn ->{
-                        CompletableFuture future=null;
-                        for (Checkout checkout : res) {
-                            if (future == null) {
-                                future = EntityStore.deleteEntityAsync(model, checkout.id(), txn);
-                            } else {
-                                future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, checkout.id(), txn));
+        return q.toListAsync().thenCompose(res -> {
+                    if (res != null && res.size() > 0) {
+                        return KVTransaction.beginAsync().thenCompose(txn -> {
+                            CompletableFuture<Void> future = null;
+                            for (Checkout checkout : res) {
+                                if (future == null) {
+                                    future = EntityStore.deleteEntityAsync(model, checkout.id(), txn);
+                                } else {
+                                    future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, checkout.id(), txn));
+                                }
                             }
-                        }
-                        return future;
-                    });
-                }else{
-                    return CompletableFuture.completedFuture(null);
+                            return future.thenCompose(r -> txn.commitAsync());
+                        });
+                    } else {
+                        return CompletableFuture.completedFuture(null);
+                    }
                 }
-            }
         );
 
     }
