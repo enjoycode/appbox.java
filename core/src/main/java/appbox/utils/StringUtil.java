@@ -46,7 +46,7 @@ public final class StringUtil {
 
         //TODO:能否判断底层是否单字节编码，这样可以直接返回长度
 
-        int size = 0;
+        int  size   = 0;
         int  srcPos = 0;
         int  srcLen = value.length();
         char c, d;
@@ -81,7 +81,7 @@ public final class StringUtil {
                 }
 
                 if (uc < 0) {
-                    size ++;
+                    size++;
                 } else {
                     size += 4;
                     srcPos++; // 2 chars
@@ -93,5 +93,15 @@ public final class StringUtil {
         }
 
         return size;
+    }
+
+    public static byte[] hexToBytes(String hex) {
+        int    len  = hex.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+                    + Character.digit(hex.charAt(i + 1), 16));
+        }
+        return data;
     }
 }
