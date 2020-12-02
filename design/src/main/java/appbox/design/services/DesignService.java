@@ -24,6 +24,7 @@ public final class DesignService implements IService {
         put("CloseDesigner", new CloseDesigner());
         put("GetEntityModel", new GetEntityModel());
         put("SaveModel", new SaveModel());
+        put("GenServiceDeclare", new GenServiceDeclare());
     }};
 
     @Override

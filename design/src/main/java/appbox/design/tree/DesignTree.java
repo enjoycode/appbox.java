@@ -86,7 +86,7 @@ public final class DesignTree {
             var allModelNodes = new ArrayList<ModelNode>();
             for (ModelBase m : models) {
                 if (m.modelType() == ModelType.DataStore) {
-                    //TODO:
+                    throw new RuntimeException("未实现");
                 } else {
                     allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
                 }
@@ -121,7 +121,7 @@ public final class DesignTree {
         var allModelNodes = new ArrayList<ModelNode>();
         for (ModelBase m : models) {
             if (m.modelType() == ModelType.DataStore) {
-                //TODO:
+                throw new RuntimeException("未实现");
             } else {
                 allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
             }
@@ -257,15 +257,13 @@ public final class DesignTree {
 
     /**
      * 查找所有引用指定模型标识的EntityRef Member集合
-     * @param targetEntityModelID
-     * @return
      */
     public List<EntityRefModel> findEntityRefModels(long targetEntityModelID) {
-        List            result = new ArrayList();
-        List<ModelNode> ls     = findNodesByType(ModelType.Entity);
+        List<EntityRefModel> result = new ArrayList<>();
+        List<ModelNode>      ls     = findNodesByType(ModelType.Entity);
 
-        for (int i = 0; i < ls.size(); i++) {
-            EntityModel model = (EntityModel) ls.get(i).model();
+        for (ModelNode l : ls) {
+            EntityModel model = (EntityModel) l.model();
             //注意：不能排除自身引用，主要指树状结构的实体
             for (int j = 0; j < model.getMembers().size(); j++) {
                 if (model.getMembers().get(j).type() == EntityMemberModel.EntityMemberType.EntityRef) {
