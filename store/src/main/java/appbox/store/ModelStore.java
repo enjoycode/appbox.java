@@ -66,10 +66,19 @@ public final class ModelStore {
      * @param codeData 已经压缩编码过
      */
     public static CompletableFuture<Void> upsertModelCodeAsync(long modelId, byte[] codeData, KVTransaction txn) {
-        var req = new KVInsertModelCodeRequire(txn.id());
-        req.modelId  = modelId;
-        req.codeData = codeData;
+        var req = new KVInsertModelCodeRequire(txn.id(), modelId, codeData);
+        return SysStoreApi.execKVInsertAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
 
+    /**
+     * 保存编译好的服务组件或视图运行时代码
+     * @param asmName eg: sys.HelloService or sys.CustomerView
+     */
+    public static CompletableFuture<Void> upsertAssemblyAsync(
+            boolean isService, String asmName, byte[] asmData, KVTransaction txn) {
+        var req = new KVInsertAssemblyRequest(txn.id(), asmName, asmData, isService);
         return SysStoreApi.execKVInsertAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));

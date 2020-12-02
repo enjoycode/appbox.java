@@ -6,11 +6,14 @@ import appbox.store.KeyUtil;
 import appbox.utils.IdUtil;
 
 public final class KVInsertModelCodeRequire extends KVInsertRequire {
-    public long   modelId;
-    public byte[] codeData;
+    private final long   modelId;
+    private final byte[] codeData;
 
-    public KVInsertModelCodeRequire(KVTxnId txnId) {
+    public KVInsertModelCodeRequire(KVTxnId txnId, long modelId, byte[] codeData) {
         super(txnId);
+
+        this.modelId  = modelId;
+        this.codeData = codeData;
 
         raftGroupId    = KeyUtil.META_RAFTGROUP_ID;
         schemaVersion  = 0;

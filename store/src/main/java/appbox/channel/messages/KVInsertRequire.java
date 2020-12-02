@@ -10,8 +10,8 @@ import javax.naming.OperationNotSupportedException;
 
 public abstract class KVInsertRequire implements IMessage {
     private final KVTxnId txnId = new KVTxnId();
-    public        long    raftGroupId;
-    public        int     schemaVersion;
+    protected     long    raftGroupId;
+    protected     int     schemaVersion;
     protected     byte    dataCF;
     public        boolean overrideExists;
 
