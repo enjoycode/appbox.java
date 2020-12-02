@@ -8,6 +8,7 @@ import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static appbox.model.entity.EntityMemberModel.EntityMemberType;
 
@@ -202,6 +203,29 @@ public final class EntityModel extends ModelBase {
         return list;
     }
 
+    //endregion
+
+    //region ====IComparable====
+    public int compareTo(EntityModel other) {
+        if (other == null)
+            return 1;
+
+        //判断当前对象有没有EntityRef引用成员至目标对象, 如果引用则大于other对象
+        var refs = _members.stream()
+                .filter(m -> m.type() == EntityMemberType.EntityRef)
+                .collect(Collectors.toList());
+        for (var m : refs) {
+            var rm = (EntityRefModel) m;
+            for (var refModelId : rm.getRefModelIds()) {
+                if (refModelId == other._id) {
+                    //注意：删除的需要倒过来排序
+                    return other.persistentState() == PersistentState.Deleted ? -1 : 1;
+                }
+            }
+        }
+
+        return Long.compare(_id, other._id);
+    }
     //endregion
 
     //region ====Serialization====
