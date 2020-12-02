@@ -99,6 +99,8 @@ public final class KVRowReader {
             switch (dataLenFlag) {
                 case IdUtil.STORE_FIELD_VAR_FLAG:
                     int varSize = bs.readStoreVarLen();
+                    if (varSize < 0)
+                        throw new RuntimeException("store varsize < 0");
                     target.readMember(memberId, bs, (varSize << 8) | 1);
                     readSize += varSize + 3;
                     break;

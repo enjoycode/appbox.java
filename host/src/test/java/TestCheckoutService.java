@@ -1,6 +1,5 @@
 import appbox.channel.SharedMemoryChannel;
 import appbox.design.common.CheckoutInfo;
-import appbox.design.common.CheckoutResult;
 import appbox.design.services.CheckoutService;
 import appbox.design.tree.DesignNodeType;
 import appbox.logging.Log;
@@ -39,7 +38,7 @@ public class TestCheckoutService {
 
     @Test
     public void checkoutAsync() throws Exception{
-        UUID uuid=new UUID(-6038453433195871438l,-7082168417221633763l);
+        UUID uuid=new UUID(-6038453433195871438L,-7082168417221633763L);
         List<CheckoutInfo> checkoutInfos =new ArrayList<>();
         CheckoutInfo checkoutInfo=new CheckoutInfo(DesignNodeType.ApplicationNode,"2",1,"测试员",uuid);
         checkoutInfos.add(checkoutInfo);
@@ -58,14 +57,5 @@ public class TestCheckoutService {
     public void checkInAsync() throws Exception{
         var fu=CheckoutService.checkInAsync().get();
     }
-
-    public static void main(String args[]){
-        UUID uuid=UUID.randomUUID();
-        long m=uuid.getMostSignificantBits();
-        long l=uuid.getLeastSignificantBits();
-        System.out.println(m);
-        System.out.println(l);
-    }
-
 
 }
