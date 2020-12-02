@@ -15,7 +15,7 @@ public final class PayloadType {
     public static final byte DateTime     = 15;
     public static final byte String       = 16;
     public static final byte Guid         = 17;
-    public static final byte EntityId         = 92;
+    public static final byte EntityId     = 92;
 
     public static final byte Map   = 18;
     public static final byte Array = 19;
@@ -35,7 +35,8 @@ public final class PayloadType {
     public static final byte UnknownType  = 23;
 
     //----模型相关----
-    public static final byte EntityModel = 50;
+    public static final byte ServiceModel = 49;
+    public static final byte EntityModel  = 50;
 
     //----表达式相关----
     public static final byte BinaryExpression    = 63;

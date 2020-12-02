@@ -6,6 +6,7 @@ import appbox.expressions.KVFieldExpression;
 import appbox.expressions.PrimitiveExpression;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
+import appbox.model.ServiceModel;
 import appbox.serialization.serializers.*;
 
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public abstract class TypeSerializer {
 
         //----模型相关----
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
+        registerKnownType(new UserSerializer(PayloadType.ServiceModel, ServiceModel.class, ServiceModel::new));
 
         //----表达式相关(目前都不支持反序列化)----
         registerKnownType(new UserSerializer(PayloadType.BinaryExpression, BinaryExpression.class, () -> null));
