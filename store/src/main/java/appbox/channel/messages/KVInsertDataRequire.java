@@ -2,6 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.BinSerializer;
 import appbox.store.KVTxnId;
+import appbox.store.KeyUtil;
 
 /**
  * 仅用于测试
@@ -14,7 +15,8 @@ public final class KVInsertDataRequire extends KVInsertRequire {
     public KVInsertDataRequire(KVTxnId txnId) {
         super(txnId);
 
-        dataCF = -1;
+        raftGroupId = KeyUtil.META_RAFTGROUP_ID;
+        dataCF      = -1;
     }
 
     @Override

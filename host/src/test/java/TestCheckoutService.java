@@ -5,10 +5,12 @@ import appbox.design.tree.DesignNodeType;
 import appbox.logging.Log;
 import appbox.runtime.RuntimeContext;
 import appbox.server.runtime.HostRuntimeContext;
+import appbox.store.KVTransaction;
 import appbox.store.SysStoreApi;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
@@ -37,25 +39,27 @@ public class TestCheckoutService {
     }
 
     @Test
-    public void checkoutAsync() throws Exception{
-        UUID uuid=new UUID(-6038453433195871438L,-7082168417221633763L);
-        List<CheckoutInfo> checkoutInfos =new ArrayList<>();
-        CheckoutInfo checkoutInfo=new CheckoutInfo(DesignNodeType.ApplicationNode,"2",1,"测试员",uuid);
+    public void checkoutAsync() throws Exception {
+        UUID               uuid          = new UUID(-6038453433195871438L, -7082168417221633763L);
+        List<CheckoutInfo> checkoutInfos = new ArrayList<>();
+        CheckoutInfo       checkoutInfo  = new CheckoutInfo(DesignNodeType.ApplicationNode, "2", 1, "测试员", uuid);
         checkoutInfos.add(checkoutInfo);
         var res = CheckoutService.checkoutAsync(checkoutInfos).get();
         assertNotNull(res);
     }
 
     @Test
-    public void loadAllAsync() throws Exception{
+    public void loadAllAsync() throws Exception {
         var map = CheckoutService.loadAllAsync().get();
-        Log.debug("size:"+map.size());
+        Log.debug("size:" + map.size());
         assertNotNull(map);
     }
 
     @Test
-    public void checkInAsync() throws Exception{
-        var fu=CheckoutService.checkInAsync().get();
+    public void checkInAsync() throws Exception {
+        var txn = KVTransaction.beginAsync().get();
+        var fu  = CheckoutService.checkInAsync(txn).get();
+        txn.commitAsync().get();
     }
 
 }

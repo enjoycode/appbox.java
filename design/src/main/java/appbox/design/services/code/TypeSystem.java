@@ -67,7 +67,7 @@ public final class TypeSystem {
 
     /** 注意：服务模型也会更新，如不需要由调用者忽略 */
     public void updateModelDocument(ModelNode node) {
-        Log.warn("暂未实现");
+        Log.warn("updateModelDocument暂未实现");
     }
 
     //region ====find XXX====

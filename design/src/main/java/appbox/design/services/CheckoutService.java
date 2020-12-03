@@ -82,28 +82,21 @@ public final class CheckoutService {
     /**
      * 签入当前用户所有已签出项
      */
-    public static CompletableFuture<Void> checkInAsync() {
+    public static CompletableFuture<Void> checkInAsync(KVTransaction txn) {
+        //TODO:***** Use DeleteCommand(join txn), 暂查询再删除
         var devId = RuntimeContext.current().currentSession().leafOrgUnitId();
         var model = (EntityModel) RuntimeContext.current().getModel(IdUtil.SYS_CHECKOUT_MODEL_ID);
 
         var q = new TableScan<>(IdUtil.SYS_CHECKOUT_MODEL_ID, Checkout.class);
         q.where(Checkout.DEVELOPER.eq(devId));
         return q.toListAsync().thenCompose(res -> {
+                    CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
                     if (res != null && res.size() > 0) {
-                        return KVTransaction.beginAsync().thenCompose(txn -> {
-                            CompletableFuture<Void> future = null;
-                            for (Checkout checkout : res) {
-                                if (future == null) {
-                                    future = EntityStore.deleteEntityAsync(model, checkout.id(), txn);
-                                } else {
-                                    future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, checkout.id(), txn));
-                                }
-                            }
-                            return future.thenCompose(r -> txn.commitAsync());
-                        });
-                    } else {
-                        return CompletableFuture.completedFuture(null);
+                        for (Checkout checkout : res) {
+                            future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, checkout.id(), txn));
+                        }
                     }
+                    return future;
                 }
         );
 

@@ -44,9 +44,8 @@ public class TestSysStore {
 
     private static KVInsertDataRequire makeInsertDataCommand(KVTxnId txnId) {
         var cmd = new KVInsertDataRequire(txnId);
-        cmd.raftGroupId = 0;
-        cmd.key         = new byte[]{65, 66, 67, 68}; //ABCD
-        cmd.data        = new byte[]{65, 66, 67, 68};
+        cmd.key  = new byte[]{65, 66, 67, 68}; //ABCD
+        cmd.data = new byte[]{65, 66, 67, 68};
         return cmd;
     }
 
@@ -161,7 +160,7 @@ public class TestSysStore {
     public void testToTreePath() throws Exception {
         var q = new TableScan<>(IdUtil.SYS_ORGUNIT_MODEL_ID, OrgUnit.class);
         q.where(OrgUnit.NAME.eq("Admin"));
-        var list = q.toListAsync().get();
+        var list  = q.toListAsync().get();
         var admin = list.get(0);
         assertNotNull(admin);
 

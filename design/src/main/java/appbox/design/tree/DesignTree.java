@@ -293,7 +293,7 @@ public final class DesignTree {
     public void checkinAllNodes() {
         //循环更新模型节点
         for (int i = 0; i < appRootNode.nodes.count(); i++) {
-            ((ApplicationRootNode) appRootNode.nodes.get(i)).checkinAllNodes();
+            ((ApplicationNode) appRootNode.nodes.get(i)).checkinAllNodes();
         }
 
         //刷新签出信息表，移除被自己签出的信息

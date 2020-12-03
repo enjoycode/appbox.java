@@ -45,7 +45,7 @@ public final class PublishService {
             if (item instanceof ServiceModel && ((ServiceModel) item).persistentState() != PersistentState.Deleted) {
                 var serviceModel = (ServiceModel) item;
                 var asmData      = compileService(hub, serviceModel, null);
-                var appName      = hub.designTree.findApplicationNode(serviceModel.appId());
+                var appName      = hub.designTree.findApplicationNode(serviceModel.appId()).model.name();
                 var fullName     = String.format("%s.%s", appName, serviceModel.name());
                 //重命名的已不再需要加入待删除列表，保存模型时已处理
                 pkg.serviceAssemblies.put(fullName, asmData);
@@ -129,9 +129,9 @@ public final class PublishService {
         var otherStoreTxns = new HashMap<Long, DbTransaction>();
         return KVTransaction.beginAsync().thenCompose(txn -> {
             //1.保存所有模型并同步相关表结构
-            var task = saveModelsAsync(hub, pkg, txn, otherStoreTxns);
+            var task = saveModelsAsync(hub, pkg, txn, otherStoreTxns); //TODO:异常回滚
             //2.签入所有
-            task = task.thenCompose(r -> CheckoutService.checkInAsync());
+            task = task.thenCompose(r -> CheckoutService.checkInAsync(txn));
             //3.刷新所有CheckoutByMe的节点项,注意必须先刷新后清除缓存，否则删除的节点在移除后会自动保存
             hub.designTree.checkinAllNodes();
             //4.清除所有修改
@@ -160,6 +160,7 @@ public final class PublishService {
                 case Unchnaged: //TODO:临时
                 case Modified:
                     task = task.thenCompose(r -> updateModelAsync(model, txn, hub));
+                    break;
                 default:
                     throw new RuntimeException("未实现");
             }
