@@ -1,7 +1,8 @@
-package appbox.design.handlers;
+package appbox.design.handlers.service;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
+import appbox.design.handlers.IRequestHandler;
 import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;

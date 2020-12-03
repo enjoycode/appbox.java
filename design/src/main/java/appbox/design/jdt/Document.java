@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Document implements IBuffer /*, IDocumentListener*/ {
+public final class Document implements IBuffer {
     //TODO:暂简单实现行检测，参考LineTracker实现
     public static final class TextLine {
         public final int start;
@@ -143,18 +143,6 @@ public final class Document implements IBuffer /*, IDocumentListener*/ {
     }
 
     //region ====buffer change event====
-    //region ----IDocumentListener----
-    //@Override
-    //public void documentAboutToBeChanged(DocumentEvent event) {
-    //    // no about to be changed on IBuffer
-    //}
-    //
-    //@Override
-    //public void documentChanged(DocumentEvent event) {
-    //    fireBufferChanged(new BufferChangedEvent(this, event.getOffset(), event.getLength(), event.getText()));
-    //}
-    //endregion
-
     @Override
     public void addBufferChangedListener(IBufferChangedListener listener) {
         synchronized (lock) {
@@ -254,6 +242,8 @@ public final class Document implements IBuffer /*, IDocumentListener*/ {
         } else {
             buffer.replace(spos, epos, newText);
         }
+        //需要激发变更事件,否则CompletionUnit不更新
+        fireBufferChanged(new BufferChangedEvent(this, spos, epos - spos, newText));
     }
 
 }

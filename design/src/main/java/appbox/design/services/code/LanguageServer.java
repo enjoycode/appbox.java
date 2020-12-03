@@ -161,6 +161,9 @@ public final class LanguageServer {
     }
 
     //region ====create XXX====
+    public String makeServiceProjectName(String appName, String serviceName) {
+        return String.format("%s_services_%s", appName, serviceName);
+    }
 
     /**
      * 创建指定名称的项目
@@ -280,6 +283,53 @@ public final class LanguageServer {
             ex.printStackTrace();
             return Collections.emptyList();
         }
+    }
+
+    /** 根据行号列号找到服务方法相关信息,找不到返回null */
+    public ServiceMethodInfo findServiceMethod(String appName, String serviceName, int line, int column) {
+        var     projectName = makeServiceProjectName(appName, serviceName);
+        var     project     = jdtWorkspace.getRoot().getProject(projectName);
+        var     file        = project.getFile(String.format("%s.java", serviceName));
+        var     cu          = JDTUtils.resolveCompilationUnit(file);
+        IBuffer buffer      = null;
+        try {
+            cu.makeConsistent(null);
+            buffer = cu.getBuffer();
+            var position = getPosition(buffer, line, column);
+            var element  = cu.getElementAt(position);
+            if (element instanceof SourceMethod) {
+                var method     = (SourceMethod) element;
+                var methodInfo = new ServiceMethodInfo();
+                methodInfo.Name = method.getElementName();
+                for (var para : method.getParameters()) {
+                    methodInfo.addParameter(para.getElementName(),
+                            Signature.toString(para.getTypeSignature()));
+                }
+                return methodInfo;
+            } else {
+                Log.debug("find elemet[" + element.getClass().getSimpleName() + "] is not SourceMethod");
+            }
+        } catch (Exception ex) {
+            Log.warn("findServiceMethod: " + ex.getMessage());
+        }
+        return null;
+    }
+
+    private static int getPosition(IBuffer buffer, int line, int column) {
+        if (line == 0) {
+            return column;
+        }
+
+        int curLine = 0;
+        for (int i = 0; i < buffer.getLength(); i++) {
+            if (buffer.getChar(i) == '\n') {
+                curLine++;
+                if (curLine == line) {
+                    return i + column + 1;
+                }
+            }
+        }
+        return -1;
     }
 
 }

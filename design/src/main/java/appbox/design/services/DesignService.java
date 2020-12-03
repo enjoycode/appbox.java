@@ -3,6 +3,8 @@ package appbox.design.services;
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.entity.GetEntityModel;
+import appbox.design.handlers.service.GenServiceDeclare;
+import appbox.design.handlers.service.GetServiceMethod;
 import appbox.design.handlers.service.OpenServiceModel;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArg;
@@ -17,16 +19,18 @@ public final class DesignService implements IService {
     private final HashMap<CharSequence, IRequestHandler> handlers = new HashMap<>() {{
         put("LoadDesignTree", new LoadDesignTree());
         put("Checkout", new Checkout());
-        put("OpenServiceModel", new OpenServiceModel());
         put("ChangeBuffer", new ChangeBuffer());
         put("GetCompletion", new GetCompletion());
         put("CheckCode", new CheckCode());
         put("CloseDesigner", new CloseDesigner());
         put("GetEntityModel", new GetEntityModel());
         put("SaveModel", new SaveModel());
-        put("GenServiceDeclare", new GenServiceDeclare());
         put("GetPendingChanges", new GetPendingChanges());
         put("Publish", new Publish());
+        //----Service----
+        put("OpenServiceModel", new OpenServiceModel());
+        put("GenServiceDeclare", new GenServiceDeclare());
+        put("GetServiceMethod", new GetServiceMethod());
     }};
 
     @Override

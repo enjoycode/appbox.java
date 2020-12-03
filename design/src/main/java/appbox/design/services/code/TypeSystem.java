@@ -43,7 +43,7 @@ public final class TypeSystem {
         //TODO:其他类型模型
         if (model.modelType() == ModelType.Service) {
             //不再需要加载源码, 注意已签出先从Staged中加载
-            var projectName = String.format("%s_services_%s", appName, model.name());
+            var projectName = languageServer.makeServiceProjectName(appName, model.name());
             var project = languageServer.createProject(projectName,
                     new IClasspathEntry[]{JavaCore.newProjectEntry(modelsProject.getFullPath())});
 
