@@ -73,4 +73,10 @@ public final class ServiceContainer {
         return instance;
     }
 
+    public void tryRemove(CharSequence service) {
+        _mapLock.writeLock().lock();
+        _services.remove(service);
+        _mapLock.writeLock().unlock();
+    }
+
 }

@@ -11,6 +11,7 @@ import appbox.model.ModelBase;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
 import appbox.runtime.IService;
+import appbox.runtime.RuntimeContext;
 import appbox.store.DbTransaction;
 import appbox.store.KVTransaction;
 import appbox.store.ModelStore;
@@ -212,7 +213,21 @@ public final class PublishService {
 
     /** 通知集群各节点模型缓存失效 */
     private static void invalidModelsCache(DesignHub hub, PublishPackage pkg) {
-        //TODO:
+        if (pkg.models.size() == 0)
+            return;
+
+        var others = pkg.models.stream()
+                .filter(t -> t.modelType() != ModelType.Service)
+                .mapToLong(ModelBase::id).toArray();
+        var services = pkg.models.stream()
+                .filter(t -> t.modelType() == ModelType.Service)
+                .map(t -> {
+                    var appName = hub.designTree.findApplicationNode(t.appId()).model.name();
+                    var name    = t.isNameChanged() ? t.originalName() : t.name();
+                    return String.format("%s.%s", appName, name);
+                }).toArray(String[]::new);
+
+        RuntimeContext.current().invalidModelsCache(services, others, true);
     }
 
 }

@@ -80,12 +80,16 @@ public abstract class ModelBase implements IBinSerializable {
         _folderId = folderId;
     }
 
-    protected final String originalName() {
+    public final String originalName() {
         return _originalName == null ? _name : _originalName;
     }
     //endregion
 
     //region ====Design Methods====
+    public boolean isNameChanged() {
+        return _originalName != null && !_originalName.equals(_name);
+    }
+
     public void increaseVersion() {
         _version += 1;
     }

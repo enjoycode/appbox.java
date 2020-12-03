@@ -148,6 +148,25 @@ public final class HostRuntimeContext implements IRuntimeContext {
 
         return null;
     }
+
+    @Override
+    public void invalidModelsCache(String[] services, long[] others, boolean byPublish) {
+        if (others != null) {
+            for (var other : others) {
+                models.remove(other);
+            }
+        }
+
+        if (services != null) {
+            for (var service : services) {
+                _services.tryRemove(service);
+            }
+        }
+
+        //if (byPublish) {
+        //TODO:***** 最后通知整个集群
+        //}
+    }
     //endregion
 
 }

@@ -16,10 +16,7 @@ public interface IRuntimeContext {
      */
     ISessionInfo currentSession();
 
-    /**
-     * 设置当前会话信息
-     * @param session
-     */
+    /** 设置当前会话信息 */
     void setCurrentSession(ISessionInfo session);
 
     /**
@@ -34,5 +31,8 @@ public interface IRuntimeContext {
     ApplicationModel getApplicationModel(int appId);
 
     <T extends ModelBase> T getModel(long modelId);
+
+    /** 用于发布成功后更新模型缓存 */
+    void invalidModelsCache(String[] services, long[] others, boolean byPublish);
     //endregion
 }

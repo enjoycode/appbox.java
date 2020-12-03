@@ -51,4 +51,9 @@ public final class MockRuntimeContext implements IRuntimeContext {
     public <T extends ModelBase> T getModel(long modelId) {
         return (T) models.get(modelId);
     }
+
+    @Override
+    public void invalidModelsCache(String[] services, long[] others, boolean byPublish) {
+
+    }
 }
