@@ -57,6 +57,12 @@ public final class InvokeRequire implements IMessage {
         args.add(arg);
     }
 
+    public void addArg(String value) {
+        var arg = InvokeArg.pool.rent();
+        arg.setValue(value);
+        args.add(arg);
+    }
+
     private void clearArgs() {
         for (InvokeArg arg : args) {
             InvokeArg.pool.back(arg);

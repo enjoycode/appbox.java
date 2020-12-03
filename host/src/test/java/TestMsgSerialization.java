@@ -40,8 +40,8 @@ public class TestMsgSerialization {
         var req = InvokeRequire.rentFromPool();
         req.shard     = 0;
         req.sessionId = 0;
-        req.service   = "sys.OrderService.SayHello";
-        req.addArg(12345);
+        req.service   = "sys.TestService.sayHello";
+        req.addArg("Future");
 
         var output = new BytesOutputStream(8192);
         var os     = BinSerializer.rentFromPool(output);
