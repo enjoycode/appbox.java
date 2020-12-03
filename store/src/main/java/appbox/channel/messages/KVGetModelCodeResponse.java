@@ -11,6 +11,7 @@ public final class KVGetModelCodeResponse extends KVGetResponse {
     public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
+        checkStoreError();
 
         var size = bs.readNativeVariant(); //跳过长度
         if (size > 0) {

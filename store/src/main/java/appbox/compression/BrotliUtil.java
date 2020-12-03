@@ -28,7 +28,9 @@ public final class BrotliUtil {
 
     public static byte[] decompressFrom(InputStream inputStream) throws IOException {
         var brotli = new BrotliInputStream(inputStream);
-        return brotli.readAllBytes();
+        var res    = brotli.readAllBytes();
+        brotli.close();
+        return res;
     }
 
     public static byte[] decompress(byte[] src) throws IOException {

@@ -12,8 +12,10 @@ public final class KVGetAssemblyResponse extends KVGetResponse {
     public void readFrom(BinDeserializer bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
+        checkStoreError();
 
-        if (errorCode == 0 && bs.hasRemaining()) {
+        var size = bs.readNativeVariant(); //跳过长度
+        if (size > 0) {
             asmData = bs.readRemaining();
         }
     }
