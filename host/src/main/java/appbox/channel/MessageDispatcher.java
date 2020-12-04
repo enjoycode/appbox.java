@@ -44,73 +44,64 @@ public final class MessageDispatcher {
         //根据协议类型反序列化消息
         var req = InvokeRequire.rentFromPool();
         req.reqId = NativeSmq.getMsgId(first);
-        Exception deserializeError = null;
         try {
             IHostMessageChannel.deserialize(req, first);
         } catch (Exception e) {
-            deserializeError = e;
+            //反序列化错误直接发送响应并返回
+            CompletableFuture.runAsync(() -> {
+                sendInvokeResponse(channel, req, InvokeResponse.ErrorCode.DeserializeRequestFail, e.getMessage());
+                Log.warn("反序列化InvokeRequire错误: " + e.getMessage());
+            });
+            return;
         } finally {
             channel.returnAllChunks(first);
         }
 
-        if (deserializeError == null) {
-            //异步交给运行时服务容器处理
-            CompletableFuture.supplyAsync(() -> {
-                //先设置当前会话信息
-                ISessionInfo sessionInfo = null;
-                if (req.sessionId != 0) {
-                    sessionInfo = SessionManager.tryGet(req.sessionId);
-                }
-                RuntimeContext.current().setCurrentSession(sessionInfo);
-                //再调用服务
-                return RuntimeContext.invokeAsync(req.service, req.args);
-            }).thenCompose(r -> r).handle((r, ex) -> {
+        //异步交给运行时服务容器处理
+        CompletableFuture.runAsync(() -> {
+            //先设置当前会话信息
+            ISessionInfo sessionInfo = null;
+            if (req.sessionId != 0) {
+                sessionInfo = SessionManager.tryGet(req.sessionId);
+            }
+            RuntimeContext.current().setCurrentSession(sessionInfo);
+            //再调用服务
+            RuntimeContext.invokeAsync(req.service, req.args).handle((r, ex) -> {
+                var error  = ex == null ? InvokeResponse.ErrorCode.None : InvokeResponse.ErrorCode.ServiceInnerError;
+                var result = ex == null ? r : ex.getMessage();
+                var service = req.service;
                 //发送请求响应
-                var res = InvokeResponse.rentFromPool();
-                res.reqId  = req.reqId;
-                res.shard  = req.shard;
-                res.error  = ex == null ? InvokeResponse.ErrorCode.None : InvokeResponse.ErrorCode.ServiceInnerError;
-                res.result = ex == null ? r : ex.getMessage();
-                try {
-                    channel.sendMessage(channel.newMessageId(), res);
-                    if (ex != null) {
-                        Log.error(String.format("Invoke Service[%s] Error:%s", req.service, ex.getMessage()));
-                        ex.getCause().printStackTrace(); //TODO: to log
-                    }
-                } catch (Exception e) {
-                    Log.warn("发送响应消息失败");
-                } finally {
-                    InvokeRequire.backToPool(req);
-                    InvokeResponse.backToPool(res);
-                }
+                sendInvokeResponse(channel, req, error, result);
 
+                if (ex != null) {
+                    Log.error(String.format("Invoke Service[%s] Error:%s", service, ex.getMessage()));
+                    ex.getCause().printStackTrace(); //TODO: to log
+                }
                 return null;
             });
-        } else { //反序列化错误直接发送响应
-            Exception finalDeserializeError = deserializeError;
-            CompletableFuture.runAsync(() -> {
-                var res = InvokeResponse.rentFromPool();
-                res.reqId  = req.reqId;
-                res.shard  = req.shard;
-                res.error  = InvokeResponse.ErrorCode.DeserializeRequestFail;
-                res.result = finalDeserializeError.getMessage();
+        });
+    }
 
-                try {
-                    channel.sendMessage(channel.newMessageId(), res);
-                } catch (Exception e) {
-                    Log.warn("发送响应消息失败");
-                } finally {
-                    InvokeRequire.backToPool(req);
-                    InvokeResponse.backToPool(res);
-                }
+    private static void sendInvokeResponse(IHostMessageChannel channel,
+                                           InvokeRequire req, byte errorCode, Object result) {
+        var res = InvokeResponse.rentFromPool();
+        res.reqId  = req.reqId;
+        res.shard  = req.shard;
+        res.error  = errorCode;
+        res.result = result;
 
-                Log.warn("反序列化InvokeRequire错误: " + finalDeserializeError.getMessage());
-            });
+        try {
+            channel.sendMessage(channel.newMessageId(), res);
+        } catch (Exception e) {
+            Log.warn("发送响应消息失败: " + e.getMessage());
+        } finally {
+            InvokeRequire.backToPool(req);
+            InvokeResponse.backToPool(res);
         }
     }
 
     private static void processStoreResponse(IHostMessageChannel channel, Pointer first) {
-        var reqId = NativeSmq.getDataPtr(first).getInt(0);;
+        var reqId = NativeSmq.getDataPtr(first).getInt(0); ;
         var pendingItem = SysStoreApi.getPendingItem(reqId);
         if (pendingItem == null) { //可能已超时
             channel.returnAllChunks(first);
