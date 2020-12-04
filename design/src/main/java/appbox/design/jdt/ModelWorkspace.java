@@ -15,13 +15,13 @@ import java.util.Map;
 
 public class ModelWorkspace implements IWorkspace {
 
-    protected          IWorkspaceRoot       defaultRoot = new ModelWorkspaceRoot(new ModelPath("/"), this);
+    protected          IWorkspaceRoot       defaultRoot  = new ModelWorkspaceRoot(new ModelPath("/"), this);
     private            IResourceRuleFactory ruleFactory;
     protected          WorkspacePreferences description;
     protected volatile ElementTree          tree;
     //protected volatile Thread treeLocked = null;
-    protected long nextMarkerId = 0;
-    protected long nextNodeId   = 1;
+    protected          long                 nextMarkerId = 0;
+    protected          long                 nextNodeId   = 1;
 
     public final LanguageServer languageServer;
 
@@ -335,9 +335,15 @@ public class ModelWorkspace implements IWorkspace {
         return nextNodeId++;
     }
 
+    public long nextMarkerId() {
+        return this.nextMarkerId++;
+    }
+
     public void updateModificationStamp(ResourceInfo info) {
         info.incrementModificationStamp();
     }
+
+    //region ====Resource methods====
 
     protected ResourceInfo newElement(int type) {
         ResourceInfo result = null;
@@ -497,8 +503,23 @@ public class ModelWorkspace implements IWorkspace {
         }
     }
 
-    public long nextMarkerId() {
-        return (long)(this.nextMarkerId++);
+    /**
+     * Delete the given resource from the current tree of the receiver.
+     * This method simply removes the resource from the tree.  No cleanup or
+     * other management is done.  Use IResource.delete for proper deletion.
+     * If the given resource is the root, all of its children (i.e., all projects) are
+     * deleted but the root is left.
+     */
+    void deleteResource(IResource resource) {
+        IPath path = resource.getFullPath();
+        if (path.equals(Path.ROOT)) {
+            IProject[] children = getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
+            for (IProject element : children)
+                tree.deleteElement(element.getFullPath());
+        } else
+            tree.deleteElement(path);
     }
+
+    //endregion
 
 }

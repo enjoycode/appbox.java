@@ -154,13 +154,14 @@ public abstract class ModelResource implements IResource {
     }
 
     @Override
-    public void delete(boolean b, IProgressMonitor iProgressMonitor) throws CoreException {
-
+    public void delete(boolean force, IProgressMonitor monitor) throws CoreException {
+        delete(force ? IResource.FORCE : IResource.NONE, monitor);
     }
 
     @Override
-    public void delete(int i, IProgressMonitor iProgressMonitor) throws CoreException {
-
+    public void delete(int updateFlags, IProgressMonitor monitor) throws CoreException {
+        //TODO:暂简单实现
+        workspace.deleteResource(this);
     }
     //endregion
 

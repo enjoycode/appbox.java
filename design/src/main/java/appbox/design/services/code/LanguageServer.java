@@ -167,7 +167,6 @@ public final class LanguageServer {
 
     /**
      * 创建指定名称的项目
-     * @param name
      * @param deps 所依赖的内部项目列表，可为null
      */
     public IProject createProject(String name, IClasspathEntry[] deps) throws Exception {

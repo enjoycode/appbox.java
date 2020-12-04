@@ -109,9 +109,13 @@ public final class PublishService {
         //获取并压缩编译好的.class
         var classFile = runtimeProject.getFolder("bin")
                 .getFile(vfile.getName().replace(".java", ".class"));
-        return BrotliUtil.compress(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
+        var classData = BrotliUtil.compress(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
+        //删除用于编译的临时Project及运行时服务代码
+        classFile.delete(true, null);
+        runtimeFile.delete(true, null);
+        runtimeProject.delete(true, null);
 
-        //TODO:***删除用于编译的临时Project及运行时服务代码
+        return classData;
     }
 
     /**
