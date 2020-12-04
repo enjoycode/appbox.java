@@ -269,7 +269,7 @@ public final class DesignTree {
         //先判断是否新增的
         if (isNewNode) {
             node.setCheckoutInfo(new CheckoutInfo(node.nodeType(),
-                    node.checkoutInfoTargetID(), node.getVersion(),
+                    node.checkoutInfoTargetID(), node.version(),
                     designHub.session.name(), designHub.session.leafOrgUnitId()));
             return;
         }

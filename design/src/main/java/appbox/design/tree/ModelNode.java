@@ -38,6 +38,11 @@ public final class ModelNode extends DesignNode {
     }
 
     @Override
+    public int version() {
+        return _model.version();
+    }
+
+    @Override
     public String checkoutInfoTargetID() {
         return Long.toUnsignedString(_model.id());
     }

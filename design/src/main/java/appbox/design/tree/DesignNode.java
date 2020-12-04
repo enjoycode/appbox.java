@@ -14,7 +14,6 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     private   DesignNode   parent;
     protected String       text; //TODO: remove it，改为抽象
-    private   int          version;
     private   CheckoutInfo _checkoutInfo;
 
     public final NodeCollection nodes = new NodeCollection(this);
@@ -27,14 +26,14 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
      * 用于前端回传时识别是哪个节点
      */
     public String id() {
-        return getText();
+        return text();
     }
 
-    public String getText() {
+    public String text() {
         return text;
     }
 
-    public int getVersion() { return version; }
+    public int version() { throw new UnsupportedOperationException(); }
 
     public final DesignNode getParent() {
         return parent;
@@ -58,7 +57,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     /**
      * 是否允许签出
      */
-    public boolean getAllowCheckout() {
+    public boolean allowCheckout() {
         if (nodeType() == DesignNodeType.ModelRootNode
                 || nodeType().value >= DesignNodeType.EntityModelNode.value
                 || nodeType() == DesignNodeType.DataStoreNode) {
@@ -83,7 +82,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
      * 节点签出信息的标识
      */
     public String checkoutInfoTargetID() {
-        return getText();
+        return text();
     }
 
     /**
@@ -102,7 +101,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
      */
     public CompletableFuture<Boolean> checkout() {
         //判断是否已签出或者能否签出
-        if (!getAllowCheckout()) {
+        if (!allowCheckout()) {
             return CompletableFuture.completedFuture(false);
         }
         if (isCheckoutByMe()) {
@@ -112,7 +111,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         //调用签出服务
         List<CheckoutInfo> infos = new ArrayList<>();
         CheckoutInfo info = new CheckoutInfo(nodeType(),
-                checkoutInfoTargetID(), version,
+                checkoutInfoTargetID(), version(),
                 designTree().designHub.session.name(),
                 designTree().designHub.session.leafOrgUnitId());
         infos.add(info);
@@ -142,7 +141,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     @Override
     public final int compareTo(DesignNode designNode) {
         if (nodeType() == designNode.nodeType()) {
-            return String.CASE_INSENSITIVE_ORDER.compare(getText(), designNode.getText());
+            return String.CASE_INSENSITIVE_ORDER.compare(text(), designNode.text());
         }
         return Byte.compare(nodeType().value, designNode.nodeType().value);
     }
@@ -160,7 +159,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         writer.writeValue(nodeType().value);
 
         writer.writeKey("Text");
-        writer.writeValue(getText());
+        writer.writeValue(text());
 
         if (!(this instanceof ModelNode)) {
             writer.writeKey("Nodes");
