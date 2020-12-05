@@ -297,7 +297,7 @@ final class PgSqlQueryBuilder {
                 var fe = (EntityFieldExpression) exp;
                 EntityModel model = RuntimeContext.current().getModel(fe.owner.modelId);
                 var fieldModel = (DataFieldModel) model.tryGetMember(fe.name);
-                return fieldModel.getDataType() == DataFieldModel.DataFieldType.String;
+                return fieldModel.dataType() == DataFieldModel.DataFieldType.String;
             case PrimitiveExpression:
                 return ((PrimitiveExpression) exp).value instanceof String;
             default:

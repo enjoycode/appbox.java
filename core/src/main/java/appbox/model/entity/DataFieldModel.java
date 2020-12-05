@@ -72,6 +72,11 @@ public final class DataFieldModel extends EntityMemberModel {
         return EntityMemberType.DataField;
     }
 
+    /** 数据类型 */
+    public DataFieldType dataType() {
+        return _dataType;
+    }
+
     /**
      * 保留用于根据规则生成Sql列的名称, eg:相同前缀、命名规则等
      */
@@ -169,7 +174,4 @@ public final class DataFieldModel extends EntityMemberModel {
     }
     //endregion
 
-    public DataFieldType getDataType() {
-        return _dataType;
-    }
 }
