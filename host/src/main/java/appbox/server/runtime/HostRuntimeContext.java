@@ -61,18 +61,21 @@ public final class HostRuntimeContext implements IRuntimeContext {
 
     @Override
     public CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args) {
-        //从服务容器内找到服务实例
         var methodDotIndex = method.lastIndexOf('.');
         var servicePath    = method.subSequence(0, methodDotIndex);
-        var service        = _services.tryGet(servicePath);
-        if (service == null) {
-            var error = "Can't find service: " + servicePath.toString();
-            Log.warn(error);
-            return CompletableFuture.failedFuture(new ClassNotFoundException(error));
+        var methodName     = method.subSequence(methodDotIndex + 1, method.length());
+        //从服务容器内找到服务实例
+        var service = _services.tryGet(servicePath);
+        if (service != null) { //已加载服务实例
+            return service.invokeAsync(methodName, args);
         }
-        //调用服务实例的方法
-        var methodName = method.subSequence(methodDotIndex + 1, method.length());
-        return service.invokeAsync(methodName, args);
+        //不存在则加载
+        return _services.tryLoadAsync(servicePath)
+                .thenCompose(instance -> {
+                    if (instance == null)
+                        return CompletableFuture.failedFuture(new ClassNotFoundException("Can't find service"));
+                    return instance.invokeAsync(methodName, args);
+                });
     }
 
     //region ====ModelContainer====
