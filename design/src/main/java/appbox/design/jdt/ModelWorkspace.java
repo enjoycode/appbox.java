@@ -54,6 +54,7 @@ public class ModelWorkspace implements IWorkspace {
 
     }
 
+    @Deprecated
     @Override
     public ISavedState addSaveParticipant(Plugin plugin, ISaveParticipant iSaveParticipant) throws CoreException {
         return null;
@@ -79,6 +80,7 @@ public class ModelWorkspace implements IWorkspace {
 
     }
 
+    @Deprecated
     @Override
     public IProject[][] computePrerequisiteOrder(IProject[] iProjects) {
         return new IProject[0][];
@@ -219,6 +221,7 @@ public class ModelWorkspace implements IWorkspace {
 
     }
 
+    @Deprecated
     @Override
     public void removeSaveParticipant(Plugin plugin) {
 

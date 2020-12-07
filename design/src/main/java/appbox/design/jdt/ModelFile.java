@@ -109,8 +109,10 @@ public final class ModelFile extends ModelResource implements IFile {
             }
         }
 
-        if (RuntimeContext.current() == null || RuntimeContext.current() instanceof MockRuntimeContext) { //仅用于单元测试
-            return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
+        //虚拟基础代码从资源文件加载
+        if (getParent().getName().equals("sys")) {
+            Log.debug("Load dummy code: " + getName());
+            return ModelFile.class.getResourceAsStream("/dummy/" + getName());
         }
 
         //注意:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码
@@ -126,6 +128,11 @@ public final class ModelFile extends ModelResource implements IFile {
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
                 return new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {
+                //测试服务通过代理加载(仅用于单元测试)
+                if (RuntimeContext.current() instanceof MockRuntimeContext) {
+                    return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
+                }
+
                 //TODO:**直接加载为utf8 bytes,避免字符串转换
                 if (modelNode.isCheckoutByMe()) {
                     var stagedCode = StagedService.loadServiceCode(modelNode.model().id()).get();
@@ -147,6 +154,7 @@ public final class ModelFile extends ModelResource implements IFile {
         }
     }
 
+    @Deprecated
     @Override
     public int getEncoding() throws CoreException {
         return 0;
@@ -162,6 +170,7 @@ public final class ModelFile extends ModelResource implements IFile {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public void setCharset(String s) throws CoreException {
         throw new UnsupportedOperationException();

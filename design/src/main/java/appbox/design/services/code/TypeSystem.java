@@ -5,14 +5,18 @@ import appbox.design.jdt.ModelFile;
 import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
 import appbox.model.ModelType;
+import appbox.runtime.IService;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 
 public final class TypeSystem {
 
+    public static final String PROJECT_MODELS = "models";
+
     public final  LanguageServer languageServer;
-    private       IProject       modelsProject;
+    private       IProject       modelsProject; //实体、枚举等通用模型项目
     private final DesignHub      hub;
 
     public TypeSystem(DesignHub designHub) {
@@ -26,8 +30,20 @@ public final class TypeSystem {
      */
     public void init() {
         try {
-            //创建实体、枚举等通用模型项目
-            modelsProject = languageServer.createProject("models", null);
+            var libAppBoxCorePath = new Path(IService.class.getProtectionDomain()
+                    .getCodeSource().getLocation().getPath());
+            var libs = new IClasspathEntry[]{
+                    JavaCore.newLibraryEntry(libAppBoxCorePath, null, null)
+            };
+            modelsProject = languageServer.createProject(PROJECT_MODELS, libs);
+            //添加基础虚拟文件,从resources中加载
+            var sysFolder = modelsProject.getFolder("sys");
+            sysFolder.create(true, true, null);
+
+            sysFolder.getFile("EntityBase.java").create(null, true, null);
+            sysFolder.getFile("SysEntityBase.java").create(null, true, null);
+            sysFolder.getFile("SqlEntityBase.java").create(null, true, null);
+
             //TODO:创建服务代理项目
         } catch (Exception e) {
             e.printStackTrace();

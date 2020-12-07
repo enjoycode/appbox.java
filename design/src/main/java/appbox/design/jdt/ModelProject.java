@@ -204,7 +204,14 @@ public class ModelProject extends ModelContainer implements IProject {
 
     @Override
     public IProject[] getReferencedProjects() throws CoreException {
-        return new IProject[0];
+        ResourceInfo info = this.getResourceInfo(false, false);
+        this.checkAccessible(this.getFlags(info));
+        ProjectDescription description = ((ProjectInfo)info).getDescription();
+        if (description == null) {
+            this.checkAccessible(-1);
+        }
+
+        return description.getAllReferences(this, true);
     }
 
     @Override

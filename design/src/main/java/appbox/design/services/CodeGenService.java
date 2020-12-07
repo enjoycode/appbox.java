@@ -2,6 +2,7 @@ package appbox.design.services;
 
 import appbox.data.EntityId;
 import appbox.design.tree.DesignTree;
+import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
@@ -19,20 +20,24 @@ public class CodeGenService {
 
     /**
      * 根据实体模型生成虚拟代码
-     * @param model
-     * @param appName
-     * @param designTree
-     * @return
      */
     public static String genEntityDummyCode(EntityModel model, String appName, DesignTree designTree) {
         var sb = new StringBuilder();
         sb.append("package ");
         sb.append(appName);
-        sb.append(".entities\n");
+        sb.append(".entities;\n");
+
+        sb.append("import sys.*;");
 
         var className = StringUtil.firstUpperCase(model.name());
         sb.append("public class ");
         sb.append(className);
+        //根据存储选项继承不同基类
+        if (model.sysStoreOptions() != null) {
+            sb.append(" extends SysEntityBase");
+        } else if (model.sqlStoreOptions() != null) {
+            sb.append(" extends SqlEntityBase");
+        }
         sb.append(" {\n");
 
         //fields
@@ -63,11 +68,11 @@ public class CodeGenService {
     }
 
     private static void genEntityRefMember(EntityRefModel entityRef, StringBuilder sb) {
-
+        Log.warn("待实现");
     }
 
     private static void genEntitySetMember(EntitySetModel entitySet, StringBuilder sb) {
-
+        Log.warn("待实现");
     }
 
     private static String getDataFieldTypeString(DataFieldModel field) {
