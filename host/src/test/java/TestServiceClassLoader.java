@@ -23,7 +23,7 @@ public class TestServiceClassLoader {
 
         var instance = (IService) clazz.getDeclaredConstructor().newInstance();
         var args = new ArrayList<InvokeArg>();
-        args.add(InvokeArg.from("Rick"));
+        args.add(InvokeArg.from("Future"));
         args.add(InvokeArg.from(100));
         var res = instance.invokeAsync("hello", args).get();
         assertEquals("Hello Future!", res.toString());

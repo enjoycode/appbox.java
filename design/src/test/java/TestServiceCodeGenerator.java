@@ -1,6 +1,8 @@
 import appbox.design.MockDeveloperSession;
 import appbox.design.services.PublishService;
+import appbox.entities.Employee;
 import appbox.model.*;
+import appbox.model.entity.DataFieldModel;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
 import appbox.utils.IdUtil;
@@ -37,6 +39,11 @@ public class TestServiceCodeGenerator {
         //生成测试实体模型
         var entityModel = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Employee");
         entityModel.bindToSysStore(true, false);
+        var nameField = new DataFieldModel(entityModel, "Name", DataFieldModel.DataFieldType.String, false);
+        entityModel.addSysMember(nameField, Employee.NAME_ID);
+        var maleField = new DataFieldModel(entityModel, "Male", DataFieldModel.DataFieldType.Bool, false);
+        entityModel.addSysMember(maleField, Employee.MALE_ID);
+
         models.add(entityModel);
         //生成测试服务模型
         var testServiceModel = new ServiceModel(makeServiceModelId(10), "TestService");

@@ -1,18 +1,21 @@
 package appbox.design.services.code;
 
+import appbox.data.EntityId;
 import appbox.design.DesignHub;
 import appbox.design.tree.ModelNode;
+import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
+import appbox.model.entity.DataFieldModel;
+import appbox.model.entity.EntityMemberModel;
 import appbox.utils.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.corext.dom.GenericVisitor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /** 用于生成运行时的服务代码 */
 public final class ServiceCodeGenerator extends GenericVisitor {
@@ -54,7 +57,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     @Override
     public boolean visit(SimpleType node) {
-        var entityType = TypeHelper.isEntityClass(node, hub);
+        var entityType = TypeHelper.isEntityClass(node);
         if (entityType != null) {
             var entityFullName  = entityType.getQualifiedName();
             var entityModelNode = usedEntities.get(entityFullName);
@@ -71,6 +74,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 var entityRuntimeType = ast.newSimpleType(ast.newName(makeEntityClassName(entityModelNode)));
                 astRewrite.replace(node, entityRuntimeType, null);
             }
+            return false;
         }
 
         //在这里转换虚拟类型为运行时类型
@@ -91,6 +95,48 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
         return super.visit(node);
     }
+
+    @Override
+    public boolean visit(Assignment node) {
+        if (node.getLeftHandSide() instanceof QualifiedName) {
+            var qfn       = (QualifiedName) node.getLeftHandSide();
+            var owner     = qfn.getQualifier();
+            var ownerType = owner.resolveTypeBinding();
+            if (TypeHelper.isEntityType(ownerType)) {
+                var newNode = ast.newMethodInvocation();
+                newNode.setName(ast.newSimpleName("set"
+                        + StringUtil.firstUpperCase(qfn.getName().getIdentifier())));
+                var newOwner = (Expression) ASTNode.copySubtree(ast, owner);
+                newNode.setExpression(newOwner);
+                var newArg = (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
+                newNode.arguments().add(newArg);
+                astRewrite.replace(node, newNode, null);
+                return super.visit(newNode);
+            }
+        }
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(QualifiedName node) {
+        var owner     = node.getQualifier();
+        var ownerType = owner.resolveTypeBinding();
+        if (TypeHelper.isEntityType(ownerType)) {
+            //TODO:判断是否实体属性
+            var newNode = ast.newMethodInvocation();
+            newNode.setName(ast.newSimpleName("get"
+                    + StringUtil.firstUpperCase(node.getName().getIdentifier())));
+            var newOwner = (Expression) ASTNode.copySubtree(ast, owner);
+            newNode.setExpression(newOwner);
+            astRewrite.replace(node, newNode, null);
+
+            //newOwner.accept(this);
+            return false;
+        }
+
+        return super.visit(node);
+    }
+
     //endregion
 
     /** 添加为服务方法,如果有重名抛异常 */
@@ -258,7 +304,96 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         entityClass.setName(ast.newSimpleName(makeEntityClassName(modelNode)));
         entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
 
+        var model = (EntityModel) modelNode.model();
+        for (var member : model.getMembers()) {
+            if (member.type() == EntityMemberModel.EntityMemberType.DataField) {
+                var dataField = (DataFieldModel) member;
+                var fieldName = "_" + StringUtil.firstLowerCase(member.name());
+
+                var vdf = ast.newVariableDeclarationFragment();
+                vdf.setName(ast.newSimpleName(fieldName));
+                var field = ast.newFieldDeclaration(vdf);
+                field.setType(makeDataFieldType(dataField));
+                field.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
+                entityClass.bodyDeclarations().add(field);
+
+                var getMethod = ast.newMethodDeclaration();
+                getMethod.setName(ast.newSimpleName("get" + StringUtil.firstUpperCase(member.name())));
+                getMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+                getMethod.setReturnType2(makeDataFieldType(dataField));
+                var getBody   = ast.newBlock();
+                var getReturn = ast.newReturnStatement();
+                getReturn.setExpression(ast.newSimpleName(fieldName));
+                getBody.statements().add(getReturn);
+                getMethod.setBody(getBody);
+                entityClass.bodyDeclarations().add(getMethod);
+
+                var setMethod = ast.newMethodDeclaration();
+                setMethod.setName(ast.newSimpleName("set" + StringUtil.firstUpperCase(member.name())));
+                setMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+                var setPara = ast.newSingleVariableDeclaration();
+                setPara.setName(ast.newSimpleName("value"));
+                setPara.setType(makeDataFieldType(dataField));
+                setMethod.parameters().add(setPara);
+                var setBody       = ast.newBlock();
+                var setAssignment = ast.newAssignment();
+                setAssignment.setLeftHandSide(ast.newSimpleName(fieldName));
+                setAssignment.setRightHandSide(ast.newSimpleName("value"));
+                setBody.statements().add(ast.newExpressionStatement(setAssignment));
+                setMethod.setBody(setBody);
+                entityClass.bodyDeclarations().add(setMethod);
+            }
+        }
+
         return entityClass;
+    }
+
+    private Type makeDataFieldType(DataFieldModel field) {
+        switch (field.dataType()) {
+            case EntityId:
+                return ast.newSimpleType(ast.newName(EntityId.class.getName()));
+            case String:
+                return ast.newSimpleType(ast.newSimpleName("String"));
+            case DateTime:
+                return ast.newSimpleType(ast.newName(LocalDateTime.class.getName()));
+            case Short:
+                return field.allowNull() ?
+                        ast.newSimpleType(ast.newSimpleName("Short")) :
+                        ast.newPrimitiveType(PrimitiveType.SHORT);
+            case Int:
+            case Enum:
+                return field.allowNull() ?
+                        ast.newSimpleType(ast.newSimpleName("Integer")) :
+                        ast.newPrimitiveType(PrimitiveType.INT);
+            case Long:
+                return field.allowNull() ?
+                        ast.newSimpleType(ast.newSimpleName("Long")) :
+                        ast.newPrimitiveType(PrimitiveType.LONG);
+            case Decimal:
+                return ast.newSimpleType(ast.newName(BigDecimal.class.getName()));
+            case Bool:
+                return field.allowNull() ?
+                        ast.newSimpleType(ast.newSimpleName("Boolean")) :
+                        ast.newPrimitiveType(PrimitiveType.BOOLEAN);
+            case Guid:
+                return ast.newSimpleType(ast.newName(UUID.class.getName()));
+            case Byte:
+                return field.allowNull() ?
+                        ast.newSimpleType(ast.newSimpleName("Byte")) :
+                        ast.newPrimitiveType(PrimitiveType.BYTE);
+            case Binary:
+                return ast.newArrayType(ast.newPrimitiveType(PrimitiveType.BYTE));
+            case Float:
+                return field.allowNull() ?
+                        ast.newSimpleType(ast.newSimpleName("Float")) :
+                        ast.newPrimitiveType(PrimitiveType.FLOAT);
+            case Double:
+                return field.allowNull() ?
+                        ast.newSimpleType(ast.newSimpleName("Double")) :
+                        ast.newPrimitiveType(PrimitiveType.DOUBLE);
+            default:
+                return ast.newSimpleType(ast.newSimpleName("Object"));
+        }
     }
 
 }

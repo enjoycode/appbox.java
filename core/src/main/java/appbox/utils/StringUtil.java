@@ -32,12 +32,22 @@ public final class StringUtil {
      * 首字母转化大写
      */
     public static String firstUpperCase(String str) {
+        //TODO:已经大写不需要处理
         if ((str == null) || (str.length() == 0))
             return str;
         char[] ch = str.toCharArray();
         if (ch[0] >= 'a' && ch[0] <= 'z') {
             ch[0] = (char) (ch[0] - 32);
         }
+        return new String(ch);
+    }
+
+    public static String firstLowerCase(String str) {
+        //TODO:同上
+        if ((str == null) || (str.length() == 0))
+            return str;
+        char[] ch = str.toCharArray();
+        ch[0] = Character.toLowerCase(ch[0]);
         return new String(ch);
     }
 
@@ -113,7 +123,7 @@ public final class StringUtil {
         byte[] hexChars = new byte[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2]     = HEX_ARRAY[v >>> 4];
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
         return new String(hexChars, StandardCharsets.UTF_8);

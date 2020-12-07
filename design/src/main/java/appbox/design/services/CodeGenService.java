@@ -63,7 +63,7 @@ public class CodeGenService {
         sb.append("\tpublic ");
         sb.append(getDataFieldTypeString(field));
         sb.append(" ");
-        sb.append(field.name());
+        sb.append(StringUtil.firstLowerCase(field.name()));
         sb.append(";\n");
     }
 
@@ -75,7 +75,7 @@ public class CodeGenService {
         Log.warn("待实现");
     }
 
-    private static String getDataFieldTypeString(DataFieldModel field) {
+    public static String getDataFieldTypeString(DataFieldModel field) {
         switch (field.dataType()) {
             case EntityId:
                 return EntityId.class.getName();

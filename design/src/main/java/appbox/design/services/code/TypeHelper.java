@@ -1,21 +1,26 @@
 package appbox.design.services.code;
 
-import appbox.design.DesignHub;
 import org.eclipse.jdt.core.dom.*;
 
 final class TypeHelper {
 
-    public static ITypeBinding isEntityClass(SimpleType node, DesignHub hub) {
+    public static ITypeBinding isEntityClass(SimpleType node) {
         //TODO:忽略常规类型如String
         var type = node.resolveBinding();
+        return isEntityType(type) ? type : null;
+    }
+
+    public static boolean isEntityType(ITypeBinding type) {
+        if (type == null)
+            return false;
         if (!type.isFromSource())
-            return null;
+            return false;
         var pkg = type.getPackage().getJavaElement();
         if (pkg == null)
-            return null;
+            return false;
         if (pkg.getPath().lastSegment().equals("entities"))
-            return type;
-        return null;
+            return true;
+        return false;
     }
 
     public static boolean isServiceClass(TypeDeclaration node, String appName, String serviceName) {
