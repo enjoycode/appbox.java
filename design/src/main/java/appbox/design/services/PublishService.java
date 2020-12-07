@@ -74,7 +74,7 @@ public final class PublishService {
         //检测虚拟代码错误
         var problems = ((CompilationUnit) astNode).getProblems();
         if (problems != null && problems.length > 0) {
-            //TODO:友好提示
+            //TODO:友好提示及忽略警告
             throw new RuntimeException("Has problems.");
         }
 

@@ -1,13 +1,18 @@
 package appbox.design.services.code;
 
 import appbox.design.DesignHub;
+import appbox.design.tree.ModelNode;
+import appbox.model.ModelType;
 import appbox.model.ServiceModel;
+import appbox.utils.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.corext.dom.GenericVisitor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** 用于生成运行时的服务代码 */
 public final class ServiceCodeGenerator extends GenericVisitor {
@@ -15,6 +20,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     private       TypeDeclaration         _serviceTypeDeclaration;
     /** 公开的服务方法集合 */
     private final List<MethodDeclaration> publicMethods = new ArrayList<>();
+    private final Map<String, ModelNode>  usedEntities  = new HashMap<>();
 
     private final DesignHub    hub;
     private final String       appName;
@@ -48,6 +54,25 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     @Override
     public boolean visit(SimpleType node) {
+        var entityType = TypeHelper.isEntityClass(node, hub);
+        if (entityType != null) {
+            var entityFullName  = entityType.getQualifiedName();
+            var entityModelNode = usedEntities.get(entityFullName);
+            if (entityModelNode == null) {
+                var pkg     = entityType.getPackage().getJavaElement();
+                var appName = pkg.getPath().segment(1);
+                var appNode = hub.designTree.findApplicationNodeByName(appName);
+                entityModelNode = hub.designTree.findModelNodeByName(
+                        appNode.model.id(), ModelType.Entity, entityType.getName());
+                usedEntities.put(entityFullName, entityModelNode);
+            }
+            //转换为运行时类型
+            if (!node.isVar()) {
+                var entityRuntimeType = ast.newSimpleType(ast.newName(makeEntityClassName(entityModelNode)));
+                astRewrite.replace(node, entityRuntimeType, null);
+            }
+        }
+
         //在这里转换虚拟类型为运行时类型
         //if (node.getName().isSimpleName() && node.getName().getFullyQualifiedName().equals("String")) {
         //    var newType = ast.newSimpleType(ast.newName("Object"));
@@ -86,6 +111,11 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var listRewrite =
                 astRewrite.getListRewrite(_serviceTypeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
         listRewrite.insertLast(invokeMethod, null);
+
+        //附加用到的实体
+        for (var modelNode : usedEntities.values()) {
+            listRewrite.insertLast(generateEntityRuntimeCode(modelNode), null);
+        }
     }
 
     /** 生成实现IService的代码 */
@@ -215,6 +245,20 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         }
 
         return getMethod;
+    }
+
+    private static String makeEntityClassName(ModelNode modelNode) {
+        return String.format("%s_%s",
+                StringUtil.firstUpperCase(modelNode.appNode.model.name()), modelNode.model().name());
+    }
+
+    /** 生成实体的运行时代码 */
+    private TypeDeclaration generateEntityRuntimeCode(ModelNode modelNode) {
+        var entityClass = ast.newTypeDeclaration();
+        entityClass.setName(ast.newSimpleName(makeEntityClassName(modelNode)));
+        entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+
+        return entityClass;
     }
 
 }

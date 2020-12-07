@@ -1,9 +1,6 @@
 import appbox.design.MockDeveloperSession;
 import appbox.design.services.PublishService;
-import appbox.model.ApplicationModel;
-import appbox.model.ModelBase;
-import appbox.model.ModelType;
-import appbox.model.ServiceModel;
+import appbox.model.*;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
 import appbox.utils.IdUtil;
@@ -27,7 +24,7 @@ public class TestServiceCodeGenerator {
     }
 
     private static InputStream loadTestServiceCode(IPath path) {
-        return TestServiceCodeGenerator.class.getResourceAsStream(path.toString());
+        return TestServiceCodeGenerator.class.getResourceAsStream("/test_services/" + path.lastSegment());
     }
 
     @Test
@@ -37,6 +34,10 @@ public class TestServiceCodeGenerator {
 
         var appModel = new ApplicationModel("appbox", "sys");
         var models   = new ArrayList<ModelBase>();
+        //生成测试实体模型
+        var entityModel = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Employee");
+        entityModel.bindToSysStore(true, false);
+        models.add(entityModel);
         //生成测试服务模型
         var testServiceModel = new ServiceModel(makeServiceModelId(10), "TestService");
         models.add(testServiceModel);

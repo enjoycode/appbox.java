@@ -13,10 +13,13 @@ import org.eclipse.jdt.core.JavaCore;
 
 public final class TypeSystem {
 
-    public static final String PROJECT_MODELS = "models";
+    public static final String PROJECT_MODELS  = "models";
+    static final        String DUMMY_ENTITY    = "EntityBase";
+    static final        String DUMMY_SQLENTITY = "SqlEntityBase";
+    static final        String DUMMY_SYSENTITY = "SysEntityBase";
 
     public final  LanguageServer languageServer;
-    private       IProject       modelsProject; //实体、枚举等通用模型项目
+    protected       IProject       modelsProject; //实体、枚举等通用模型项目
     private final DesignHub      hub;
 
     public TypeSystem(DesignHub designHub) {
@@ -40,9 +43,9 @@ public final class TypeSystem {
             var sysFolder = modelsProject.getFolder("sys");
             sysFolder.create(true, true, null);
 
-            sysFolder.getFile("EntityBase.java").create(null, true, null);
-            sysFolder.getFile("SysEntityBase.java").create(null, true, null);
-            sysFolder.getFile("SqlEntityBase.java").create(null, true, null);
+            sysFolder.getFile(DUMMY_ENTITY + ".java").create(null, true, null);
+            sysFolder.getFile(DUMMY_SYSENTITY + ".java").create(null, true, null);
+            sysFolder.getFile(DUMMY_SQLENTITY + ".java").create(null, true, null);
 
             //TODO:创建服务代理项目
         } catch (Exception e) {
