@@ -11,16 +11,23 @@ final class TypeHelper {
     }
 
     public static boolean isEntityType(ITypeBinding type) {
-        if (type == null)
+        if (type == null || !type.isFromSource())
             return false;
-        if (!type.isFromSource())
-            return false;
+
         var pkg = type.getPackage().getJavaElement();
         if (pkg == null)
             return false;
         if (pkg.getPath().lastSegment().equals("entities"))
             return true;
         return false;
+    }
+
+    public static boolean isDataStoreType(ITypeBinding type) {
+        if (type == null || !type.isFromSource())
+            return false;
+
+        var pkg = type.getPackage();
+        return pkg != null && pkg.isUnnamed() && type.getName().equals("DataStore");
     }
 
     public static boolean isServiceClass(TypeDeclaration node, String appName, String serviceName) {

@@ -36,14 +36,18 @@ public class TestServiceCodeGenerator {
 
         var appModel = new ApplicationModel("appbox", "sys");
         var models   = new ArrayList<ModelBase>();
+        //生成测试DataStore
+        var dataStoreModel = new DataStoreModel(DataStoreModel.DataStoreKind.Sql, "PostgreSql", "DemoDB");
+        models.add(dataStoreModel);
+
         //生成测试实体模型
         var entityModel = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Employee");
-        entityModel.bindToSysStore(true, false);
+        //entityModel.bindToSysStore(true, false);
+        entityModel.bindToSqlStore(dataStoreModel.id());
         var nameField = new DataFieldModel(entityModel, "Name", DataFieldModel.DataFieldType.String, false);
         entityModel.addSysMember(nameField, Employee.NAME_ID);
         var maleField = new DataFieldModel(entityModel, "Male", DataFieldModel.DataFieldType.Bool, false);
         entityModel.addSysMember(maleField, Employee.MALE_ID);
-
         models.add(entityModel);
         //生成测试服务模型
         var testServiceModel = new ServiceModel(makeServiceModelId(10), "TestService");

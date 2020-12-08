@@ -127,7 +127,7 @@ public final class DesignTree {
         var allModelNodes = new ArrayList<ModelNode>();
         for (ModelBase m : models) {
             if (m.modelType() == ModelType.DataStore) {
-                throw new RuntimeException("未实现");
+                storeRootNode.addModel((DataStoreModel) m, designHub);
             } else {
                 allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
             }
@@ -177,6 +177,10 @@ public final class DesignTree {
             }
         }
         return null;
+    }
+
+    public DataStoreNode findDataStoreNodeByName(String name) {
+        return (DataStoreNode) storeRootNode.nodes.find(n -> n.text().equals(name));
     }
 
     public ModelRootNode findModelRootNode(int appId, ModelType modelType) {

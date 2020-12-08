@@ -2,8 +2,10 @@ package appbox.design.services.code;
 
 import appbox.design.DesignHub;
 import appbox.design.tree.ModelNode;
+import appbox.model.DataStoreModel;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
+import appbox.store.SqlStore;
 import appbox.utils.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -127,6 +129,22 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
             //newOwner.accept(this);
             return false;
+        } else if (TypeHelper.isDataStoreType(ownerType) && owner.isSimpleName()) {
+            String storeName = node.getName().getIdentifier();
+            String storeTypeName = null;
+            var    storeNode     = hub.designTree.findDataStoreNodeByName(storeName);
+            if (storeNode.model().kind() == DataStoreModel.DataStoreKind.Sql) {
+                storeTypeName = SqlStore.class.getName();
+                var newNode = ast.newMethodInvocation();
+                newNode.setName(ast.newSimpleName("get"));
+                newNode.setExpression(ast.newName(storeTypeName));
+                newNode.arguments().add(ast.newNumberLiteral(storeNode.model().id() + "L"));
+                astRewrite.replace(node, newNode, null);
+
+                return false;
+            } else {
+                //TODO:
+            }
         }
 
         return super.visit(node);

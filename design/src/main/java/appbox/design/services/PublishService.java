@@ -18,6 +18,7 @@ import appbox.serialization.BytesOutputStream;
 import appbox.store.DbTransaction;
 import appbox.store.KVTransaction;
 import appbox.store.ModelStore;
+import appbox.store.SqlStore;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -30,7 +31,6 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jface.text.Document;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -97,8 +97,10 @@ public final class PublishService {
 
         //生成运行时临时Project并进行编译
         var libAppBoxCorePath = new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        var libAppBoxStorePath = new Path(SqlStore.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         var libs = new IClasspathEntry[]{
-                JavaCore.newLibraryEntry(libAppBoxCorePath, null, null)
+                JavaCore.newLibraryEntry(libAppBoxCorePath, null, null),
+                JavaCore.newLibraryEntry(libAppBoxStorePath, null, null)
         };
         var runtimeProject =
                 hub.typeSystem.languageServer.createProject(

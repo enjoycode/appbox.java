@@ -6,8 +6,9 @@ public class TestService {
         var obj = new sys.entities.Employee();
         obj.name = "Rick";
         obj.male = true;
-        System.out.println(obj.name);
-        return CompletableFuture.completedFuture("Hello Future!");
+        return DataStore.DemoDB.insertAsync(obj, null)
+                .thenApply(r -> "Hello Future!");
+        //return CompletableFuture.completedFuture("Hello Future!");
     }
 
 }
