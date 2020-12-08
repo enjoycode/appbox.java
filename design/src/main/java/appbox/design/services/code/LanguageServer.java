@@ -51,6 +51,8 @@ import java.util.function.Function;
  */
 public final class LanguageServer {
     //region ====static====
+    public static final String BUILD_OUTPUT = "bin";
+
     private static final JREContainerInitializer jreContainerInitializer   = new JREContainerInitializer();
     private static final ProjectPreferences      defaultProjectPreferences = new ProjectPreferences();
     private static final PreferenceManager       lsPreferenceManager;
@@ -194,7 +196,7 @@ public final class LanguageServer {
         }
 
         //TODO: 待检查setRawClasspath的referencedEntries参数
-        var outPath = project.getFullPath().append("bin");
+        var outPath = project.getFullPath().append(BUILD_OUTPUT);
         perProjectInfo.setRawClasspath(buildPath, outPath, JavaModelStatus.VERIFIED_OK);
 
         return project;

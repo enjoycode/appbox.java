@@ -1,6 +1,7 @@
 package appbox.design.services.code;
 
 import appbox.data.EntityId;
+import appbox.data.SysEntity;
 import appbox.design.DesignHub;
 import appbox.design.tree.ModelNode;
 import appbox.model.EntityModel;
@@ -302,7 +303,9 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     private TypeDeclaration generateEntityRuntimeCode(ModelNode modelNode) {
         var entityClass = ast.newTypeDeclaration();
         entityClass.setName(ast.newSimpleName(makeEntityClassName(modelNode)));
+        entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
         entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+        entityClass.setSuperclassType(ast.newSimpleType(ast.newName(SysEntity.class.getName())));
 
         var model = (EntityModel) modelNode.model();
         for (var member : model.getMembers()) {

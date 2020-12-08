@@ -10,7 +10,9 @@ public final class BytesOutputStream extends ByteArrayOutputStream implements IO
         super(size);
     }
 
-    public BytesInputStream copyToInput() {
+    public byte[] getBuffer() { return buf; }
+
+    public BytesInputStream copyToInput() { //TODO:move to input
         var input = new BytesInputStream(super.count);
         System.arraycopy(super.buf, 0, input.data, 0, super.count);
         return input;

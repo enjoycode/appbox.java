@@ -160,7 +160,7 @@ public abstract class ModelResource implements IResource {
 
     @Override
     public void delete(int updateFlags, IProgressMonitor monitor) throws CoreException {
-        //TODO:暂简单实现
+        //TODO:暂简单实现,需要删除编译临时文件
         workspace.deleteResource(this);
     }
     //endregion

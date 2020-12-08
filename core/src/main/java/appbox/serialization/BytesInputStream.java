@@ -1,8 +1,5 @@
 package appbox.serialization;
 
-/**
- * 仅用于测试
- */
 public final class BytesInputStream implements IInputStream {
     public final byte[] data;
     private      int    pos;
@@ -14,7 +11,16 @@ public final class BytesInputStream implements IInputStream {
 
     public BytesInputStream(byte[] data) {
         this.data = data;
-        pos = 0;
+        pos       = 0;
+    }
+
+    public int getPosition() { return pos; }
+
+    @Override
+    public void skip(int size) {
+        if (size < 0)
+            throw new IllegalArgumentException();
+        pos += size;
     }
 
     @Override
