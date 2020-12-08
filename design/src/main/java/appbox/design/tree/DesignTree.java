@@ -5,6 +5,7 @@ import appbox.design.DesignHub;
 import appbox.design.services.CheckoutService;
 import appbox.design.services.StagedItems;
 import appbox.design.services.StagedService;
+import appbox.logging.Log;
 import appbox.model.*;
 import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
@@ -153,7 +154,10 @@ public final class DesignTree {
                 return findModelNode(ModelType.Entity, Long.parseUnsignedLong(id));
             case ServiceModelNode:
                 return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
+            case DataStoreNode:
+                return storeRootNode.nodes.find(n -> n.id().equals(id));
             default:
+                Log.warn("findNode: " + type.name() + "未实现");
                 throw new RuntimeException("未实现");
         }
     }

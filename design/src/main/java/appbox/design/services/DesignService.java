@@ -7,6 +7,7 @@ import appbox.design.handlers.service.GenServiceDeclare;
 import appbox.design.handlers.service.GetServiceMethod;
 import appbox.design.handlers.service.OpenServiceModel;
 import appbox.design.handlers.store.NewDataStore;
+import appbox.design.handlers.store.SaveDataStore;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArg;
 import appbox.runtime.RuntimeContext;
@@ -30,6 +31,7 @@ public final class DesignService implements IService {
         put("Publish", new Publish());
         //----DataStore----
         put("NewDataStore", new NewDataStore());
+        put("SaveDataStore", new SaveDataStore());
         //----Service----
         put("OpenServiceModel", new OpenServiceModel());
         put("GenServiceDeclare", new GenServiceDeclare());

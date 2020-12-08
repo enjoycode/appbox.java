@@ -25,6 +25,10 @@ public final class DataStoreModel extends ModelBase {
 
     public String settings() { return _settings; }
 
+    public void updateSettings(String value) {
+        _settings = value;
+    }
+
     @Override
     public ModelType modelType() {
         return ModelType.DataStore;
