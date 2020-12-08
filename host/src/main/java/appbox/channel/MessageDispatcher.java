@@ -121,7 +121,7 @@ public final class MessageDispatcher {
             channel.returnAllChunks(first);
         }
 
-        //正常响应，注意必须异步，还在Loop线程内
+        //正常响应，注意必须异步，还在Loop线程内 TODO:**考虑GetModel类响应用专用线程,防止同步阻塞
         pendingItem.completeAsync();
     }
 

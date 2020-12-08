@@ -2,6 +2,7 @@ package appbox.store;
 
 import appbox.data.SqlEntity;
 import appbox.logging.Log;
+import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityMemberModel;
@@ -27,7 +28,22 @@ public abstract class SqlStore {
         var store = sqlStores.get(storeId);
         if (store == null) {
             synchronized (sqlStores) {
-                //TODO: load from meta store
+                //load from meta store
+                store = sqlStores.get(storeId);
+                if (store != null)
+                    return store;
+
+                try {
+                    var model =  ModelStore.loadModelAsync(storeId).get();
+                    if (model == null)
+                        throw new RuntimeException("DataStoreModel not exists");
+                    var dataStoreModel = (DataStoreModel) model;
+                    //TODO:**** 根据Provider创建相应的实例
+                    store = new PgSqlStore(dataStoreModel.settings());
+                    sqlStores.put(storeId, store);
+                } catch (Exception ex) {
+                    Log.error("Load DataStoreModel error: " + ex.getMessage());
+                }
             }
         }
         return store;
