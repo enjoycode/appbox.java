@@ -24,7 +24,7 @@ public final class NewDataStore implements IRequestHandler {
         var node = hub.designTree.storeRootNode().addModel(model, hub);
 
         return node.saveAsync().thenApply(r -> {
-            hub.typeSystem.createStoreDocument(node);
+            hub.typeSystem.updateStoresDocument();
             return new JsonResult(node);
         });
     }

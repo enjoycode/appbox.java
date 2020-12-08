@@ -92,8 +92,7 @@ public final class DesignTree {
             var allModelNodes = new ArrayList<ModelNode>(); //需要延迟创建虚拟代码的模型
             for (ModelBase m : mergedModels) {
                 if (m.modelType() == ModelType.DataStore) {
-                    var dataStoreNode = storeRootNode.addModel((DataStoreModel) m, designHub);
-                    designHub.typeSystem.createStoreDocument(dataStoreNode);
+                    storeRootNode.addModel((DataStoreModel) m, designHub);
                 } else {
                     allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
                 }

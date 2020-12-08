@@ -1,8 +1,10 @@
 package appbox.design.services;
 
 import appbox.data.EntityId;
+import appbox.design.tree.DataStoreNode;
 import appbox.design.tree.DesignTree;
 import appbox.logging.Log;
+import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
@@ -17,6 +19,27 @@ import java.util.UUID;
  * 用于生成各模型的虚拟代码
  */
 public class CodeGenService {
+
+    public static String getStoresDummyCode(DesignTree designTree) {
+        var sb = new StringBuilder();
+        sb.append("import sys.*;");
+        sb.append("public final class DataStore {\n");
+
+        for (int i = 0; i < designTree.storeRootNode().nodes.count(); i++) {
+            var node = (DataStoreNode)designTree.storeRootNode().nodes.get(i);
+            sb.append("public static final ");
+            if (node.model().kind() == DataStoreModel.DataStoreKind.Sql) {
+                sb.append("SqlStore ");
+                sb.append(node.model().name());
+                sb.append(" = null;");
+            } else {
+                //TODO:
+            }
+        }
+
+        sb.append("}");
+        return sb.toString();
+    }
 
     /**
      * 根据实体模型生成虚拟代码

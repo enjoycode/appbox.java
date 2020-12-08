@@ -3,6 +3,7 @@ package appbox.design.jdt;
 import appbox.design.IDeveloperSession;
 import appbox.design.services.CodeGenService;
 import appbox.design.services.StagedService;
+import appbox.design.services.code.TypeSystem;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
@@ -110,23 +111,28 @@ public final class ModelFile extends ModelResource implements IFile {
         }
 
         //虚拟基础代码从资源文件加载
-        if (getParent().getName().equals("sys")) {
+        var parentName = getParent().getName();
+        if (parentName.equals("sys")) {
             Log.debug("Load dummy code: " + getName());
             return ModelFile.class.getResourceAsStream("/dummy/" + getName());
         }
 
+        var hub = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
+        if (getName().equals("DataStore.java") && parentName.equals(TypeSystem.PROJECT_MODELS)) {
+            var storesDummyCode = CodeGenService.getStoresDummyCode(hub.designTree);
+            return new ByteArrayInputStream(storesDummyCode.getBytes(StandardCharsets.UTF_8));
+        }
         //注意:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码
         try {
-            var hub = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
             //根据类型查找模型节点
             var modelNode = hub.typeSystem.findModelNodeByModelFile(this);
             //TODO:其他类型处理
             if (modelNode.model().modelType() == ModelType.Entity) {
                 //通过CodeGenService生成虚拟代码
-                var testCode = CodeGenService.genEntityDummyCode(
+                var entityDummyCode = CodeGenService.genEntityDummyCode(
                         (EntityModel) modelNode.model(), modelNode.appNode.model.name(), null);
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
-                return new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
+                return new ByteArrayInputStream(entityDummyCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {
                 //测试服务通过代理加载(仅用于单元测试)
                 if (RuntimeContext.current() instanceof MockRuntimeContext) {
