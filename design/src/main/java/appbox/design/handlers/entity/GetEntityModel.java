@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class GetEntityModel implements IRequestHandler {
+
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
         var modelId=Long.parseUnsignedLong(args.get(0).getString());
@@ -25,7 +26,6 @@ public class GetEntityModel implements IRequestHandler {
         } else{
             return CompletableFuture.failedFuture(new Exception("StoreOptions is unknown"));
         }
-
 
     }
 }

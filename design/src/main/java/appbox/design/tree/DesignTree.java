@@ -42,11 +42,11 @@ public final class DesignTree {
         staged = value;
     }
 
-    public DataStoreRootNode getStoreRootNode() {
+    public DataStoreRootNode storeRootNode() {
         return storeRootNode;
     }
 
-    public ApplicationRootNode getAppRootNode() {
+    public ApplicationRootNode appRootNode() {
         return appRootNode;
     }
     //endregion
@@ -82,12 +82,17 @@ public final class DesignTree {
 
             return ModelStore.loadAllModelAsync(); //加载所有模型
         }).thenCompose(models -> {
-            //TODO:先移除已删除的
+            var mergedModels = new ArrayList<ModelBase>(Arrays.asList(models));
+            //加载staged中新建的模型，可能包含DataStoreModel
+            mergedModels.addAll(Arrays.asList(staged.findNewModels()));
 
-            var allModelNodes = new ArrayList<ModelNode>();
-            for (ModelBase m : models) {
+            //加入Models
+            staged.removeDeletedModels(mergedModels);  //先移除已删除的
+            var allModelNodes = new ArrayList<ModelNode>(); //需要延迟创建虚拟代码的模型
+            for (ModelBase m : mergedModels) {
                 if (m.modelType() == ModelType.DataStore) {
-                    throw new RuntimeException("未实现");
+                    var dataStoreNode = storeRootNode.addModel((DataStoreModel) m, designHub);
+                    designHub.typeSystem.createStoreDocument(dataStoreNode);
                 } else {
                     allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
                 }

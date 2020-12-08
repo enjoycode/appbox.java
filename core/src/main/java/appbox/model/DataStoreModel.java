@@ -19,6 +19,12 @@ public final class DataStoreModel extends ModelBase {
         _provider = provider;
     }
 
+    public DataStoreKind kind() { return _kind; }
+
+    public String provider() { return _provider; }
+
+    public String settings() { return _settings; }
+
     @Override
     public ModelType modelType() {
         return ModelType.DataStore;

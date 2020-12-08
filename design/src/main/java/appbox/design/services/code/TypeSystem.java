@@ -2,6 +2,7 @@ package appbox.design.services.code;
 
 import appbox.design.DesignHub;
 import appbox.design.jdt.ModelFile;
+import appbox.design.tree.DataStoreNode;
 import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
 import appbox.model.ModelType;
@@ -87,6 +88,10 @@ public final class TypeSystem {
     /** 注意：服务模型也会更新，如不需要由调用者忽略 */
     public void updateModelDocument(ModelNode node) {
         Log.warn("updateModelDocument暂未实现");
+    }
+
+    public void createStoreDocument(DataStoreNode node) {
+        //TODO:
     }
 
     //region ====find XXX====
