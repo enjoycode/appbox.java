@@ -35,8 +35,9 @@ public final class PayloadType {
     public static final byte UnknownType  = 23;
 
     //----模型相关----
-    public static final byte ServiceModel = 49;
-    public static final byte EntityModel  = 50;
+    public static final byte DataStoreModel = 45;
+    public static final byte ServiceModel   = 49;
+    public static final byte EntityModel    = 50;
 
     //----表达式相关----
     public static final byte BinaryExpression    = 63;

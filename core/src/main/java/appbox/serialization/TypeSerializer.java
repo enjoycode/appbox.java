@@ -5,6 +5,7 @@ import appbox.expressions.BinaryExpression;
 import appbox.expressions.KVFieldExpression;
 import appbox.expressions.PrimitiveExpression;
 import appbox.logging.Log;
+import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.model.ServiceModel;
 import appbox.serialization.serializers.*;
@@ -29,6 +30,7 @@ public abstract class TypeSerializer {
         registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null/*不支持*/));
 
         //----模型相关----
+        registerKnownType(new UserSerializer(PayloadType.DataStoreModel, DataStoreModel.class, DataStoreModel::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
         registerKnownType(new UserSerializer(PayloadType.ServiceModel, ServiceModel.class, ServiceModel::new));
 
