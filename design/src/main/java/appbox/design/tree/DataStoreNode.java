@@ -3,7 +3,7 @@ package appbox.design.tree;
 import appbox.design.DesignHub;
 import appbox.design.services.StagedService;
 import appbox.model.DataStoreModel;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -45,20 +45,17 @@ public final class DataStoreNode extends DesignNode {
     //endregion
 
     public CompletableFuture<Void> saveAsync() {
-        if(!isCheckoutByMe())
-          return CompletableFuture.failedFuture(new RuntimeException("DataStore hasn't checkout"));
+        if (!isCheckoutByMe())
+            return CompletableFuture.failedFuture(new RuntimeException("DataStore hasn't checkout"));
         return StagedService.saveModelAsync(_model);
     }
 
     @Override
-    protected void writeJsonMembers(JSONWriter writer) {
+    protected void writeJsonMembers(IJsonWriter writer) {
         super.writeJsonMembers(writer);
 
-        writer.writeKey("Kind");
-        writer.writeValue( _model.kind().value);
-        writer.writeKey("Provider");
-        writer.writeValue(_model.provider());
-        writer.writeKey("Settings");
-        writer.writeValue(_model.settings());
+        writer.writeKeyValue("Kind", _model.kind().value);
+        writer.writeKeyValue("Provider", _model.provider());
+        writer.writeKeyValue("Settings", _model.settings());
     }
 }

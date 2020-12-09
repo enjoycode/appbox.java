@@ -4,7 +4,7 @@ import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.List;
 
@@ -67,7 +67,7 @@ public final class SqlStoreOptions implements IEntityStoreOption {
     }
 
     @Override
-    public void writeToJson(JSONWriter writer) {
+    public void writeToJson(IJsonWriter writer) {
         writer.startObject();
 
         writer.writeKey("StoreName");

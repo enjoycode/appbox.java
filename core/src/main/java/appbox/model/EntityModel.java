@@ -5,8 +5,8 @@ import appbox.model.entity.*;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonSerializable;
+import appbox.serialization.IJsonWriter;
 import appbox.utils.IdUtil;
-import com.alibaba.fastjson.JSONWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -324,20 +324,19 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
     }
 
     @Override
-    public void writeToJson(JSONWriter writer) {
+    public void writeToJson(IJsonWriter writer) {
         writer.startObject();
 
-        writer.writeKey("IsNew");
-        writer.writeValue(persistentState() == PersistentState.Detached);
+        writer.writeKeyValue("IsNew", persistentState() == PersistentState.Detached);
 
         //写入成员列表,注意不向前端发送EntityRef的隐藏成员及标为删除的成员
         writer.writeKey("Members");
         var ms = _members.stream()
-            .filter(t-> t.persistentState() != PersistentState.Deleted
-                && !(t instanceof DataFieldModel && ((DataFieldModel)t).isForeignKey()))
+                .filter(t -> t.persistentState() != PersistentState.Deleted
+                        && !(t instanceof DataFieldModel && ((DataFieldModel) t).isForeignKey()))
                 .collect(Collectors.toList());
         writer.startArray();
-        for(var m : ms) {
+        for (var m : ms) {
             m.writeToJson(writer);
         }
         writer.endArray();

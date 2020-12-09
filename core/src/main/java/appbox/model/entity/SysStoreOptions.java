@@ -4,8 +4,8 @@ import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IJsonWriter;
 import appbox.utils.IdUtil;
-import com.alibaba.fastjson.JSONWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -226,7 +226,7 @@ public final class SysStoreOptions implements IEntityStoreOption {
     }
 
     @Override
-    public void writeToJson(JSONWriter writer) {
+    public void writeToJson(IJsonWriter writer) {
         writer.startObject();
 
         writer.writeKey("OrderByDesc");

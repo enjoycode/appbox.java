@@ -1,7 +1,7 @@
 package appbox.design.tree;
 
 import appbox.serialization.IJsonSerializable;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.*;
 
@@ -85,7 +85,7 @@ public final class NodeCollection implements IJsonSerializable {
 
     //region ====IJsonSerializable====
     @Override
-    public void writeToJson(JSONWriter writer) {
+    public void writeToJson(IJsonWriter writer) {
         writer.startArray();
         for (DesignNode node : list) {
             node.writeToJson(writer);

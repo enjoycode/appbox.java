@@ -6,7 +6,7 @@ import appbox.model.entity.EntityMemberModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IJsonSerializable;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +79,7 @@ public final class SysEntityKVO extends SysEntity implements IJsonSerializable {
     }
 
     @Override
-    public void writeToJson(JSONWriter writer) {
+    public void writeToJson(IJsonWriter writer) {
         writer.startObject();
         for(var entry : _kvo.entrySet()) {
             writer.writeKey(entry.getKey());

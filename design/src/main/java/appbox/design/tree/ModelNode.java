@@ -6,7 +6,7 @@ import appbox.design.services.StagedService;
 import appbox.model.ModelBase;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -73,14 +73,11 @@ public final class ModelNode extends DesignNode {
     //endregion
 
     @Override
-    protected void writeJsonMembers(JSONWriter writer) {
+    protected void writeJsonMembers(IJsonWriter writer) {
         super.writeJsonMembers(writer);
 
-        writer.writeKey("App"); //TODO:考虑不用，由前端处理
-        writer.writeValue(appNode.model.name());
-
-        writer.writeKey("ModelType");
-        writer.writeValue(_model.modelType().value);
+        writer.writeKeyValue("App",appNode.model.name()); //TODO:考虑不用，由前端处理
+        writer.writeKeyValue("ModelType",_model.modelType().value);
 
         //TODO: EntityModel输出对应的存储标识，方便前端IDE筛选相同存储的实体
         //ServiceModel输出Language

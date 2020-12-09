@@ -4,7 +4,7 @@ import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 public final class DataFieldModel extends EntityMemberModel {
     //region ====DataFieldType====
@@ -180,7 +180,7 @@ public final class DataFieldModel extends EntityMemberModel {
     }
 
     @Override
-    protected void writeJsonMembers(JSONWriter writer) {
+    protected void writeJsonMembers(IJsonWriter writer) {
         writer.writeKey("DataType");
         writer.writeValue(_dataType.value);
 

@@ -1,11 +1,7 @@
 package appbox.data;
 
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
-import appbox.serialization.IBinSerializable;
-import appbox.serialization.IJsonSerializable;
+import appbox.serialization.*;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONWriter;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 
@@ -16,17 +12,18 @@ import java.nio.charset.StandardCharsets;
  * 用于包装服务端返回给前端的Json序列化后的结果
  */
 public final class JsonResult implements IBinSerializable {
-    private static final SerializeConfig config    = new SerializeConfig();
-    private static final byte[]          JSON_NULL = "null".getBytes(StandardCharsets.UTF_8);
+    private static final SerializeConfig  config            = new SerializeConfig();
+    private static final byte[]           JSON_NULL         = "null".getBytes(StandardCharsets.UTF_8);
+    private static final ObjectSerializer customeSerializer = (serializer, object, fieldName, fieldType, features) -> {
+        var jsonWriter = new FastJsonWriter(serializer);
+        var instance   = (IJsonSerializable) object;
+        instance.writeToJson(jsonWriter);
+        //jsonWriter.close(); //Donot close
+    };
+
 
     static {
-        //TODO:待重新实现IJsonSerializable接口及自定义JSONWriter
-        registerType(SysEntityKVO.class, (serializer, object, fieldName, fieldType, features) -> {
-            var jsonWriter = new JSONWriter(serializer.getWriter());
-            var instance   = (IJsonSerializable) object;
-            instance.writeToJson(jsonWriter);
-            jsonWriter.close();
-        });
+        registerType(SysEntityKVO.class, customeSerializer);
     }
 
     public static void registerType(Class<?> clazz, ObjectSerializer serializer) {
@@ -52,7 +49,7 @@ public final class JsonResult implements IBinSerializable {
             //直接写Json
             if (result instanceof IJsonSerializable) {
                 var out        = new OutputStreamWriter(bs);
-                var jsonWriter = new JSONWriter(out);
+                var jsonWriter = new FastJsonWriter(out);
                 ((IJsonSerializable) result).writeToJson(jsonWriter);
                 jsonWriter.close();
                 return;

@@ -5,7 +5,7 @@ import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 /**
  * 实体成员模型基类
@@ -163,29 +163,20 @@ public abstract class EntityMemberModel implements IBinSerializable {
         } while (propIndex != 0);
     }
 
-    public final void writeToJson(JSONWriter writer) {
+    public final void writeToJson(IJsonWriter writer) {
         writer.startObject();
 
-        writer.writeKey("ID");
-        writer.writeValue(_memberId);
-
-        writer.writeKey("AllowNull");
-        writer.writeValue(_allowNull);
-
-        writer.writeKey("Comment");
-        writer.writeValue(_comment);
-
-        writer.writeKey("Name");
-        writer.writeValue(_name);
-
-        writer.writeKey("Type");
-        writer.writeValue(type().value);
-
+        writer.writeKeyValue("ID", _memberId);
+        writer.writeKeyValue("AllowNull",_allowNull);
+        writer.writeKeyValue("Comment",_comment);
+        writer.writeKeyValue("Name",_name);
+        writer.writeKeyValue("Type",type().value);
+        //写入子类成员
         writeJsonMembers(writer);
 
         writer.endObject();
     }
 
-    protected abstract void writeJsonMembers(JSONWriter writer);
+    protected abstract void writeJsonMembers(IJsonWriter writer);
     //endregion
 }

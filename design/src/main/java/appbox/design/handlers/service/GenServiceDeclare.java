@@ -7,7 +7,7 @@ import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;
 import appbox.serialization.IJsonSerializable;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +40,7 @@ public final class GenServiceDeclare implements IRequestHandler {
         public String declare;
 
         @Override
-        public void writeToJson(JSONWriter writer) {
+        public void writeToJson(IJsonWriter writer) {
             throw new RuntimeException("未实现");
         }
 

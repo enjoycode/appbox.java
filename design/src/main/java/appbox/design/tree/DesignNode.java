@@ -4,7 +4,7 @@ import appbox.design.common.CheckoutInfo;
 import appbox.design.services.CheckoutService;
 import appbox.runtime.RuntimeContext;
 import appbox.serialization.IJsonSerializable;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -149,17 +149,12 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     //region ====IJsonSerializable====
     @Override
-    public final void writeToJson(JSONWriter writer) {
+    public final void writeToJson(IJsonWriter writer) {
         writer.startObject();
 
-        writer.writeKey("ID");
-        writer.writeValue(id());
-
-        writer.writeKey("Type");
-        writer.writeValue(nodeType().value);
-
-        writer.writeKey("Text");
-        writer.writeValue(text());
+        writer.writeKeyValue("ID", id());
+        writer.writeKeyValue("Type", nodeType().value);
+        writer.writeKeyValue("Text", text());
 
         if (!(this instanceof ModelNode)) {
             writer.writeKey("Nodes");
@@ -178,7 +173,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         writer.endObject();
     }
 
-    protected void writeJsonMembers(JSONWriter writer) {
+    protected void writeJsonMembers(IJsonWriter writer) {
     }
     //endregion
 

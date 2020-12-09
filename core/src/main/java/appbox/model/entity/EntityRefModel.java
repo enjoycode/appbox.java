@@ -3,7 +3,7 @@ package appbox.model.entity;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
-import com.alibaba.fastjson.JSONWriter;
+import appbox.serialization.IJsonWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -189,15 +189,10 @@ public final class EntityRefModel extends EntityMemberModel {
     }
 
     @Override
-    protected void writeJsonMembers(JSONWriter writer) {
-        writer.writeKey("IsReverse");
-        writer.writeValue(isReverse);
-
-        writer.writeKey("IsAggregationRef");
-        writer.writeValue(isAggregationRef());
-
-        writer.writeKey("IsForeignKeyConstraint");
-        writer.writeValue(isForeignKeyConstraint);
+    protected void writeJsonMembers(IJsonWriter writer) {
+        writer.writeKeyValue("IsReverse", isReverse);
+        writer.writeKeyValue("IsAggregationRef", isAggregationRef());
+        writer.writeKeyValue("IsForeignKeyConstraint", isForeignKeyConstraint);
 
         writer.writeKey("RefModelIds");
         writer.startArray();
