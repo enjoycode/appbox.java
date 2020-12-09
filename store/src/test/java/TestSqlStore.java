@@ -3,6 +3,7 @@ import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.FieldWithOrder;
+import appbox.model.entity.SqlIndexModel;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
 import appbox.store.PgSqlStore;
@@ -34,6 +35,10 @@ public class TestSqlStore {
         model.sqlStoreOptions().setPrimaryKeys(
                 new FieldWithOrder[]{new FieldWithOrder(idMember.memberId())}
         );
+        //set idx
+        var ixId = new SqlIndexModel(model, "IX_ID", true
+                , new FieldWithOrder[] {new FieldWithOrder(idMember.memberId())}, null);
+        model.sqlStoreOptions().addIndex(ixId);
 
         var ctx = new MockRuntimeContext();
         ctx.injectApplicationModel(new ApplicationModel("appbox", "sys"));
