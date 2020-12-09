@@ -7,7 +7,6 @@ import appbox.model.ModelBase;
 import appbox.model.ModelFolder;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArg;
-import com.alibaba.fastjson.annotation.JSONField;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,13 +30,13 @@ public final class GetPendingChanges implements IRequestHandler {
                             var model  = (ModelBase) item;
                             var change = new ChangedInfo();
                             change.ModelType = model.modelType().name();
-                            change.ModelId   = model.name();
+                            change.ModelID   = model.name();
                             list.add(change);
                         } else if (item instanceof ModelFolder) {
                             var folder = (ModelFolder) item;
                             var change = new ChangedInfo();
                             change.ModelType = ModelType.Folder.name();
-                            change.ModelId   = folder.getTargetModelType().name();
+                            change.ModelID   = folder.getTargetModelType().name();
                             list.add(change);
                         }
                     }
@@ -47,7 +46,7 @@ public final class GetPendingChanges implements IRequestHandler {
 
     static final class ChangedInfo {
         public String ModelType;
-        public String ModelId;
+        public String ModelID;
     }
 
 }
