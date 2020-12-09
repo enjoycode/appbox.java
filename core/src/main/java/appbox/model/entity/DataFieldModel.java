@@ -49,7 +49,9 @@ public final class DataFieldModel extends EntityMemberModel {
     private DataFieldType _dataType;
     private int           _length; //仅用于Sql存储设置字符串最大长度(0=无限制)或Decimal整数部分长度
     private int           _decimals; //仅用于Sql存储设置Decimal小数部分长度
-    //TODO:默认值
+    private Object        _defaultValue; //默认值
+
+    //region ====Ctor====
 
     /** Only for serialization */
     public DataFieldModel(EntityModel owner) {
@@ -68,6 +70,7 @@ public final class DataFieldModel extends EntityMemberModel {
         _dataType     = dataType;
         _isForeignKey = isFK;
     }
+    //endregion
 
     //region ====Properties====
     @Override
@@ -100,6 +103,13 @@ public final class DataFieldModel extends EntityMemberModel {
 
     /** 是否引用外键 */
     public boolean isForeignKey() { return _isForeignKey; }
+
+    /** 默认值 */
+    public Object defaultValue() { return _defaultValue; }
+
+    public int length() { return _length; }
+
+    public int decimals() { return _decimals; }
     //endregion
 
     //region ====Design Methods====
@@ -138,7 +148,9 @@ public final class DataFieldModel extends EntityMemberModel {
             bs.writeVariant(_decimals, 6);
         }
 
-        //TODO:写入默认值
+        if (_defaultValue != null) {
+            bs.serialize(_defaultValue, 4);
+        }
 
         bs.writeBool(_isDataTypeChanged, 7);
 
@@ -162,6 +174,9 @@ public final class DataFieldModel extends EntityMemberModel {
                 case 3:
                     _enumModelId = bs.readLong();
                     break;
+                case 4:
+                    _defaultValue = bs.deserialize();
+                    break;
                 case 5:
                     _length = bs.readVariant();
                     break;
@@ -181,21 +196,15 @@ public final class DataFieldModel extends EntityMemberModel {
 
     @Override
     protected void writeJsonMembers(IJsonWriter writer) {
-        writer.writeKey("DataType");
-        writer.writeValue(_dataType.value);
+        writer.writeKeyValue("DataType", _dataType.value);
 
         if (_dataType == DataFieldType.Enum) {
-            writer.writeKey("EnumModelId");
-            writer.writeValue(Long.toUnsignedString(_enumModelId));
+            writer.writeKeyValue("EnumModelId", Long.toUnsignedString(_enumModelId));
         } else if (_dataType == DataFieldType.String) {
-            writer.writeKey("Length");
-            writer.writeValue(_length);
+            writer.writeKeyValue("Length", _length);
         } else if (_dataType == DataFieldType.Decimal) {
-            writer.writeKey("Length");
-            writer.writeValue(_length);
-
-            writer.writeKey("Decimals");
-            writer.writeValue(_decimals);
+            writer.writeKeyValue("Length", _length);
+            writer.writeKeyValue("Decimals", _decimals);
         }
     }
     //endregion

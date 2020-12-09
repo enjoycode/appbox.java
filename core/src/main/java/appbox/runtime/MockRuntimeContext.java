@@ -1,5 +1,6 @@
 package appbox.runtime;
 
+import appbox.design.IDesignContext;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.ModelBase;
@@ -8,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class MockRuntimeContext implements IRuntimeContext {
+public final class MockRuntimeContext implements IRuntimeContext, IDesignContext {
     private       ApplicationModel         applicationModel;
     private final HashMap<Long, ModelBase> models = new HashMap<>();
     private       ISessionInfo             session;
@@ -55,5 +56,10 @@ public final class MockRuntimeContext implements IRuntimeContext {
     @Override
     public void invalidModelsCache(String[] services, long[] others, boolean byPublish) {
 
+    }
+
+    @Override
+    public EntityModel getEntityModel(long modelId) {
+        return getModel(modelId);
     }
 }

@@ -1,6 +1,7 @@
 package appbox.store;
 
 import appbox.data.SqlEntity;
+import appbox.design.IDesignContext;
 import appbox.logging.Log;
 import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
@@ -12,6 +13,7 @@ import com.github.jasync.sql.db.Connection;
 import com.github.jasync.sql.db.QueryResult;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class SqlStore {
@@ -53,12 +55,31 @@ public abstract class SqlStore {
     /** 名称转义符，如PG用引号包括字段名称\"xxx\" */
     protected abstract char nameEscaper();
 
+    //region ====Connection & Transaction====
     protected abstract CompletableFuture<Connection> openConnection();
 
     protected abstract void closeConnection(Connection connection);
 
     public abstract CompletableFuture<DbTransaction> beginTransaction();
+    //endregion
 
+    //region ====DDL Methods====
+    protected abstract List<DbCommand> makeCreateTable(EntityModel model, IDesignContext ctx);
+
+    public CompletableFuture<Void> createTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
+        var cmds = makeCreateTable(model, ctx);
+        CompletableFuture<Long> task = null;
+        for(var cmd : cmds) {
+            if (task == null)
+                task = cmd.execNonQueryAsync(txn.getConnection());
+            else
+                task = task.thenCompose(r -> cmd.execNonQueryAsync(txn.getConnection()));
+        }
+        return task.thenAccept(r -> {});
+    }
+    //endregion
+
+    //region ====DML Methods====
     protected DbCommand buildInsertCommand(SqlEntity entity, EntityModel model) {
         //注意目前实现仅插入非空的字段，并且不缓存命令
         var cmd = new DbCommand();
@@ -141,4 +162,6 @@ public abstract class SqlStore {
                     return null;
                 });
     }
+    //endregion
+
 }

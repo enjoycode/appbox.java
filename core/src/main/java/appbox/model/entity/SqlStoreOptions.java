@@ -16,6 +16,8 @@ public final class SqlStoreOptions implements IEntityStoreOption {
     private byte _devIndexIdSeq;
     private byte _usrIndexIdSeq;
 
+    private List<FieldWithOrder> _primaryKeys;
+
     private long           _storeModelId; //映射的DataStoreModel的标识
     private DataStoreModel _dataStoreModel_cached; //仅用于缓存
 
@@ -34,6 +36,10 @@ public final class SqlStoreOptions implements IEntityStoreOption {
     }
 
     public DataStoreModel storeModel() { return _dataStoreModel_cached; }
+
+    public boolean hasPrimaryKeys() { return _primaryKeys != null && _primaryKeys.size() > 0; }
+
+    public List<FieldWithOrder> primaryKeys() { return _primaryKeys; }
 
     @Override
     public boolean hasIndexes() {

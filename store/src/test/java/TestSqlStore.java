@@ -1,3 +1,4 @@
+import appbox.design.IDesignContext;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
@@ -7,18 +8,20 @@ import appbox.store.PgSqlStore;
 import appbox.store.SqlStore;
 import appbox.store.query.SqlQuery;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSqlStore {
 
-    private static final String connection  = "jdbc:postgresql://10.211.55.2:54321/ABStore?user=lushuaijun&password=123456";
-    private static final long   testStoreId = 1;
+    private static final String      connection  = "jdbc:postgresql://10.211.55.2:54321/ABStore?user=lushuaijun&password=123456";
+    private static final long        testStoreId = 1;
+    private static       EntityModel model;
 
     @BeforeAll
     public static void init() throws Exception {
-        var model = new EntityModel(ELog.MODEL_ID, "ELog");
+        model = new EntityModel(ELog.MODEL_ID, "ELog2");
         model.bindToSqlStore(testStoreId);
         var idMember   = new DataFieldModel(model, "Id", DataFieldModel.DataFieldType.Int, false);
         var nameMember = new DataFieldModel(model, "Name", DataFieldModel.DataFieldType.String, true);
@@ -36,7 +39,18 @@ public class TestSqlStore {
         SqlStore.inject(testStoreId, db);
     }
 
+
     @Test
+    @Order(1)
+    public void testCreateTable() throws Exception {
+        var db = SqlStore.get(testStoreId);
+        var txn = db.beginTransaction().get();
+        db.createTableAsync(model, txn, (IDesignContext) RuntimeContext.current()).get();
+        txn.commitAsync().get();
+    }
+
+    @Test
+    @Order(10)
     public void testInsert() throws Exception {
         var log = new ELog();
         log.setId(100);
@@ -47,6 +61,7 @@ public class TestSqlStore {
     }
 
     @Test
+    @Order(20)
     public void testQueryToList() throws Exception {
         var q    = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
         var list = q.toListAsync().get();
@@ -54,6 +69,7 @@ public class TestSqlStore {
     }
 
     @Test
+    @Order(30)
     public void testQueryToDynamic() throws Exception {
         var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
         q.where(q.t.m("Id").eq(200)); //t->t.Id == 200
@@ -70,9 +86,10 @@ public class TestSqlStore {
     }
 
     @Test
+    @Order(40)
     public void testQueryToExpand() throws Exception {
         var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
-        var list = q.toListAsync(r -> new ELog(){
+        var list = q.toListAsync(r -> new ELog() {
             final String extName = "Ext" + r.getString(1); //扩展的字段
         }, q.t.m("Id"), q.t.m("Name"), q.t.m("Address")).get();
         assertNotNull(list);

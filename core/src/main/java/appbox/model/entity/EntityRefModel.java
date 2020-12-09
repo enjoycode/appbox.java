@@ -46,6 +46,8 @@ public final class EntityRefModel extends EntityMemberModel {
     private EntityRefActionRule updateRule = EntityRefActionRule.Cascade;
     private EntityRefActionRule deleteRule = EntityRefActionRule.NoAction;
 
+    //region ====Ctor====
+
     /** Only for serialization */
     public EntityRefModel(EntityModel owner) {
         super(owner);
@@ -86,6 +88,7 @@ public final class EntityRefModel extends EntityMemberModel {
         this.typeMemberId      = typeMemberId;
         isForeignKeyConstraint = foreignConstraint;
     }
+    //endregion
 
     //region ====Properties====
 
@@ -103,6 +106,10 @@ public final class EntityRefModel extends EntityMemberModel {
     public short[] getFKMemberIds() { return fkMemberIds; }
 
     public short getTypeMemberId() { return typeMemberId; }
+
+    public EntityRefActionRule updateRule() { return updateRule; }
+
+    public EntityRefActionRule deleteRule() { return deleteRule; }
 
     @Override
     public EntityMemberType type() {
