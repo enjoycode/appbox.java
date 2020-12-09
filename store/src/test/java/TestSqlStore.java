@@ -2,6 +2,7 @@ import appbox.design.IDesignContext;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
+import appbox.model.entity.FieldWithOrder;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
 import appbox.store.PgSqlStore;
@@ -29,6 +30,10 @@ public class TestSqlStore {
         model.addSysMember(idMember, ELog.ID_ID);
         model.addSysMember(nameMember, ELog.NAME_ID);
         model.addSysMember(addrMember, ELog.ADDR_ID);
+        //set pk
+        model.sqlStoreOptions().setPrimaryKeys(
+                new FieldWithOrder[]{new FieldWithOrder(idMember.memberId())}
+        );
 
         var ctx = new MockRuntimeContext();
         ctx.injectApplicationModel(new ApplicationModel("appbox", "sys"));
@@ -43,7 +48,7 @@ public class TestSqlStore {
     @Test
     @Order(1)
     public void testCreateTable() throws Exception {
-        var db = SqlStore.get(testStoreId);
+        var db  = SqlStore.get(testStoreId);
         var txn = db.beginTransaction().get();
         db.createTableAsync(model, txn, (IDesignContext) RuntimeContext.current()).get();
         txn.commitAsync().get();

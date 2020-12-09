@@ -73,6 +73,8 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         var fks       = new ArrayList<CharSequence>(); //引用外键集合
 
         var sb = new StringBuilder(200);
+
+        //Build Create Table
         sb.append("CREATE TABLE \"");
         sb.append(tableName);
         sb.append("\" (");
@@ -95,6 +97,25 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
             }
         }
         sb.append(");");
+
+        //Build PrimaryKey
+        if (model.sqlStoreOptions().hasPrimaryKeys()) {
+            //使用模型标识作为PK名称以避免重命名影响
+            sb.append("ALTER TABLE \"");
+            sb.append(tableName);
+            sb.append("\" ADD CONSTRAINT \"PK_");
+            sb.append(Long.toUnsignedString(model.id()));
+            sb.append("\" PRIMARY KEY (");
+            for (int i = 0; i < model.sqlStoreOptions().primaryKeys().length; i++) {
+                var mm = (DataFieldModel)model.getMember(model.sqlStoreOptions().primaryKeys()[i].memberId);
+                if (i != 0)
+                    sb.append(',');
+                sb.append("\"");
+                sb.append(mm.sqlColName());
+                sb.append("\"");
+            }
+            sb.append(");");
+        }
 
         //加入EntityRef引用外键
         for (var fk : fks) {
@@ -231,8 +252,8 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         sb.append(") REFERENCES \"");
         sb.append(refModel.getSqlTableName(false, ctx)); //引用目标使用新名称
         sb.append("\" (");
-        for (int i = 0; i < refModel.sqlStoreOptions().primaryKeys().size(); i++) {
-            var pk = (DataFieldModel) refModel.getMember(refModel.sqlStoreOptions().primaryKeys().get(i).memberId);
+        for (int i = 0; i < refModel.sqlStoreOptions().primaryKeys().length; i++) {
+            var pk = (DataFieldModel) refModel.getMember(refModel.sqlStoreOptions().primaryKeys()[i].memberId);
             if (i != 0)
                 sb.append(',');
             sb.append("\"");
