@@ -4,7 +4,9 @@ import appbox.data.PersistentState;
 import appbox.model.entity.*;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IJsonSerializable;
 import appbox.utils.IdUtil;
+import com.alibaba.fastjson.JSONWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +14,7 @@ import java.util.stream.Collectors;
 
 import static appbox.model.entity.EntityMemberModel.EntityMemberType;
 
-public final class EntityModel extends ModelBase {
+public final class EntityModel extends ModelBase implements IJsonSerializable {
     private static final short MAX_MEMBER_ID = 512;
 
     private short _devMemberIdSeq;
@@ -319,6 +321,34 @@ public final class EntityModel extends ModelBase {
                     throw new RuntimeException("Unknown field id: " + propIndex);
             }
         } while (propIndex != 0);
+    }
+
+    @Override
+    public void writeToJson(JSONWriter writer) {
+        writer.startObject();
+
+        writer.writeKey("IsNew");
+        writer.writeValue(persistentState() == PersistentState.Detached);
+
+        //写入成员列表,注意不向前端发送EntityRef的隐藏成员及标为删除的成员
+        writer.writeKey("Members");
+        var ms = _members.stream()
+            .filter(t-> t.persistentState() != PersistentState.Deleted
+                && !(t instanceof DataFieldModel && ((DataFieldModel)t).isForeignKey()))
+                .collect(Collectors.toList());
+        writer.startArray();
+        for(var m : ms) {
+            m.writeToJson(writer);
+        }
+        writer.endArray();
+
+        //写入存储选项
+        if (_storeOptions != null) {
+            writer.writeKey("StoreOptions");
+            _storeOptions.writeToJson(writer);
+        }
+
+        writer.endObject();
     }
     //endregion
 

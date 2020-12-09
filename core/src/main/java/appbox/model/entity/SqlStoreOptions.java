@@ -1,8 +1,10 @@
 package appbox.model.entity;
 
+import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import com.alibaba.fastjson.JSONWriter;
 
 import java.util.List;
 
@@ -14,7 +16,8 @@ public final class SqlStoreOptions implements IEntityStoreOption {
     private byte _devIndexIdSeq;
     private byte _usrIndexIdSeq;
 
-    private long _storeModelId; //映射的DataStoreModel的标识
+    private long           _storeModelId; //映射的DataStoreModel的标识
+    private DataStoreModel _dataStoreModel_cached; //仅用于缓存
 
     /** only for serialization */
     public SqlStoreOptions(EntityModel owner) {
@@ -26,9 +29,11 @@ public final class SqlStoreOptions implements IEntityStoreOption {
         _storeModelId = storeModelId;
     }
 
-    public long getStoreModelId() {
+    public long storeModelId() {
         return _storeModelId;
     }
+
+    public DataStoreModel storeModel() { return _dataStoreModel_cached; }
 
     @Override
     public boolean hasIndexes() {
@@ -45,6 +50,11 @@ public final class SqlStoreOptions implements IEntityStoreOption {
 
     }
 
+    /** 仅用于设计时 */
+    public void setDataStoreModel(DataStoreModel dataStoreModel) {
+        _dataStoreModel_cached = dataStoreModel;
+    }
+
     //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) {
@@ -55,6 +65,30 @@ public final class SqlStoreOptions implements IEntityStoreOption {
     public void readFrom(BinDeserializer bs) {
 
     }
+
+    @Override
+    public void writeToJson(JSONWriter writer) {
+        writer.startObject();
+
+        writer.writeKey("StoreName");
+        writer.writeValue(_dataStoreModel_cached.name());
+
+        writer.writeKey("StoreKind");
+        writer.writeValue(_dataStoreModel_cached.kind().value);
+
+        writer.writeKey("PrimaryKeys");
+        writer.startArray();
+        //TODO:
+        writer.endArray();
+
+        writer.writeKey("Indexes");
+        writer.startArray();
+        //TODO:
+        writer.endArray();
+
+        writer.endObject();
+    }
+
     //endregion
 
 }

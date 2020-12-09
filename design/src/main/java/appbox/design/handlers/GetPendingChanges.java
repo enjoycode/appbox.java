@@ -30,14 +30,14 @@ public final class GetPendingChanges implements IRequestHandler {
                         if (item instanceof ModelBase) {
                             var model  = (ModelBase) item;
                             var change = new ChangedInfo();
-                            change.modelType = model.modelType().name();
-                            change.modelId   = model.name();
+                            change.ModelType = model.modelType().name();
+                            change.ModelId   = model.name();
                             list.add(change);
                         } else if (item instanceof ModelFolder) {
                             var folder = (ModelFolder) item;
                             var change = new ChangedInfo();
-                            change.modelType = ModelType.Folder.name();
-                            change.modelId   = folder.getTargetModelType().name();
+                            change.ModelType = ModelType.Folder.name();
+                            change.ModelId   = folder.getTargetModelType().name();
                             list.add(change);
                         }
                     }
@@ -46,10 +46,8 @@ public final class GetPendingChanges implements IRequestHandler {
     }
 
     static final class ChangedInfo {
-        @JSONField(name = "ModelType")
-        public String modelType;
-        @JSONField(name = "ModelID")
-        public String modelId;
+        public String ModelType;
+        public String ModelId;
     }
 
 }

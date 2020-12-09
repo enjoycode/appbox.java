@@ -3,6 +3,7 @@ package appbox.design.services;
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.entity.GetEntityModel;
+import appbox.design.handlers.entity.LoadEntityData;
 import appbox.design.handlers.service.GenServiceDeclare;
 import appbox.design.handlers.service.GetServiceMethod;
 import appbox.design.handlers.service.OpenServiceModel;
@@ -25,13 +26,15 @@ public final class DesignService implements IService {
         put("GetCompletion", new GetCompletion());
         put("CheckCode", new CheckCode());
         put("CloseDesigner", new CloseDesigner());
-        put("GetEntityModel", new GetEntityModel());
         put("SaveModel", new SaveModel());
         put("GetPendingChanges", new GetPendingChanges());
         put("Publish", new Publish());
         //----DataStore----
         put("NewDataStore", new NewDataStore());
         put("SaveDataStore", new SaveDataStore());
+        //----Entity----
+        put("GetEntityModel", new GetEntityModel());
+        put("LoadEntityData", new LoadEntityData());
         //----Service----
         put("OpenServiceModel", new OpenServiceModel());
         put("GenServiceDeclare", new GenServiceDeclare());

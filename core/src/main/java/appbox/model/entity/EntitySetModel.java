@@ -3,6 +3,7 @@ package appbox.model.entity;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import com.alibaba.fastjson.JSONWriter;
 
 public final class EntitySetModel extends EntityMemberModel {
 
@@ -66,6 +67,15 @@ public final class EntitySetModel extends EntityMemberModel {
                     throw new RuntimeException("Unknown field id: " + propIndex);
             }
         } while (propIndex != 0);
+    }
+
+    @Override
+    protected void writeJsonMembers(JSONWriter writer) {
+        writer.writeKey("RefModelId");
+        writer.writeValue(Long.toUnsignedString(_refModelId));
+
+        writer.writeKey("RefMemberId");
+        writer.writeValue(_refMemberId);
     }
     //endregion
 

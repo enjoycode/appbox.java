@@ -3,11 +3,13 @@ package appbox.model.entity;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import com.alibaba.fastjson.JSONWriter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class EntityRefModel extends EntityMemberModel {
+    //region ====EntityRefActionRule====
     public enum EntityRefActionRule {
         NoAction(0),
         Cascade(1),
@@ -28,6 +30,7 @@ public final class EntityRefModel extends EntityMemberModel {
             throw new RuntimeException("Unknown value: " + v);
         }
     }
+    //endregion
 
     private       boolean    isReverse; //是否反向引用 eg: A->B , B->A(反向)
     private       boolean    isForeignKeyConstraint; //是否强制外键约束
@@ -183,6 +186,25 @@ public final class EntityRefModel extends EntityMemberModel {
                     throw new RuntimeException("Unknown field id: " + propIndex);
             }
         } while (propIndex != 0);
+    }
+
+    @Override
+    protected void writeJsonMembers(JSONWriter writer) {
+        writer.writeKey("IsReverse");
+        writer.writeValue(isReverse);
+
+        writer.writeKey("IsAggregationRef");
+        writer.writeValue(isAggregationRef());
+
+        writer.writeKey("IsForeignKeyConstraint");
+        writer.writeValue(isForeignKeyConstraint);
+
+        writer.writeKey("RefModelIds");
+        writer.startArray();
+        for (var rid : refModelIds) {
+            writer.writeValue(Long.toUnsignedString(rid));
+        }
+        writer.endArray();
     }
     //endregion
 

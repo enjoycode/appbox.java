@@ -78,21 +78,21 @@ public abstract class ModelBase implements IBinSerializable {
     //endregion
 
     //region ====Design Methods====
-    public boolean isNameChanged() {
+    public final boolean isNameChanged() {
         return _originalName != null && !_originalName.equals(_name);
     }
 
-    public void increaseVersion() {
+    public final void increaseVersion() {
         _version += 1;
     }
 
-    public void checkDesignMode() throws RuntimeException {
+    public final void checkDesignMode() throws RuntimeException {
         if (!designMode()) {
             throw new RuntimeException();
         }
     }
 
-    public void onPropertyChanged() {
+    public final void onPropertyChanged() {
         if (_persistentState == PersistentState.Unchnaged) {
             _persistentState = PersistentState.Modified;
         }

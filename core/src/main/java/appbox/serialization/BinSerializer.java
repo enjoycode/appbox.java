@@ -191,6 +191,11 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         _stream.writeString(value);
     }
 
+    /** 写入不带长度信息的utf8 */
+    public void writeUtf8(String value) {
+        _stream.writeUtf8(value);
+    }
+
     public void writeUUID(UUID value) {
         _stream.writeUUID(value);
     }

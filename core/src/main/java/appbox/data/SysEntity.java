@@ -8,11 +8,11 @@ public abstract class SysEntity extends Entity implements IKVRow {
         super(modelId);
     }
 
-    public EntityId id() {
+    public final EntityId id() {
         return _id;
     }
 
-    protected PersistentState persistentState() { return _persistentState; }
+    protected final PersistentState persistentState() { return _persistentState; }
 
     protected final void onPropertyChanged(short memberId) {
         //TODO: track member changes

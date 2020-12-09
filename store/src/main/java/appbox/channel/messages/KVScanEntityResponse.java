@@ -7,14 +7,15 @@ import appbox.store.KeyUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 public final class KVScanEntityResponse<T extends SysEntity> extends KVScanResponse {
 
-    public        List<T>  result;
-    private final Class<T> clazz;
+    public        List<T>     result;
+    private final Supplier<T> creator; //实例创建
 
-    public KVScanEntityResponse(Class<T> clazz) {
-        this.clazz = clazz;
+    public KVScanEntityResponse(Supplier<T> creator) {
+        this.creator = creator;
     }
 
     @Override
@@ -31,12 +32,7 @@ public final class KVScanEntityResponse<T extends SysEntity> extends KVScanRespo
             var keySize = bs.readNativeVariant(); //Row's key size
             assert keySize == KeyUtil.ENTITY_KEY_SIZE;
             //创建对象实例并从RowKey读取Id
-            T obj = null;
-            try {
-                obj = clazz.getDeclaredConstructor().newInstance();
-            } catch (Exception ex) {
-                throw new RuntimeException("Can't create instance.");
-            }
+            T obj = creator.get();
             result.add(obj);
             obj.id().readFrom(bs);
             //开始读取当前行的各个字段
@@ -44,14 +40,4 @@ public final class KVScanEntityResponse<T extends SysEntity> extends KVScanRespo
         }
     }
 
-    //private T makeInstance() throws Exception {
-    //    if (clazz == null) {
-    //        var testType = ReflectUtil.getRawType(this.getClass());
-    //
-    //        Type superClass = getClass().getGenericSuperclass();
-    //        Type type       = ((ParameterizedType) superClass).getActualTypeArguments()[0];
-    //        clazz = ReflectUtil.getRawType(type);
-    //    }
-    //    return (T) clazz.getDeclaredConstructor().newInstance();
-    //}
 }

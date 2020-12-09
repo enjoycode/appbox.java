@@ -16,7 +16,18 @@ import java.nio.charset.StandardCharsets;
  * 用于包装服务端返回给前端的Json序列化后的结果
  */
 public final class JsonResult implements IBinSerializable {
-    private static final SerializeConfig config = new SerializeConfig();
+    private static final SerializeConfig config    = new SerializeConfig();
+    private static final byte[]          JSON_NULL = "null".getBytes(StandardCharsets.UTF_8);
+
+    static {
+        //TODO:待重新实现IJsonSerializable接口及自定义JSONWriter
+        registerType(SysEntityKVO.class, (serializer, object, fieldName, fieldType, features) -> {
+            var jsonWriter = new JSONWriter(serializer.getWriter());
+            var instance   = (IJsonSerializable) object;
+            instance.writeToJson(jsonWriter);
+            jsonWriter.close();
+        });
+    }
 
     public static void registerType(Class<?> clazz, ObjectSerializer serializer) {
         config.put(clazz, serializer);
@@ -31,6 +42,13 @@ public final class JsonResult implements IBinSerializable {
     @Override
     public void writeTo(BinSerializer bs) {
         try {
+            if (result == null) {
+                bs.write(JSON_NULL, 0, JSON_NULL.length);
+                return;
+            }
+
+            //TODO:fast for primitive types
+
             //直接写Json
             if (result instanceof IJsonSerializable) {
                 var out        = new OutputStreamWriter(bs);

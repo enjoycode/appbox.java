@@ -19,10 +19,9 @@ import java.util.ArrayList;
 public class TestServiceCodeGenerator {
 
     private static long makeServiceModelId(long idIndex) {
-        var modelId = ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
+        return ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
                 | ((long) ModelType.Service.value << IdUtil.MODELID_TYPE_OFFSET)
                 | (idIndex << IdUtil.MODELID_SEQ_OFFSET);
-        return modelId;
     }
 
     private static InputStream loadTestServiceCode(IPath path) {

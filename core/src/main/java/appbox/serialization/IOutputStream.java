@@ -87,7 +87,7 @@ public interface IOutputStream {
         }
     }
 
-    private void writeUtf8(String value) {
+    default void writeUtf8(String value) {
         int  srcPos = 0;
         int  srcLen = value.length();
         char c, d;

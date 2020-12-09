@@ -5,6 +5,7 @@ import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.utils.IdUtil;
+import com.alibaba.fastjson.JSONWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +72,17 @@ public final class SysStoreOptions implements IEntityStoreOption {
     //endregion
 
     //region ====Design Methods====
+    public boolean isPartitionKey(short memberId) {
+        if (hasPartitionKeys()) {
+            for (PartitionKey partitionKey : _partitionKeys) {
+                if (partitionKey.memberId == memberId) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public void acceptChanges() {
         if (hasIndexes()) {
@@ -127,17 +139,6 @@ public final class SysStoreOptions implements IEntityStoreOption {
                 | (_isMVCC ? 1 : 0) << IdUtil.RAFTGROUPID_FLAGS_MVCC_OFFSET);
     }
     //endregion
-
-    public boolean isPartitionKey(short memberId) {
-        if (hasPartitionKeys()) {
-            for (PartitionKey partitionKey : _partitionKeys) {
-                if (partitionKey.memberId == memberId) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 
     //region ====Serialization====
     @Override
@@ -222,6 +223,30 @@ public final class SysStoreOptions implements IEntityStoreOption {
                     throw new RuntimeException("Unknown field id:" + propIndex);
             }
         } while (propIndex != 0);
+    }
+
+    @Override
+    public void writeToJson(JSONWriter writer) {
+        writer.startObject();
+
+        writer.writeKey("OrderByDesc");
+        writer.writeValue(_orderByDesc);
+
+        //写入索引
+        writer.writeKey("Indexes");
+        writer.startArray();
+        if (hasIndexes()) {
+            //TODO:
+        }
+        writer.endArray();
+
+        //写入分区键列表
+        writer.writeKey("PartitionKeys");
+        writer.startArray();
+        //TODO:
+        writer.endArray();
+
+        writer.endObject();
     }
     //endregion
 }

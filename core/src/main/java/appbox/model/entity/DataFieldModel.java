@@ -4,8 +4,10 @@ import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import com.alibaba.fastjson.JSONWriter;
 
 public final class DataFieldModel extends EntityMemberModel {
+    //region ====DataFieldType====
     public enum DataFieldType {
         EntityId(0),
         String(1),
@@ -37,6 +39,7 @@ public final class DataFieldModel extends EntityMemberModel {
             throw new RuntimeException("Unknown value: " + v);
         }
     }
+    //endregion
 
     private boolean       _isForeignKey; //是否引用外键
     private boolean       _isDataTypeChanged; //字段类型、AllowNull及DefaultValue变更均视为DataTypeChanged
@@ -94,6 +97,9 @@ public final class DataFieldModel extends EntityMemberModel {
     public boolean isPartitionKey() {
         return owner.sysStoreOptions() != null && owner.sysStoreOptions().isPartitionKey(memberId());
     }
+
+    /** 是否引用外键 */
+    public boolean isForeignKey() { return _isForeignKey; }
     //endregion
 
     //region ====Design Methods====
@@ -171,6 +177,26 @@ public final class DataFieldModel extends EntityMemberModel {
                     throw new RuntimeException("Unknown field id: " + propIndex);
             }
         } while (propIndex != 0);
+    }
+
+    @Override
+    protected void writeJsonMembers(JSONWriter writer) {
+        writer.writeKey("DataType");
+        writer.writeValue(_dataType.value);
+
+        if (_dataType == DataFieldType.Enum) {
+            writer.writeKey("EnumModelId");
+            writer.writeValue(Long.toUnsignedString(_enumModelId));
+        } else if (_dataType == DataFieldType.String) {
+            writer.writeKey("Length");
+            writer.writeValue(_length);
+        } else if (_dataType == DataFieldType.Decimal) {
+            writer.writeKey("Length");
+            writer.writeValue(_length);
+
+            writer.writeKey("Decimals");
+            writer.writeValue(_decimals);
+        }
     }
     //endregion
 

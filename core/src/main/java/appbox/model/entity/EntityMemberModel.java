@@ -5,11 +5,13 @@ import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import com.alibaba.fastjson.JSONWriter;
 
 /**
  * 实体成员模型基类
  */
 public abstract class EntityMemberModel implements IBinSerializable {
+    //region ====EntityMemberType====
     public enum EntityMemberType {
         DataField(0), EntityRef(2), EntitySet(3);
         public final byte value;
@@ -18,6 +20,7 @@ public abstract class EntityMemberModel implements IBinSerializable {
             value = (byte) v;
         }
     }
+    //endregion
 
     public final EntityModel owner;     //不用序列化
 
@@ -57,7 +60,7 @@ public abstract class EntityMemberModel implements IBinSerializable {
         return _memberId;
     }
 
-    public PersistentState persistentState() {
+    public final PersistentState persistentState() {
         return _persistentState;
     }
 
@@ -159,5 +162,30 @@ public abstract class EntityMemberModel implements IBinSerializable {
 
         } while (propIndex != 0);
     }
+
+    public final void writeToJson(JSONWriter writer) {
+        writer.startObject();
+
+        writer.writeKey("ID");
+        writer.writeValue(_memberId);
+
+        writer.writeKey("AllowNull");
+        writer.writeValue(_allowNull);
+
+        writer.writeKey("Comment");
+        writer.writeValue(_comment);
+
+        writer.writeKey("Name");
+        writer.writeValue(_name);
+
+        writer.writeKey("Type");
+        writer.writeValue(type().value);
+
+        writeJsonMembers(writer);
+
+        writer.endObject();
+    }
+
+    protected abstract void writeJsonMembers(JSONWriter writer);
     //endregion
 }

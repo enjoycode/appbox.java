@@ -82,7 +82,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         //if (_rootIncluder != null)
         //    await _rootIncluder.AddSelects(this, model);
 
-        var db = SqlStore.get(model.sqlStoreOptions().getStoreModelId());
+        var db = SqlStore.get(model.sqlStoreOptions().storeModelId());
         return db.runQuery(this).thenApply(res -> {
             Log.debug("共读取: " + res.getRows().size());
             var rows      = res.getRows();
@@ -117,7 +117,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         }
 
         EntityModel model = RuntimeContext.current().getModel(t.modelId);
-        var         db    = SqlStore.get(model.sqlStoreOptions().getStoreModelId());
+        var         db    = SqlStore.get(model.sqlStoreOptions().storeModelId());
         return db.runQuery(this).thenApply(res -> {
             Log.debug("共读取: " + res.getRows().size());
             var rows        = res.getRows();
