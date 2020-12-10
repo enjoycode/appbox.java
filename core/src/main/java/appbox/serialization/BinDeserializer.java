@@ -5,12 +5,12 @@ import appbox.data.EntityId;
 import appbox.logging.Log;
 import appbox.utils.IdUtil;
 
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public final class BinDeserializer implements IEntityMemberReader {
@@ -65,7 +65,7 @@ public final class BinDeserializer implements IEntityMemberReader {
             Object result = null;
             //TODO: 先处理数组及范型类型
             result = serializer.creator.get();
-            addToObjectRefs(result);
+            //addToObjectRefs(result);
             serializer.read(this, result); return result;
         }
     }
@@ -132,6 +132,74 @@ public final class BinDeserializer implements IEntityMemberReader {
     public void read(byte[] buffer, int offset, int count) {
         _stream.read(buffer, offset, count);
     }
+
+    //region ====Collections====
+    //private static <E extends IBinSerializable> Supplier<E> getCreator(Class<E> clazz) {
+    //    var serializer = TypeSerializer.getSerializer(clazz);
+    //
+    //    Supplier<E> creator = null;
+    //    if (serializer != null) {
+    //        creator = () -> (E) serializer.creator;
+    //    } else {
+    //        try {
+    //            var ctor = clazz.getDeclaredConstructor();
+    //            creator = () -> {
+    //                try {
+    //                    return ctor.newInstance();
+    //                } catch (Exception e) {
+    //                    throw new RuntimeException(e);
+    //                }
+    //            };
+    //        } catch (Exception ex) {
+    //            throw new RuntimeException(ex);
+    //        }
+    //    }
+    //    return creator;
+    //}
+
+    public <E extends IBinSerializable> E[] readArray(IntFunction<E[]> arrayMaker, Supplier<E> elementMaker) {
+        var count = readVariant();
+        if (count == -1)
+            return null;
+        //else if (count == -2)
+
+        E[] array = arrayMaker.apply(count);
+        for (int i = 0; i < count; i++) {
+            if (_stream.readBool()) {
+                array[i] = elementMaker.get();
+                array[i].readFrom(this);
+            }
+        }
+        return array;
+    }
+
+    public <E extends IBinSerializable> List<E> readList(Supplier<E> elementMaker) {
+        var count = readVariant();
+        if (count == -1)
+            return null;
+        //else if (count == -2)
+
+        var list    = new ArrayList<E>(count);
+        //addToObjectRefs(list);
+        for (int i = 0; i < count; i++) {
+            if (_stream.readBool()) {
+                var element = elementMaker.get();
+                element.readFrom(this);
+                list.add(element);
+            } else {
+                list.add(null);
+            }
+        }
+        return list;
+    }
+
+    private void addToObjectRefs(Object obj) {
+        if (_objRefItems == null)
+            _objRefItems = new ArrayList<>();
+
+        _objRefItems.add(obj);
+    }
+    //endregion
 
     //region ====IEntityMemberReader====
 
@@ -201,84 +269,6 @@ public final class BinDeserializer implements IEntityMemberReader {
         var id = new EntityId();
         id.readFrom(this);
         return id;
-    }
-
-    public List<?> readList(Class clz) {
-        return readList(clz, null);
-    }
-
-    public List<?> readList(Class clz, Supplier<List<?>> creator) {
-        int count = readVariant();
-        if (count == -1)
-            return null;
-        else if (count == -2)
-            return _objRefItems;
-
-        List<?> list = creator == null ? new ArrayList<>(count) : creator.get();
-        addToObjectRefs(list);
-        readCollection(clz, count, list);
-        return list;
-    }
-
-    private void readCollection(Class clz, int count, List list) {
-        if (count == 0)
-            return;
-
-        var serializer = TypeSerializer.getSerializer(clz);
-        if (serializer == null || clz != String.class) //元素为引用类型
-        {
-            for (int i = 0; i < count; i++) {
-                list.add(deserialize());
-            }
-        } else //元素为值类型
-        {
-            //TODO check
-            //if (serializer.genericTypeCount > 0) //范型值类型
-            //{
-            //    for (int i = 0; i < count; i++)
-            //    {
-            //        Object element =newInstance(clz);
-            //        serializer.read(this, element);
-            //        list.add(deserialize());
-            //    }
-            //}
-            //else
-            if (serializer.creator != null) //带有构造器的值类型
-            {
-                for (int i = 0; i < count; i++) {
-                    Object element = newInstance(clz);
-                    serializer.read(this, element);
-                    list.add(deserialize());
-                }
-            } else //其他值类型
-            {
-                for (int i = 0; i < count; i++) {
-                    list.add(serializer.read(this, null));
-                }
-            }
-        }
-    }
-
-    Object newInstance(Class clz) {
-        try {
-            return clz.getDeclaredConstructor().newInstance();
-        } catch (InstantiationException e) {
-            Log.error(e.getMessage());
-        } catch (IllegalAccessException e) {
-            Log.error(e.getMessage());
-        } catch (InvocationTargetException e) {
-            Log.error(e.getMessage());
-        } catch (NoSuchMethodException e) {
-            Log.error(e.getMessage());
-        }
-        return null;
-    }
-
-    private void addToObjectRefs(Object obj) {
-        if (_objRefItems == null)
-            _objRefItems = new ArrayList<>();
-
-        _objRefItems.add(obj);
     }
 
     //endregion

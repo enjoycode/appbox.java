@@ -29,7 +29,7 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     //region ====static helper====
     public static ByteArrayOutputStream serializeTo(Object obj, boolean compress) {
         var output = new BytesOutputStream(1024);
-        var bs = BinSerializer.rentFromPool(output);
+        var bs     = BinSerializer.rentFromPool(output);
         try {
             bs.serialize(obj);
         } finally {
@@ -82,7 +82,8 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
         //写入类型信息
         _stream.writeByte(serializer.payloadType);
         //TODO:写入附加类型信息
-        addToObjectRefs(obj);
+
+        //addToObjectRefs(obj);
         //写入数据
         serializer.write(this, obj);
     }
@@ -208,6 +209,73 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
     public void finishWriteFields() {
         _stream.writeVariant(0);
     }
+
+    //region ====Collections====
+    public <E extends IBinSerializable> void writeArray(E[] array, int field) {
+        _stream.writeVariant(field);
+        if (checkNullOrSerialized(array))
+            return;
+
+        //addToObjectRefs(array);
+        writeVariant(array.length);
+        for (E element : array) {
+            _stream.writeBool(element != null);
+            if (element != null) {
+                element.writeTo(this);
+            }
+        }
+    }
+
+    public <E extends IBinSerializable> void writeList(List<E> list, int fieldId) {
+        _stream.writeVariant(fieldId);
+        if (checkNullOrSerialized(list))
+            return;
+
+        //addToObjectRefs(list);
+        writeVariant(list.size());
+        for (E element : list) {
+            _stream.writeBool(element != null);
+            if (element != null) {
+                element.writeTo(this);
+            }
+        }
+    }
+
+    private boolean checkNullOrSerialized(Object obj) {
+        if (obj == null) {
+            write(-1);
+            return true;
+        }
+
+        //int index = indexOfObjectRefs(obj);
+        //if (index > -1) {
+        //    write(-2);
+        //    write(index);
+        //    return true;
+        //}
+
+        //注意：不能在这里AddToObjectRefs(obj);
+        return false;
+    }
+
+    private void addToObjectRefs(Object obj) {
+        if (_objRefItems == null)
+            _objRefItems = new ArrayList<>();
+
+        _objRefItems.add(obj);
+    }
+
+    private int indexOfObjectRefs(Object obj) {
+        if (_objRefItems == null || _objRefItems.size() == 0)
+            return -1;
+
+        for (int i = 0; i < _objRefItems.size(); i++) {
+            if (_objRefItems.get(i).equals(obj))
+                return i;
+        }
+        return -1;
+    }
+    //endregion
 
     //region ===OutputStream====
     @Override
@@ -346,72 +414,6 @@ public final class BinSerializer extends OutputStream implements IEntityMemberWr
             _stream.writeLong(value.getTime());
         }
     }
-
-    public void writeList(List list, int fieldId) {
-        _stream.writeVariant(fieldId);
-        if (checkNullOrSerialized(list))
-            return;
-
-        addToObjectRefs(list);
-        write(list.size());
-        writeCollection(list);
-    }
-
-    private void writeCollection(List list) {
-        if (list.size() == 0)
-            return;
-
-        var type = list.get(0).getClass();
-        //尝试获取elementType有没有相应的序列化实现存在
-        var serializer = TypeSerializer.getSerializer(type);
-        if (serializer == null || type != String.class) //引用类型，注意：elementType == typeof(Object)没有序列化实现
-        {
-            for (int i = 0; i < list.size(); i++) {
-                serialize(list.get(i));
-            }
-        } else //值类型
-        {
-            for (int i = 0; i < list.size(); i++) {
-                serializer.write(this, list.get(i));
-            }
-        }
-    }
-
-    private boolean checkNullOrSerialized(Object obj) {
-        if (obj == null) {
-            write(-1);
-            return true;
-        }
-
-        int index = indexOfObjectRefs(obj);
-        if (index > -1) {
-            write(-2);
-            write(index);
-            return true;
-        }
-
-        //注意：不能在这里AddToObjectRefs(obj);
-        return false;
-    }
-
-    private void addToObjectRefs(Object obj) {
-        if (_objRefItems == null)
-            _objRefItems = new ArrayList<>();
-
-        _objRefItems.add(obj);
-    }
-
-    private int indexOfObjectRefs(Object obj) {
-        if (_objRefItems == null || _objRefItems.size() == 0)
-            return -1;
-
-        for (int i = 0; i < _objRefItems.size(); i++) {
-            if (_objRefItems.get(i).equals(obj))
-                return i;
-        }
-        return -1;
-    }
-
     //endregion
 
 }
