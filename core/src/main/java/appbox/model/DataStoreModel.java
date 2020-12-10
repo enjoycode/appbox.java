@@ -1,7 +1,7 @@
 package appbox.model;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.utils.StringUtil;
 
 public final class DataStoreModel extends ModelBase {
@@ -37,12 +37,12 @@ public final class DataStoreModel extends ModelBase {
     //region ====Serialization====
     //注意:provider及settings的编号与C#不同
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        bs.writeByte(_kind.value, 1);
-        bs.writeString(_provider, 5);
-        bs.writeString(_settings, 6);
+        bs.writeByteField(_kind.value, 1);
+        bs.writeStringField(_provider, 5);
+        bs.writeStringField(_settings, 6);
 
         bs.finishWriteFields();
     }

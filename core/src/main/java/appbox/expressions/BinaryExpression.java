@@ -1,7 +1,7 @@
 package appbox.expressions;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 public final class BinaryExpression extends Expression {
     public enum BinaryOperatorType {
@@ -67,7 +67,7 @@ public final class BinaryExpression extends Expression {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.serialize(leftOperand);
         bs.writeByte(binaryType.value);
         bs.serialize(rightOperand);

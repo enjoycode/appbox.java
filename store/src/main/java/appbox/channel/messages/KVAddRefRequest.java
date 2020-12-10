@@ -5,6 +5,7 @@ import appbox.channel.MessageType;
 import appbox.data.EntityId;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 
 public final class KVAddRefRequest implements IMessage {
@@ -34,7 +35,7 @@ public final class KVAddRefRequest implements IMessage {
     public byte MessageType() { return MessageType.KVAddRefRequest;}
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         _txnId.writeTo(bs);
         bs.writeLong(targetEntityId.raftGroupId()); //TODO:暂为了兼容存储层
         bs.writeLong(fromRaftGroupId);

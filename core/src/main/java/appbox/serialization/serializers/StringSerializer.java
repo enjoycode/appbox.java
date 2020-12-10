@@ -1,7 +1,7 @@
 package appbox.serialization.serializers;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.serialization.PayloadType;
 import appbox.serialization.TypeSerializer;
 
@@ -13,7 +13,7 @@ public final class StringSerializer extends TypeSerializer {
     }
 
     @Override
-    public void write(BinSerializer bs, Object value) {
+    public void write(IOutputStream bs, Object value) {
         bs.writeString((String) value);
     }
 

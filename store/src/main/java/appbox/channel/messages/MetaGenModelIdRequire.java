@@ -4,6 +4,7 @@ import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 
 public final class MetaGenModelIdRequire implements IMessage {
     public int     appId;
@@ -15,7 +16,7 @@ public final class MetaGenModelIdRequire implements IMessage {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeInt(appId);
         bs.writeBool(devLayer);
     }

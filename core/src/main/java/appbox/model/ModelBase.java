@@ -2,8 +2,8 @@ package appbox.model;
 
 import appbox.data.PersistentState;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
 import java.util.UUID;
@@ -122,17 +122,17 @@ public abstract class ModelBase implements IBinSerializable {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
-        bs.writeLong(_id, 1);
-        bs.writeString(_name, 2);
-        bs.writeBool(_designMode, 3);
+    public void writeTo(IOutputStream bs) {
+        bs.writeLongField(_id, 1);
+        bs.writeStringField(_name, 2);
+        bs.writeBoolField(_designMode, 3);
 
         if (_designMode) {
-            bs.writeInt(_version, 4);
-            bs.writeByte(_persistentState.value, 5);
+            bs.writeIntField(_version, 4);
+            bs.writeByteField(_persistentState.value, 5);
             //TODO: folder
             if (_originalName != null) {
-                bs.writeString(_originalName, 7);
+                bs.writeStringField(_originalName, 7);
             }
         } else if (modelType() == ModelType.Permission) {
             //TODO: folder

@@ -3,9 +3,9 @@ package appbox.model;
 import appbox.data.PersistentState;
 import appbox.model.entity.*;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonSerializable;
 import appbox.serialization.IJsonWriter;
+import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
@@ -252,7 +252,7 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
         //写入成员集合
@@ -280,8 +280,8 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
         }
 
         if (designMode()) {
-            bs.writeShort(_devMemberIdSeq, 3);
-            bs.writeShort(_usrMemberIdSeq, 4);
+            bs.writeShortField(_devMemberIdSeq, 3);
+            bs.writeShortField(_usrMemberIdSeq, 4);
         }
 
         bs.finishWriteFields();

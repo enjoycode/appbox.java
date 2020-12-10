@@ -82,8 +82,7 @@ public class TestSerialization {
     public void testStoreVarLen() {
         int len = 154;
         var out = new BytesOutputStream(8);
-        var bs = BinSerializer.rentFromPool(out);
-        bs.writeStoreVarLen(len);
+        out.writeStoreVarLen(len);
 
         var input = out.copyToInput();
         var ds = BinDeserializer.rentFromPool(input);

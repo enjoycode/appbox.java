@@ -37,7 +37,7 @@ public final class JsonResult implements IBinSerializable {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         try {
             if (result == null) {
                 bs.write(JSON_NULL, 0, JSON_NULL.length);
@@ -45,18 +45,18 @@ public final class JsonResult implements IBinSerializable {
             }
 
             //TODO:fast for primitive types
-
+            throw new RuntimeException("待重新实现");
             //直接写Json
-            if (result instanceof IJsonSerializable) {
-                var out        = new OutputStreamWriter(bs);
-                var jsonWriter = new FastJsonWriter(out);
-                ((IJsonSerializable) result).writeToJson(jsonWriter);
-                jsonWriter.close();
-                return;
-            }
+            //if (result instanceof IJsonSerializable) {
+            //    var out        = new OutputStreamWriter(bs);
+            //    var jsonWriter = new FastJsonWriter(out);
+            //    ((IJsonSerializable) result).writeToJson(jsonWriter);
+            //    jsonWriter.close();
+            //    return;
+            //}
 
-            JSON.writeJSONString(bs, StandardCharsets.UTF_8, result,
-                    config, null, null, JSON.DEFAULT_GENERATE_FEATURE);
+            //JSON.writeJSONString(bs, StandardCharsets.UTF_8, result,
+            //        config, null, null, JSON.DEFAULT_GENERATE_FEATURE);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

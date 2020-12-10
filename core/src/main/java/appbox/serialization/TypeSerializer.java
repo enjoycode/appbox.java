@@ -82,7 +82,7 @@ public abstract class TypeSerializer {
         this.creator     = creator;
     }
 
-    public abstract void write(BinSerializer bs, Object value);
+    public abstract void write(IOutputStream bs, Object value);
 
     public abstract Object read(BinDeserializer bs, Object value);
 }

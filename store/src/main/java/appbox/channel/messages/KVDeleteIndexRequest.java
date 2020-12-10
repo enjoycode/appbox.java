@@ -4,6 +4,7 @@ import appbox.channel.KVRowReader;
 import appbox.data.EntityId;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
 import appbox.utils.IdUtil;
@@ -28,7 +29,7 @@ public final class KVDeleteIndexRequest extends KVDeleteRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
         //refs always 0

@@ -3,6 +3,7 @@ package appbox.channel.messages;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 
 /**
  * 通用的存储命令响应
@@ -19,7 +20,7 @@ public final class KVCommandResponse extends StoreResponse {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         throw new UnsupportedOperationException();
     }
 

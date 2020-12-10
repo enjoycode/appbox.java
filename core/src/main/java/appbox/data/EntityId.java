@@ -2,7 +2,7 @@ package appbox.data;
 
 import appbox.runtime.RuntimeContext;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -123,7 +123,7 @@ public final class EntityId {
         System.arraycopy(from._data, 0, _data, 0, 16);
     }
 
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.write(_data, 0, 16);
     }
 
@@ -131,13 +131,15 @@ public final class EntityId {
         bs.read(_data, 0, 16);
     }
 
-    /** 仅用于系统存储写索引 */
-    public void writePart1(BinSerializer bs) {
+    /** 仅用于系统存储写索引
+     * @param bs*/
+    public void writePart1(IOutputStream bs) {
         bs.write(_data, 0, 6);
     }
 
-    /** 仅用于系统存储写索引 */
-    public void writePart2(BinSerializer bs) {
+    /** 仅用于系统存储写索引
+     * @param bs*/
+    public void writePart2(IOutputStream bs) {
         bs.write(_data, 6, 10);
     }
 

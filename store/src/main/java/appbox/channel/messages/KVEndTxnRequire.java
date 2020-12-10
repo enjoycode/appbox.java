@@ -4,6 +4,7 @@ import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 
 public final class KVEndTxnRequire implements IMessage {
@@ -16,7 +17,7 @@ public final class KVEndTxnRequire implements IMessage {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         txnId.writeTo(bs);
         bs.writeByte(action);
     }

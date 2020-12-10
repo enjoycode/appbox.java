@@ -2,7 +2,7 @@ package appbox.runtime;
 
 import appbox.cache.ObjectPool;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.serialization.PayloadType;
 
 /**
@@ -62,7 +62,7 @@ public final class InvokeArg {
         return (String) value;
     }
 
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         //TODO:暂简单实现，待优化
         bs.serialize(value);
     }

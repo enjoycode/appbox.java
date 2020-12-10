@@ -3,9 +3,9 @@ package appbox.model.entity;
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
 import appbox.serialization.IJsonWriter;
+import appbox.serialization.IOutputStream;
 
 /**
  * 实体成员模型基类
@@ -114,17 +114,17 @@ public abstract class EntityMemberModel implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
-        bs.writeBool(_allowNull, 2);
-        bs.writeString(_name, 3);
-        bs.writeShort(_memberId, 4);
+    public void writeTo(IOutputStream bs) {
+        bs.writeBoolField(_allowNull, 2);
+        bs.writeStringField(_name, 3);
+        bs.writeShortField(_memberId, 4);
         if (_comment != null) {
-            bs.writeString(_comment, 7);
+            bs.writeStringField(_comment, 7);
         }
 
         if (owner.designMode()) {
-            bs.writeString(_originalName, 5);
-            bs.writeByte(_persistentState.value, 6);
+            bs.writeStringField(_originalName, 5);
+            bs.writeByteField(_persistentState.value, 6);
         }
 
         bs.finishWriteFields();

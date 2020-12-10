@@ -6,6 +6,7 @@ import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IEntityMemberWriter;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
 
@@ -31,7 +32,7 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
         //key

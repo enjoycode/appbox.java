@@ -4,6 +4,7 @@ import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IEntityMemberWriter;
+import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;
 
 public final class KVGetIndexRequest extends KVGetRequest {
@@ -22,7 +23,7 @@ public final class KVGetIndexRequest extends KVGetRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeInt(0);                     //ReqId占位
         bs.writeLong(_raftGroupId);               //raftGroupId
         bs.writeByte(KeyUtil.INDEXCF_INDEX);      //dataCF

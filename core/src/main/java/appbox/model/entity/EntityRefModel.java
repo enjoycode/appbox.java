@@ -2,8 +2,8 @@ package appbox.model.entity;
 
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonWriter;
+import appbox.serialization.IOutputStream;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,14 +132,14 @@ public final class EntityRefModel extends EntityMemberModel {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        bs.writeBool(isReverse, 1);
-        bs.writeBool(isForeignKeyConstraint, 4);
-        bs.writeShort(typeMemberId, 6);
-        bs.writeByte(updateRule.value, 7);
-        bs.writeByte(deleteRule.value, 8);
+        bs.writeBoolField(isReverse, 1);
+        bs.writeBoolField(isForeignKeyConstraint, 4);
+        bs.writeShortField(typeMemberId, 6);
+        bs.writeByteField(updateRule.value, 7);
+        bs.writeByteField(deleteRule.value, 8);
 
         bs.writeVariant(3);
         bs.writeVariant(refModelIds.size());

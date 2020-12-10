@@ -3,7 +3,7 @@ package appbox.model.entity;
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 /**
  * 系统存储的二级索引
@@ -66,11 +66,11 @@ public final class SysIndexModel extends IndexModelBase {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        bs.writeBool(_global, 1);
-        bs.writeByte(_state.value, 2);
+        bs.writeBoolField(_global, 1);
+        bs.writeByteField(_state.value, 2);
         bs.finishWriteFields();
     }
 

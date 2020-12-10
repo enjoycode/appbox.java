@@ -1,8 +1,8 @@
 package appbox.model.entity;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IOutputStream;
 
 /**
  * 系统存储的分区键
@@ -62,7 +62,7 @@ public final class PartitionKey implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeShort(memberId);
         bs.writeBool(orderByDesc);
         bs.writeByte(rule.value);

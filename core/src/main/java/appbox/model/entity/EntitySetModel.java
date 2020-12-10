@@ -2,8 +2,8 @@ package appbox.model.entity;
 
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonWriter;
+import appbox.serialization.IOutputStream;
 
 public final class EntitySetModel extends EntityMemberModel {
 
@@ -40,11 +40,11 @@ public final class EntitySetModel extends EntityMemberModel {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        bs.writeLong(_refModelId, 1);
-        bs.writeShort(_refMemberId, 2);
+        bs.writeLongField(_refModelId, 1);
+        bs.writeShortField(_refMemberId, 2);
 
         bs.finishWriteFields();
     }

@@ -2,6 +2,7 @@ package appbox.channel.messages;
 
 import appbox.data.EntityId;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;
 
 public final class KVGetEntityRequest extends KVGetRequest {
@@ -12,7 +13,7 @@ public final class KVGetEntityRequest extends KVGetRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(entityId.raftGroupId()); //raftGroupId
         bs.writeByte((byte) -1);    //dataCF

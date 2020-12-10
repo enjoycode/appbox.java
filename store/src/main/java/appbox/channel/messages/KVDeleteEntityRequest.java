@@ -4,6 +4,7 @@ import appbox.data.EntityId;
 import appbox.model.EntityModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
 
@@ -28,7 +29,7 @@ public final class KVDeleteEntityRequest extends KVDeleteRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
         //refs 暂存储层是字符串，实际是short数组

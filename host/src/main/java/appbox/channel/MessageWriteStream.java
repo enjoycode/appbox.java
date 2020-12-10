@@ -76,13 +76,6 @@ public final class MessageWriteStream implements IOutputStream {
         }
     }
 
-    /**
-     * 当前块的剩余字节数
-     */
-    private int left() {
-        return NativeSmq.CHUNK_DATA_SIZE - _index;
-    }
-
     public void flush() {
         //设置当前消息包的长度
         NativeSmq.setMsgDataLen(_curChunk, (short) _index);
@@ -107,7 +100,7 @@ public final class MessageWriteStream implements IOutputStream {
 
     @Override
     public void writeByte(byte value) {
-        if (left() <= 0) {
+        if (_index >= NativeSmq.CHUNK_DATA_SIZE) {
             createChunk();
         }
         _dataPtr.setByte(_index++, value);
@@ -115,7 +108,7 @@ public final class MessageWriteStream implements IOutputStream {
 
     @Override
     public void write(byte[] src, int offset, int count) {
-        var left = left();
+        var left = NativeSmq.CHUNK_DATA_SIZE - _index;
         if (left > 0) {
             if (left >= count) {
                 _dataPtr.write(_index, src, offset, count);

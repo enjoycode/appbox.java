@@ -3,8 +3,8 @@ package appbox.model.entity;
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonWriter;
+import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
@@ -142,10 +142,10 @@ public final class SysStoreOptions implements IEntityStoreOption {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
-        bs.writeBool(_isMVCC, 1);
-        bs.writeBool(_orderByDesc, 2);
-        bs.writeInt(_schemaVersion, 3);
+    public void writeTo(IOutputStream bs) {
+        bs.writeBoolField(_isMVCC, 1);
+        bs.writeBoolField(_orderByDesc, 2);
+        bs.writeIntField(_schemaVersion, 3);
 
         //写入索引集合
         if (hasIndexes()) {
@@ -157,10 +157,10 @@ public final class SysStoreOptions implements IEntityStoreOption {
             bs.writeArray(_partitionKeys, 5);
         }
 
-        bs.writeByte(_devIndexIdSeq, 6);
-        bs.writeByte(_usrIndexIdSeq, 7);
+        bs.writeByteField(_devIndexIdSeq, 6);
+        bs.writeByteField(_usrIndexIdSeq, 7);
         if (_hasChangedSchema) {
-            bs.writeInt(_oldSchemaVersion, 8);
+            bs.writeIntField(_oldSchemaVersion, 8);
         }
 
         bs.finishWriteFields();

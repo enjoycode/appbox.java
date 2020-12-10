@@ -3,8 +3,8 @@ package appbox.model.entity;
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IOutputStream;
 
 /**
  * 系统存储及Sql存储的索引模型基类
@@ -80,10 +80,10 @@ public abstract class IndexModelBase implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
-        bs.writeByte(_indexId, 2);
-        bs.writeString(_name, 3);
-        bs.writeBool(_unique, 4);
+    public void writeTo(IOutputStream bs) {
+        bs.writeByteField(_indexId, 2);
+        bs.writeStringField(_name, 3);
+        bs.writeBoolField(_unique, 4);
 
         //fields
         bs.writeVariant(6);
@@ -102,7 +102,7 @@ public abstract class IndexModelBase implements IBinSerializable {
         }
 
         if (owner.designMode()) {
-            bs.writeByte(_persistentState.value, 9);
+            bs.writeByteField(_persistentState.value, 9);
         }
 
         bs.finishWriteFields();
