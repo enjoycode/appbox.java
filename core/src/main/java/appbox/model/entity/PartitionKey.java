@@ -2,11 +2,12 @@ package appbox.model.entity;
 
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IBinSerializable;
 
 /**
  * 系统存储的分区键
  */
-public final class PartitionKey {
+public final class PartitionKey implements IBinSerializable {
     public enum PartitionKeyRule {
         /**
          * 按指定成员值
@@ -60,6 +61,7 @@ public final class PartitionKey {
     public int              ruleArgument;
 
     //region ====Serialization====
+    @Override
     public void writeTo(BinSerializer bs) {
         bs.writeShort(memberId);
         bs.writeBool(orderByDesc);
@@ -67,6 +69,7 @@ public final class PartitionKey {
         bs.writeVariant(ruleArgument);
     }
 
+    @Override
     public void readFrom(BinDeserializer bs) {
         memberId     = bs.readShort();
         orderByDesc  = bs.readBool();

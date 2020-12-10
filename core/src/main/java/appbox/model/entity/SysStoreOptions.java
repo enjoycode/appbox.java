@@ -21,13 +21,13 @@ public final class SysStoreOptions implements IEntityStoreOption {
 
     protected final EntityModel owner;              //不要序列化
 
-    private boolean                  _isMVCC;        //是否MVCC存储格式
-    private PartitionKey[]           _partitionKeys; //null表示不分区
-    private ArrayList<SysIndexModel> _indexes;
-    private boolean                  _orderByDesc;   //主键是否按时间倒序
-    private boolean                  _hasChangedSchema; //不用序列化
-    private int                      _oldSchemaVersion;
-    private int                      _schemaVersion;
+    private boolean             _isMVCC;        //是否MVCC存储格式
+    private PartitionKey[]      _partitionKeys; //null表示不分区
+    private List<SysIndexModel> _indexes;
+    private boolean             _orderByDesc;   //主键是否按时间倒序
+    private boolean             _hasChangedSchema; //不用序列化
+    private int                 _oldSchemaVersion;
+    private int                 _schemaVersion;
 
     /**
      * Only for serialization
@@ -149,20 +149,12 @@ public final class SysStoreOptions implements IEntityStoreOption {
 
         //写入索引集合
         if (hasIndexes()) {
-            bs.writeVariant(4);
-            bs.writeVariant(_indexes.size());
-            for (SysIndexModel index : _indexes) {
-                index.writeTo(bs);
-            }
+            bs.writeList(_indexes, 4);
         }
 
         //写入分区键
         if (hasPartitionKeys()) {
-            bs.writeVariant(5);
-            bs.writeVariant(_partitionKeys.length);
-            for (PartitionKey partitionKey : _partitionKeys) {
-                partitionKey.writeTo(bs);
-            }
+            bs.writeArray(_partitionKeys, 5);
         }
 
         bs.writeByte(_devIndexIdSeq, 6);
@@ -189,24 +181,12 @@ public final class SysStoreOptions implements IEntityStoreOption {
                 case 3:
                     _schemaVersion = bs.readInt();
                     break;
-                case 4: {
-                    var count = bs.readVariant();
-                    for (int i = 0; i < count; i++) {
-                        var index = new SysIndexModel(owner);
-                        index.readFrom(bs);
-                        getIndexes().add(index);
-                    }
+                case 4:
+                    _indexes = bs.readList(() -> new SysIndexModel(owner));
                     break;
-                }
-                case 5: {
-                    var count = bs.readVariant();
-                    _partitionKeys = new PartitionKey[count];
-                    for (int i = 0; i < count; i++) {
-                        _partitionKeys[i] = new PartitionKey();
-                        _partitionKeys[i].readFrom(bs);
-                    }
+                case 5:
+                    _partitionKeys = bs.readArray(PartitionKey[]::new, PartitionKey::new);
                     break;
-                }
                 case 6:
                     _devIndexIdSeq = bs.readByte();
                     break;

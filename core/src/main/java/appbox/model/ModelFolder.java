@@ -9,44 +9,37 @@ import java.util.UUID;
 
 /**
  * 模型的文件夹，每个应用的模型类型对应一个根文件夹
- *
  */
 public class ModelFolder implements IBinSerializable {
 
-    private String _name;
-
-    private ModelFolder _parent;
-
-    private int _appId;
-
-    private ModelType _targetModelType;
-
-    private UUID _id;
-
-    private int _sortNum;
-
-    private int _version;
-
+    private String            _name;
+    private ModelFolder       _parent;
+    private int               _appId;
+    private ModelType         _targetModelType;
+    private UUID              _id;
+    private int               _sortNum;
+    private int               _version;
     private List<ModelFolder> _childs;
+    private boolean           _isDeleted;
 
-    private boolean _isDeleted;
     ModelFolder() { }
 
-    ModelFolder(int appID, ModelType targetModelType){
-        this._appId=appID;
-        this._targetModelType=targetModelType;
+    ModelFolder(int appID, ModelType targetModelType) {
+        this._appId           = appID;
+        this._targetModelType = targetModelType;
     }
 
-    ModelFolder(ModelFolder parent, String name){
-        this._id = UUID.randomUUID();
-        _appId = parent._appId;
-        _parent = parent;
-        _name = name;
+    ModelFolder(ModelFolder parent, String name) {
+        this._id         = UUID.randomUUID();
+        _appId           = parent._appId;
+        _parent          = parent;
+        _name            = name;
         _targetModelType = parent._targetModelType;
         _parent._childs.add(this);
     }
-    //region ======properties======
-    public boolean hasChild(){
+
+    //region ====Properties====
+    public boolean hasChild() {
         return _childs != null && _childs.size() > 0;
     }
 
@@ -123,18 +116,16 @@ public class ModelFolder implements IBinSerializable {
     }
     //endregion
 
+    //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) {
-        if (_parent != null)
-        {
-            bs.writeUUID(_id,1);
+        if (_parent != null) {
+            bs.writeUUID(_id, 1);
             bs.writeString(_name, 2);
             bs.serialize(_parent, 4);
             if (_targetModelType == ModelType.Permission) //仅权限文件夹排序
                 bs.writeInt(_sortNum, 8);
-        }
-        else
-        {
+        } else {
             bs.writeInt(_version, 3);
             bs.writeBool(_isDeleted, 9);
         }
@@ -162,11 +153,10 @@ public class ModelFolder implements IBinSerializable {
                     _version = bs.readInt();
                     break;
                 case 4:
-                    _parent = (ModelFolder)bs.deserialize();
+                    _parent = (ModelFolder) bs.deserialize();
                     break;
                 case 5:
-                    //TODO readList
-                    _childs = (List<ModelFolder>) bs.readList(ModelFolder.class);
+                    _childs = bs.readList(ModelFolder::new);
                     break;
                 case 0:
                     break;
@@ -175,4 +165,5 @@ public class ModelFolder implements IBinSerializable {
             }
         } while (propIndex != 0);
     }
+    //endregion
 }

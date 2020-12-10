@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestObjectPool {
 
-    class Person {
+    static class Person {
         String Name;
     }
 

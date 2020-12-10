@@ -2,11 +2,12 @@ package appbox.model.entity;
 
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IBinSerializable;
 
 /**
  * 带排序标记的字段
  */
-public final class FieldWithOrder { //TODO: rename to OrderedField
+public final class FieldWithOrder implements IBinSerializable { //TODO: rename to OrderedField
 
     public short   memberId;
     public boolean orderByDesc;
@@ -24,11 +25,13 @@ public final class FieldWithOrder { //TODO: rename to OrderedField
         this.orderByDesc = orderByDesc;
     }
 
+    @Override
     public void writeTo(BinSerializer bs) {
         bs.writeShort(memberId);
         bs.writeBool(orderByDesc);
     }
 
+    @Override
     public void readFrom(BinDeserializer bs) {
         memberId    = bs.readShort();
         orderByDesc = bs.readBool();

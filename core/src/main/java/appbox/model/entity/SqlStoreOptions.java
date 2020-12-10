@@ -110,12 +110,55 @@ public final class SqlStoreOptions implements IEntityStoreOption {
     //region ====Serialization====
     @Override
     public void writeTo(BinSerializer bs) {
+        bs.writeLong(_storeModelId, 1);
 
+        //写入主键
+        if (hasPrimaryKeys()) {
+            bs.writeArray(_primaryKeys, 2);
+        }
+        bs.writeBool(_primaryKeysHasChanged, 3);
+
+        //写入索引
+        if (hasIndexes()) {
+            bs.writeList(_indexes, 4);
+        }
+
+        bs.writeByte(_devIndexIdSeq, 6);
+        bs.writeByte(_usrIndexIdSeq, 7);
+
+        bs.finishWriteFields();
     }
 
     @Override
     public void readFrom(BinDeserializer bs) {
-
+        int propIndex;
+        do {
+            propIndex = bs.readVariant();
+            switch (propIndex) {
+                case 1:
+                    _storeModelId = bs.readLong();
+                    break;
+                case 2:
+                    _primaryKeys = bs.readArray(FieldWithOrder[]::new, FieldWithOrder::new);
+                    break;
+                case 3:
+                    _primaryKeysHasChanged = bs.readBool();
+                    break;
+                case 4:
+                    _indexes = bs.readList(() -> new SqlIndexModel(owner));
+                    break;
+                case 6:
+                    _devIndexIdSeq = bs.readByte();
+                    break;
+                case 7:
+                    _usrIndexIdSeq = bs.readByte();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new RuntimeException("Unknown field id:" + propIndex);
+            }
+        } while (propIndex != 0);
     }
 
     @Override
