@@ -81,6 +81,24 @@ public abstract class SqlStore {
         }
         return task.thenAccept(r -> {});
     }
+
+    public CompletableFuture<Void> alterTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
+        var cmds = makeAlterTable(model, ctx);
+        CompletableFuture<Long> task = null;
+        for(var cmd : cmds) {
+            if (task == null)
+                task = cmd.execNonQueryAsync(txn.getConnection());
+            else
+                task = task.thenCompose(r -> cmd.execNonQueryAsync(txn.getConnection()));
+        }
+        return task.thenAccept(r -> {});
+    }
+
+    public CompletableFuture<Void> dropTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
+        var cmd = makeDropTable(model, ctx);
+        CompletableFuture<Long> task = cmd.execNonQueryAsync(txn.getConnection());
+        return task.thenAccept(r -> {});
+    }
     //endregion
 
     //region ====DML Methods====
