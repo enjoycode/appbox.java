@@ -2,7 +2,7 @@ package appbox.model.entity;
 
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IJsonWriter;
 import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
@@ -167,7 +167,7 @@ public final class SysStoreOptions implements IEntityStoreOption {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         int propIndex;
         do {
             propIndex = bs.readVariant();

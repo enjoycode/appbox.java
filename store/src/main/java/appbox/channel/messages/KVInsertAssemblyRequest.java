@@ -1,6 +1,5 @@
 package appbox.channel.messages;
 
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;

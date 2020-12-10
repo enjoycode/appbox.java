@@ -84,5 +84,5 @@ public abstract class TypeSerializer {
 
     public abstract void write(IOutputStream bs, Object value);
 
-    public abstract Object read(BinDeserializer bs, Object value);
+    public abstract Object read(IInputStream bs, Object value);
 }

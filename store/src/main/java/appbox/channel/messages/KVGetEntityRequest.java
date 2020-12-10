@@ -1,7 +1,6 @@
 package appbox.channel.messages;
 
 import appbox.data.EntityId;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;
 

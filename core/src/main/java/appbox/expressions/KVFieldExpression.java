@@ -1,7 +1,7 @@
 package appbox.expressions;
 
 import appbox.model.entity.DataFieldModel;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 public final class KVFieldExpression extends Expression {
@@ -33,7 +33,7 @@ public final class KVFieldExpression extends Expression {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         throw new UnsupportedOperationException();
     }
 }

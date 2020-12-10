@@ -2,7 +2,7 @@ package appbox.model.entity;
 
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IJsonWriter;
 import appbox.serialization.IOutputStream;
 
@@ -158,7 +158,7 @@ public final class DataFieldModel extends EntityMemberModel {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         super.readFrom(bs);
 
         int propIndex;

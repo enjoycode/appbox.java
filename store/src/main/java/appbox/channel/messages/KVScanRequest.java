@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.channel.IMessage;
 import appbox.channel.MessageType;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 
 public abstract class KVScanRequest implements IMessage {
 
@@ -12,7 +12,7 @@ public abstract class KVScanRequest implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         throw new UnsupportedOperationException();
     }
 

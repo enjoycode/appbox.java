@@ -3,8 +3,7 @@ package appbox.channel.messages;
 import appbox.channel.IMessage;
 import appbox.channel.MessageType;
 import appbox.data.EntityId;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 
@@ -45,7 +44,7 @@ public final class KVAddRefRequest implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         throw new UnsupportedOperationException();
     }
 }

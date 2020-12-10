@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.channel.KVRowReader;
 import appbox.data.SysEntity;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.store.KeyUtil;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public final class KVScanEntityResponse<T extends SysEntity> extends KVScanRespo
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         checkStoreError();

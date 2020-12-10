@@ -1,7 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.model.ApplicationModel;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 
 public final class KVGetApplicationResponse extends KVGetResponse {
 
@@ -10,7 +10,7 @@ public final class KVGetApplicationResponse extends KVGetResponse {
     public ApplicationModel getApplicationModel() { return _applicationModel; }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         checkStoreError();

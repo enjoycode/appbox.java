@@ -1,11 +1,9 @@
 package appbox.data;
 
 import appbox.serialization.*;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -63,7 +61,7 @@ public final class JsonResult implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         throw new UnsupportedOperationException();
     }
 }

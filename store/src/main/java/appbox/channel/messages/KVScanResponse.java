@@ -1,7 +1,6 @@
 package appbox.channel.messages;
 
 import appbox.channel.MessageType;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IOutputStream;
 
 public abstract class KVScanResponse extends StoreResponse {

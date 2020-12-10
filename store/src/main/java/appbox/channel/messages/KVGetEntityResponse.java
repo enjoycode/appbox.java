@@ -3,7 +3,7 @@ package appbox.channel.messages;
 import appbox.channel.KVRowReader;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 
 public final class KVGetEntityResponse<T extends SysEntity> extends KVGetResponse {
 
@@ -19,7 +19,7 @@ public final class KVGetEntityResponse<T extends SysEntity> extends KVGetRespons
     public T getEntity() { return entity; }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         checkStoreError();

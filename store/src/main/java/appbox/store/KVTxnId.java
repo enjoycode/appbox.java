@@ -1,7 +1,7 @@
 package appbox.store;
 
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IInputStream;
+import appbox.serialization.IOutputStream;
 
 /**
  * 系统存储的事务标识号
@@ -19,14 +19,14 @@ public final class KVTxnId {
         isoLevel = from.isoLevel;
     }
 
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeLong(startTS);
         bs.writeShort(peerId);
         bs.writeShort(shardId);
         bs.writeByte(isoLevel);
     }
 
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         startTS  = bs.readLong();
         peerId   = bs.readShort();
         shardId  = bs.readShort();

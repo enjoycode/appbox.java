@@ -1,6 +1,6 @@
 package appbox.model;
 
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.utils.StringUtil;
 
@@ -48,7 +48,7 @@ public final class DataStoreModel extends ModelBase {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         super.readFrom(bs);
 
         int fieldId;

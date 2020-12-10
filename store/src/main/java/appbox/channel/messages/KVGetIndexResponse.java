@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.channel.KVRowReader;
 import appbox.data.IKVRow;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 
 public final class KVGetIndexResponse<T extends IKVRow> extends KVGetResponse {
 
@@ -16,7 +16,7 @@ public final class KVGetIndexResponse<T extends IKVRow> extends KVGetResponse {
     public T getRow() { return _indexRow; }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         checkStoreError();

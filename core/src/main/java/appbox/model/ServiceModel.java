@@ -1,6 +1,6 @@
 package appbox.model;
 
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 public final class ServiceModel extends ModelBase {
@@ -54,7 +54,7 @@ public final class ServiceModel extends ModelBase {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         super.readFrom(bs);
 
         int propIndex;

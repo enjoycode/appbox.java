@@ -85,8 +85,7 @@ public class TestSerialization {
         out.writeStoreVarLen(len);
 
         var input = out.copyToInput();
-        var ds = BinDeserializer.rentFromPool(input);
-        int varSize = ds.readStoreVarLen();
+        int varSize = input.readStoreVarLen();
         assertEquals(len, varSize);
     }
 

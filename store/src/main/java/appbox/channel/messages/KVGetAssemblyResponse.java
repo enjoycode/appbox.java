@@ -1,6 +1,6 @@
 package appbox.channel.messages;
 
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 
 public final class KVGetAssemblyResponse extends KVGetResponse {
 
@@ -9,7 +9,7 @@ public final class KVGetAssemblyResponse extends KVGetResponse {
     public byte[] getAssemblyData() { return asmData; }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         checkStoreError();

@@ -36,7 +36,7 @@ public abstract class Entity implements IBinSerializable {
     }
 
     @Override
-    public final void readFrom(BinDeserializer bs) {
+    public final void readFrom(IInputStream bs) {
         _modelId = bs.readLong();
 
         if (this instanceof SysEntity) {

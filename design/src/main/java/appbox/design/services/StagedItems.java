@@ -5,7 +5,7 @@ import appbox.design.services.StagedService.StagedType;
 import appbox.entities.StagedModel;
 import appbox.model.ModelBase;
 import appbox.model.ModelFolder;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IBinSerializable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ public final class StagedItems {
                 switch (type) {
                     case Model:
                     case Folder:
-                        items[i] = BinDeserializer.deserialize(data);
+                        items[i] = IBinSerializable.deserialize(data);
                         break;
                     case SourceCode:
                         var modelId1 = Long.parseUnsignedLong(staged.get(i).getModelId());

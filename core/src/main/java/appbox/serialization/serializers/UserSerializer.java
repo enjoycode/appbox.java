@@ -18,7 +18,7 @@ public final class UserSerializer extends TypeSerializer { //TODO: rename to Kno
     }
 
     @Override
-    public Object read(BinDeserializer bs, Object value) {
+    public Object read(IInputStream bs, Object value) {
         ((IBinSerializable) value).readFrom(bs);
         return value;
     }

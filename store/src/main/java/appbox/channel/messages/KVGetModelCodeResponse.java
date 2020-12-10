@@ -1,14 +1,14 @@
 package appbox.channel.messages;
 
 import appbox.model.ModelType;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.store.utils.ModelCodeUtil;
 
 public final class KVGetModelCodeResponse extends KVGetResponse {
     public Object sourceCode;
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
         checkStoreError();

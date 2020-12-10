@@ -1,7 +1,7 @@
 package appbox.store;
 
 import appbox.data.EntityId;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 import java.nio.charset.StandardCharsets;
 
@@ -28,7 +28,7 @@ public final class KeyUtil {
 
     public static final int ENTITY_KEY_SIZE = 16;
 
-    public static void writeAppKey(BinSerializer bs, int appId, boolean withSize) {
+    public static void writeAppKey(IOutputStream bs, int appId, boolean withSize) {
         if (withSize) {
             bs.writeNativeVariant(5); //注意按无符号写入key长度
         }
@@ -36,7 +36,7 @@ public final class KeyUtil {
         bs.writeIntBE(appId);
     }
 
-    public static void writeModelKey(BinSerializer bs, long modelId, boolean withSize) {
+    public static void writeModelKey(IOutputStream bs, long modelId, boolean withSize) {
         if (withSize) {
             bs.writeNativeVariant(9); //注意按无符号写入key长度
         }
@@ -44,7 +44,7 @@ public final class KeyUtil {
         bs.writeLongBE(modelId); //暂大字节序写入
     }
 
-    public static void writeModelCodeKey(BinSerializer bs, long modelId, boolean withSize) {
+    public static void writeModelCodeKey(IOutputStream bs, long modelId, boolean withSize) {
         if (withSize) {
             bs.writeNativeVariant(9); //注意按无符号写入key长度
         }
@@ -52,7 +52,7 @@ public final class KeyUtil {
         bs.writeLongBE(modelId);
     }
 
-    public static void writeAssemblyKey(BinSerializer bs, boolean isService, String asmName, boolean withSize) {
+    public static void writeAssemblyKey(IOutputStream bs, boolean isService, String asmName, boolean withSize) {
         var data = asmName.getBytes(StandardCharsets.UTF_8);
         if (withSize) {
             bs.writeNativeVariant(data.length + 1);
@@ -66,14 +66,14 @@ public final class KeyUtil {
         bs.write(data, 0, data.length);
     }
 
-    public static void writeEntityKey(BinSerializer bs, EntityId id, boolean withSize) {
+    public static void writeEntityKey(IOutputStream bs, EntityId id, boolean withSize) {
         //TODO: write appStoreId + tableId
         if (withSize)
             bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
     }
 
-    public static void writeRaftGroupId(BinSerializer bs, long raftGroupId) {
+    public static void writeRaftGroupId(IOutputStream bs, long raftGroupId) {
         //与EntityId.initRaftGroupId一致
         //前32位
         int p1 = (int) (raftGroupId >>> 12);

@@ -1,14 +1,14 @@
 package appbox.channel.messages;
 
 import appbox.model.ApplicationModel;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 
 public final class KVScanAppsResponse extends KVScanResponse {
 
     public ApplicationModel[] apps;
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 
