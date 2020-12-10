@@ -7,6 +7,7 @@ import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonWriter;
 
 public final class DataFieldModel extends EntityMemberModel {
+
     //region ====DataFieldType====
     public enum DataFieldType {
         EntityId(0),
@@ -206,6 +207,9 @@ public final class DataFieldModel extends EntityMemberModel {
             writer.writeKeyValue("Length", _length);
             writer.writeKeyValue("Decimals", _decimals);
         }
+    }
+    public boolean isDataTypeChanged() {
+        return _isDataTypeChanged;
     }
     //endregion
 

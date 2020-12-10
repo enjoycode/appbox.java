@@ -133,6 +133,177 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         return res;
     }
 
+    @Override
+    protected List<DbCommand> makeAlterTable(EntityModel model, IDesignContext ctx) {
+        //TODO:***处理主键变更
+
+        String tableName =  model.getSqlTableName(false, ctx);
+
+        StringBuilder sb=new StringBuilder(200);
+        boolean needCommand = false; //用于判断是否需要处理NpgsqlCommand
+        List<String> fks = new ArrayList<>(); //引用外键列表
+        List<DbCommand> commands = new ArrayList<>();
+        //先处理表名称有没有变更，后续全部使用新名称
+        if (model.isNameChanged())
+        {
+            String oldTableName = model.getSqlTableName(true, ctx);
+            DbCommand renameTableCmd = new DbCommand();
+            renameTableCmd.setCommandText(String.format("ALTER TABLE \"%s\" RENAME TO \"%s\"", oldTableName, tableName));
+            commands.add(renameTableCmd);
+        }
+
+        //处理删除的成员
+        var deletedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Deleted).toArray();
+        if (deletedMembers != null && deletedMembers.length > 0)
+        {
+            //#region ----删除的成员----
+            for (EntityMemberModel m : deletedMembers)
+            {
+                if (m.type() == EntityMemberModel.EntityMemberType.DataField)
+                {
+                    needCommand = true;
+                    sb.append(String.format("ALTER TABLE \"%s\" DROP COLUMN \"%s\";", tableName, ((DataFieldModel)m).sqlColOriginalName()));
+                }
+                else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef)
+                {
+                    EntityRefModel rm = (EntityRefModel)m;
+                    if (!rm.isAggregationRef())
+                    {
+                        String fkName = String.format("FK_%s_%s", rm.owner.id(), rm.memberId()); //TODO:特殊处理DbFirst导入表的外键约束名称
+                        fks.add(String.format("ALTER TABLE \"%s\" DROP CONSTRAINT \"%s\";", tableName, fkName));
+                    }
+                }
+            }
+
+            String cmdText = sb.toString();
+            if (needCommand)
+            {
+                //加入删除的外键SQL
+                for (int i = 0; i < fks.size(); i++)
+                {
+                    sb.insert(0, fks.get(i));
+                    sb.append("\r\n");
+                }
+                var cmd=new DbCommand();
+                cmd.setCommandText(cmdText);
+                commands.add(cmd);
+            }
+            //#endregion
+        }
+
+        //reset
+        needCommand = false;
+        fks.clear();
+
+        //处理新增的成员
+        var addedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Detached).toArray();
+        if (addedMembers != null && addedMembers.length > 0)
+        {
+            //#region ----新增的成员----
+            for (EntityMemberModel m : addedMembers)
+            {
+                if (m.type() == EntityMemberModel.EntityMemberType.DataField)
+                {
+                    needCommand = true;
+                    sb.append(String.format("ALTER TABLE \"%s\" ADD COLUMN ", tableName));
+                    buildFieldDefine((DataFieldModel)m, sb, false);
+                    sb.append(";");
+                }
+                else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef)
+                {
+                    EntityRefModel rm = (EntityRefModel)m;
+                    if (!rm.isAggregationRef()) //只有非聚合引合创建外键
+                    {
+                        fks.add(buildForeignKey(rm, ctx, tableName).toString());
+                        //考虑CreateGetTreeNodeChildsDbFuncCommand
+                    }
+                }
+            }
+
+            String cmdText = sb.toString();
+            if (needCommand)
+            {
+                //加入关系
+                sb.append("\r\n");
+                for (int i = 0; i < fks.size(); i++)
+                {
+                    sb.append(fks.get(i) + "\r\n");
+                }
+
+                var cmd=new DbCommand();
+                cmd.setCommandText(cmdText);
+                commands.add(cmd);
+            }
+            //#endregion
+        }
+
+        //reset
+        needCommand = false;
+        fks.clear();
+
+        //处理修改的成员
+        var changedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Modified).toArray();
+        if (changedMembers != null && changedMembers.length > 0)
+        {
+            //#region ----修改的成员----
+            for (EntityMemberModel m : changedMembers)
+            {
+                if (m.type() == EntityMemberModel.EntityMemberType.DataField)
+                {
+                    DataFieldModel dfm = (DataFieldModel)m;
+                    //先处理数据类型变更，变更类型或者变更AllowNull或者变更默认值
+                    if (dfm.isDataTypeChanged())
+                    {
+                        sb.append(String.format("ALTER TABLE \"%s\" ALTER COLUMN ", tableName));
+                        String defaultValue = buildFieldDefine(dfm, sb, true);
+
+                        if (dfm.allowNull())
+                        {
+                            sb.append(String.format(",ALTER COLUMN \"%s\" DROP NOT NULL", dfm.sqlColOriginalName()));
+                        }
+                        else
+                        {
+                            if (dfm.dataType() == DataFieldModel.DataFieldType.Binary)
+                            {
+                                throw new RuntimeException("Binary field must be allow null");
+                            }
+                            sb.append(String.format(",ALTER COLUMN \"%s\" SET NOT NULL,ALTER COLUMN \"%s\" SET DEFAULT %s", dfm.sqlColOriginalName(), dfm.sqlColOriginalName(), defaultValue));
+                        }
+                        var cmd=new DbCommand();
+                        cmd.setCommandText(sb.toString());
+                        commands.add(cmd);
+                    }
+
+                    //再处理重命名列
+                    if (m.isNameChanged())
+                    {
+                        var renameColCmd = new DbCommand();
+                        renameColCmd.setCommandText(String.format("ALTER TABLE \"%s\" RENAME COLUMN \"%s\" TO \"%s\"", tableName, dfm.sqlColOriginalName(), dfm.sqlColName()));
+                        commands.add(renameColCmd);
+                    }
+                }
+
+                //TODO:处理EntityRef更新与删除规则
+                //注意不再需要同旧实现一样变更EntityRef的外键约束名称 "ALTER TABLE \"XXX\" RENAME CONSTRAINT \"XXX\" TO \"XXX\""
+                //因为ModelFirst的外键名称为FK_{MemberId}；CodeFirst为导入的名称
+            }
+            //#endregion
+        }
+
+        //处理索引变更
+        buildIndexes(model, commands, tableName);
+
+        return commands;
+    }
+
+    @Override
+    protected DbCommand makeDropTable(EntityModel model, IDesignContext ctx) {
+        String tableName =  model.getSqlTableName(true, ctx);
+        var cmd=new DbCommand();
+        cmd.setCommandText(String.format("DROP TABLE IF EXISTS \"%s\"",tableName));
+        return cmd;
+    }
+
     //endregion
 
     //region ====DML Methods====

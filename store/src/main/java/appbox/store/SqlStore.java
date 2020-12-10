@@ -66,6 +66,10 @@ public abstract class SqlStore {
     //region ====DDL Methods====
     protected abstract List<DbCommand> makeCreateTable(EntityModel model, IDesignContext ctx);
 
+    protected abstract List<DbCommand> makeAlterTable(EntityModel model, IDesignContext ctx);
+
+    protected abstract DbCommand makeDropTable(EntityModel model, IDesignContext ctx);
+
     public CompletableFuture<Void> createTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
         var cmds = makeCreateTable(model, ctx);
         CompletableFuture<Long> task = null;
