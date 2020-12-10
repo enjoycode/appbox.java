@@ -4,13 +4,15 @@ import appbox.cache.ObjectPool;
 import appbox.serialization.IOutputStream;
 import com.sun.jna.Pointer;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
  * 消息发送流, 注意目前实现边写边发
  */
-public final class MessageWriteStream implements IOutputStream {
+public final class MessageWriteStream extends OutputStream implements IOutputStream /*暂继承OutputStream方便写Json*/ {
     private static final ObjectPool<MessageWriteStream> pool = new ObjectPool<>(MessageWriteStream::new, 32);
 
     public static MessageWriteStream rentFromPool(byte msgType, int msgId, long sourceId, byte msgFlag,
@@ -96,6 +98,11 @@ public final class MessageWriteStream implements IOutputStream {
                 | MessageFlag.LastChunk | MessageFlag.SerializeError));
         if (_sender != null)
             _sender.accept(_curChunk);
+    }
+
+    @Override
+    public void write(int value) throws IOException {
+        writeByte((byte) value);
     }
 
     @Override
