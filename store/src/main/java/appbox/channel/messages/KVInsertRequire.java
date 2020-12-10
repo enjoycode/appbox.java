@@ -4,9 +4,8 @@ import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-
-import javax.naming.OperationNotSupportedException;
 
 public abstract class KVInsertRequire implements IMessage {
     private final KVTxnId txnId = new KVTxnId();
@@ -26,7 +25,7 @@ public abstract class KVInsertRequire implements IMessage {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         txnId.writeTo(bs);
 
         bs.writeLong(raftGroupId);

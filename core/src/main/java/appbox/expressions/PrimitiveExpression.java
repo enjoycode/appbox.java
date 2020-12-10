@@ -1,7 +1,7 @@
 package appbox.expressions;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 public final class PrimitiveExpression extends Expression {
     public final Object value;
@@ -24,7 +24,7 @@ public final class PrimitiveExpression extends Expression {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.serialize(value);
     }
 

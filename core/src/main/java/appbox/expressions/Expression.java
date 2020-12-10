@@ -1,8 +1,8 @@
 package appbox.expressions;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IOutputStream;
 
 public abstract class Expression implements IBinSerializable/*TODO:移至需要的实现*/ {
     public abstract ExpressionType getType();
@@ -33,7 +33,7 @@ public abstract class Expression implements IBinSerializable/*TODO:移至需要�
     public abstract void toCode(StringBuilder sb, String preTabs);
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         throw new UnsupportedOperationException();
     }
 

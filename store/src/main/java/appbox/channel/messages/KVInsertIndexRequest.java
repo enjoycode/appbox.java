@@ -5,6 +5,7 @@ import appbox.data.SysEntity;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.BinSerializer;
 import appbox.serialization.IEntityMemberWriter;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
 import appbox.utils.IdUtil;
@@ -27,7 +28,7 @@ public final class KVInsertIndexRequest extends KVInsertRequire {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
         //key(需要长度信息)

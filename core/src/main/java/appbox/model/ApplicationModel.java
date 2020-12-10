@@ -1,8 +1,8 @@
 package appbox.model;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IOutputStream;
 import appbox.utils.StringUtil;
 
 public final class ApplicationModel implements IBinSerializable {
@@ -46,11 +46,11 @@ public final class ApplicationModel implements IBinSerializable {
 
     //region ====IBinSerializable====
     @Override
-    public void writeTo(BinSerializer bs) {
-        bs.writeInt(_id, 1);
-        bs.writeVariant(_devModelIdSeq, 2);
-        bs.writeString(_owner, 3);
-        bs.writeString(_name, 4);
+    public void writeTo(IOutputStream bs) {
+        bs.writeIntField(_id, 1);
+        bs.writeVariantField(_devModelIdSeq, 2);
+        bs.writeStringField(_owner, 3);
+        bs.writeStringField(_name, 4);
         bs.finishWriteFields();
     }
 

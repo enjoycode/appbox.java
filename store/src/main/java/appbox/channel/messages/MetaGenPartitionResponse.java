@@ -3,6 +3,7 @@ package appbox.channel.messages;
 import appbox.channel.MessageType;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 public final class MetaGenPartitionResponse extends StoreResponse {
     public long raftGroupId;
@@ -13,7 +14,7 @@ public final class MetaGenPartitionResponse extends StoreResponse {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         throw new UnsupportedOperationException();
     }
 

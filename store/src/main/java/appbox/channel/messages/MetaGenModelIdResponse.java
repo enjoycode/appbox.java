@@ -3,6 +3,7 @@ package appbox.channel.messages;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 
 public final class MetaGenModelIdResponse extends StoreResponse {
     public int modelId;
@@ -13,7 +14,7 @@ public final class MetaGenModelIdResponse extends StoreResponse {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
 
     }
 

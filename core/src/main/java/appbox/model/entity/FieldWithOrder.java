@@ -1,8 +1,8 @@
 package appbox.model.entity;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IOutputStream;
 
 /**
  * 带排序标记的字段
@@ -26,7 +26,7 @@ public final class FieldWithOrder implements IBinSerializable { //TODO: rename t
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeShort(memberId);
         bs.writeBool(orderByDesc);
     }

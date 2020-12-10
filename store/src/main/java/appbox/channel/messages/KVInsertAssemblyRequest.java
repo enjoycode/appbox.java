@@ -1,6 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;
 
@@ -24,7 +25,7 @@ public final class KVInsertAssemblyRequest extends KVInsertRequire {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
         //key

@@ -5,8 +5,8 @@ import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.model.ModelLayer;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonWriter;
+import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
@@ -109,22 +109,22 @@ public final class SqlStoreOptions implements IEntityStoreOption {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
-        bs.writeLong(_storeModelId, 1);
+    public void writeTo(IOutputStream bs) {
+        bs.writeLongField(_storeModelId, 1);
 
         //写入主键
         if (hasPrimaryKeys()) {
             bs.writeArray(_primaryKeys, 2);
         }
-        bs.writeBool(_primaryKeysHasChanged, 3);
+        bs.writeBoolField(_primaryKeysHasChanged, 3);
 
         //写入索引
         if (hasIndexes()) {
             bs.writeList(_indexes, 4);
         }
 
-        bs.writeByte(_devIndexIdSeq, 6);
-        bs.writeByte(_usrIndexIdSeq, 7);
+        bs.writeByteField(_devIndexIdSeq, 6);
+        bs.writeByteField(_usrIndexIdSeq, 7);
 
         bs.finishWriteFields();
     }

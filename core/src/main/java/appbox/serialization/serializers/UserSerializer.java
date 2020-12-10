@@ -13,7 +13,7 @@ public final class UserSerializer extends TypeSerializer { //TODO: rename to Kno
     }
 
     @Override
-    public void write(BinSerializer bs, Object value) {
+    public void write(IOutputStream bs, Object value) {
         ((IBinSerializable) value).writeTo(bs);
     }
 

@@ -18,7 +18,7 @@ public abstract class Entity implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public final void writeTo(BinSerializer bs) {
+    public final void writeTo(IOutputStream bs) {
         bs.writeLong(_modelId);
 
         if (this instanceof SysEntity) {

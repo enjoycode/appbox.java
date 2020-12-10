@@ -4,6 +4,7 @@ import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 
 public final class KVBeginTxnRequire implements IMessage {
     //TODO:ObjectPool
@@ -16,7 +17,7 @@ public final class KVBeginTxnRequire implements IMessage {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeByte(isoLevel);
     }
 

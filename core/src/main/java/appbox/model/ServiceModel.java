@@ -1,7 +1,7 @@
 package appbox.model;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 public final class ServiceModel extends ModelBase {
     //region ====Enum Language====
@@ -45,10 +45,10 @@ public final class ServiceModel extends ModelBase {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        bs.writeByte(_language.value, 2);
+        bs.writeByteField(_language.value, 2);
 
         bs.finishWriteFields();
     }

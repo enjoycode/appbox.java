@@ -1,6 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 
 /** 仅用于测试 */
@@ -17,7 +18,7 @@ public final class KVDeleteDataRequest extends KVDeleteRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
         //refs

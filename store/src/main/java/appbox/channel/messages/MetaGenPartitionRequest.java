@@ -4,6 +4,7 @@ import appbox.channel.IMessage;
 import appbox.channel.MessageType;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.PartitionInfo;
 
@@ -23,7 +24,7 @@ public final class MetaGenPartitionRequest implements IMessage {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         //txnId
         txnId.writeTo(bs);
         //raftType flags

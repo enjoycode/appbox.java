@@ -12,7 +12,7 @@ public class EntityIdSerializer extends TypeSerializer {
     }
 
     @Override
-    public void write(BinSerializer bs, Object value) {
+    public void write(IOutputStream bs, Object value) {
         ((EntityId) value).writeTo(bs);
     }
 

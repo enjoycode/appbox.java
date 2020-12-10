@@ -6,6 +6,7 @@ import appbox.runtime.InvokeArg;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 
 import java.util.ArrayList;
 
@@ -72,7 +73,7 @@ public final class InvokeRequire implements IMessage {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeShort(shard);
         bs.writeLong(sessionId);
         bs.writeString(service);

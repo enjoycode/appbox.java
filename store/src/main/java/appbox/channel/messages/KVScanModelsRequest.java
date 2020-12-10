@@ -1,6 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;
 
 /**
@@ -9,7 +10,7 @@ import appbox.store.KeyUtil;
 public final class KVScanModelsRequest extends KVScanRequest {
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeNativeVariant(1); //BeginKeySize

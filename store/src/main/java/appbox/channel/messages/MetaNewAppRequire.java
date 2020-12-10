@@ -5,6 +5,7 @@ import appbox.model.ApplicationModel;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;
 
 public final class MetaNewAppRequire implements IMessage {
@@ -22,7 +23,7 @@ public final class MetaNewAppRequire implements IMessage {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         //写入５字节Key
         KeyUtil.writeAppKey(bs, application.id(), false);
         //写入模型数据,注意不需要写入头部9字节，由读取端处理

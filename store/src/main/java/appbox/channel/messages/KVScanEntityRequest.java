@@ -2,6 +2,7 @@ package appbox.channel.messages;
 
 import appbox.expressions.Expression;
 import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;
 
 /** 扫描表分区请求 */
@@ -20,7 +21,7 @@ public final class KVScanEntityRequest extends KVScanRequest {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(raftGroupId); //raftGroupId
 

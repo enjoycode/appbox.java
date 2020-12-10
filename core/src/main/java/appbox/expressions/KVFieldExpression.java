@@ -2,7 +2,7 @@ package appbox.expressions;
 
 import appbox.model.entity.DataFieldModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IOutputStream;
 
 public final class KVFieldExpression extends Expression {
     public final short                        fieldId;
@@ -27,7 +27,7 @@ public final class KVFieldExpression extends Expression {
     }
 
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeShort(fieldId);
         bs.writeByte(fieldType.value);
     }

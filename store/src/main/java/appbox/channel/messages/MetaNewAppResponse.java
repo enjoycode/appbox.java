@@ -3,6 +3,7 @@ package appbox.channel.messages;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 
 public final class MetaNewAppResponse extends StoreResponse {
     public byte appId;
@@ -14,7 +15,7 @@ public final class MetaNewAppResponse extends StoreResponse {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
 
     }
 

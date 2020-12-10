@@ -4,6 +4,7 @@ import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 
 public abstract class KVDeleteRequest implements IMessage {
@@ -25,7 +26,7 @@ public abstract class KVDeleteRequest implements IMessage {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         txnId.writeTo(bs);
 
         bs.writeLong(raftGroupId);

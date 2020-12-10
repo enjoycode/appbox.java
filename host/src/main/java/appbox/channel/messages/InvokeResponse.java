@@ -5,6 +5,7 @@ import appbox.channel.IMessage;
 import appbox.serialization.BinDeserializer;
 import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IOutputStream;
 
 public final class InvokeResponse implements IMessage {
     public static final class ErrorCode {
@@ -39,7 +40,7 @@ public final class InvokeResponse implements IMessage {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         //注意不要改变写入顺序
         bs.writeInt(reqId);
         bs.writeShort(shard);

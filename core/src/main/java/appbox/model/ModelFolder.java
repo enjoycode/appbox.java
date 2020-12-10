@@ -1,8 +1,8 @@
 package appbox.model;
 
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IOutputStream;
 
 import java.util.List;
 import java.util.UUID;
@@ -118,21 +118,21 @@ public class ModelFolder implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         if (_parent != null) {
-            bs.writeUUID(_id, 1);
-            bs.writeString(_name, 2);
+            bs.writeUUIDField(_id, 1);
+            bs.writeStringField(_name, 2);
             bs.serialize(_parent, 4);
             if (_targetModelType == ModelType.Permission) //仅权限文件夹排序
-                bs.writeInt(_sortNum, 8);
+                bs.writeIntField(_sortNum, 8);
         } else {
-            bs.writeInt(_version, 3);
-            bs.writeBool(_isDeleted, 9);
+            bs.writeIntField(_version, 3);
+            bs.writeBoolField(_isDeleted, 9);
         }
         if (hasChild())
             bs.writeList(_childs, 5);
-        bs.writeInt(_appId, 6);
-        bs.writeByte(_targetModelType.value, 7);
+        bs.writeIntField(_appId, 6);
+        bs.writeByteField(_targetModelType.value, 7);
 
         bs.writeInt(0);
     }

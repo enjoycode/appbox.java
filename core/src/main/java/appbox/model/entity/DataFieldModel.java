@@ -3,8 +3,8 @@ package appbox.model.entity;
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
 import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IJsonWriter;
+import appbox.serialization.IOutputStream;
 
 public final class DataFieldModel extends EntityMemberModel {
     //region ====DataFieldType====
@@ -134,25 +134,25 @@ public final class DataFieldModel extends EntityMemberModel {
 
     //region ====Serialization====
     @Override
-    public void writeTo(BinSerializer bs) {
+    public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        bs.writeByte(_dataType.value, 1);
-        bs.writeBool(_isForeignKey, 2);
+        bs.writeByteField(_dataType.value, 1);
+        bs.writeBoolField(_isForeignKey, 2);
         if (_dataType == DataFieldType.Enum) {
-            bs.writeLong(_enumModelId, 3);
+            bs.writeLongField(_enumModelId, 3);
         } else if (_dataType == DataFieldType.String) {
-            bs.writeVariant(_length, 5);
+            bs.writeVariantField(_length, 5);
         } else if (_dataType == DataFieldType.Decimal) {
-            bs.writeVariant(_length, 5);
-            bs.writeVariant(_decimals, 6);
+            bs.writeVariantField(_length, 5);
+            bs.writeVariantField(_decimals, 6);
         }
 
         if (_defaultValue != null) {
             bs.serialize(_defaultValue, 4);
         }
 
-        bs.writeBool(_isDataTypeChanged, 7);
+        bs.writeBoolField(_isDataTypeChanged, 7);
 
         bs.finishWriteFields();
     }
