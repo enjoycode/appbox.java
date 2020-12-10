@@ -1,23 +1,20 @@
 package appbox.runtime;
 
 import appbox.cache.BytesSegment;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.serialization.PayloadType;
 
-public final class InvokeArgs {
+public final class InvokeArgs implements IInputStream {
 
+    //region ====Maker====
     public static class Maker implements IOutputStream {
 
-        private BytesSegment  _current;
-        private int           _pos;
+        private BytesSegment _current;
+        private int          _pos;
 
-        Maker() {
-            _current    = BytesSegment.rent();
-        }
-
-        public void add(int arg) {
-            writeByte(PayloadType.Int32);
-            writeInt(arg);
+        private Maker() {
+            _current = BytesSegment.rent();
         }
 
         public InvokeArgs done() {
@@ -25,11 +22,16 @@ public final class InvokeArgs {
         }
 
         //region ----IOutputStream----
+        private void createSegment() {
+            _current.setDataSize(_pos);
+            _current = BytesSegment.rent(_current);
+            _pos     = 0;
+        }
+
         @Override
         public void writeByte(byte value) {
             if (_pos >= BytesSegment.FRAME_SIZE) {
-                _current = BytesSegment.rent(_current);
-                _pos = 0;
+                createSegment();
             }
             _current.buffer[_pos++] = value;
         }
@@ -43,23 +45,94 @@ public final class InvokeArgs {
                     _pos += count;
                 } else {
                     System.arraycopy(src, offset, _current.buffer, _pos, left);
-                    _current = BytesSegment.rent(_current);
-                    _pos = 0;
+                    createSegment();
                     write(src, offset + left, count - left);
                 }
             } else {
-                _current = BytesSegment.rent(_current);
-                _pos = 0;
+                createSegment();
                 write(src, offset, count);
             }
         }
         //endregion
     }
 
+    public static Maker make() {
+        return new Maker();
+    }
+    //endregion
+
     private BytesSegment _current;
+    private int          _pos;
 
     private InvokeArgs(BytesSegment first) {
-       _current = first;
+        _current = first;
     }
+
+    //region ====GetXXX Methods====
+    public int getInt() {
+        var payloadType = readByte();
+        if (payloadType == PayloadType.Int32) {
+            return readInt();
+        }
+        throw new RuntimeException("PayloadType Error");
+    }
+
+    public String getString() {
+        var payloadType = readByte();
+        if (payloadType == PayloadType.String) {
+            return readString();
+        }
+        throw new RuntimeException("PayloadType Error");
+    }
+    //endregion
+
+    //region ====IInputStream====
+    private void moveToNext() {
+        var next = _current.next();
+        if (next == null) {
+            throw new RuntimeException("Has no data to read.");
+        }
+
+        _current = next;
+        _pos     = 0;
+    }
+
+    @Override
+    public byte readByte() {
+        if (_pos >= _current.getDataSize()) {
+            moveToNext();
+        }
+        return _current.buffer[_pos++];
+    }
+
+    @Override
+    public void read(byte[] dest, int offset, int count) {
+        var left = _current.getDataSize() - _pos;
+        if (left > 0) {
+            if (left >= count) {
+                System.arraycopy(_current.buffer, _pos, dest, offset, count);
+                _pos += count;
+            } else {
+                System.arraycopy(_current.buffer, _pos, dest, offset, left);
+                moveToNext();
+                read(dest, offset + left, count - left);
+            }
+        } else {
+            moveToNext();
+            read(dest, offset, count);
+        }
+    }
+
+    @Override
+    public int remaining() {
+        var remaining = _current.getDataSize() - _pos;
+        var temp      = _current.next();
+        while (temp != null) {
+            remaining += temp.getDataSize();
+            temp = temp.next();
+        }
+        return remaining;
+    }
+    //endregion
 
 }

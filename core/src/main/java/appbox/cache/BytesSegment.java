@@ -53,6 +53,7 @@ public final class BytesSegment {
     public final byte[]       buffer;
     private      BytesSegment _first;
     private      BytesSegment _next;
+    private      int          _dataSize;
 
     public BytesSegment() {
         buffer = new byte[FRAME_SIZE];
@@ -62,6 +63,18 @@ public final class BytesSegment {
 
     public BytesSegment first() {
         return _first;
+    }
+
+    public BytesSegment next() { return _next; }
+
+    public int getDataSize() {
+        return _dataSize;
+    }
+
+    public void setDataSize(int size) {
+        if (size < 0 || size > FRAME_SIZE)
+            throw new IllegalArgumentException();
+        _dataSize = size;
     }
 
 }
