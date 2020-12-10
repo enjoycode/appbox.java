@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static java.util.stream.Collectors.toList;
-
 public final class PgSqlStore extends SqlStore implements AutoCloseable {
 
     private final ConnectionPool<PostgreSQLConnection> _connectionPool;
@@ -155,8 +153,8 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         }
 
         //处理删除的成员
-        var deletedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Deleted).collect(toList());
-        if (deletedMembers != null && deletedMembers.size() > 0)
+        var deletedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Deleted).toArray();
+        if (deletedMembers != null && deletedMembers.length > 0)
         {
             //#region ----删除的成员----
             for (EntityMemberModel m : deletedMembers)
@@ -198,8 +196,8 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         fks.clear();
 
         //处理新增的成员
-        var addedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Detached).collect(toList());
-        if (addedMembers != null && addedMembers.size() > 0)
+        var addedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Detached).toArray();
+        if (addedMembers != null && addedMembers.length > 0)
         {
             //#region ----新增的成员----
             for (EntityMemberModel m : addedMembers)
@@ -244,8 +242,8 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         fks.clear();
 
         //处理修改的成员
-        var changedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Modified).collect(toList());
-        if (changedMembers != null && changedMembers.size() > 0)
+        var changedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Modified).toArray();
+        if (changedMembers != null && changedMembers.length > 0)
         {
             //#region ----修改的成员----
             for (EntityMemberModel m : changedMembers)
