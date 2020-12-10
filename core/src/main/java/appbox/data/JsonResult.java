@@ -1,9 +1,12 @@
 package appbox.data;
 
 import appbox.serialization.*;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -43,18 +46,18 @@ public final class JsonResult implements IBinSerializable {
             }
 
             //TODO:fast for primitive types
-            throw new RuntimeException("待重新实现");
-            //直接写Json
-            //if (result instanceof IJsonSerializable) {
-            //    var out        = new OutputStreamWriter(bs);
-            //    var jsonWriter = new FastJsonWriter(out);
-            //    ((IJsonSerializable) result).writeToJson(jsonWriter);
-            //    jsonWriter.close();
-            //    return;
-            //}
 
-            //JSON.writeJSONString(bs, StandardCharsets.UTF_8, result,
-            //        config, null, null, JSON.DEFAULT_GENERATE_FEATURE);
+            //fast for IJSonSerializable
+            if (result instanceof IJsonSerializable) {
+                var out        = new OutputStreamWriter((OutputStream) bs);
+                var jsonWriter = new FastJsonWriter(out);
+                ((IJsonSerializable) result).writeToJson(jsonWriter);
+                jsonWriter.close();
+                return;
+            }
+
+            JSON.writeJSONString((OutputStream) bs, StandardCharsets.UTF_8, result,
+                    config, null, null, JSON.DEFAULT_GENERATE_FEATURE);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
