@@ -3,9 +3,8 @@ package appbox.channel.messages;
 import appbox.cache.ObjectPool;
 import appbox.channel.IMessage;
 import appbox.runtime.InvokeArg;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 import java.util.ArrayList;
@@ -84,7 +83,7 @@ public final class InvokeRequire implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         shard     = bs.readShort();
         sessionId = bs.readLong();
         service   = bs.readString();

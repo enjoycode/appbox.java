@@ -1,7 +1,7 @@
 package appbox.runtime;
 
 import appbox.cache.ObjectPool;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.serialization.PayloadType;
 
@@ -67,7 +67,7 @@ public final class InvokeArg {
         bs.serialize(value);
     }
 
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         //TODO:暂简单实现，待优化
         value = bs.deserialize();
     }

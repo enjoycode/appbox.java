@@ -1,9 +1,8 @@
 package appbox.channel.messages;
 
 import appbox.channel.IMessage;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 
@@ -38,7 +37,7 @@ public abstract class KVDeleteRequest implements IMessage {
     }
 
     @Override
-    public final void readFrom(BinDeserializer bs) {
+    public final void readFrom(IInputStream bs) {
         throw new UnsupportedOperationException();
     }
     //endregion

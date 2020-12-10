@@ -2,10 +2,7 @@ package appbox.model.entity;
 
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.IBinSerializable;
-import appbox.serialization.IJsonWriter;
-import appbox.serialization.IOutputStream;
+import appbox.serialization.*;
 
 /**
  * 实体成员模型基类
@@ -131,7 +128,7 @@ public abstract class EntityMemberModel implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         int propIndex;
         do {
             propIndex = bs.readVariant();

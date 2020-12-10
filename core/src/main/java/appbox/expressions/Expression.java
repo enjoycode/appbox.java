@@ -1,7 +1,7 @@
 package appbox.expressions;
 
-import appbox.serialization.BinDeserializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 public abstract class Expression implements IBinSerializable/*TODO:移至需要的实现*/ {
@@ -38,7 +38,7 @@ public abstract class Expression implements IBinSerializable/*TODO:移至需要�
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         throw new UnsupportedOperationException();
     }
 }

@@ -14,19 +14,15 @@ public class TestMsgSerialization {
         src.addArg(12345);
 
         var output = new BytesOutputStream(8192);
-        var os     = BinSerializer.rentFromPool(output);
-        src.writeTo(os); //直接写
-        BinSerializer.backToPool(os);
+        src.writeTo(output); //直接写
 
         var input = output.copyToInput();
-        var is    = BinDeserializer.rentFromPool(input);
         var dst   = InvokeRequire.rentFromPool();
-        dst.readFrom(is); //直接读
+        dst.readFrom(input); //直接读
         assertEquals(src.shard, dst.shard);
         assertEquals(src.service, dst.service);
         assertEquals(src.getArgsCount(), dst.getArgsCount());
         assertEquals(src.getArg(0).getInt(), dst.getArg(0).getInt());
-        BinDeserializer.backToPool(is);
 
         InvokeRequire.backToPool(src);
         InvokeRequire.backToPool(dst);
@@ -44,9 +40,7 @@ public class TestMsgSerialization {
         req.addArg("Future");
 
         var output = new BytesOutputStream(8192);
-        var os     = BinSerializer.rentFromPool(output);
-        req.writeTo(os);
-        BinSerializer.backToPool(os);
+        req.writeTo(output);
 
         output.saveToFile(10/*偏移shard + sessionId*/, "src/test/java/InvokeRequire.bin");
     }

@@ -1,6 +1,5 @@
 package appbox.channel;
 
-import appbox.serialization.BinDeserializer;
 import com.sun.jna.Pointer;
 
 /**
@@ -18,11 +17,9 @@ public interface IHostMessageChannel extends IMessageChannel {
      */
     static <T extends IMessage> void deserialize(T msg, Pointer first) {
         var stream = MessageReadStream.rentFromPool(first);
-        var reader = BinDeserializer.rentFromPool(stream);
         try {
-            msg.readFrom(reader);
+            msg.readFrom(stream);
         } finally {
-            BinDeserializer.backToPool(reader);
             MessageReadStream.backToPool(stream);
         }
     }

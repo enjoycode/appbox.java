@@ -1,9 +1,6 @@
 package appbox.serialization.serializers;
 
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.IOutputStream;
-import appbox.serialization.PayloadType;
-import appbox.serialization.TypeSerializer;
+import appbox.serialization.*;
 
 import java.util.UUID;
 
@@ -21,7 +18,7 @@ public class UUIDSerializer extends TypeSerializer {
     }
 
     @Override
-    public Object read(BinDeserializer bs, Object value) {
+    public Object read(IInputStream bs, Object value) {
         return bs.readUUID();
     }
 }

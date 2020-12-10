@@ -2,13 +2,13 @@ package appbox.channel.messages;
 
 import appbox.data.PersistentState;
 import appbox.model.ModelBase;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 
 public final class KVScanModelsResponse extends KVScanResponse {
     public ModelBase[] models;
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId     = bs.readInt();
         errorCode = bs.readInt();
 

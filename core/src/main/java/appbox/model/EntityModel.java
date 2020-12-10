@@ -2,10 +2,7 @@ package appbox.model;
 
 import appbox.data.PersistentState;
 import appbox.model.entity.*;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.IJsonSerializable;
-import appbox.serialization.IJsonWriter;
-import appbox.serialization.IOutputStream;
+import appbox.serialization.*;
 import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
@@ -288,7 +285,7 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         super.readFrom(bs);
 
         int propIndex;

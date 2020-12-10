@@ -1,8 +1,7 @@
 package appbox.channel.messages;
 
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 
@@ -22,7 +21,7 @@ public final class KVBeginTxnResponse extends StoreResponse {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         reqId = bs.readInt();
         errorCode = bs.readInt();
         txnId.readFrom(bs);

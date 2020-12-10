@@ -3,7 +3,6 @@ package appbox.channel.messages;
 import appbox.data.EntityId;
 import appbox.model.EntityModel;
 import appbox.model.entity.EntityRefModel;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
 import appbox.store.KeyUtil;

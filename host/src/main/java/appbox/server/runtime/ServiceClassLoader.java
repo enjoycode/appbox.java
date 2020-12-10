@@ -1,7 +1,6 @@
 package appbox.server.runtime;
 
 import appbox.compression.BrotliUtil;
-import appbox.serialization.BinDeserializer;
 import appbox.serialization.BytesInputStream;
 
 import java.io.IOException;
@@ -12,21 +11,17 @@ public final class ServiceClassLoader extends ClassLoader {
     public Class<?> loadServiceClass(String name, byte[] compressedData) throws IOException {
         var      data         = BrotliUtil.decompress(compressedData);
         var      input        = new BytesInputStream(data);
-        var      ds           = BinDeserializer.rentFromPool(input);
         Class<?> serviceClass = null;
-        try {
-            int count = ds.readVariant();
-            for (int i = 0; i < count; i++) {
-                var className = ds.readString();
-                var dataLen   = ds.readVariant();
-                var clazz     = defineClass(className, data, input.getPosition(), dataLen);
-                ds.skip(dataLen);
-                if (className.equals(name)) {
-                    serviceClass = clazz;
-                }
+
+        int count = input.readVariant();
+        for (int i = 0; i < count; i++) {
+            var className = input.readString();
+            var dataLen   = input.readVariant();
+            var clazz     = defineClass(className, data, input.getPosition(), dataLen);
+            input.skip(dataLen);
+            if (className.equals(name)) {
+                serviceClass = clazz;
             }
-        } finally {
-            BinDeserializer.backToPool(ds);
         }
 
         return serviceClass;

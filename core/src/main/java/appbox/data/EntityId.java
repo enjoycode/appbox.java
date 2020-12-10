@@ -1,7 +1,7 @@
 package appbox.data;
 
 import appbox.runtime.RuntimeContext;
-import appbox.serialization.BinDeserializer;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 import java.util.Arrays;
@@ -127,7 +127,7 @@ public final class EntityId {
         bs.write(_data, 0, 16);
     }
 
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         bs.read(_data, 0, 16);
     }
 

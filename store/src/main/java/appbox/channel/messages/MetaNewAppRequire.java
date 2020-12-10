@@ -2,9 +2,8 @@ package appbox.channel.messages;
 
 import appbox.channel.IMessage;
 import appbox.model.ApplicationModel;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
 import appbox.channel.MessageType;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;
 
@@ -31,7 +30,7 @@ public final class MetaNewAppRequire implements IMessage {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
 
     }
     //endregion

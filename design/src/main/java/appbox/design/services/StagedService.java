@@ -6,7 +6,7 @@ import appbox.model.EntityModel;
 import appbox.model.ModelBase;
 import appbox.model.ModelFolder;
 import appbox.runtime.RuntimeContext;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IBinSerializable;
 import appbox.store.EntityStore;
 import appbox.store.KVTransaction;
 import appbox.store.query.TableScan;
@@ -38,7 +38,7 @@ public final class StagedService {
 
     /** 保存Staged模型 */
     public static CompletableFuture<Void> saveModelAsync(ModelBase model) {
-        var data = BinSerializer.serialize(model, false);
+        var data = IBinSerializable.serialize(model, false);
         return saveAsync(StagedType.Model, Long.toUnsignedString(model.id()), data);
     }
 
@@ -46,7 +46,7 @@ public final class StagedService {
     public static CompletableFuture<Void> saveFolderAsync(ModelFolder folder) {
         if (folder.getParent() != null)
             throw new RuntimeException("仅允许保存模型类型的根目录");
-        var data = BinSerializer.serialize(folder, false);
+        var data = IBinSerializable.serialize(folder, false);
         return saveAsync(StagedType.Folder, folder.getAppId() + "-" + folder.getTargetModelType().value /*不要使用folder.Id*/, data);
     }
 

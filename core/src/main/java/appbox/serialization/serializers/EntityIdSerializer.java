@@ -17,7 +17,7 @@ public class EntityIdSerializer extends TypeSerializer {
     }
 
     @Override
-    public Object read(BinDeserializer bs, Object value) {
+    public Object read(IInputStream bs, Object value) {
         ((EntityId) value).readFrom(bs);
         return value;
     }

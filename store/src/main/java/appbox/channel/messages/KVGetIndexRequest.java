@@ -2,7 +2,6 @@ package appbox.channel.messages;
 
 import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.SysIndexModel;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IOutputStream;
 import appbox.store.KeyUtil;

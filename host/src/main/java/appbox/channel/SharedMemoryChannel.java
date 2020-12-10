@@ -1,7 +1,6 @@
 package appbox.channel;
 
 import appbox.logging.Log;
-import appbox.serialization.BinSerializer;
 import com.sun.jna.Pointer;
 
 import java.util.HashMap;
@@ -138,9 +137,8 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
                 id, sourceId, flag,
                 () -> NativeSmq.SMQ_GetChunkForWriting(_sendQueue, -1),
                 (s) -> NativeSmq.SMQ_PostChunk(_sendQueue, s));
-        var bs = BinSerializer.rentFromPool(mws);
         try {
-            msg.writeTo(bs);
+            msg.writeTo(mws);
             mws.flush(); //必须
         } catch (Exception e) {
             //发生异常，则通知接收端取消挂起的消息
@@ -149,7 +147,6 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
             Log.warn(e.toString());
             throw e;
         } finally {
-            BinSerializer.backToPool(bs);
             MessageWriteStream.backToPool(mws);
         }
     }

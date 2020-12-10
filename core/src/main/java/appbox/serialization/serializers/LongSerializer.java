@@ -1,9 +1,6 @@
 package appbox.serialization.serializers;
 
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.IOutputStream;
-import appbox.serialization.PayloadType;
-import appbox.serialization.TypeSerializer;
+import appbox.serialization.*;
 
 public final class LongSerializer extends TypeSerializer {
     public static final LongSerializer instance = new LongSerializer();
@@ -18,7 +15,7 @@ public final class LongSerializer extends TypeSerializer {
     }
 
     @Override
-    public Object read(BinDeserializer bs, Object value) {
+    public Object read(IInputStream bs, Object value) {
         return bs.readLong();
     }
 }

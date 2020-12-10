@@ -1,7 +1,7 @@
 package appbox.model.entity;
 
-import appbox.serialization.BinDeserializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 /**
@@ -70,7 +70,7 @@ public final class PartitionKey implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         memberId     = bs.readShort();
         orderByDesc  = bs.readBool();
         rule         = PartitionKeyRule.fromValue(bs.readByte());

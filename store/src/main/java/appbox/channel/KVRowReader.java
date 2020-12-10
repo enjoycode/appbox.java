@@ -3,8 +3,8 @@ package appbox.channel;
 import appbox.data.EntityId;
 import appbox.data.IKVRow;
 import appbox.data.SysIndex;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
+import appbox.serialization.IInputStream;
+import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
 import java.util.function.BiConsumer;
@@ -68,9 +68,10 @@ public final class KVRowReader {
 
     /**
      * 将存储返回的成员值读出并写入，主要用于Update or Delete entity后更新索引
+     * @param bs
      * @param flags (1 << IdUtil.MEMBERID_ORDER_OFFSET) 或者 0
      */
-    public static void writeMember(byte[] rowData, short id, BinSerializer bs, byte flags) {
+    public static void writeMember(byte[] rowData, short id, IOutputStream bs, byte flags) {
         findMember(rowData, id, (cur, fieldSize) -> {
             if (cur < 0) { //未找到
                 bs.writeShort((short) (id | flags | IdUtil.STORE_FIELD_NULL_FLAG));   //重新写入带排序标记的memberId
@@ -83,7 +84,7 @@ public final class KVRowReader {
     }
 
     /** 专用于读取从存储返回的行数据 */
-    public static void readFields(BinDeserializer bs, IKVRow target) {
+    public static void readFields(IInputStream bs, IKVRow target) {
         var   valueSize = bs.readNativeVariant(); //Row's value size
         int   readSize  = 0;
         short fieldId   = 0; //存储的字段标识

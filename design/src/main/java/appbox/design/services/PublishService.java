@@ -13,7 +13,6 @@ import appbox.model.ModelType;
 import appbox.model.ServiceModel;
 import appbox.runtime.IService;
 import appbox.runtime.RuntimeContext;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.BytesOutputStream;
 import appbox.store.DbTransaction;
 import appbox.store.KVTransaction;
@@ -96,7 +95,7 @@ public final class PublishService {
         var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
 
         //生成运行时临时Project并进行编译
-        var libAppBoxCorePath = new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        var libAppBoxCorePath  = new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         var libAppBoxStorePath = new Path(SqlStore.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         var libs = new IClasspathEntry[]{
                 JavaCore.newLibraryEntry(libAppBoxCorePath, null, null),
@@ -113,24 +112,20 @@ public final class PublishService {
         builder.build();
 
         //获取并压缩编译好的.class
-        var classFolder = runtimeProject.getFolder(LanguageServer.BUILD_OUTPUT);
-        var classFiles = classFolder.members();
-        var outStream = new BytesOutputStream(2048);
-        var bs = BinSerializer.rentFromPool(outStream);
-        byte[] classData = null;
-        try {
-            bs.writeVariant(classFiles.length); //.class文件数
-            for (var classFile : classFiles) {
-                var className = classFile.getName().replace(".class", "");
-                bs.writeString(className);
-                bs.writeByteArray(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
-                classFile.delete(true, null);
-            }
+        var    classFolder = runtimeProject.getFolder(LanguageServer.BUILD_OUTPUT);
+        var    classFiles  = classFolder.members();
+        var    outStream   = new BytesOutputStream(2048);
+        byte[] classData   = null;
 
-            classData = BrotliUtil.compress(outStream.getBuffer(), 0, outStream.size());
-        } finally {
-            BinSerializer.backToPool(bs);
+        outStream.writeVariant(classFiles.length); //.class文件数
+        for (var classFile : classFiles) {
+            var className = classFile.getName().replace(".class", "");
+            outStream.writeString(className);
+            outStream.writeByteArray(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
+            classFile.delete(true, null);
         }
+
+        classData = BrotliUtil.compress(outStream.getBuffer(), 0, outStream.size());
 
         //删除用于编译的临时Project及运行时服务代码
         runtimeFile.delete(true, null);

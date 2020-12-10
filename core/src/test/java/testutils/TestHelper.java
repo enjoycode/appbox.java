@@ -4,10 +4,6 @@ import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.FieldWithOrder;
 import appbox.model.entity.SysIndexModel;
-import appbox.serialization.BinDeserializer;
-import appbox.serialization.BinSerializer;
-import appbox.serialization.BytesInputStream;
-import appbox.serialization.BytesOutputStream;
 import appbox.utils.IdUtil;
 
 public final class TestHelper {
@@ -26,19 +22,6 @@ public final class TestHelper {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    public static void serializeTo(Object obj, BytesOutputStream output) {
-        var bs = BinSerializer.rentFromPool(output);
-        bs.serialize(obj);
-        BinSerializer.backToPool(bs);
-    }
-
-    public static Object deserializeFrom(BytesInputStream input) {
-        var bs  = BinDeserializer.rentFromPool(input);
-        var res = bs.deserialize();
-        BinDeserializer.backToPool(bs);
-        return res;
     }
 
 }

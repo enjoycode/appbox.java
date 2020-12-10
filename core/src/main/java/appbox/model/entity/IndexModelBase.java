@@ -2,8 +2,8 @@ package appbox.model.entity;
 
 import appbox.data.PersistentState;
 import appbox.model.EntityModel;
-import appbox.serialization.BinDeserializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 /**
@@ -109,7 +109,7 @@ public abstract class IndexModelBase implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         int propIndex;
         do {
             propIndex = bs.readVariant();

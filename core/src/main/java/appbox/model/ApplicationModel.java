@@ -1,7 +1,7 @@
 package appbox.model;
 
-import appbox.serialization.BinDeserializer;
 import appbox.serialization.IBinSerializable;
+import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.utils.StringUtil;
 
@@ -55,7 +55,7 @@ public final class ApplicationModel implements IBinSerializable {
     }
 
     @Override
-    public void readFrom(BinDeserializer bs) {
+    public void readFrom(IInputStream bs) {
         int fieldId;
         do {
             fieldId = bs.readVariant();

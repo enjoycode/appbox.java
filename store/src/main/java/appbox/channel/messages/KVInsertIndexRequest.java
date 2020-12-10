@@ -3,7 +3,6 @@ package appbox.channel.messages;
 import appbox.channel.MemberSizeCounter;
 import appbox.data.SysEntity;
 import appbox.model.entity.SysIndexModel;
-import appbox.serialization.BinSerializer;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;

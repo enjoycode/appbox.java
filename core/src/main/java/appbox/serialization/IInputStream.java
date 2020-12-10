@@ -1,22 +1,71 @@
 package appbox.serialization;
 
-import java.util.UUID;
+import appbox.data.EntityId;
+import appbox.utils.IdUtil;
 
-public interface IInputStream {
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
+
+public interface IInputStream extends IEntityMemberReader {
+
+    //region ====abstract====
+    byte readByte();
+
+    void read(byte[] dest, int offset, int count);
 
     /**
      * 流内剩余字节数
      */
     int remaining();
+    //endregion
+
+    //region ====Deserialize====
+    default Object deserialize() {
+        var payloadType = readByte();
+        if (payloadType == PayloadType.Null) return null;
+        else if (payloadType == PayloadType.BooleanTrue) return Boolean.TRUE;
+        else if (payloadType == PayloadType.BooleanFalse) return Boolean.FALSE;
+        else if (payloadType == PayloadType.ObjectRef) throw new RuntimeException("TODO");
+
+        TypeSerializer serializer = null;
+        if (payloadType == PayloadType.ExtKnownType) throw new RuntimeException("TODO");
+        else serializer = TypeSerializer.getSerializer(payloadType);
+        if (serializer == null) throw new RuntimeException("待实现未知类型反序列化");
+
+        //读取附加类型信息并创建实例
+        if (serializer.creator == null && payloadType != PayloadType.Array //非数组类型
+            /*&& serializer.genericTypeCount <= 0 //非范型类型*/) {
+            return serializer.read(this, null);
+        } else { //其他需要创建实例的类型
+            Object result = null;
+            //TODO: 先处理数组及范型类型
+            result = serializer.creator.get();
+            //addToObjectRefs(result);
+            serializer.read(this, result); return result;
+        }
+    }
+    //endregion
 
     /** 是否流内有剩余字节 */
     default boolean hasRemaining() {
         return remaining() > 0;
     }
 
-    byte readByte();
-
-    void read(byte[] dest, int offset, int count);
+    /** 读剩余字节，没有返回null */
+    default byte[] readRemaining() {
+        int left = remaining();
+        if (left <= 0) {
+            return null;
+        }
+        var data = new byte[left];
+        read(data, 0, data.length);
+        return data;
+    }
 
     /**
      * 跳过指定字节数
@@ -160,4 +209,138 @@ public interface IInputStream {
 
         return new String(dst);
     }
+
+    //region ====Collections====
+    //private static <E extends IBinSerializable> Supplier<E> getCreator(Class<E> clazz) {
+    //    var serializer = TypeSerializer.getSerializer(clazz);
+    //
+    //    Supplier<E> creator = null;
+    //    if (serializer != null) {
+    //        creator = () -> (E) serializer.creator;
+    //    } else {
+    //        try {
+    //            var ctor = clazz.getDeclaredConstructor();
+    //            creator = () -> {
+    //                try {
+    //                    return ctor.newInstance();
+    //                } catch (Exception e) {
+    //                    throw new RuntimeException(e);
+    //                }
+    //            };
+    //        } catch (Exception ex) {
+    //            throw new RuntimeException(ex);
+    //        }
+    //    }
+    //    return creator;
+    //}
+
+    default  <E extends IBinSerializable> E[] readArray(IntFunction<E[]> arrayMaker, Supplier<E> elementMaker) {
+        var count = readVariant();
+        if (count == -1)
+            return null;
+        //else if (count == -2)
+
+        E[] array = arrayMaker.apply(count);
+        for (int i = 0; i < count; i++) {
+            if (readBool()) {
+                array[i] = elementMaker.get();
+                array[i].readFrom(this);
+            }
+        }
+        return array;
+    }
+
+    default  <E extends IBinSerializable> List<E> readList(Supplier<E> elementMaker) {
+        var count = readVariant();
+        if (count == -1)
+            return null;
+        //else if (count == -2)
+
+        var list    = new ArrayList<E>(count);
+        //addToObjectRefs(list);
+        for (int i = 0; i < count; i++) {
+            if (readBool()) {
+                var element = elementMaker.get();
+                element.readFrom(this);
+                list.add(element);
+            } else {
+                list.add(null);
+            }
+        }
+        return list;
+    }
+    //endregion
+
+    //region ====IEntityMemberReader====
+
+    /** 读取与存储一致的3字节长度(小字节序) */
+    default int readStoreVarLen() {
+        var byte1 = readByte() & 255;
+        var byte2 = readByte() & 255;
+        var byte3 = readByte() & 255;
+        return byte3 << 16 | byte2 << 8 | byte1;
+    }
+
+    @Override
+    default String readStringMember(int flags) {
+        if (flags == 0)
+            return readString();
+        int size  = flags >>> 8; //TODO:优化读utf8
+        var bytes = new byte[size];
+        read(bytes, 0, size);
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    default boolean readBoolMember(int flags) {
+        if (flags == 0)
+            return readBool();
+        return (flags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;
+    }
+
+    @Override
+    default int readIntMember(int flags) {
+        return readInt();
+    }
+
+    @Override
+    default byte readByteMember(int flags) {
+        return readByte();
+    }
+
+    @Override
+    default long readLongMember(int flags) {
+        return readLong();
+    }
+
+    @Override
+    default UUID readUUIDMember(int flags) {
+        return new UUID(readLong(), readLong());
+    }
+
+    @Override
+    default byte[] readBinaryMember(int flags) {
+        if (flags == 0)
+            return readByteArray();
+        int size  = flags >>> 8;
+        var bytes = new byte[size];
+        if (size > 0)
+            read(bytes, 0, size);
+        return bytes;
+    }
+
+    @Override
+    default Date readDateMember(int flags) {
+        return new Date(readLong());
+    }
+
+    @Override
+    default EntityId readEntityIdMember(int flags) {
+        var id = new EntityId();
+        id.readFrom(this);
+        return id;
+    }
+
+    //endregion
+
 }
