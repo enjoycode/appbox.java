@@ -84,6 +84,11 @@ public final class DesignTree {
             return ModelStore.loadAllModelAsync(); //加载所有模型
         }).thenCompose(models -> {
             var mergedModels = new ArrayList<ModelBase>(Arrays.asList(models));
+            //添加系统默认存储模型
+            var defaultStoreModel = new DataStoreModel(DataStoreModel.DataStoreKind.Future, "", "Default");
+            defaultStoreModel.acceptChanges();
+            mergedModels.add(defaultStoreModel);
+
             //加载staged中新建的模型，可能包含DataStoreModel
             mergedModels.addAll(Arrays.asList(staged.findNewModels()));
 
