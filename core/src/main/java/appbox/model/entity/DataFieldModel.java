@@ -6,6 +6,11 @@ import appbox.serialization.IInputStream;
 import appbox.serialization.IJsonWriter;
 import appbox.serialization.IOutputStream;
 
+import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.UUID;
+
 public final class DataFieldModel extends EntityMemberModel {
 
     //region ====DataFieldType====
@@ -124,12 +129,44 @@ public final class DataFieldModel extends EntityMemberModel {
     @Override
     public void setAllowNull(boolean value) {
         _allowNull = value;
-        onDataTypeChanged();
+        onDataTypeChanged(); //TODO: !allowNull -> allowNull
     }
 
     public void setLength(int value) {
         _length = value;
         onDataTypeChanged();
+    }
+
+    public void setDefaultValue(String value) throws ParseException {
+        switch (_dataType) {
+            case String:
+                _defaultValue = value; break;
+            case DateTime:
+                _defaultValue = DateFormat.getDateInstance().parse(value);break;
+            case Byte:
+                _defaultValue = Byte.parseByte(value); break;
+            case Short:
+                _defaultValue = Short.parseShort(value); break;
+            case Int:
+                _defaultValue = Integer.parseInt(value); break;
+            case Long:
+                _defaultValue = Long.parseLong(value); break;
+            case Decimal:
+                _defaultValue = new BigDecimal(value); break;
+            case Float:
+                _defaultValue = Float.parseFloat(value); break;
+            case Double:
+                _defaultValue = Double.parseDouble(value); break;
+            case Bool:
+                _defaultValue = Boolean.parseBoolean(value); break;
+            case Guid:
+                _defaultValue = UUID.fromString(value); break;
+            default:
+                throw new RuntimeException("未实现");
+        }
+
+        if (!_allowNull)
+            onDataTypeChanged();
     }
     //endregion
 

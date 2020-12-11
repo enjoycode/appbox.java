@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class GetEntityRefModels implements IDesignHandler {
+public final class GetEntityRefModels implements IDesignHandler {
 
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
@@ -28,4 +28,5 @@ public class GetEntityRefModels implements IDesignHandler {
         }
         return CompletableFuture.completedFuture(new JsonResult(res));
     }
+
 }
