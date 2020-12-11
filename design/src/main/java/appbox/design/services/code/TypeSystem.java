@@ -14,10 +14,10 @@ import org.eclipse.jdt.core.JavaCore;
 
 public final class TypeSystem {
 
-    public static final String PROJECT_MODELS  = "models";
+    public static final String PROJECT_MODELS = "models";
 
     public final  LanguageServer languageServer;
-    protected       IProject       modelsProject; //实体、枚举等通用模型项目
+    protected     IProject       modelsProject; //实体、枚举等通用模型项目
     private final DesignHub      hub;
 
     public TypeSystem(DesignHub designHub) {
@@ -56,33 +56,37 @@ public final class TypeSystem {
     }
 
     /** 用于加载设计树后创建模型相应的虚拟文件 */
-    public void createModelDocument(ModelNode node) throws Exception {
+    public void createModelDocument(ModelNode node) {
         var appName  = node.appNode.model.name();
         var model    = node.model();
         var fileName = String.format("%s.java", model.name());
 
         //TODO:其他类型模型
-        if (model.modelType() == ModelType.Service) {
-            //不再需要加载源码, 注意已签出先从Staged中加载
-            var projectName = languageServer.makeServiceProjectName(appName, model.name());
-            var project = languageServer.createProject(projectName,
-                    new IClasspathEntry[]{JavaCore.newProjectEntry(modelsProject.getFullPath())});
+        try {
+            if (model.modelType() == ModelType.Service) {
+                //不再需要加载源码, 注意已签出先从Staged中加载
+                var projectName = languageServer.makeServiceProjectName(appName, model.name());
+                var project = languageServer.createProject(projectName,
+                        new IClasspathEntry[]{JavaCore.newProjectEntry(modelsProject.getFullPath())});
 
-            var file = project.getFile(fileName);
-            file.create(null, true, null);
-            //TODO:服务模型创建虚拟代理
-        } else if (model.modelType() == ModelType.Entity) {
-            //需要包含目录,如sys/entities/Order.java
-            var appFolder = modelsProject.getFolder(appName);
-            if (!appFolder.exists()) {
-                appFolder.create(true, true, null);
+                var file = project.getFile(fileName);
+                file.create(null, true, null);
+                //TODO:服务模型创建虚拟代理
+            } else if (model.modelType() == ModelType.Entity) {
+                //需要包含目录,如sys/entities/Order.java
+                var appFolder = modelsProject.getFolder(appName);
+                if (!appFolder.exists()) {
+                    appFolder.create(true, true, null);
+                }
+                var typeFolder = appFolder.getFolder("entities");
+                if (!typeFolder.exists()) {
+                    typeFolder.create(true, true, null);
+                }
+                var file = typeFolder.getFile(fileName);
+                file.create(null, true, null);
             }
-            var typeFolder = appFolder.getFolder("entities");
-            if (!typeFolder.exists()) {
-                typeFolder.create(true, true, null);
-            }
-            var file = typeFolder.getFile(fileName);
-            file.create(null, true, null);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 

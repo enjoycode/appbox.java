@@ -33,7 +33,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         return text;
     }
 
-    public int version() { throw new UnsupportedOperationException(); }
+    public int version() { return 0; }
 
     public final DesignNode getParent() {
         return parent;

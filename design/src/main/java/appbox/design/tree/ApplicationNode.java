@@ -14,28 +14,35 @@ public final class ApplicationNode extends DesignNode {
         //添加各类模型的根节点
         var modelRoot = new ModelRootNode(ModelType.Entity);
         nodes.add(modelRoot);
-        //tree.bindCheckoutInfo(modelRoot, false);
+        tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.Service);
         nodes.add(modelRoot);
+        tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.View);
         nodes.add(modelRoot);
+        tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.Workflow);
         nodes.add(modelRoot);
+        tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.Report);
         nodes.add(modelRoot);
+        tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.Enum);
         nodes.add(modelRoot);
+        tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.Event);
         nodes.add(modelRoot);
+        tree.bindCheckoutInfo(modelRoot, false);
 
         modelRoot = new ModelRootNode(ModelType.Permission);
         nodes.add(modelRoot);
+        tree.bindCheckoutInfo(modelRoot, false);
     }
 
     @Override
