@@ -13,6 +13,8 @@ import java.util.function.Supplier;
  * 消息发送流, 注意目前实现边写边发
  */
 public final class MessageWriteStream extends OutputStream implements IOutputStream /*暂继承OutputStream方便写Json*/ {
+
+    //region ====ObjectPool====
     private static final ObjectPool<MessageWriteStream> pool = new ObjectPool<>(MessageWriteStream::new, 32);
 
     public static MessageWriteStream rentFromPool(byte msgType, int msgId, long sourceId, byte msgFlag,
@@ -34,6 +36,7 @@ public final class MessageWriteStream extends OutputStream implements IOutputStr
     public static void backToPool(MessageWriteStream obj) {
         pool.back(obj);
     }
+    //endregion
 
     private Pointer _curChunk;
     private Pointer _dataPtr;
@@ -46,10 +49,6 @@ public final class MessageWriteStream extends OutputStream implements IOutputStr
 
     private Supplier<Pointer> _maker;
     private Consumer<Pointer> _sender;
-
-    public Pointer getCurrentChunk() {
-        return _curChunk;
-    }
 
     private void createChunk() {
         var preChunk = _curChunk;
@@ -78,7 +77,7 @@ public final class MessageWriteStream extends OutputStream implements IOutputStr
         }
     }
 
-    public void flush() {
+    public void finish() {
         //设置当前消息包的长度
         NativeSmq.setMsgDataLen(_curChunk, (short) _index);
         //将当前消息包标为完整消息结束
@@ -86,6 +85,7 @@ public final class MessageWriteStream extends OutputStream implements IOutputStr
         //直接发送最后一包
         if (_sender != null) {
             _sender.accept(_curChunk);
+            _curChunk = Pointer.NULL;
         }
     }
 

@@ -1,17 +1,16 @@
 package appbox.design.handlers.service;
 
 import appbox.design.DesignHub;
-import appbox.design.handlers.IRequestHandler;
+import appbox.design.handlers.IDesignHandler;
 import appbox.model.ModelType;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class OpenServiceModel implements IRequestHandler {
+public final class OpenServiceModel implements IDesignHandler {
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var modelId   = Long.parseUnsignedLong(args.get(0).getString());
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var modelId   = Long.parseUnsignedLong(args.getString());
         var modelNode = hub.designTree.findModelNode(ModelType.Service, modelId);
         if (modelNode == null) {
             var error = new Exception("Can't find service model");

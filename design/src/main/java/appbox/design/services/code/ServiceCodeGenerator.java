@@ -5,6 +5,7 @@ import appbox.design.tree.ModelNode;
 import appbox.model.DataStoreModel;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
+import appbox.runtime.InvokeArgs;
 import appbox.store.SqlStore;
 import appbox.utils.StringUtil;
 import org.eclipse.jdt.core.dom.*;
@@ -196,10 +197,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         invokeMethod.parameters().add(para1);
 
         var para2    = ast.newSingleVariableDeclaration();
-        var typeList = ast.newSimpleType(ast.newName("java.util.List"));
-        var type2    = ast.newParameterizedType(typeList);
-        type2.typeArguments().add(ast.newSimpleType(ast.newName("appbox.runtime.InvokeArg")));
-        para2.setType(type2);
+        para2.setType(ast.newSimpleType(ast.newName(InvokeArgs.class.getName())));
         para2.setName(ast.newSimpleName("args"));
         invokeMethod.parameters().add(para2);
 
@@ -271,14 +269,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     private MethodInvocation makeInvokeArgsGet(SingleVariableDeclaration para, int index) {
-        var argIndex      = ast.newNumberLiteral(Integer.toString(index));
-        var listGetMethod = ast.newMethodInvocation();
-        listGetMethod.setExpression(ast.newSimpleName("args"));
-        listGetMethod.setName(ast.newSimpleName("get"));
-        listGetMethod.arguments().add(argIndex);
-
         var getMethod = ast.newMethodInvocation();
-        getMethod.setExpression(listGetMethod);
+        getMethod.setExpression(ast.newSimpleName("args"));
 
         var paraType = para.getType();
         if (paraType.isPrimitiveType()) {

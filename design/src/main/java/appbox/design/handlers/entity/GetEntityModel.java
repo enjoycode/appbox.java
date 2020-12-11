@@ -2,21 +2,20 @@ package appbox.design.handlers.entity;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
-import appbox.design.handlers.IRequestHandler;
+import appbox.design.handlers.IDesignHandler;
 import appbox.design.tree.DataStoreNode;
 import appbox.design.tree.DesignNodeType;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class GetEntityModel implements IRequestHandler {
+public class GetEntityModel implements IDesignHandler {
 
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var modelId   = Long.parseUnsignedLong(args.get(0).getString());
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var modelId   = Long.parseUnsignedLong(args.getString());
         var modelNode = hub.designTree.findModelNode(modelId);
         if (modelNode == null) {
             var error = String.format("Cannot find EntityModel: %s", modelId);

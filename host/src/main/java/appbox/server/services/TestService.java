@@ -1,13 +1,10 @@
 package appbox.server.services;
 
-import appbox.channel.messages.KVGetModelRequest;
 import appbox.logging.Log;
 import appbox.runtime.IService;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import appbox.runtime.RuntimeContext;
-import appbox.store.SysStoreApi;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -15,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class TestService implements IService {
     @Override
-    public CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args) {
+    public CompletableFuture<Object> invokeAsync(CharSequence method, InvokeArgs args) {
         Log.debug("调用测试服务时的会话：" + RuntimeContext.current().currentSession().name());
 
         return CompletableFuture.completedFuture("Hello Future! 你好，未来!");

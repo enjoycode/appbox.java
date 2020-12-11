@@ -1,26 +1,24 @@
 package appbox.design.handlers;
 
 import appbox.design.DesignHub;
-import appbox.logging.Log;
 import appbox.model.ModelType;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * 前端改变了模型或表达式的代码，后端进行同步与reparse
  */
-public final class ChangeBuffer implements IRequestHandler { //TODO: rename
+public final class ChangeBuffer implements IDesignHandler { //TODO: rename
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var type        = args.get(0).getInt();
-        var targetId    = args.get(1).getString();
-        var startLine   = args.get(2).getInt() - 1; //注意前端值-1
-        var startColumn = args.get(3).getInt() - 1;
-        var endLine     = args.get(4).getInt() - 1;
-        var endColumn   = args.get(5).getInt() - 1;
-        var newText     = args.get(6).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var type        = args.getInt();
+        var targetId    = args.getString();
+        var startLine   = args.getInt() - 1; //注意前端值-1
+        var startColumn = args.getInt() - 1;
+        var endLine     = args.getInt() - 1;
+        var endColumn   = args.getInt() - 1;
+        var newText     = args.getString();
         if (newText == null) {
             newText = "";
         }

@@ -31,7 +31,7 @@ public final class RuntimeContext {
         return _peerId;
     }
 
-    public static CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args) {
+    public static CompletableFuture<Object> invokeAsync(String method, InvokeArgs args) {
         return _current.invokeAsync(method, args);
     }
 }

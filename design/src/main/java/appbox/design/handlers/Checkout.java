@@ -4,20 +4,19 @@ import appbox.design.DesignHub;
 import appbox.design.tree.DesignNodeType;
 import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class Checkout implements IRequestHandler {
+public final class Checkout implements IDesignHandler {
     /**
      * 签出编辑模型
      * @return true表示签出时模型已被其他人改变
      */
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var nodeType = DesignNodeType.forValue((byte) args.get(0).getInt());
-        var nodeId   = args.get(1).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var nodeType = DesignNodeType.forValue((byte) args.getInt());
+        var nodeId   = args.getString();
 
         var node = hub.designTree.findNode(nodeType, nodeId);
         if (node == null)

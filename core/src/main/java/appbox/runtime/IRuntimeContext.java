@@ -22,8 +22,9 @@ public interface IRuntimeContext {
     /**
      * 异步调用服务
      * @param method eg: "sys.OrderService.Save"
+     * @param args
      */
-    CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args);
+    CompletableFuture<Object> invokeAsync(String method, InvokeArgs args);
 
     //region ====ModelContainer====
     //C#为异步，这里为了方便暂采用同步

@@ -85,10 +85,7 @@ public class TestEntitySerialization {
         emp.setAge(33);
 
         var outStream  = new BytesOutputStream(1000);
-        var serializer = BinSerializer.rentFromPool(outStream);
-        emp.writeTo(serializer);
-
-        BinSerializer.backToPool(serializer);
+        emp.writeTo(outStream);
     }
 
 }

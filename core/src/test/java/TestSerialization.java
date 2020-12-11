@@ -54,10 +54,10 @@ public class TestSerialization {
     @Test
     public void testSerialization() {
         var output = new BytesOutputStream(1024);
-        TestHelper.serializeTo(12345, output);
+        output.serialize(12345);
 
         var input = output.copyToInput();
-        assertEquals(12345, TestHelper.deserializeFrom(input));
+        assertEquals(12345, input.deserialize());
     }
 
     @Test
@@ -66,13 +66,13 @@ public class TestSerialization {
 
         //serialize
         var output1 = new BytesOutputStream(200);
-        TestHelper.serializeTo(model, output1);
+        output1.serialize(model);
         //deserialize
         var input    = output1.copyToInput();
-        var outModel = (EntityModel) TestHelper.deserializeFrom(input);
+        var outModel = (EntityModel) input.deserialize();
         //serialize again
         var output2 = new BytesOutputStream(200);
-        TestHelper.serializeTo(outModel, output2);
+        output2.serialize(outModel);
         //assert
         assertEquals(output1.size(), output2.size());
         assertArrayEquals(output1.toByteArray(), output2.toByteArray());
@@ -84,7 +84,7 @@ public class TestSerialization {
         var out = new BytesOutputStream(8);
         out.writeStoreVarLen(len);
 
-        var input = out.copyToInput();
+        var input   = out.copyToInput();
         int varSize = input.readStoreVarLen();
         assertEquals(len, varSize);
     }

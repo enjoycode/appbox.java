@@ -2,19 +2,18 @@ package appbox.design.handlers.store;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
-import appbox.design.handlers.IRequestHandler;
+import appbox.design.handlers.IDesignHandler;
 import appbox.model.DataStoreModel;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class NewDataStore implements IRequestHandler {
+public final class NewDataStore implements IDesignHandler {
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var kind     = DataStoreModel.DataStoreKind.fromValue((byte) args.get(0).getInt());
-        var provider = args.get(1).getString();
-        var settings = args.get(2).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var kind     = DataStoreModel.DataStoreKind.fromValue((byte) args.getInt());
+        var provider = args.getString();
+        var settings = args.getString();
 
         //TODO:验证名称有效性及是否存在
 

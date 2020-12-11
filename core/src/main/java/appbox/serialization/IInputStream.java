@@ -96,8 +96,8 @@ public interface IInputStream extends IEntityMemberReader {
                 | Byte.toUnsignedLong(readByte()) << 48 | Byte.toUnsignedLong(readByte()) << 56;
     }
 
-    default UUID readUUID(){
-        return new UUID(readLong(),readLong());
+    default UUID readUUID() {
+        return new UUID(readLong(), readLong());
     }
 
     default int readVariant() {
@@ -234,7 +234,8 @@ public interface IInputStream extends IEntityMemberReader {
     //    return creator;
     //}
 
-    default  <E extends IBinSerializable> E[] readArray(IntFunction<E[]> arrayMaker, Supplier<E> elementMaker) {
+    default <E extends IBinSerializable> E[] readArray(IntFunction<E[]> arrayMaker
+            , Supplier<E> elementMaker, boolean elementNullabe) {
         var count = readVariant();
         if (count == -1)
             return null;
@@ -242,7 +243,7 @@ public interface IInputStream extends IEntityMemberReader {
 
         E[] array = arrayMaker.apply(count);
         for (int i = 0; i < count; i++) {
-            if (readBool()) {
+            if (!elementNullabe || readBool()) {
                 array[i] = elementMaker.get();
                 array[i].readFrom(this);
             }
@@ -250,16 +251,16 @@ public interface IInputStream extends IEntityMemberReader {
         return array;
     }
 
-    default  <E extends IBinSerializable> List<E> readList(Supplier<E> elementMaker) {
+    default <E extends IBinSerializable> List<E> readList(Supplier<E> elementMaker, boolean elementNullable) {
         var count = readVariant();
         if (count == -1)
             return null;
         //else if (count == -2)
 
-        var list    = new ArrayList<E>(count);
+        var list = new ArrayList<E>(count);
         //addToObjectRefs(list);
         for (int i = 0; i < count; i++) {
-            if (readBool()) {
+            if (!elementNullable || readBool()) {
                 var element = elementMaker.get();
                 element.readFrom(this);
                 list.add(element);

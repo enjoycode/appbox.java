@@ -39,7 +39,7 @@ public final class MockRuntimeContext implements IRuntimeContext, IDesignContext
     }
 
     @Override
-    public CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args) {
+    public CompletableFuture<Object> invokeAsync(String method, InvokeArgs args) {
         return null;
     }
 

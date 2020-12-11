@@ -8,7 +8,9 @@ public final class BytesSegment {
     private static final ObjectPool<BytesSegment> pool = new ObjectPool<>(BytesSegment::new, 16);
 
     public static BytesSegment rent() {
-        return pool.rent();
+        var obj = pool.rent();
+        obj._first = obj;
+        return obj;
     }
 
     public static BytesSegment rent(BytesSegment prev) {
@@ -27,26 +29,16 @@ public final class BytesSegment {
         pool.back(one);
     }
 
-    private static void backFromTo(BytesSegment start) {
-        var          current = start;
+    public static void backAll(BytesSegment item) {
+        if (item == null)
+            return;
+        var          current = item._first;
         BytesSegment next;
         while (current != null) {
             next = current._next;
             backOne(current);
             current = next;
         }
-    }
-
-    public static void backAll(BytesSegment item) {
-        if (item == null)
-            return;
-        backFromTo(item._first);
-    }
-
-    public static void backAllExceptFirst(BytesSegment item) {
-        if (item == null || item._first._next == null)
-            return;
-        backFromTo(item._first._next);
     }
     //endregion
 
@@ -55,7 +47,7 @@ public final class BytesSegment {
     private      BytesSegment _next;
     private      int          _dataSize;
 
-    public BytesSegment() {
+    private BytesSegment() {
         buffer = new byte[FRAME_SIZE];
         _first = this;
         _next  = null;

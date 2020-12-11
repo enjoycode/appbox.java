@@ -4,21 +4,20 @@ import appbox.data.JsonResult;
 import appbox.data.PersistentState;
 import appbox.data.SysEntityKVO;
 import appbox.design.DesignHub;
-import appbox.design.handlers.IRequestHandler;
+import appbox.design.handlers.IDesignHandler;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import appbox.store.query.TableScan;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /** 用于前端实体模型设计器数据视图面板加载数据 */
-public final class LoadEntityData implements IRequestHandler {
+public final class LoadEntityData implements IDesignHandler {
 
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var modelId = Long.parseUnsignedLong(args.get(0).getString());
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var modelId = Long.parseUnsignedLong(args.getString());
         var modelNode = hub.designTree.findModelNode(ModelType.Entity, modelId);
         if (modelNode == null)
             return CompletableFuture.failedFuture(new RuntimeException("Can't find EntityModel"));
