@@ -86,6 +86,16 @@ public final class InvokeArgs implements IInputStream {
     }
 
     //region ====GetXXX Methods====
+    public boolean getBool() {
+        var payloadType = readByte();
+        if (payloadType == PayloadType.BooleanTrue) {
+            return true;
+        } else if (payloadType == PayloadType.BooleanFalse) {
+            return false;
+        }
+        throw new RuntimeException("PayloadType Error");
+    }
+
     public int getInt() {
         var payloadType = readByte();
         if (payloadType == PayloadType.Int32) {

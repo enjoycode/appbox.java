@@ -26,6 +26,11 @@ public final class ModelRootNode extends DesignNode {
     }
 
     @Override
+    public String checkoutInfoTargetID() {
+        return id();
+    }
+
+    @Override
     public DesignNodeType nodeType() {
         return DesignNodeType.ModelRootNode;
     }
@@ -46,6 +51,12 @@ public final class ModelRootNode extends DesignNode {
         _models.put(node.model().id(), node); //加入字典表方便查找
         return node;
     }
+
+    /** 用于新建时添加至字典表 */
+    public void addModelIndex(ModelNode node) {
+        _models.put(node.model().id(), node);
+    }
+
     //endregion
 
     //region ====Find Methods====

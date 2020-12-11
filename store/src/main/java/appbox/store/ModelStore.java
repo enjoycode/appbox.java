@@ -2,10 +2,8 @@ package appbox.store;
 
 import appbox.channel.messages.*;
 import appbox.logging.Log;
-import appbox.model.ApplicationModel;
-import appbox.model.EntityModel;
-import appbox.model.ModelBase;
-import appbox.model.ModelType;
+import appbox.model.*;
+import appbox.utils.IdUtil;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -23,6 +21,23 @@ public final class ModelStore {
             r.checkStoreError();
             return r.appId;
         });
+    }
+
+    public static CompletableFuture<Long> genModelIdAsync(int appId, ModelType type, ModelLayer layer) {
+        if (layer == ModelLayer.SYS)
+            throw new UnsupportedOperationException();
+
+        return SysStoreApi.metaGenModelIdAsync(appId, layer == ModelLayer.DEV)
+                .thenApply(res -> {
+                    res.checkStoreError();
+
+                    int seq = res.modelId;
+                    long nid = ((long) appId) << IdUtil.MODELID_APPID_OFFSET;
+                    nid |= ((long) type.value) << IdUtil.MODELID_TYPE_OFFSET;
+                    nid |= ((long) seq) << IdUtil.MODELID_SEQ_OFFSET;
+                    nid |= layer.value;
+                    return nid;
+                });
     }
 
     public static CompletableFuture<Void> insertModelAsync(ModelBase model, KVTransaction txn) {

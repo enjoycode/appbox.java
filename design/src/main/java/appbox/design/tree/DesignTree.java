@@ -108,8 +108,6 @@ public final class DesignTree {
                 for (ModelNode n : allModelNodes) {
                     designHub.typeSystem.createModelDocument(n);
                 }
-            } catch (Exception ex) {
-                return CompletableFuture.failedFuture(ex);
             } finally {
                 _loadingFlag.compareAndExchange(1, 0);
             }
@@ -139,12 +137,8 @@ public final class DesignTree {
         }
 
         //在所有节点加载完后创建模型对应的虚拟文件
-        try {
-            for (ModelNode n : allModelNodes) {
-                designHub.typeSystem.createModelDocument(n);
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        for (ModelNode n : allModelNodes) {
+            designHub.typeSystem.createModelDocument(n);
         }
     }
     //endregion
@@ -160,6 +154,10 @@ public final class DesignTree {
                 return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
             case DataStoreNode:
                 return storeRootNode.nodes.find(n -> n.id().equals(id));
+            case ModelRootNode:
+                final var sr = id.split("-");
+                return findModelRootNode(Integer.parseUnsignedInt(sr[0])
+                        , ModelType.fromValue((byte) Integer.parseInt(sr[1])));
             default:
                 Log.warn("findNode: " + type.name() + "未实现");
                 throw new RuntimeException("未实现");
@@ -263,6 +261,36 @@ public final class DesignTree {
         var modelRootNode = findModelRootNode(appId, type);
         return modelRootNode.findModelNodeByName(name);
     }
+
+    /** 根据当前选择的节点查询新建模型的上级节点 */
+    public static DesignNode findNewModelParentNode(DesignNode node, ModelType newModelType) {
+        if (node == null)
+            return null;
+
+        if (node.nodeType() == DesignNodeType.FolderNode) {
+            return node;
+        } else if (node.nodeType() == DesignNodeType.ModelRootNode) {
+            var modelRootNode = (ModelRootNode) node;
+            if (modelRootNode.targetType == newModelType) {
+                return node;
+            }
+        } else if (node.nodeType() == DesignNodeType.ApplicationNode) {
+            return ((ApplicationNode) node).findModelRootNode(newModelType);
+        }
+
+        return findNewModelParentNode(node.getParent(), newModelType);
+    }
+
+    /** 向上递归查找指定节点所属的应用节点 */
+    public static ApplicationNode findAppNodeFromNode(DesignNode node) {
+        if (node == null)
+            return null;
+        if (node.nodeType() == DesignNodeType.ApplicationNode) {
+            return (ApplicationNode) node;
+        }
+        return findAppNodeFromNode(node.getParent());
+    }
+
     //endregion
 
     //region ====Checkout Methods====

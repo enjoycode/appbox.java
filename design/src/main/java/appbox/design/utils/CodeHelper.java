@@ -4,6 +4,11 @@ import appbox.model.ModelType;
 
 public final class CodeHelper {
 
+    public static boolean isValidIdentifier(String name) {
+        //TODO:
+        return true;
+    }
+
     /**
      * 获取模型类型的复数名称
      */

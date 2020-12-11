@@ -30,6 +30,7 @@ public final class MessageDispatcher {
                 processInvokeRequire(channel, first);
                 break;
             case MessageType.MetaNewAppResponse:
+            case MessageType.MetaGenModelIdResponse:
             case MessageType.MetaGenPartitionResponse:
             case MessageType.KVBeginTxnResponse:
             case MessageType.KVCommandResponse:
@@ -67,8 +68,8 @@ public final class MessageDispatcher {
                     sendInvokeResponse(channel, shard, reqId, error, result);
 
                     if (ex != null) {
-                        Log.error(String.format("Invoke Service[%s] Error:%s", service, ex.getMessage()));
-                        ex.getCause().printStackTrace(); //TODO: to log
+                        Log.error(String.format("Invoke Service[%s] Error:%s", service, ex));
+                        ex.printStackTrace(); //TODO: to log
                     }
                     //注意返回InvokeArgs所租用的BytesSegment
                     if (args != null)

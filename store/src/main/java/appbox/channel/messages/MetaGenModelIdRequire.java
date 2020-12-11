@@ -6,8 +6,13 @@ import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 public final class MetaGenModelIdRequire implements IMessage {
-    public int     appId;
-    public boolean devLayer;
+    private final int     appId;
+    private final boolean devLayer;
+
+    public MetaGenModelIdRequire(int appId, boolean devLayer) {
+        this.appId    = appId;
+        this.devLayer = devLayer;
+    }
 
     @Override
     public byte MessageType() {
@@ -22,6 +27,6 @@ public final class MetaGenModelIdRequire implements IMessage {
 
     @Override
     public void readFrom(IInputStream bs) {
-
+        throw new UnsupportedOperationException();
     }
 }

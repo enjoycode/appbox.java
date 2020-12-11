@@ -98,10 +98,7 @@ public final class SysStoreApi {
     }
 
     protected static CompletableFuture<MetaGenModelIdResponse> metaGenModelIdAsync(int appId, boolean devLayer) {
-        var req = new MetaGenModelIdRequire();
-        req.appId    = appId;
-        req.devLayer = devLayer;
-
+        var req = new MetaGenModelIdRequire( appId, devLayer);
         return makeTaskAndSendRequest(req, new MetaGenModelIdResponse());
     }
 
