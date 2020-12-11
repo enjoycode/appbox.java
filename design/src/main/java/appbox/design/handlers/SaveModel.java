@@ -3,17 +3,16 @@ package appbox.design.handlers;
 import appbox.design.DesignHub;
 import appbox.design.tree.DesignNodeType;
 import appbox.design.tree.ModelNode;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /** 保存当前的模型，注意：某些模型需要传入附加的参数 */
-public final class SaveModel implements IRequestHandler {
+public final class SaveModel implements IDesignHandler {
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var nodeType = DesignNodeType.forValue((byte) args.get(0).getInt());
-        var modelId  = args.get(1).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var nodeType = DesignNodeType.forValue((byte) args.getInt());
+        var modelId  = args.getString();
 
         if (nodeType == DesignNodeType.ViewModelNode) {
             throw new RuntimeException("未实现");

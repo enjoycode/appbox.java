@@ -2,10 +2,10 @@ package appbox.design.handlers.service;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
-import appbox.design.handlers.IRequestHandler;
+import appbox.design.handlers.IDesignHandler;
 import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import appbox.serialization.IJsonSerializable;
 import appbox.serialization.IJsonWriter;
 
@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /** 用于生成服务模型的前端TypeScript调用声明 */
-public final class GenServiceDeclare implements IRequestHandler {
+public final class GenServiceDeclare implements IDesignHandler {
 
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var     modelId = args.get(0).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var     modelId = args.getString();
         boolean loadAll = modelId == null || modelId.isEmpty(); //空表示所有服务模型用于初次加载
 
         List<ModelNode> serviceNodes;

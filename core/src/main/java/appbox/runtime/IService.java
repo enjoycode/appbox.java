@@ -11,6 +11,6 @@ public interface IService {
      * @param args 参数列表
      * @return 异步结果
      */
-    CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args);
+    CompletableFuture<Object> invokeAsync(CharSequence method, InvokeArgs args);
 
 }

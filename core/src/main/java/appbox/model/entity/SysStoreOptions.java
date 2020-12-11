@@ -149,12 +149,12 @@ public final class SysStoreOptions implements IEntityStoreOption {
 
         //写入索引集合
         if (hasIndexes()) {
-            bs.writeList(_indexes, 4);
+            bs.writeList(_indexes, 4, false);
         }
 
         //写入分区键
         if (hasPartitionKeys()) {
-            bs.writeArray(_partitionKeys, 5);
+            bs.writeArray(_partitionKeys, 5, false);
         }
 
         bs.writeByteField(_devIndexIdSeq, 6);
@@ -182,10 +182,10 @@ public final class SysStoreOptions implements IEntityStoreOption {
                     _schemaVersion = bs.readInt();
                     break;
                 case 4:
-                    _indexes = bs.readList(() -> new SysIndexModel(owner));
+                    _indexes = bs.readList(() -> new SysIndexModel(owner), false);
                     break;
                 case 5:
-                    _partitionKeys = bs.readArray(PartitionKey[]::new, PartitionKey::new);
+                    _partitionKeys = bs.readArray(PartitionKey[]::new, PartitionKey::new, false);
                     break;
                 case 6:
                     _devIndexIdSeq = bs.readByte();

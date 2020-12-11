@@ -117,6 +117,8 @@ public abstract class ModelBase implements IBinSerializable {
             return new EntityModel();
         } else if (type == ModelType.Service.value) {
             return new ServiceModel();
+        } else if (type == ModelType.DataStore.value) {
+            return new DataStoreModel();
         }
         throw new RuntimeException("Unknown model type: " + type);
     }

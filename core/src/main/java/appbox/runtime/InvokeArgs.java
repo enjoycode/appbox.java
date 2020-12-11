@@ -18,7 +18,18 @@ public final class InvokeArgs implements IInputStream {
         }
 
         public InvokeArgs done() {
+            _current.setDataSize(_pos);
             return new InvokeArgs(_current.first());
+        }
+
+        public Maker add(int arg) {
+            serialize(arg);
+            return this;
+        }
+
+        public Maker add(String arg) {
+            serialize(arg);
+            return this;
         }
 
         //region ----IOutputStream----
@@ -64,8 +75,14 @@ public final class InvokeArgs implements IInputStream {
     private BytesSegment _current;
     private int          _pos;
 
-    private InvokeArgs(BytesSegment first) {
+    public InvokeArgs(BytesSegment first) {
+        if (first == null || first.first() != first)
+            throw new IllegalArgumentException("segment is null or not is first");
         _current = first;
+    }
+
+    public void free() {
+        BytesSegment.backAll(_current);
     }
 
     //region ====GetXXX Methods====
@@ -73,6 +90,16 @@ public final class InvokeArgs implements IInputStream {
         var payloadType = readByte();
         if (payloadType == PayloadType.Int32) {
             return readInt();
+        }
+        throw new RuntimeException("PayloadType Error");
+    }
+
+    public long getLong() {
+        var payloadType = readByte();
+        if (payloadType == PayloadType.Int32) {
+            return readInt();
+        } else if (payloadType == PayloadType.Int64) {
+            return readLong();
         }
         throw new RuntimeException("PayloadType Error");
     }

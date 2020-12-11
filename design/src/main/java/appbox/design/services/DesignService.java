@@ -10,16 +10,15 @@ import appbox.design.handlers.service.OpenServiceModel;
 import appbox.design.handlers.store.NewDataStore;
 import appbox.design.handlers.store.SaveDataStore;
 import appbox.runtime.IService;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import appbox.runtime.RuntimeContext;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class DesignService implements IService {
 
-    private final HashMap<CharSequence, IRequestHandler> handlers = new HashMap<>() {{
+    private final HashMap<CharSequence, IDesignHandler> handlers = new HashMap<>() {{
         put("LoadDesignTree", new LoadDesignTree());
         put("Checkout", new Checkout());
         put("ChangeBuffer", new ChangeBuffer());
@@ -42,7 +41,7 @@ public final class DesignService implements IService {
     }};
 
     @Override
-    public CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args) {
+    public CompletableFuture<Object> invokeAsync(CharSequence method, InvokeArgs args) {
         if (!(RuntimeContext.current().currentSession() instanceof IDeveloperSession)) {
             return CompletableFuture.failedFuture(new Exception("Must login as a developer"));
         }
@@ -58,6 +57,10 @@ public final class DesignService implements IService {
             return CompletableFuture.failedFuture(new Exception("Unknown design request: " + method));
         }
 
-        return handler.handle(designHub, args);
+        try {
+            return handler.handle(designHub, args);
+        } catch (Exception ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
     }
 }

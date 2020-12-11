@@ -6,17 +6,16 @@ import appbox.design.services.PublishService;
 import appbox.design.services.StagedItems;
 import appbox.logging.Log;
 import appbox.model.ModelBase;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /** IDE发布变更的模型包 */
-public final class Publish implements IRequestHandler {
+public final class Publish implements IDesignHandler {
 
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var commitMessage = args.get(0).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var commitMessage = args.getString();
 
         if (hub.pendingChanges == null || hub.pendingChanges.length == 0)
             return CompletableFuture.completedFuture(null);

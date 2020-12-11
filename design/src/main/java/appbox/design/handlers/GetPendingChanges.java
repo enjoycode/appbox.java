@@ -6,17 +6,16 @@ import appbox.design.services.StagedService;
 import appbox.model.ModelBase;
 import appbox.model.ModelFolder;
 import appbox.model.ModelType;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /** 发布时获取所有变更 */
-public final class GetPendingChanges implements IRequestHandler {
+public final class GetPendingChanges implements IDesignHandler {
 
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
         //暂重新加载
         return StagedService.loadStagedAsync(false)
                 .thenApply(staged -> {

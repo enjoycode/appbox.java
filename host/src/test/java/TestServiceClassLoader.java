@@ -1,11 +1,10 @@
 import appbox.runtime.IService;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import appbox.server.runtime.ServiceClassLoader;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,9 +21,7 @@ public class TestServiceClassLoader {
         assertNotNull(clazz);
 
         var instance = (IService) clazz.getDeclaredConstructor().newInstance();
-        var args = new ArrayList<InvokeArg>();
-        args.add(InvokeArg.from("Future"));
-        args.add(InvokeArg.from(100));
+        var args = InvokeArgs.make().add("Future").add(100).done();
         var res = instance.invokeAsync("hello", args).get();
         assertEquals("Hello Future!", res.toString());
     }

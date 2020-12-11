@@ -24,7 +24,7 @@ public class PerfSerialization {
 
         //serialize
         var output1 = new BytesOutputStream(200);
-        TestHelper.serializeTo(model, output1);
+        output1.serialize(model);
         //deserialize
         //var input    = output1.copyToInput();
         //var outModel = (EntityModel) deserializeFrom(input);

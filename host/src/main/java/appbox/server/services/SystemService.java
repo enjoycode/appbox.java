@@ -7,7 +7,7 @@ import appbox.entities.Employee;
 import appbox.entities.OrgUnit;
 import appbox.logging.Log;
 import appbox.runtime.IService;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import appbox.store.EntityStore;
 import appbox.store.StoreInitiator;
 import appbox.store.query.IndexGet;
@@ -15,7 +15,6 @@ import appbox.store.query.TableScan;
 import appbox.utils.IdUtil;
 import com.alibaba.fastjson.JSON;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -81,11 +80,11 @@ public final class SystemService implements IService {
     }
 
     @Override
-    public CompletableFuture<Object> invokeAsync(CharSequence method, List<InvokeArg> args) {
+    public CompletableFuture<Object> invokeAsync(CharSequence method, InvokeArgs args) {
         if (method.equals("InitStore")) {
             return StoreInitiator.initAsync().thenApply(ok -> ok);
         } else if (method.equals("Login")) {
-            return login(args.get(0).getLong(), args.get(1).getString());
+            return login(args.getLong(), args.getString());
         } else {
             var ex = new NoSuchMethodException("SystemService can't find method: " + method.toString());
             return CompletableFuture.failedFuture(ex);

@@ -114,13 +114,13 @@ public final class SqlStoreOptions implements IEntityStoreOption {
 
         //写入主键
         if (hasPrimaryKeys()) {
-            bs.writeArray(_primaryKeys, 2);
+            bs.writeArray(_primaryKeys, 2, false);
         }
         bs.writeBoolField(_primaryKeysHasChanged, 3);
 
         //写入索引
         if (hasIndexes()) {
-            bs.writeList(_indexes, 4);
+            bs.writeList(_indexes, 4, false);
         }
 
         bs.writeByteField(_devIndexIdSeq, 6);
@@ -139,13 +139,13 @@ public final class SqlStoreOptions implements IEntityStoreOption {
                     _storeModelId = bs.readLong();
                     break;
                 case 2:
-                    _primaryKeys = bs.readArray(FieldWithOrder[]::new, FieldWithOrder::new);
+                    _primaryKeys = bs.readArray(FieldWithOrder[]::new, FieldWithOrder::new, false);
                     break;
                 case 3:
                     _primaryKeysHasChanged = bs.readBool();
                     break;
                 case 4:
-                    _indexes = bs.readList(() -> new SqlIndexModel(owner));
+                    _indexes = bs.readList(() -> new SqlIndexModel(owner), false);
                     break;
                 case 6:
                     _devIndexIdSeq = bs.readByte();

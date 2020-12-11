@@ -55,6 +55,15 @@ public interface IOutputStream extends IEntityMemberWriter {
         writeByte(PayloadType.Int32);
         writeInt(obj);
     }
+
+    default void serialize(String obj) {
+        if (obj == null) {
+            writeByte(PayloadType.Null);
+            return;
+        }
+        writeByte(PayloadType.String);
+        writeString(obj);
+    }
     //endregion
 
     //region ====Write Methods====
@@ -261,7 +270,7 @@ public interface IOutputStream extends IEntityMemberWriter {
     //endregion
 
     //region ====Collections====
-    default <E extends IBinSerializable> void writeArray(E[] array, int field) {
+    default <E extends IBinSerializable> void writeArray(E[] array, int field, boolean elementNullable) {
         writeVariant(field);
         if (checkNullOrSerialized(array))
             return;
@@ -269,14 +278,15 @@ public interface IOutputStream extends IEntityMemberWriter {
         //addToObjectRefs(array);
         writeVariant(array.length);
         for (E element : array) {
-            writeBool(element != null);
+            if (elementNullable)
+                writeBool(element != null);
             if (element != null) {
                 element.writeTo(this);
             }
         }
     }
 
-    default <E extends IBinSerializable> void writeList(List<E> list, int fieldId) {
+    default <E extends IBinSerializable> void writeList(List<E> list, int fieldId, boolean elementNullable) {
         writeVariant(fieldId);
         if (checkNullOrSerialized(list))
             return;
@@ -284,7 +294,8 @@ public interface IOutputStream extends IEntityMemberWriter {
         //addToObjectRefs(list);
         writeVariant(list.size());
         for (E element : list) {
-            writeBool(element != null);
+            if (elementNullable)
+                writeBool(element != null);
             if (element != null) {
                 element.writeTo(this);
             }

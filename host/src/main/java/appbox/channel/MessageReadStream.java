@@ -1,6 +1,8 @@
 package appbox.channel;
 
+import appbox.cache.BytesSegment;
 import appbox.cache.ObjectPool;
+import appbox.runtime.InvokeArgs;
 import appbox.serialization.IInputStream;
 import com.sun.jna.Pointer;
 
@@ -8,6 +10,7 @@ import com.sun.jna.Pointer;
  * 消息读取流，用于从消息链中读取完整消息
  */
 public final class MessageReadStream implements IInputStream {
+
     //region ====ObjectPool====
     private static final ObjectPool<MessageReadStream> pool = new ObjectPool<>(MessageReadStream::new, 32);
 
@@ -27,11 +30,30 @@ public final class MessageReadStream implements IInputStream {
     private int     _dataLen;
     private int     _index;
 
-    private void reset(Pointer first) {
+    protected void reset(Pointer first) {
         _curChunk = first;
         _dataPtr  = NativeSmq.getDataPtr(_curChunk);
         _dataLen  = NativeSmq.getMsgDataLen(_curChunk);
         _index    = 0;
+    }
+
+    /** 复制剩余部分(已读取消息头)作为Invoke参数 */
+    protected InvokeArgs copyToArgs() {
+        var segment = BytesSegment.rent();
+        _dataPtr.read(_index, segment.buffer, 0, _dataLen - _index);
+        segment.setDataSize(_dataLen - _index);
+
+        var temp = NativeSmq.getMsgNext(_curChunk);
+        while (temp != Pointer.NULL) {
+            segment = BytesSegment.rent(segment);
+            var dataPtr = NativeSmq.getDataPtr(temp);
+            var dataLen = NativeSmq.getMsgDataLen(temp);
+            dataPtr.read(0, segment.buffer, 0, dataLen);
+            segment.setDataSize(dataLen);
+
+            temp = NativeSmq.getMsgNext(temp);
+        }
+        return new InvokeArgs(segment.first());
     }
 
     /**

@@ -130,7 +130,7 @@ public class ModelFolder implements IBinSerializable {
             bs.writeBoolField(_isDeleted, 9);
         }
         if (hasChild())
-            bs.writeList(_childs, 5);
+            bs.writeList(_childs, 5, false);
         bs.writeIntField(_appId, 6);
         bs.writeByteField(_targetModelType.value, 7);
 
@@ -156,7 +156,7 @@ public class ModelFolder implements IBinSerializable {
                     _parent = (ModelFolder) bs.deserialize();
                     break;
                 case 5:
-                    _childs = bs.readList(ModelFolder::new);
+                    _childs = bs.readList(ModelFolder::new, false);
                     break;
                 case 0:
                     break;

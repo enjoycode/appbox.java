@@ -2,18 +2,16 @@ package appbox.design.handlers;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
-import appbox.logging.Log;
 import appbox.model.ModelType;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class CheckCode implements IRequestHandler {
+public final class CheckCode implements IDesignHandler {
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        int type     = args.get(0).getInt();
-        var targetId = args.get(1).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        int type     = args.getInt();
+        var targetId = args.getString();
         //Log.debug(String.format("CheckCode: %d %s", type, targetId));
 
         var modelId   = Long.parseUnsignedLong(targetId);

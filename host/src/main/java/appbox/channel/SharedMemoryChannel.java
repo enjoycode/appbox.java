@@ -139,7 +139,7 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
                 (s) -> NativeSmq.SMQ_PostChunk(_sendQueue, s));
         try {
             msg.writeTo(mws);
-            mws.flush(); //必须
+            mws.finish(); //必须
         } catch (Exception e) {
             //发生异常，则通知接收端取消挂起的消息
             mws.flushWhenCancelled();

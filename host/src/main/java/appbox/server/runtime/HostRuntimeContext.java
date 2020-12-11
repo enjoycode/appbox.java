@@ -5,7 +5,7 @@ import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
 import appbox.runtime.IRuntimeContext;
 import appbox.runtime.ISessionInfo;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import appbox.store.ModelStore;
 import appbox.utils.ReflectUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
@@ -14,7 +14,6 @@ import com.alibaba.ttl.threadpool.TtlExecutors;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -60,7 +59,7 @@ public final class HostRuntimeContext implements IRuntimeContext {
     }
 
     @Override
-    public CompletableFuture<Object> invokeAsync(String method, List<InvokeArg> args) {
+    public CompletableFuture<Object> invokeAsync(String method, InvokeArgs args) {
         var methodDotIndex = method.lastIndexOf('.');
         var servicePath    = method.subSequence(0, methodDotIndex);
         var methodName     = method.subSequence(methodDotIndex + 1, method.length());

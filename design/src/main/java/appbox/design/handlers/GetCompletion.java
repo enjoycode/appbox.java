@@ -4,14 +4,13 @@ import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.logging.Log;
 import appbox.model.ModelType;
-import appbox.runtime.InvokeArg;
+import appbox.runtime.InvokeArgs;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class GetCompletion implements IRequestHandler {
+public final class GetCompletion implements IDesignHandler {
 
     static {
         JsonResult.registerType(CompletionItem.class, (serializer, object, fieldName, fieldType, features) -> {
@@ -98,12 +97,12 @@ public final class GetCompletion implements IRequestHandler {
     }
 
     @Override
-    public CompletableFuture<Object> handle(DesignHub hub, List<InvokeArg> args) {
-        var type           = args.get(0).getInt();
-        var fileName       = args.get(1).getString(); //TODO:考虑修改前端传模型标识
-        var line           = args.get(2).getInt() - 1; //注意：前端值需要-1
-        var column         = args.get(3).getInt() - 1; //注意：前端值需要-1
-        var wordToComplete = args.get(4).getString();
+    public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
+        var type           = args.getInt();
+        var fileName       = args.getString(); //TODO:考虑修改前端传模型标识
+        var line           = args.getInt() - 1; //注意：前端值需要-1
+        var column         = args.getInt() - 1; //注意：前端值需要-1
+        var wordToComplete = args.getString();
 
         Log.debug(String.format("%d %s %d-%d %s", type, fileName, line, column, wordToComplete));
 
