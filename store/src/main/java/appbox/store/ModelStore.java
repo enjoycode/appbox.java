@@ -74,6 +74,19 @@ public final class ModelStore {
         return CompletableFuture.completedFuture(null);
     }
 
+    public static CompletableFuture<Void> deleteModelAsync(ModelBase model, KVTransaction txn,
+                                                           Function<Integer, ApplicationModel> getApp) {
+        if (model.modelType() == ModelType.Entity && ((EntityModel)model).sysStoreOptions() != null) {
+            throw new RuntimeException("未实现");
+        }
+
+        //非系统存储的实体模型直接删除原数据
+        var req = new KVDeleteModelRequest(txn.id(), model.id());
+        return SysStoreApi.execKVDeleteAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
     //region ====模型代码及Assembly相关操作====
 
     /**

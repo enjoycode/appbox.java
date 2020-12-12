@@ -38,6 +38,7 @@ public final class DesignService implements IService {
         put("GetEntityModel", new GetEntityModel());
         put("GetEntityRefModels", new GetEntityRefModels());
         put("LoadEntityData", new LoadEntityData());
+        put("GenEntityDeclare", new GenEntityDeclare());
         //----Service----
         put("OpenServiceModel", new OpenServiceModel());
         put("GenServiceDeclare", new GenServiceDeclare());

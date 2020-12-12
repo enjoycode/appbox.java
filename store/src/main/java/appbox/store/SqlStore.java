@@ -36,7 +36,7 @@ public abstract class SqlStore {
                     return store;
 
                 try {
-                    var model =  ModelStore.loadModelAsync(storeId).get();
+                    var model = ModelStore.loadModelAsync(storeId).get();
                     if (model == null)
                         throw new RuntimeException("DataStoreModel not exists");
                     var dataStoreModel = (DataStoreModel) model;
@@ -70,10 +70,11 @@ public abstract class SqlStore {
 
     protected abstract DbCommand makeDropTable(EntityModel model, IDesignContext ctx);
 
-    public CompletableFuture<Void> createTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
+    public final CompletableFuture<Void> createTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
         var cmds = makeCreateTable(model, ctx);
+
         CompletableFuture<Long> task = null;
-        for(var cmd : cmds) {
+        for (var cmd : cmds) {
             if (task == null)
                 task = cmd.execNonQueryAsync(txn.getConnection());
             else
@@ -82,10 +83,11 @@ public abstract class SqlStore {
         return task.thenAccept(r -> {});
     }
 
-    public CompletableFuture<Void> alterTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
+    public final CompletableFuture<Void> alterTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
         var cmds = makeAlterTable(model, ctx);
+
         CompletableFuture<Long> task = null;
-        for(var cmd : cmds) {
+        for (var cmd : cmds) {
             if (task == null)
                 task = cmd.execNonQueryAsync(txn.getConnection());
             else
@@ -94,10 +96,9 @@ public abstract class SqlStore {
         return task.thenAccept(r -> {});
     }
 
-    public CompletableFuture<Void> dropTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
+    public final CompletableFuture<Void> dropTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
         var cmd = makeDropTable(model, ctx);
-        CompletableFuture<Long> task = cmd.execNonQueryAsync(txn.getConnection());
-        return task.thenAccept(r -> {});
+        return cmd.execNonQueryAsync(txn.getConnection()).thenAccept(r -> {});
     }
     //endregion
 

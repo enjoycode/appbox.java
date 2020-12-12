@@ -7,10 +7,7 @@ import appbox.design.common.PublishPackage;
 import appbox.design.jdt.JavaBuilderWrapper;
 import appbox.design.services.code.LanguageServer;
 import appbox.design.services.code.ServiceCodeGenerator;
-import appbox.model.EntityModel;
-import appbox.model.ModelBase;
-import appbox.model.ModelType;
-import appbox.model.ServiceModel;
+import appbox.model.*;
 import appbox.runtime.IService;
 import appbox.runtime.RuntimeContext;
 import appbox.serialization.BytesOutputStream;
@@ -35,6 +32,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public final class PublishService {
 
@@ -189,8 +187,11 @@ public final class PublishService {
                 case Modified:
                     task = task.thenCompose(r -> updateModelAsync(model, txn, hub));
                     break;
+                case Deleted:
+                    task = task.thenCompose(r -> deleteModelAsync(hub, model, txn, otherStoreTxns));
+                    break;
                 default:
-                    throw new RuntimeException("未实现");
+                    throw new RuntimeException("Can't save model with state: " + model.persistentState().name());
             }
         }
 
@@ -210,8 +211,8 @@ public final class PublishService {
         return task;
     }
 
-    private static CompletableFuture<Void> insertModelAsync(
-            DesignHub hub, ModelBase model, KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
+    private static CompletableFuture<Void> insertModelAsync(DesignHub hub, ModelBase model
+            , KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
         return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
             CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
             if (model.modelType() == ModelType.Entity) {
@@ -226,6 +227,7 @@ public final class PublishService {
                 //TODO:
                 throw new RuntimeException("未实现");
             }
+
             return task;
         });
     }
@@ -237,6 +239,27 @@ public final class PublishService {
                     //TODO:
                     return task;
                 });
+    }
+
+    private static CompletableFuture<Void> deleteModelAsync(DesignHub hub, ModelBase model
+            , KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
+        final Function<Integer, ApplicationModel> findApp = appid -> hub.designTree.findApplicationNode(appid).model;
+        return ModelStore.deleteModelAsync(model, txn, findApp).thenCompose(r -> {
+            CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
+            if (model.modelType() == ModelType.Entity) {
+                var em = (EntityModel) model;
+                if (em.sqlStoreOptions() != null) {//映射至第三方数据库的需要删除相应的表
+                    final var sqlStoreId = em.sqlStoreOptions().storeModelId();
+                    var       sqlStore   = SqlStore.get(sqlStoreId);
+                    task = task.thenCompose(r2 -> makeOtherStoreTxn(sqlStoreId, otherStoreTxns))
+                            .thenCompose(sqlTxn -> sqlStore.dropTableAsync(em, sqlTxn, hub));
+                } //TODO:Cql
+            } else {
+                throw new RuntimeException("未实现");
+            }
+
+            return task;
+        });
     }
 
     private static CompletableFuture<DbTransaction> makeOtherStoreTxn(long storeId, Map<Long, DbTransaction> txns) {
