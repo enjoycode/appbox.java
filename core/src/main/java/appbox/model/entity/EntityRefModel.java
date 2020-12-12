@@ -105,7 +105,7 @@ public final class EntityRefModel extends EntityMemberModel {
 
     public short[] getFKMemberIds() { return fkMemberIds; }
 
-    public short getTypeMemberId() { return typeMemberId; }
+    public short typeMemberId() { return typeMemberId; }
 
     public EntityRefActionRule updateRule() { return updateRule; }
 

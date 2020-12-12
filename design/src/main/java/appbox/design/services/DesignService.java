@@ -33,6 +33,7 @@ public final class DesignService implements IService {
         //----Entity----
         put("NewEntityModel", new NewEntityModel());
         put("NewEntityMember", new NewEntityMember());
+        put("DeleteEntityMember", new DeleteEntityMember());
         put("GetEntityModel", new GetEntityModel());
         put("GetEntityRefModels", new GetEntityRefModels());
         put("LoadEntityData", new LoadEntityData());
@@ -45,18 +46,18 @@ public final class DesignService implements IService {
     @Override
     public CompletableFuture<Object> invokeAsync(CharSequence method, InvokeArgs args) {
         if (!(RuntimeContext.current().currentSession() instanceof IDeveloperSession)) {
-            return CompletableFuture.failedFuture(new Exception("Must login as a developer"));
+            return CompletableFuture.failedFuture(new RuntimeException("Must login as a developer"));
         }
 
         var session   = (IDeveloperSession) RuntimeContext.current().currentSession();
         var designHub = session.getDesignHub();
         if (designHub == null) {
-            return CompletableFuture.failedFuture(new Exception("Can't get DesignContext"));
+            return CompletableFuture.failedFuture(new RuntimeException("Can't get DesignContext"));
         }
 
         var handler = handlers.get(method);
         if (handler == null) {
-            return CompletableFuture.failedFuture(new Exception("Unknown design request: " + method));
+            return CompletableFuture.failedFuture(new RuntimeException("Unknown design request: " + method));
         }
 
         try {

@@ -6,6 +6,8 @@ import appbox.serialization.IBinSerializable;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
+import java.util.Arrays;
+
 /**
  * 系统存储及Sql存储的索引模型基类
  */
@@ -37,29 +39,31 @@ public abstract class IndexModelBase implements IBinSerializable {
     }
 
     //region ====Properties====
-    public PersistentState persistentState() {
+    public final PersistentState persistentState() {
         return _persistentState;
     }
 
-    public FieldWithOrder[] fields() { return _fields; }
+    public final String name() { return _name; }
 
-    public boolean hasStoringFields() { return _storingFields != null && _storingFields.length > 0; }
+    public final FieldWithOrder[] fields() { return _fields; }
 
-    public short[] storingFields() { return _storingFields; }
+    public final boolean hasStoringFields() { return _storingFields != null && _storingFields.length > 0; }
 
-    public byte indexId() { return _indexId; }
+    public final short[] storingFields() { return _storingFields; }
 
-    public boolean unique() { return _unique; }
+    public final byte indexId() { return _indexId; }
+
+    public final boolean unique() { return _unique; }
     //endregion
 
     //region ====Design Methods====
-    public void canAddTo(EntityModel owner) {
+    public final void canAddTo(EntityModel owner) {
         if (this.owner != owner) {
             throw new RuntimeException();
         }
     }
 
-    public void initIndexId(byte id) {
+    public final void initIndexId(byte id) {
         if (_indexId == 0) {
             _indexId = id;
         } else {
@@ -67,11 +71,24 @@ public abstract class IndexModelBase implements IBinSerializable {
         }
     }
 
-    public void acceptChanges() {
+    /** 检查成员是否存在索引字段或StoringFields内 */
+    public final boolean hasMember(short memberId) {
+        if (Arrays.stream(_fields).anyMatch(t -> t.memberId == memberId))
+            return true;
+        if (hasStoringFields()) {
+            for(var storingField : _storingFields) {
+                if (storingField == memberId)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public final void acceptChanges() {
         _persistentState = PersistentState.Unchnaged;
     }
 
-    public void markDeleted() {
+    public final void markDeleted() {
         _persistentState = PersistentState.Deleted;
         owner.onPropertyChanged();
         owner.changeSchemaVersion();

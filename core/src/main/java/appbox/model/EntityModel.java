@@ -180,6 +180,41 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
         _members.sort((m1, m2) -> Short.compare(m1.memberId(), m2.memberId()));
     }
 
+    /** 根据成员名称删除成员，如果是EntityRef成员同时删除相关隐藏成员 */
+    public void removeMember(String memberName) {
+        checkDesignMode();
+
+        var m = getMember(memberName);
+        //如果实体模型是新建的或成员是新建的直接移除
+        if (persistentState() == PersistentState.Detached
+                || m.persistentState() == PersistentState.Detached) {
+            if (m.type() == EntityMemberType.EntityRef) {
+                var refModel = (EntityRefModel)m;
+                for(var fk : refModel.getFKMemberIds()) {
+                    _members.remove(getMember(fk));
+                }
+                if (refModel.isAggregationRef())
+                    _members.remove(getMember(refModel.typeMemberId()));
+            }
+            _members.remove(m);
+            return;
+        }
+
+        //标为删除状态
+        m.markDeleted();
+        if (m.type() == EntityMemberType.EntityRef) {
+            var refModel = (EntityRefModel)m;
+            for(var fk : refModel.getFKMemberIds()) {
+                getMember(fk).markDeleted();
+            }
+            if (refModel.isAggregationRef())
+                getMember(refModel.typeMemberId()).markDeleted();
+        }
+
+        changeSchemaVersion();
+        onPropertyChanged();
+    }
+
     /**
      * 用于根据规则生成Sql表的名称, eg:相同前缀、命名规则等
      * @param original true表示设计时获取旧名称
