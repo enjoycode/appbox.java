@@ -157,11 +157,18 @@ public final class PublishService {
             hub.designTree.checkinAllNodes();
             //4.清除所有修改
             task = task.thenCompose(r -> StagedService.deleteStagedAsync());
-            //5.TODO:先尝试递交第三方数据库的DDL事务,另以上失败回滚所有第三方事务
 
-            //6.再递交系统数据库事务
-            return task.thenCompose(r -> txn.commitAsync())
-                    .thenAccept(r -> invalidModelsCache(hub, pkg)); //7.最后通知各节点更新模型缓存
+            return task.thenCompose(r -> {
+                CompletableFuture<Void> commitTask = CompletableFuture.completedFuture(null);
+                //5.先尝试递交第三方数据库的DDL事务
+                for (var sqlTxn : otherStoreTxns.values()) {
+                    commitTask = commitTask.thenCompose(r2 -> sqlTxn.commitAsync());
+                }
+                //6.再递交系统数据库事务
+                return commitTask.thenCompose(r2 -> txn.commitAsync())
+                        .thenAccept(r2 -> invalidModelsCache(hub, pkg)); //7.最后通知各节点更新模型缓存
+            });
+
         });
     }
 
@@ -176,7 +183,7 @@ public final class PublishService {
         for (var model : pkg.models) {
             switch (model.persistentState()) {
                 case Detached:
-                    task = task.thenCompose(r -> insertModelAsync(model, txn));
+                    task = task.thenCompose(r -> insertModelAsync(hub, model, txn, otherStoreTxns));
                     break;
                 case Unchnaged: //TODO:临时
                 case Modified:
@@ -203,23 +210,24 @@ public final class PublishService {
         return task;
     }
 
-    private static CompletableFuture<Void> insertModelAsync(ModelBase model, KVTransaction txn) {
-        return ModelStore.insertModelAsync(model, txn)
-                .thenCompose(r -> {
-                    CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
-                    if (model.modelType() == ModelType.Entity) {
-                        var em = (EntityModel) model;
-                        if (em.sqlStoreOptions() != null) { //映射至第三方数据库的需要创建相应的表
-                            //TODO:
-                            throw new RuntimeException("未实现");
-                        }
-
-                    } else if (model.modelType() == ModelType.View) { //TODO:暂在这里保存视图模型的路由
-                        //TODO:
-                        throw new RuntimeException("未实现");
-                    }
-                    return task;
-                });
+    private static CompletableFuture<Void> insertModelAsync(
+            DesignHub hub, ModelBase model, KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
+        return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
+            CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
+            if (model.modelType() == ModelType.Entity) {
+                var em = (EntityModel) model;
+                if (em.sqlStoreOptions() != null) { //映射至第三方数据库的需要创建相应的表
+                    final var sqlStoreId = em.sqlStoreOptions().storeModelId();
+                    var       sqlStore   = SqlStore.get(sqlStoreId);
+                    task = task.thenCompose(r2 -> makeOtherStoreTxn(sqlStoreId, otherStoreTxns))
+                            .thenCompose(sqlTxn -> sqlStore.createTableAsync(em, sqlTxn, hub));
+                } //TODO:Cql
+            } else if (model.modelType() == ModelType.View) { //TODO:暂在这里保存视图模型的路由
+                //TODO:
+                throw new RuntimeException("未实现");
+            }
+            return task;
+        });
     }
 
     private static CompletableFuture<Void> updateModelAsync(ModelBase model, KVTransaction txn, DesignHub hub) {
@@ -229,6 +237,18 @@ public final class PublishService {
                     //TODO:
                     return task;
                 });
+    }
+
+    private static CompletableFuture<DbTransaction> makeOtherStoreTxn(long storeId, Map<Long, DbTransaction> txns) {
+        var txn = txns.get(storeId);
+        if (txn != null)
+            return CompletableFuture.completedFuture(txn);
+
+        var sqlStore = SqlStore.get(storeId);
+        return sqlStore.beginTransaction().thenApply(r -> {
+            txns.put(storeId, r);
+            return r;
+        });
     }
 
     /** 通知集群各节点模型缓存失效 */
