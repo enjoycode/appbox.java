@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSqlStore {
 
-    private static final String      connection  = "jdbc:postgresql://10.211.55.2:54321/ABStore?user=lushuaijun&password=123456";
+    private static final String      connection  = "jdbc:postgresql://127.0.0.1:5432/db1?user=postgres&password=123456";
     private static final long        testStoreId = 1;
     private static       EntityModel model;
 
@@ -56,6 +56,26 @@ public class TestSqlStore {
         var db  = SqlStore.get(testStoreId);
         var txn = db.beginTransaction().get();
         db.createTableAsync(model, txn, (IDesignContext) RuntimeContext.current()).get();
+        txn.commitAsync().get();
+    }
+
+    @Test
+    @Order(2)
+    public void testAlterTable() throws Exception {
+        var db  = SqlStore.get(testStoreId);
+        var txn = db.beginTransaction().get();
+        var msgMember = new DataFieldModel(model, "Msg", DataFieldModel.DataFieldType.String, true);
+        model.addSysMember(msgMember,ELog.MSG_ID);
+        db.alterTableAsync(model, txn, (IDesignContext) RuntimeContext.current()).get();
+        txn.commitAsync().get();
+    }
+
+    @Test
+    @Order(3)
+    public void testDropTable() throws Exception {
+        var db  = SqlStore.get(testStoreId);
+        var txn = db.beginTransaction().get();
+        db.dropTableAsync(model, txn, (IDesignContext) RuntimeContext.current()).get();
         txn.commitAsync().get();
     }
 

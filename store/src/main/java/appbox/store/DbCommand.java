@@ -17,6 +17,13 @@ final class DbCommand implements IEntityMemberWriter {
 
     protected Connection connection; //仅用于暂存临时连接
 
+    public DbCommand() {
+    }
+
+    public DbCommand(String commandText) {
+        this._commandText = commandText;
+    }
+
     public String getCommandText() { return _commandText; }
 
     public void setCommandText(String cmd) { _commandText = cmd; }

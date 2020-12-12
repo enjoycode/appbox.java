@@ -13,9 +13,13 @@ public class ELog extends SqlEntity {
     public static final short NAME_ID  = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short ADDR_ID  = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
 
+    public static final short MSG_ID  = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
+
     private int    _id;
     private String _name;
     private String _address;
+
+    private String _msg;
 
     public ELog() {
         super(MODEL_ID);
@@ -32,6 +36,14 @@ public class ELog extends SqlEntity {
     public String getAddress() { return _address; }
 
     public void setAddress(String value) { _address = value; }
+
+    public String getMsg() {
+        return _msg;
+    }
+
+    public void setMsg(String msg) {
+        this._msg = _msg;
+    }
 
     @Override
     public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
