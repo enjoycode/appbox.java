@@ -120,7 +120,22 @@ public final class TypeSystem {
     }
 
     public void removeModelDocument(ModelNode node) {
-        Log.warn("removeModelDocument 未实现");
+        var appName  = node.appNode.model.name();
+        var model    = node.model();
+        var fileName = String.format("%s.java", model.name());
+
+        try {
+            if (model.modelType() == ModelType.Entity) {
+                var appFolder  = modelsProject.getFolder(appName);
+                var typeFolder = appFolder.getFolder("entities");
+                var file       = typeFolder.getFile(fileName);
+                file.delete(true, null);
+            } else {
+                Log.warn("removeModelDocument 未实现");
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void updateStoresDocument() {
