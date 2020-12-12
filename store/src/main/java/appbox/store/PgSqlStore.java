@@ -123,9 +123,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         }
 
         var res = new ArrayList<DbCommand>();
-        var cmd = new DbCommand();
-        cmd.setCommandText(sb.toString());
-        res.add(cmd);
+        res.add(new DbCommand(sb.toString()));
 
         //Build Indexes
         buildIndexes(model, res, tableName);
@@ -147,13 +145,11 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         if (model.isNameChanged())
         {
             String oldTableName = model.getSqlTableName(true, ctx);
-            DbCommand renameTableCmd = new DbCommand();
-            renameTableCmd.setCommandText(String.format("ALTER TABLE \"%s\" RENAME TO \"%s\"", oldTableName, tableName));
-            commands.add(renameTableCmd);
+            commands.add(new DbCommand(String.format("ALTER TABLE \"%s\" RENAME TO \"%s\"", oldTableName, tableName)));
         }
 
         //处理删除的成员
-        var deletedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Deleted).toArray();
+        var deletedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Deleted).toArray(EntityMemberModel[]::new);
         if (deletedMembers != null && deletedMembers.length > 0)
         {
             //#region ----删除的成员----
@@ -184,9 +180,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                     sb.insert(0, fks.get(i));
                     sb.append("\r\n");
                 }
-                var cmd=new DbCommand();
-                cmd.setCommandText(cmdText);
-                commands.add(cmd);
+                commands.add(new DbCommand(cmdText));
             }
             //#endregion
         }
@@ -196,7 +190,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         fks.clear();
 
         //处理新增的成员
-        var addedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Detached).toArray();
+        var addedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Detached).toArray(EntityMemberModel[]::new);
         if (addedMembers != null && addedMembers.length > 0)
         {
             //#region ----新增的成员----
@@ -230,9 +224,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                     sb.append(fks.get(i) + "\r\n");
                 }
 
-                var cmd=new DbCommand();
-                cmd.setCommandText(cmdText);
-                commands.add(cmd);
+                commands.add(new DbCommand(cmdText));
             }
             //#endregion
         }
@@ -242,7 +234,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         fks.clear();
 
         //处理修改的成员
-        var changedMembers = (EntityMemberModel[])model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Modified).toArray();
+        var changedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Modified).toArray(EntityMemberModel[]::new);
         if (changedMembers != null && changedMembers.length > 0)
         {
             //#region ----修改的成员----
@@ -269,17 +261,13 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                             }
                             sb.append(String.format(",ALTER COLUMN \"%s\" SET NOT NULL,ALTER COLUMN \"%s\" SET DEFAULT %s", dfm.sqlColOriginalName(), dfm.sqlColOriginalName(), defaultValue));
                         }
-                        var cmd=new DbCommand();
-                        cmd.setCommandText(sb.toString());
-                        commands.add(cmd);
+                        commands.add(new DbCommand(sb.toString()));
                     }
 
                     //再处理重命名列
                     if (m.isNameChanged())
                     {
-                        var renameColCmd = new DbCommand();
-                        renameColCmd.setCommandText(String.format("ALTER TABLE \"%s\" RENAME COLUMN \"%s\" TO \"%s\"", tableName, dfm.sqlColOriginalName(), dfm.sqlColName()));
-                        commands.add(renameColCmd);
+                        commands.add(new DbCommand(String.format("ALTER TABLE \"%s\" RENAME COLUMN \"%s\" TO \"%s\"", tableName, dfm.sqlColOriginalName(), dfm.sqlColName())));
                     }
                 }
 
@@ -299,9 +287,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
     @Override
     protected DbCommand makeDropTable(EntityModel model, IDesignContext ctx) {
         String tableName =  model.getSqlTableName(true, ctx);
-        var cmd=new DbCommand();
-        cmd.setCommandText(String.format("DROP TABLE IF EXISTS \"%s\"",tableName));
-        return cmd;
+        return new DbCommand(String.format("DROP TABLE IF EXISTS \"%s\"",tableName));
     }
 
     //endregion
@@ -453,9 +439,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
             for (var index : deletedIndexes) {
                 var cmdTxt = String.format("DROP INDEX IF EXISTS \"IX_%s_%s\""
                         , Long.toUnsignedString(model.id()), Byte.toUnsignedInt(index.indexId()));
-                var cmd = new DbCommand();
-                cmd.setCommandText(cmdTxt);
-                commands.add(cmd);
+                commands.add(new DbCommand(cmdTxt));
             }
         }
 
@@ -486,9 +470,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
             }
             sb.append(')');
 
-            var cmd = new DbCommand();
-            cmd.setCommandText(sb.toString());
-            commands.add(cmd);
+            commands.add(new DbCommand(sb.toString()));
         }
 
         //TODO:处理改变的索引
