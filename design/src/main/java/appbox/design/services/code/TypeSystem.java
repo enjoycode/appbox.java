@@ -2,15 +2,18 @@ package appbox.design.services.code;
 
 import appbox.design.DesignHub;
 import appbox.design.jdt.ModelFile;
-import appbox.design.tree.DataStoreNode;
+import appbox.design.services.CodeGenService;
 import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
+import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.runtime.IService;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
 public final class TypeSystem {
 
@@ -92,7 +95,28 @@ public final class TypeSystem {
 
     /** 注意：服务模型也会更新，如不需要由调用者忽略 */
     public void updateModelDocument(ModelNode node) {
-        Log.warn("updateModelDocument暂未实现");
+        var appName  = node.appNode.model.name();
+        var model    = node.model();
+        var fileName = String.format("%s.java", model.name());
+
+        try {
+            if (model.modelType() == ModelType.Entity) {
+                var appFolder  = modelsProject.getFolder(appName);
+                var typeFolder = appFolder.getFolder("entities");
+                var file       = typeFolder.getFile(fileName);
+                var cu         = (CompilationUnit) JDTUtils.resolveCompilationUnit(file);
+                if (cu.getBuffer() != null) {
+                    cu.getBuffer().setContents(CodeGenService.genEntityDummyCode(
+                            (EntityModel) model, appName, node.designTree()));
+                    cu.makeConsistent(null);
+                    //Log.debug(cu.getBuffer().getContents());
+                }
+            } else {
+                Log.warn("updateModelDocument暂未实现: " + model.modelType().name());
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void updateStoresDocument() {
