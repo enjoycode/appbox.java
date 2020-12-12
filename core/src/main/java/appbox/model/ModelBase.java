@@ -109,6 +109,11 @@ public abstract class ModelBase implements IBinSerializable {
             _originalName = null;
         }
     }
+
+    public final void markDeleted() {
+        if (_persistentState != PersistentState.Detached)
+            _persistentState = PersistentState.Deleted;
+    }
     //endregion
 
     //region ====Serialization====

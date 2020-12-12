@@ -22,7 +22,7 @@ public class NewEntityModel implements IDesignHandler {
 
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
-        var selectedNodeType = DesignNodeType.forValue((byte) args.getInt());
+        var selectedNodeType = DesignNodeType.fromValue((byte) args.getInt());
         var selectedNodeId   = args.getString();
         var name             = args.getString();
         var localizedName    = args.getString();

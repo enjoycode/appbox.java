@@ -70,7 +70,7 @@ public final class CheckoutService {
         return q.toListAsync().thenApply(res -> {
             if (res != null && res.size() > 0) {
                 for (Checkout checkout : res) {
-                    CheckoutInfo info = new CheckoutInfo(DesignNodeType.forValue(checkout.getNodeType()), checkout.getTargetId(), checkout.getVersion()
+                    CheckoutInfo info = new CheckoutInfo(DesignNodeType.fromValue(checkout.getNodeType()), checkout.getTargetId(), checkout.getVersion()
                             , checkout.getDeveloperName(), checkout.getDeveloperId());
                     map.put(info.getKey(), info);
                 }

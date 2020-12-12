@@ -15,7 +15,7 @@ public final class Checkout implements IDesignHandler {
      */
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
-        var nodeType = DesignNodeType.forValue((byte) args.getInt());
+        var nodeType = DesignNodeType.fromValue((byte) args.getInt());
         var nodeId   = args.getString();
 
         var node = hub.designTree.findNode(nodeType, nodeId);

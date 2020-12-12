@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 public final class CloseDesigner implements IDesignHandler {
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
-        var nodeType = DesignNodeType.forValue((byte) args.getInt());
+        var nodeType = DesignNodeType.fromValue((byte) args.getInt());
         var modelId  = Long.parseUnsignedLong(args.getString());
 
         if (nodeType == DesignNodeType.ServiceModelNode) {

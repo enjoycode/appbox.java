@@ -57,6 +57,11 @@ public final class ModelRootNode extends DesignNode {
         _models.put(node.model().id(), node);
     }
 
+    /**  删除并移除字典表中对应的键 */
+    public void removeModel(ModelNode node) {
+        node.getParent().nodes.remove(node);
+        _models.remove(node.model().id());
+    }
     //endregion
 
     //region ====Find Methods====
@@ -69,7 +74,7 @@ public final class ModelRootNode extends DesignNode {
         return null;
     }
 
-    protected ModelNode findModelNode(long modelId) {
+    public ModelNode findModelNode(long modelId) {
         return _models.get(modelId);
     }
 

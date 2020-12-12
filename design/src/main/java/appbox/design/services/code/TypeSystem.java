@@ -119,6 +119,10 @@ public final class TypeSystem {
         }
     }
 
+    public void removeModelDocument(ModelNode node) {
+        Log.warn("removeModelDocument 未实现");
+    }
+
     public void updateStoresDocument() {
         //TODO:
     }

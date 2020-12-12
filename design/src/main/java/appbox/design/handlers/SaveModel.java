@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 public final class SaveModel implements IDesignHandler {
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
-        var nodeType = DesignNodeType.forValue((byte) args.getInt());
+        var nodeType = DesignNodeType.fromValue((byte) args.getInt());
         var modelId  = args.getString();
 
         if (nodeType == DesignNodeType.ViewModelNode) {
