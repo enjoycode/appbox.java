@@ -39,6 +39,8 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
         return _members;
     }
 
+    public IEntityStoreOption storeOptions() { return _storeOptions; }
+
     public SysStoreOptions sysStoreOptions() {
         return _storeOptions != null && _storeOptions instanceof SysStoreOptions ?
                 (SysStoreOptions) _storeOptions : null;
@@ -138,6 +140,10 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
         if (persistentState() != PersistentState.Detached && sysStoreOptions() != null) {
             ((SysStoreOptions) _storeOptions).changeSchemaVersion();
         }
+    }
+
+    public void addMember(EntityMemberModel member) {
+        addMember(member, false);
     }
 
     public void addMember(EntityMemberModel member, boolean byImport) {

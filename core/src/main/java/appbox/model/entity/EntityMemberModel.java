@@ -7,7 +7,7 @@ import appbox.serialization.*;
 /**
  * 实体成员模型基类
  */
-public abstract class EntityMemberModel implements IBinSerializable {
+public abstract class EntityMemberModel implements IBinSerializable, IJsonSerializable {
     //region ====EntityMemberType====
     public enum EntityMemberType {
         DataField(0), EntityRef(2), EntitySet(3);
@@ -160,6 +160,7 @@ public abstract class EntityMemberModel implements IBinSerializable {
         } while (propIndex != 0);
     }
 
+    @Override
     public final void writeToJson(IJsonWriter writer) {
         writer.startObject();
 
