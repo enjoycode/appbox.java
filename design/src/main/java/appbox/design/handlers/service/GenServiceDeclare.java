@@ -34,10 +34,18 @@ public final class GenServiceDeclare implements IDesignHandler {
         return CompletableFuture.completedFuture(new JsonResult(list));
     }
 
-    static final class TypeScriptDeclare implements IJsonSerializable {
+    public static final class TypeScriptDeclare implements IJsonSerializable {
 
         public String name;
         public String declare;
+
+        public TypeScriptDeclare() {
+        }
+
+        public TypeScriptDeclare(String name, String declare) {
+            this.name = name;
+            this.declare = declare;
+        }
 
         @Override
         public void writeToJson(IJsonWriter writer) {
