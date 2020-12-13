@@ -107,7 +107,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
             sb.append(Long.toUnsignedString(model.id()));
             sb.append("\" PRIMARY KEY (");
             for (int i = 0; i < model.sqlStoreOptions().primaryKeys().length; i++) {
-                var mm = (DataFieldModel)model.getMember(model.sqlStoreOptions().primaryKeys()[i].memberId);
+                var mm = (DataFieldModel) model.getMember(model.sqlStoreOptions().primaryKeys()[i].memberId);
                 if (i != 0)
                     sb.append(',');
                 sb.append("\"");
@@ -135,36 +135,31 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
     protected List<DbCommand> makeAlterTable(EntityModel model, IDesignContext ctx) {
         //TODO:***处理主键变更
 
-        String tableName =  model.getSqlTableName(false, ctx);
+        String tableName = model.getSqlTableName(false, ctx);
 
-        StringBuilder sb=new StringBuilder(200);
-        boolean needCommand = false; //用于判断是否需要处理NpgsqlCommand
-        List<String> fks = new ArrayList<>(); //引用外键列表
-        List<DbCommand> commands = new ArrayList<>();
+        StringBuilder   sb          = new StringBuilder(200);
+        boolean         needCommand = false; //用于判断是否需要处理NpgsqlCommand
+        List<String>    fks         = new ArrayList<>(); //引用外键列表
+        List<DbCommand> commands    = new ArrayList<>();
         //先处理表名称有没有变更，后续全部使用新名称
-        if (model.isNameChanged())
-        {
+        if (model.isNameChanged()) {
             String oldTableName = model.getSqlTableName(true, ctx);
             commands.add(new DbCommand(String.format("ALTER TABLE \"%s\" RENAME TO \"%s\"", oldTableName, tableName)));
         }
 
         //处理删除的成员
-        var deletedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Deleted).toArray(EntityMemberModel[]::new);
-        if (deletedMembers != null && deletedMembers.length > 0)
-        {
+        var deletedMembers = model.getMembers().stream()
+                .filter(t -> t.persistentState() == PersistentState.Deleted)
+                .toArray(EntityMemberModel[]::new);
+        if (deletedMembers.length > 0) {
             //#region ----删除的成员----
-            for (EntityMemberModel m : deletedMembers)
-            {
-                if (m.type() == EntityMemberModel.EntityMemberType.DataField)
-                {
+            for (EntityMemberModel m : deletedMembers) {
+                if (m.type() == EntityMemberModel.EntityMemberType.DataField) {
                     needCommand = true;
-                    sb.append(String.format("ALTER TABLE \"%s\" DROP COLUMN \"%s\";", tableName, ((DataFieldModel)m).sqlColOriginalName()));
-                }
-                else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef)
-                {
-                    EntityRefModel rm = (EntityRefModel)m;
-                    if (!rm.isAggregationRef())
-                    {
+                    sb.append(String.format("ALTER TABLE \"%s\" DROP COLUMN \"%s\";", tableName, ((DataFieldModel) m).sqlColOriginalName()));
+                } else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef) {
+                    EntityRefModel rm = (EntityRefModel) m;
+                    if (!rm.isAggregationRef()) {
                         String fkName = String.format("FK_%s_%s", rm.owner.id(), rm.memberId()); //TODO:特殊处理DbFirst导入表的外键约束名称
                         fks.add(String.format("ALTER TABLE \"%s\" DROP CONSTRAINT \"%s\";", tableName, fkName));
                     }
@@ -172,13 +167,11 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
             }
 
             String cmdText = sb.toString();
-            if (needCommand)
-            {
+            if (needCommand) {
                 //加入删除的外键SQL
-                for (int i = 0; i < fks.size(); i++)
-                {
-                    sb.insert(0, fks.get(i));
-                    sb.append("\r\n");
+                for (String fk : fks) {
+                    sb.insert(0, fk);
+                    sb.append("\n");
                 }
                 commands.add(new DbCommand(cmdText));
             }
@@ -190,22 +183,19 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         fks.clear();
 
         //处理新增的成员
-        var addedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Detached).toArray(EntityMemberModel[]::new);
-        if (addedMembers != null && addedMembers.length > 0)
-        {
+        var addedMembers = model.getMembers().stream()
+                .filter(t -> t.persistentState() == PersistentState.Detached)
+                .toArray(EntityMemberModel[]::new);
+        if (addedMembers.length > 0) {
             //#region ----新增的成员----
-            for (EntityMemberModel m : addedMembers)
-            {
-                if (m.type() == EntityMemberModel.EntityMemberType.DataField)
-                {
+            for (EntityMemberModel m : addedMembers) {
+                if (m.type() == EntityMemberModel.EntityMemberType.DataField) {
                     needCommand = true;
                     sb.append(String.format("ALTER TABLE \"%s\" ADD COLUMN ", tableName));
-                    buildFieldDefine((DataFieldModel)m, sb, false);
+                    buildFieldDefine((DataFieldModel) m, sb, false);
                     sb.append(";");
-                }
-                else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef)
-                {
-                    EntityRefModel rm = (EntityRefModel)m;
+                } else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef) {
+                    EntityRefModel rm = (EntityRefModel) m;
                     if (!rm.isAggregationRef()) //只有非聚合引合创建外键
                     {
                         fks.add(buildForeignKey(rm, ctx, tableName).toString());
@@ -215,13 +205,11 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
             }
 
             String cmdText = sb.toString();
-            if (needCommand)
-            {
+            if (needCommand) {
                 //加入关系
-                sb.append("\r\n");
-                for (int i = 0; i < fks.size(); i++)
-                {
-                    sb.append(fks.get(i) + "\r\n");
+                sb.append("\n");
+                for (String fk : fks) {
+                    sb.append(fk).append("\n");
                 }
 
                 commands.add(new DbCommand(cmdText));
@@ -234,39 +222,31 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         fks.clear();
 
         //处理修改的成员
-        var changedMembers = model.getMembers().stream().filter(t->t.persistentState()==PersistentState.Modified).toArray(EntityMemberModel[]::new);
-        if (changedMembers != null && changedMembers.length > 0)
-        {
+        var changedMembers = model.getMembers().stream()
+                .filter(t -> t.persistentState() == PersistentState.Modified)
+                .toArray(EntityMemberModel[]::new);
+        if (changedMembers.length > 0) {
             //#region ----修改的成员----
-            for (EntityMemberModel m : changedMembers)
-            {
-                if (m.type() == EntityMemberModel.EntityMemberType.DataField)
-                {
-                    DataFieldModel dfm = (DataFieldModel)m;
+            for (EntityMemberModel m : changedMembers) {
+                if (m.type() == EntityMemberModel.EntityMemberType.DataField) {
+                    DataFieldModel dfm = (DataFieldModel) m;
                     //先处理数据类型变更，变更类型或者变更AllowNull或者变更默认值
-                    if (dfm.isDataTypeChanged())
-                    {
+                    if (dfm.isDataTypeChanged()) {
                         sb.append(String.format("ALTER TABLE \"%s\" ALTER COLUMN ", tableName));
                         String defaultValue = buildFieldDefine(dfm, sb, true);
 
-                        if (dfm.allowNull())
-                        {
+                        if (dfm.allowNull()) {
                             sb.append(String.format(",ALTER COLUMN \"%s\" DROP NOT NULL", dfm.sqlColOriginalName()));
-                        }
-                        else
-                        {
+                        } else {
                             if (dfm.dataType() == DataFieldModel.DataFieldType.Binary)
-                            {
                                 throw new RuntimeException("Binary field must be allow null");
-                            }
                             sb.append(String.format(",ALTER COLUMN \"%s\" SET NOT NULL,ALTER COLUMN \"%s\" SET DEFAULT %s", dfm.sqlColOriginalName(), dfm.sqlColOriginalName(), defaultValue));
                         }
                         commands.add(new DbCommand(sb.toString()));
                     }
 
                     //再处理重命名列
-                    if (m.isNameChanged())
-                    {
+                    if (m.isNameChanged()) {
                         commands.add(new DbCommand(String.format("ALTER TABLE \"%s\" RENAME COLUMN \"%s\" TO \"%s\"", tableName, dfm.sqlColOriginalName(), dfm.sqlColName())));
                     }
                 }
@@ -286,8 +266,8 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
 
     @Override
     protected DbCommand makeDropTable(EntityModel model, IDesignContext ctx) {
-        String tableName =  model.getSqlTableName(true, ctx);
-        return new DbCommand(String.format("DROP TABLE IF EXISTS \"%s\"",tableName));
+        String tableName = model.getSqlTableName(true, ctx);
+        return new DbCommand(String.format("DROP TABLE IF EXISTS \"%s\"", tableName));
     }
 
     //endregion
