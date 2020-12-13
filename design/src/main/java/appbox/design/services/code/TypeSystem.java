@@ -129,7 +129,9 @@ public final class TypeSystem {
                 var appFolder  = modelsProject.getFolder(appName);
                 var typeFolder = appFolder.getFolder("entities");
                 var file       = typeFolder.getFile(fileName);
-                file.delete(true, null);
+                var cu = JDTUtils.resolveCompilationUnit(file);
+                cu.delete(true, null);
+                //不需要file.delete(),上一步会调用
             } else {
                 Log.warn("removeModelDocument 未实现");
             }
@@ -138,6 +140,7 @@ public final class TypeSystem {
         }
     }
 
+    /**  */
     public void updateStoresDocument() {
         //TODO:
     }
