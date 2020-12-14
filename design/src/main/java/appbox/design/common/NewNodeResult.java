@@ -14,6 +14,17 @@ public final class NewNodeResult implements IJsonSerializable {
     /** 用于前端处理插入点，由后端排好序后返回给前端，省得前端处理排序问题 */
     public int InsertIndex;
 
+    public NewNodeResult() {
+    }
+
+    public NewNodeResult(int parentNodeType, String parentNodeID, DesignNode newNode, String rootNodeID, int insertIndex) {
+        ParentNodeType = parentNodeType;
+        ParentNodeID = parentNodeID;
+        NewNode = newNode;
+        RootNodeID = rootNodeID;
+        InsertIndex = insertIndex;
+    }
+
     @Override
     public void writeToJson(IJsonWriter writer) {
         writer.startObject();

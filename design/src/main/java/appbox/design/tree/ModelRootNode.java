@@ -19,6 +19,10 @@ public final class ModelRootNode extends DesignNode {
         text            = CodeHelper.getPluralStringOfModelType(targetType);
     }
 
+    public String fullName(){
+        return getParent().text();
+    }
+
     @Override
     public String id() {
         var appIdString = Integer.toUnsignedString(((ApplicationNode) getParent()).model.id());
