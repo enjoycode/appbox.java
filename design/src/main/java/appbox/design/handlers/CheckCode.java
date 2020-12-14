@@ -26,23 +26,8 @@ public final class CheckCode implements IDesignHandler {
             return CompletableFuture.failedFuture(new Exception(error));
         }
         return CompletableFuture.supplyAsync(() -> {
-            //List<QuickFix> quickFixes = new ArrayList<>();
-            //hub.typeSystem.languageServer.getAst
-            //try(CompileTask task = hub.typeSystem.workspace.compiler().compile(List.of(sourceFile))) {
-            //    LineMap lines = task.root().getLineMap();
-            //    for (javax.tools.Diagnostic<? extends JavaFileObject> diagnostic : task.diagnostics) {
-            //        QuickFix quickFix = new QuickFix();
-            //        quickFix.setLine((int) diagnostic.getLineNumber());
-            //        quickFix.setColumn((int) diagnostic.getColumnNumber());
-            //        quickFix.setText(diagnostic.getMessage(Locale.CHINESE));
-            //        quickFix.setLevel(quickFix.getLevelFromKind(diagnostic.getKind()));//TODO check
-            //        quickFix.setEndLine((int) lines.getLineNumber(diagnostic.getEndPosition()));
-            //        quickFix.setEndColumn((int) lines.getColumnNumber(diagnostic.getEndPosition()));
-            //        quickFixes.add(quickFix);
-            //    }
-            //    return new JsonResult(quickFixes);
-            return new JsonResult(null);
-            //}
+            var problems = hub.typeSystem.languageServer.diagnostics(doc);
+            return new JsonResult(problems);
         }, hub.codeEditorTaskPool);
     }
 

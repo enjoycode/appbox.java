@@ -1,9 +1,7 @@
 package appbox.design.services.code;
 
 import appbox.design.IDeveloperSession;
-import appbox.design.jdt.DefaultVMType;
-import appbox.design.jdt.Document;
-import appbox.design.jdt.ModelWorkspace;
+import appbox.design.jdt.*;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.PathUtil;
 import appbox.design.utils.ReflectUtil;
@@ -28,23 +26,18 @@ import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
 import org.eclipse.jdt.internal.launching.JREContainerInitializer;
 import org.eclipse.jdt.internal.ui.util.StringMatcher;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jdt.ls.core.internal.*;
 import org.eclipse.jdt.ls.core.internal.DocumentAdapter;
-import org.eclipse.jdt.ls.core.internal.JDTUtils;
-import org.eclipse.jdt.ls.core.internal.JVMConfigurator;
-import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.contentassist.CompletionProposalRequestor;
 import org.eclipse.jdt.ls.core.internal.contentassist.TypeFilter;
 import org.eclipse.jdt.ls.core.internal.preferences.PreferenceManager;
 import org.eclipse.jdt.ls.core.internal.syntaxserver.ModelBasedCompletionEngine;
-import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.*;
 
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * 一个TypeSystem对应一个实例，管理JavaProject及相应的虚拟文件
@@ -284,6 +277,79 @@ public final class LanguageServer {
             ex.printStackTrace();
             return Collections.emptyList();
         }
+    }
+
+    public List<DiagnosticsHandler.Diagnostic> diagnostics(Document doc) {
+        var cu = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+
+        var diagnosticsHandler = new DiagnosticsHandler();
+        WorkingCopyOwner wcOwner = new WorkingCopyOwner() {
+            @Override
+            public IBuffer createBuffer(ICompilationUnit workingCopy) {
+                ICompilationUnit original = workingCopy.getPrimary();
+                IResource        resource = original.getResource();
+                if (resource instanceof IFile) {
+                    return new DocumentAdapter(workingCopy, (IFile) resource);
+                }
+                return DocumentAdapter.Null;
+            }
+
+            @Override
+            public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
+                return diagnosticsHandler;
+            }
+
+        };
+
+        int flags = ICompilationUnit.FORCE_PROBLEM_DETECTION
+                | ICompilationUnit.ENABLE_BINDINGS_RECOVERY
+                | ICompilationUnit.ENABLE_STATEMENTS_RECOVERY;
+        try {
+            cu.reconcile(ICompilationUnit.NO_AST, flags, wcOwner, null);
+            return diagnosticsHandler.getProblems();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public String[] hover(Document doc, int line, int column) {
+        List<String> res = new ArrayList<>();
+        var unit = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+        var monitor = new ProgressMonitor();
+        try {
+            var elements = JDTUtils.findElementsAtSelection(unit, line, column, lsPreferenceManager, monitor);
+            if (elements == null || elements.length == 0)
+                return null;
+
+            IJavaElement curr = null;
+            if (elements.length != 1) {
+                IPackageFragment packageFragment = (IPackageFragment)unit.getParent();
+                IJavaElement found = Stream.of(elements)
+                        .filter((e) -> e.equals(packageFragment))
+                        .findFirst().orElse(null);
+                if (found == null) {
+                    curr = elements[0];
+                } else {
+                    curr = found;
+                }
+            } else {
+                curr = elements[0];
+            }
+
+            var signature = HoverInfoProvider.computeSignature(curr);
+            if (signature != null)
+                res.add(signature.getValue());
+
+            var javadoc = HoverInfoProvider.computeJavadoc(curr);
+            if (javadoc != null)
+                res.add(javadoc.getValue());
+
+            return res.toArray(String[]::new);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        // hoverInfoProvider.computeHover(line, column, monitor);
     }
 
     /** 根据行号列号找到服务方法相关信息,找不到返回null */

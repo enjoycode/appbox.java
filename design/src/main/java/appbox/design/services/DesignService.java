@@ -4,6 +4,7 @@ import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.GenServiceDeclare;
+import appbox.design.handlers.service.GetHover;
 import appbox.design.handlers.service.GetServiceMethod;
 import appbox.design.handlers.service.OpenServiceModel;
 import appbox.design.handlers.store.NewDataStore;
@@ -43,6 +44,7 @@ public final class DesignService implements IService {
         put("OpenServiceModel", new OpenServiceModel());
         put("GenServiceDeclare", new GenServiceDeclare());
         put("GetServiceMethod", new GetServiceMethod());
+        put("GetHover", new GetHover());
     }};
 
     @Override
