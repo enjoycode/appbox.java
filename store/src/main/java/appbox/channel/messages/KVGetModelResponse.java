@@ -19,6 +19,7 @@ public final class KVGetModelResponse extends KVGetResponse {
         if (size > 0) {
             _model = ModelBase.makeModelByType(bs.readByte());
             _model.readFrom(bs);
+            _model.acceptChanges();
         }
     }
 }

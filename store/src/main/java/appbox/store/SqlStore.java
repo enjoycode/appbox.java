@@ -86,12 +86,9 @@ public abstract class SqlStore {
     public final CompletableFuture<Void> alterTableAsync(EntityModel model, DbTransaction txn, IDesignContext ctx) {
         var cmds = makeAlterTable(model, ctx);
 
-        CompletableFuture<Long> task = null;
+        CompletableFuture<Long> task = CompletableFuture.completedFuture(0L); //目前cmds可能为空
         for (var cmd : cmds) {
-            if (task == null)
-                task = cmd.execNonQueryAsync(txn.getConnection());
-            else
-                task = task.thenCompose(r -> cmd.execNonQueryAsync(txn.getConnection()));
+            task = task.thenCompose(r -> cmd.execNonQueryAsync(txn.getConnection()));
         }
         return task.thenAccept(r -> {});
     }
