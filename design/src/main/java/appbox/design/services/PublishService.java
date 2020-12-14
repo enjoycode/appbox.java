@@ -7,6 +7,7 @@ import appbox.design.common.PublishPackage;
 import appbox.design.jdt.JavaBuilderWrapper;
 import appbox.design.services.code.LanguageServer;
 import appbox.design.services.code.ServiceCodeGenerator;
+import appbox.logging.Log;
 import appbox.model.*;
 import appbox.runtime.IService;
 import appbox.runtime.RuntimeContext;
@@ -185,7 +186,7 @@ public final class PublishService {
                     break;
                 case Unchnaged: //TODO:临时
                 case Modified:
-                    task = task.thenCompose(r -> updateModelAsync(model, txn, hub));
+                    task = task.thenCompose(r -> updateModelAsync(hub, model, txn, otherStoreTxns));
                     break;
                 case Deleted:
                     task = task.thenCompose(r -> deleteModelAsync(hub, model, txn, otherStoreTxns));
@@ -214,30 +215,27 @@ public final class PublishService {
     private static CompletableFuture<Void> insertModelAsync(DesignHub hub, ModelBase model
             , KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
         return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
-            CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
             if (model.modelType() == ModelType.Entity) {
-                var em = (EntityModel) model;
-                if (em.sqlStoreOptions() != null) { //映射至第三方数据库的需要创建相应的表
-                    final var sqlStoreId = em.sqlStoreOptions().storeModelId();
-                    var       sqlStore   = SqlStore.get(sqlStoreId);
-                    task = task.thenCompose(r2 -> makeOtherStoreTxn(sqlStoreId, otherStoreTxns))
-                            .thenCompose(sqlTxn -> sqlStore.createTableAsync(em, sqlTxn, hub));
-                } //TODO:Cql
+                return createTableAsync(hub, (EntityModel) model, otherStoreTxns);
             } else if (model.modelType() == ModelType.View) { //TODO:暂在这里保存视图模型的路由
-                //TODO:
-                throw new RuntimeException("未实现");
+                return upsertViewRouteAsync(model, txn);
             }
-
-            return task;
+            return CompletableFuture.completedFuture(null);
         });
     }
 
-    private static CompletableFuture<Void> updateModelAsync(ModelBase model, KVTransaction txn, DesignHub hub) {
+    private static CompletableFuture<Void> updateModelAsync(DesignHub hub, ModelBase model
+            , KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
         return ModelStore.updateModelAsync(model, txn, appid -> hub.designTree.findApplicationNode(appid).model)
                 .thenCompose(r -> {
-                    CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
-                    //TODO:
-                    return task;
+                    if (model.modelType() == ModelType.Entity) {
+                        return alterTableAsync(hub, (EntityModel) model, otherStoreTxns);
+                    } else if (model.modelType() == ModelType.Service) {
+                        //TODO:服务模型重命名删除旧的Assembly
+                    } else if (model.modelType() == ModelType.View) {
+                        throw new RuntimeException("未实现");
+                    }
+                    return CompletableFuture.completedFuture(null);
                 });
     }
 
@@ -245,23 +243,27 @@ public final class PublishService {
             , KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
         final Function<Integer, ApplicationModel> findApp = appid -> hub.designTree.findApplicationNode(appid).model;
         return ModelStore.deleteModelAsync(model, txn, findApp).thenCompose(r -> {
-            CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
             if (model.modelType() == ModelType.Entity) {
-                var em = (EntityModel) model;
-                if (em.sqlStoreOptions() != null) {//映射至第三方数据库的需要删除相应的表
-                    final var sqlStoreId = em.sqlStoreOptions().storeModelId();
-                    var       sqlStore   = SqlStore.get(sqlStoreId);
-                    task = task.thenCompose(r2 -> makeOtherStoreTxn(sqlStoreId, otherStoreTxns))
-                            .thenCompose(sqlTxn -> sqlStore.dropTableAsync(em, sqlTxn, hub));
-                } //TODO:Cql
-            } else {
+                return dropTableAsync(hub, (EntityModel) model, otherStoreTxns);
+            } else if (model.modelType() == ModelType.Service) {
+                var app     = hub.designTree.findApplicationNode(model.appId());
+                var asmName = String.format("%s.%s", app.model.name(), model.originalName()); //注意是旧名称
+                return ModelStore.deleteModelCodeAsync(model.id(), txn)
+                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(true, asmName, txn));
+            } else if (model.modelType() == ModelType.View) {
                 throw new RuntimeException("未实现");
             }
-
-            return task;
+            return CompletableFuture.completedFuture(null);
         });
     }
 
+    /** 保存视图模型的路由 */
+    private static CompletableFuture<Void> upsertViewRouteAsync(ModelBase model, KVTransaction txn) {
+        Log.warn("保存视图路由未实现");
+        return CompletableFuture.completedFuture(null);
+    }
+
+    //region ====第三方数据库的数据表操作====
     private static CompletableFuture<DbTransaction> makeOtherStoreTxn(long storeId, Map<Long, DbTransaction> txns) {
         var txn = txns.get(storeId);
         if (txn != null)
@@ -273,6 +275,43 @@ public final class PublishService {
             return r;
         });
     }
+
+    /** 新建第三方数据库的数据表 */
+    private static CompletableFuture<Void> createTableAsync(DesignHub hub, EntityModel em
+            , Map<Long, DbTransaction> otherStoreTxns) {
+        if (em.sqlStoreOptions() != null) {
+            final var sqlStoreId = em.sqlStoreOptions().storeModelId();
+            var       sqlStore   = SqlStore.get(sqlStoreId);
+            return makeOtherStoreTxn(sqlStoreId, otherStoreTxns)
+                    .thenCompose(sqlTxn -> sqlStore.createTableAsync(em, sqlTxn, hub));
+        } //TODO:Cql
+        return CompletableFuture.completedFuture(null);
+    }
+
+    /** 更改第三方数据库的数据表 */
+    private static CompletableFuture<Void> alterTableAsync(DesignHub hub, EntityModel em
+            , Map<Long, DbTransaction> otherStoreTxns) {
+        if (em.sqlStoreOptions() != null) {
+            final var sqlStoreId = em.sqlStoreOptions().storeModelId();
+            var       sqlStore   = SqlStore.get(sqlStoreId);
+            return makeOtherStoreTxn(sqlStoreId, otherStoreTxns)
+                    .thenCompose(sqlTxn -> sqlStore.alterTableAsync(em, sqlTxn, hub));
+        } //TODO:Cql
+        return CompletableFuture.completedFuture(null);
+    }
+
+    /** 删除第三方数据库的数据表 */
+    private static CompletableFuture<Void> dropTableAsync(DesignHub hub, EntityModel em
+            , Map<Long, DbTransaction> otherStoreTxns) {
+        if (em.sqlStoreOptions() != null) {
+            final var sqlStoreId = em.sqlStoreOptions().storeModelId();
+            var       sqlStore   = SqlStore.get(sqlStoreId);
+            return makeOtherStoreTxn(sqlStoreId, otherStoreTxns)
+                    .thenCompose(sqlTxn -> sqlStore.dropTableAsync(em, sqlTxn, hub));
+        } //TODO:Cql
+        return CompletableFuture.completedFuture(null);
+    }
+    //endregion
 
     /** 通知集群各节点模型缓存失效 */
     private static void invalidModelsCache(DesignHub hub, PublishPackage pkg) {

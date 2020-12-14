@@ -31,7 +31,7 @@ public final class ModelStore {
                 .thenApply(res -> {
                     res.checkStoreError();
 
-                    int seq = res.modelId;
+                    int  seq = res.modelId;
                     long nid = ((long) appId) << IdUtil.MODELID_APPID_OFFSET;
                     nid |= ((long) type.value) << IdUtil.MODELID_TYPE_OFFSET;
                     nid |= ((long) seq) << IdUtil.MODELID_SEQ_OFFSET;
@@ -76,7 +76,7 @@ public final class ModelStore {
 
     public static CompletableFuture<Void> deleteModelAsync(ModelBase model, KVTransaction txn,
                                                            Function<Integer, ApplicationModel> getApp) {
-        if (model.modelType() == ModelType.Entity && ((EntityModel)model).sysStoreOptions() != null) {
+        if (model.modelType() == ModelType.Entity && ((EntityModel) model).sysStoreOptions() != null) {
             throw new RuntimeException("未实现");
         }
 
@@ -100,6 +100,13 @@ public final class ModelStore {
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
+    public static CompletableFuture<Void> deleteModelCodeAsync(long modelId, KVTransaction txn) {
+        var req = new KVDeleteModelCodeRequest(txn.id(), modelId);
+        return SysStoreApi.execKVDeleteAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
     /**
      * 保存编译好的服务组件或视图运行时代码
      * @param asmName eg: sys.HelloService or sys.CustomerView
@@ -108,6 +115,13 @@ public final class ModelStore {
             boolean isService, String asmName, byte[] asmData, KVTransaction txn) {
         var req = new KVInsertAssemblyRequest(txn.id(), asmName, asmData, isService);
         return SysStoreApi.execKVInsertAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
+    public static CompletableFuture<Void> deleteAssemblyAsync(boolean isService, String asmName, KVTransaction txn) {
+        var req = new KVDeleteAssemblyRequest(txn.id(), asmName, isService);
+        return SysStoreApi.execKVDeleteAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
