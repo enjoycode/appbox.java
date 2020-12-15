@@ -57,6 +57,7 @@ public final class TypeSystem {
             sysFolder.getFile("SqlStore.java").create(null, true, null);
             sysFolder.getFile("RuntimeType.java").create(null, true, null);
             sysFolder.getFile("CtorInterceptor.java").create(null, true, null);
+            sysFolder.getFile("MethodInterceptor.java").create(null, true, null);
 
             modelsProject.getFile("DataStore.java").create(null, true, null);
             modelsProject.getFile("SqlQuery.java").create(null, true, null);

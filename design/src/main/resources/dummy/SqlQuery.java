@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Predicate;
 //import java.util.function.BiPredicate;
 import java.util.concurrent.CompletableFuture;
+
 import sys.*;
 
 @RuntimeType(type = "appbox.store.query.SqlQuery")
@@ -13,6 +14,7 @@ public final class SqlQuery<T extends SqlEntityBase> {
 
     public SqlQuery() {}
 
+    @MethodInterceptor(name = "SqlQueryWhere")
     public SqlQuery<T> where(Predicate<T> filter) {return this;}
 
     public CompletableFuture<List<T>> toListAsync() { return null; }

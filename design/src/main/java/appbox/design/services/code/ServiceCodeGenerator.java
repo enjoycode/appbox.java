@@ -17,9 +17,13 @@ import java.util.*;
 /** 用于生成运行时的服务代码 */
 public final class ServiceCodeGenerator extends GenericVisitor {
 
-    //region ====拦截器列表====
+    //region ====拦截器====
     private static final Map<String, ICtorInterceptor> ctorInterceptors = new HashMap<>() {{
         put("SqlQuery", new SqlQueryCtorInterceptor());
+    }};
+
+    private static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
+        put("SqlQueryWhere", new SqlQueryWhereInterceptor());
     }};
     //endregion
 
@@ -154,6 +158,16 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var ctorInterceptor = TypeHelper.getCtorInterceptor(node.resolveTypeBinding());
         if (ctorInterceptor != null) {
             return ctorInterceptors.get(ctorInterceptor).visit(node, this);
+        }
+
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(MethodInvocation node) {
+        var methodInterceptor = TypeHelper.getMethodInterceptor(node.resolveMethodBinding());
+        if (methodInterceptor != null) {
+            return methodInterceptors.get(methodInterceptor).visit(node, this);
         }
 
         return super.visit(node);

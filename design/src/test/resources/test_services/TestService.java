@@ -16,7 +16,7 @@ public class TestService {
 
     public CompletableFuture<Object> query() {
         var q = new SqlQuery<sys.entities.Employee>();
-        //q.where(e -> e.name == "Rick");
+        q.where(e -> e.name == "Rick");
         return q.toListAsync().thenApply(r -> (Object) r);
     }
 

@@ -30,6 +30,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         _clazz = clazz;
     }
 
+    public EntityBaseExpression m(String name) {
+        return t.m(name);
+    }
+
     @Override
     public QueryPurpose getPurpose() { return _purpose; }
 
@@ -42,6 +46,11 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     }
 
     //region ====Where Methods====
+    public SqlQuery<T> where(Function<SqlQuery<T>, Expression> condition) {
+        _filter = condition.apply(this);
+        return this;
+    }
+
     public SqlQuery<T> where(Expression condition) {
         _filter = condition;
         return this;
@@ -84,7 +93,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
 
         var db = SqlStore.get(model.sqlStoreOptions().storeModelId());
         return db.runQuery(this).thenApply(res -> {
-            Log.debug("共读取: " + res.getRows().size());
+            //Log.debug("共读取: " + res.getRows().size());
             var rows      = res.getRows();
             var rowReader = new SqlRowReader(rows.columnNames());
             var list      = new ArrayList<T>(rows.size());

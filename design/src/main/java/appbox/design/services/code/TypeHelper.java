@@ -60,4 +60,17 @@ final class TypeHelper {
         return null;
     }
 
+    /** 判断是否具有方法调用拦截器，没有返回null，有则返回拦截器名称 */
+    public static String getMethodInterceptor(IMethodBinding method) {
+        var annotations = method.getAnnotations();
+        if (annotations == null || annotations.length == 0)
+            return null;
+        for (var item : annotations) {
+            if(item.getName().equals("MethodInterceptor")) {
+                return (String) item.getDeclaredMemberValuePairs()[0].getValue();
+            }
+        }
+        return null;
+    }
+
 }
