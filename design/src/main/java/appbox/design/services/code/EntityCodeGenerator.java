@@ -26,7 +26,7 @@ public final class EntityCodeGenerator {
         var entityClass     = ast.newTypeDeclaration();
         var entityClassName = makeEntityClassName(modelNode);
         entityClass.setName(ast.newSimpleName(entityClassName));
-        entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
+        entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
         entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
 
         //extends

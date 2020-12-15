@@ -13,6 +13,8 @@ import java.util.function.Function;
  */
 public final class ModelStore {
 
+    //public static final ExecutorService LoadModelExecutor = Executors.newSingleThreadExecutor();
+
     /**
      * 创建新的应用，成功返回应用对应的存储Id
      */

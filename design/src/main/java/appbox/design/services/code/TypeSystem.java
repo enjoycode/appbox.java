@@ -8,7 +8,9 @@ import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.runtime.IService;
+import appbox.store.SqlStore;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
@@ -17,7 +19,11 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
 public final class TypeSystem {
 
-    public static final String PROJECT_MODELS = "models";
+    public static final String PROJECT_MODELS     = "models";
+    public static final IPath  libAppBoxCorePath  =
+            new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+    public static final IPath  libAppBoxStorePath =
+            new Path(SqlStore.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 
     public final  LanguageServer languageServer;
     protected     IProject       modelsProject; //实体、枚举等通用模型项目
@@ -73,7 +79,10 @@ public final class TypeSystem {
                 //不再需要加载源码, 注意已签出先从Staged中加载
                 var projectName = languageServer.makeServiceProjectName(appName, model.name());
                 var project = languageServer.createProject(projectName,
-                        new IClasspathEntry[]{JavaCore.newProjectEntry(modelsProject.getFullPath())});
+                        new IClasspathEntry[]{
+                                JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null),
+                                JavaCore.newProjectEntry(modelsProject.getFullPath())
+                        });
 
                 var file = project.getFile(fileName);
                 file.create(null, true, null);

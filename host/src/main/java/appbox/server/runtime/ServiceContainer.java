@@ -56,18 +56,18 @@ public final class ServiceContainer {
         var firstDotIndex   = serviceFullName.indexOf('.');
         var serviceName     = serviceFullName.substring(firstDotIndex + 1);
 
-        _mapLock.writeLock().lock();
-        var instance = _services.get(service);
-        if (instance != null) {
-            _mapLock.writeLock().unlock();
-            return CompletableFuture.completedFuture(instance);
-        }
-
+        //TODO:暂并发时会多余加载，待修改
         return ModelStore.loadServiceAssemblyAsync(serviceFullName).handle((r, ex) -> {
             if (ex != null || r == null) {
-                _mapLock.writeLock().unlock();
                 Log.error("Load service assembly[" + service + "] error:" + ex.getMessage());
                 return null;
+            }
+
+            _mapLock.writeLock().lock();
+            var instance = _services.get(service);
+            if (instance != null) {
+                _mapLock.writeLock().unlock();
+                return instance;
             }
 
             //创建服务实例

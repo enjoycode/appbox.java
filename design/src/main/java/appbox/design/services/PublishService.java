@@ -7,9 +7,9 @@ import appbox.design.common.PublishPackage;
 import appbox.design.jdt.JavaBuilderWrapper;
 import appbox.design.services.code.LanguageServer;
 import appbox.design.services.code.ServiceCodeGenerator;
+import appbox.design.services.code.TypeSystem;
 import appbox.logging.Log;
 import appbox.model.*;
-import appbox.runtime.IService;
 import appbox.runtime.RuntimeContext;
 import appbox.serialization.BytesOutputStream;
 import appbox.store.DbTransaction;
@@ -17,7 +17,6 @@ import appbox.store.KVTransaction;
 import appbox.store.ModelStore;
 import appbox.store.SqlStore;
 import org.eclipse.core.internal.resources.BuildConfiguration;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -94,11 +93,9 @@ public final class PublishService {
         var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
 
         //生成运行时临时Project并进行编译
-        var libAppBoxCorePath  = new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-        var libAppBoxStorePath = new Path(SqlStore.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         var libs = new IClasspathEntry[]{
-                JavaCore.newLibraryEntry(libAppBoxCorePath, null, null),
-                JavaCore.newLibraryEntry(libAppBoxStorePath, null, null)
+                JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null),
+                JavaCore.newLibraryEntry(TypeSystem.libAppBoxStorePath, null, null)
         };
         var runtimeProject =
                 hub.typeSystem.languageServer.createProject(
