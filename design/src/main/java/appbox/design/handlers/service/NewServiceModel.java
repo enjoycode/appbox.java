@@ -1,10 +1,12 @@
 package appbox.design.handlers.service;
 
+import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.common.CheckoutInfo;
 import appbox.design.common.NewNodeResult;
 import appbox.design.handlers.IDesignHandler;
 import appbox.design.tree.DesignNodeType;
+import appbox.design.tree.DesignTree;
 import appbox.design.tree.FolderNode;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.CodeHelper;
@@ -36,25 +38,26 @@ public final class NewServiceModel implements IDesignHandler {
         var parentNode = hub.designTree.findNewModelParentNode(selectedNode, ModelType.Service);
         if (parentNode == null)
             throw new RuntimeException("Can't find parent node");
+        var appNode = DesignTree.findAppNodeFromNode(parentNode);
         //判断名称是否已存在
-        if (hub.designTree.findModelNodeByName(parentNode.appId, ModelType.Service, name) != null)
+        if (hub.designTree.findModelNodeByName(appNode.model.id(), ModelType.Service, name) != null)
             throw new RuntimeException("Service name has exists");
 
         //判断当前模型根节点有没有签出
-        var rootNode = hub.designTree.findModelRootNode(parentNode.appId, ModelType.Service);
+        var rootNode = hub.designTree.findModelRootNode(appNode.model.id(), ModelType.Service);
         boolean rootNodeHasCheckout = rootNode.isCheckoutByMe();
-        return rootNode.checkout().thenApply(r->{
+        return rootNode.checkout().thenCompose(r->{
             if(!r){
                 new RuntimeException(String.format("Can't checkout: %s",rootNode.fullName()));
             }
             //生成模型标识号并新建模型及节点
-            return ModelStore.genModelIdAsync(parentNode.appId,ModelType.Service, ModelLayer.DEV).thenCompose(modelId->{
+            return ModelStore.genModelIdAsync(appNode.model.id(),ModelType.Service, ModelLayer.DEV).thenCompose(modelId->{
                 var model = new ServiceModel(modelId, name);
                 var node = new ModelNode(model, hub);
-                var insertIndex = parentNode.designNode.nodes.add(node);
+                var insertIndex = parentNode.nodes.add(node);
                 //设置文件夹
-                if (parentNode.designNode.nodeType() == DesignNodeType.FolderNode)
-                    model.setFolderId(((FolderNode)parentNode.designNode).getFolder().getId());
+                if (parentNode.nodeType() == DesignNodeType.FolderNode)
+                    model.setFolderId(((FolderNode)parentNode).getFolder().getId());
                 // 添加至根节点索引内
                 rootNode.addModelIndex(node);
 
@@ -64,13 +67,13 @@ public final class NewServiceModel implements IDesignHandler {
 
                 //保存至Staged
                 var appName = node.appNode.model.name();
-                var initServiceCode = String.format("using System;\nusing System.Threading.Tasks;\n\nnamespace %s.ServiceLogic\n{{\n\tpublic class %s\n\t{{\n\t}}\n}}",appName,model.name());//TODO java version code
+                var initServiceCode = String.format("public class %s\n{\n}",model.name());//TODO java version code
                 return node.saveAsync(new Object[] { initServiceCode }).thenApply(re->{
                      hub.typeSystem.createModelDocument(node);
-                     return CompletableFuture.completedFuture(new NewNodeResult((int)parentNode.designNode.nodeType().value,parentNode.designNode.id(),node,rootNodeHasCheckout ? null : rootNode.id(),insertIndex));
+                     return new NewNodeResult((int)parentNode.nodeType().value,parentNode.id(),node,rootNodeHasCheckout ? null : rootNode.id(),insertIndex);
                 });
             });
-        });
+        }).thenApply(JsonResult::new);
 
     }
 }

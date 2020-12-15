@@ -3,10 +3,7 @@ package appbox.design.services;
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.entity.*;
-import appbox.design.handlers.service.GenServiceDeclare;
-import appbox.design.handlers.service.GetHover;
-import appbox.design.handlers.service.GetServiceMethod;
-import appbox.design.handlers.service.OpenServiceModel;
+import appbox.design.handlers.service.*;
 import appbox.design.handlers.store.NewDataStore;
 import appbox.design.handlers.store.SaveDataStore;
 import appbox.runtime.IService;
@@ -45,6 +42,7 @@ public final class DesignService implements IService {
         put("OpenServiceModel", new OpenServiceModel());
         put("GenServiceDeclare", new GenServiceDeclare());
         put("GetServiceMethod", new GetServiceMethod());
+        put("NewServiceModel", new NewServiceModel());
         put("GetHover", new GetHover());
     }};
 

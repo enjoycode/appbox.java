@@ -263,26 +263,22 @@ public final class DesignTree {
     }
 
     /** 根据当前选择的节点查询新建模型的上级节点 */
-    public static DesignNodeBox findNewModelParentNode(DesignNode node, ModelType newModelType) {
+    public static DesignNode findNewModelParentNode(DesignNode node, ModelType newModelType) {
         if (node == null)
             return null;
 
-        int appId=0;
-
         if (node.nodeType() == DesignNodeType.FolderNode) {
-            return new DesignNodeBox(appId,node);
+            return node;
         } else if (node.nodeType() == DesignNodeType.ModelRootNode) {
             var modelRootNode = (ModelRootNode) node;
             if (modelRootNode.targetType == newModelType) {
-                appId = ((ApplicationNode)modelRootNode.getParent()).model.id();
-                return new DesignNodeBox(appId,node);
+                return node;
             }
         } else if (node.nodeType() == DesignNodeType.ApplicationNode) {
-            appId = ((ApplicationNode)node).model.id();
-            return new DesignNodeBox(appId,((ApplicationNode) node).findModelRootNode(newModelType));
+            return ((ApplicationNode) node).findModelRootNode(newModelType);
         }
-        node=findNewModelParentNode(node.getParent(), newModelType).designNode;
-        return new DesignNodeBox(appId,node);
+
+        return findNewModelParentNode(node.getParent(), newModelType);
     }
 
     /** 向上递归查找指定节点所属的应用节点 */
@@ -356,15 +352,5 @@ public final class DesignTree {
         }
     }
     //endregion
-
-    public static class DesignNodeBox{
-        public final DesignNode designNode;
-        public final int appId;
-
-        public DesignNodeBox(int appId,DesignNode designNode) {
-            this.designNode = designNode;
-            this.appId = appId;
-        }
-    }
 
 }
