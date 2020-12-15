@@ -87,6 +87,7 @@ public final class EntityCodeGenerator {
         return entityClass;
     }
 
+    /** 生成运行时实体名称 eg: Sys_Employee */
     static String makeEntityClassName(ModelNode modelNode) {
         return String.format("%s_%s",
                 StringUtil.firstUpperCase(modelNode.appNode.model.name()), modelNode.model().name());

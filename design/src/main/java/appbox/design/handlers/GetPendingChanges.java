@@ -16,7 +16,7 @@ public final class GetPendingChanges implements IDesignHandler {
 
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
-        //暂重新加载
+        //TODO: 暂重新加载(模型指向错误)
         return StagedService.loadStagedAsync(false)
                 .thenApply(staged -> {
                     hub.pendingChanges = staged.getItems();

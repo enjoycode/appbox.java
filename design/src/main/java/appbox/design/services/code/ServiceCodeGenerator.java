@@ -17,16 +17,22 @@ import java.util.*;
 /** 用于生成运行时的服务代码 */
 public final class ServiceCodeGenerator extends GenericVisitor {
 
+    //region ====拦截器列表====
+    private static final Map<String, ICtorInterceptor> ctorInterceptors = new HashMap<>() {{
+        put("SqlQuery", new SqlQueryCtorInterceptor());
+    }};
+    //endregion
+
     private       TypeDeclaration         _serviceTypeDeclaration;
     /** 公开的服务方法集合 */
     private final List<MethodDeclaration> publicMethods = new ArrayList<>();
     private final Map<String, ModelNode>  usedEntities  = new HashMap<>();
 
-    private final DesignHub    hub;
-    private final String       appName;
-    private final ServiceModel serviceModel;
-    private final ASTRewrite   astRewrite;
-    private final AST          ast;
+    protected final DesignHub    hub;
+    protected final String       appName;
+    protected final ServiceModel serviceModel;
+    protected final ASTRewrite   astRewrite;
+    protected final AST          ast;
 
     public ServiceCodeGenerator(DesignHub hub, String appName,
                                 ServiceModel serviceModel, ASTRewrite astRewrite) {
@@ -56,16 +62,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     public boolean visit(SimpleType node) {
         var entityType = TypeHelper.isEntityClass(node);
         if (entityType != null) {
-            var entityFullName  = entityType.getQualifiedName();
-            var entityModelNode = usedEntities.get(entityFullName);
-            if (entityModelNode == null) {
-                var pkg     = entityType.getPackage().getJavaElement();
-                var appName = pkg.getPath().segment(1);
-                var appNode = hub.designTree.findApplicationNodeByName(appName);
-                entityModelNode = hub.designTree.findModelNodeByName(
-                        appNode.model.id(), ModelType.Entity, entityType.getName());
-                usedEntities.put(entityFullName, entityModelNode);
-            }
+            var entityModelNode = getUsedEntity(entityType);
             //转换为运行时类型
             if (!node.isVar()) {
                 var entityClassName   = EntityCodeGenerator.makeEntityClassName(entityModelNode);
@@ -131,7 +128,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             //newOwner.accept(this);
             return false;
         } else if (TypeHelper.isDataStoreType(ownerType) && owner.isSimpleName()) {
-            String storeName = node.getName().getIdentifier();
+            String storeName     = node.getName().getIdentifier();
             String storeTypeName = null;
             var    storeNode     = hub.designTree.findDataStoreNodeByName(storeName);
             if (storeNode.model().kind() == DataStoreModel.DataStoreKind.Sql) {
@@ -151,7 +148,33 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         return super.visit(node);
     }
 
+    @Override
+    public boolean visit(ClassInstanceCreation node) {
+        //判断有无构造拦截器
+        var ctorInterceptor = TypeHelper.getCtorInterceptor(node.resolveTypeBinding());
+        if (ctorInterceptor != null) {
+            return ctorInterceptors.get(ctorInterceptor).visit(node, this);
+        }
+
+        return super.visit(node);
+    }
+
     //endregion
+
+    /** 根据实体名称(eg: sys.entities.Employee)获取对应的ModelNode */
+    protected ModelNode getUsedEntity(ITypeBinding entityType) {
+        var fullName        = entityType.getQualifiedName();
+        var entityModelNode = usedEntities.get(fullName);
+        if (entityModelNode == null) {
+            var pkg     = entityType.getPackage().getJavaElement();
+            var appName = pkg.getPath().segment(1);
+            var appNode = hub.designTree.findApplicationNodeByName(appName);
+            entityModelNode = hub.designTree.findModelNodeByName(
+                    appNode.model.id(), ModelType.Entity, entityType.getName());
+            usedEntities.put(fullName, entityModelNode);
+        }
+        return entityModelNode;
+    }
 
     /** 添加为服务方法,如果有重名抛异常 */
     private void addAsServiceMethod(MethodDeclaration node) {
@@ -196,7 +219,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         para1.setName(ast.newSimpleName("method"));
         invokeMethod.parameters().add(para1);
 
-        var para2    = ast.newSingleVariableDeclaration();
+        var para2 = ast.newSingleVariableDeclaration();
         para2.setType(ast.newSimpleType(ast.newName(InvokeArgs.class.getName())));
         para2.setName(ast.newSimpleName("args"));
         invokeMethod.parameters().add(para2);

@@ -20,6 +20,7 @@ import java.util.UUID;
  */
 public class CodeGenService {
 
+    /** 生成所有存储的虚拟代码 */
     public static String getStoresDummyCode(DesignTree designTree) {
         var sb = new StringBuilder();
         sb.append("import sys.*;");

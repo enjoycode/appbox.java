@@ -49,8 +49,11 @@ public final class TypeSystem {
             sysFolder.getFile("SysEntityBase.java").create(null, true, null);
             sysFolder.getFile("DbTransaction.java").create(null, true, null);
             sysFolder.getFile("SqlStore.java").create(null, true, null);
+            sysFolder.getFile("RuntimeType.java").create(null, true, null);
+            sysFolder.getFile("CtorInterceptor.java").create(null, true, null);
 
             modelsProject.getFile("DataStore.java").create(null, true, null);
+            modelsProject.getFile("SqlQuery.java").create(null, true, null);
 
             //TODO:创建服务代理项目
         } catch (Exception e) {
@@ -129,7 +132,7 @@ public final class TypeSystem {
                 var appFolder  = modelsProject.getFolder(appName);
                 var typeFolder = appFolder.getFolder("entities");
                 var file       = typeFolder.getFile(fileName);
-                var cu = JDTUtils.resolveCompilationUnit(file);
+                var cu         = JDTUtils.resolveCompilationUnit(file);
                 cu.delete(true, null);
                 //不需要file.delete(),上一步会调用
             } else {
@@ -140,7 +143,7 @@ public final class TypeSystem {
         }
     }
 
-    /**  */
+    /** 仅用于添加或删除存储模型后更新DataStore.java虚拟代码 */
     public void updateStoresDocument() {
         //TODO:
     }

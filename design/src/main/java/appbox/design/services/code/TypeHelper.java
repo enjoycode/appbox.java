@@ -47,4 +47,17 @@ final class TypeHelper {
         return foundPublicModifier;
     }
 
+    /** 判断是否具有构造拦截器，没有返回null，有则返回拦截器名称 */
+    public static String getCtorInterceptor(ITypeBinding type) {
+        var annotations = type.getAnnotations();
+        if (annotations == null || annotations.length == 0)
+            return null;
+        for (var item : annotations) {
+            if (item.getName().equals("CtorInterceptor")) {
+                return (String)item.getDeclaredMemberValuePairs()[0].getValue();
+            }
+        }
+        return null;
+    }
+
 }
