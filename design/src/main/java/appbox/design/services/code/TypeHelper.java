@@ -2,7 +2,7 @@ package appbox.design.services.code;
 
 import org.eclipse.jdt.core.dom.*;
 
-final class TypeHelper {
+public final class TypeHelper {
 
     public static ITypeBinding isEntityClass(SimpleType node) {
         //TODO:忽略常规类型如String

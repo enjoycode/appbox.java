@@ -63,7 +63,7 @@ public final class PublishService {
         //获取对应的虚拟文件
         var designNode = hub.designTree.findModelNode(ModelType.Service, model.id());
         var appName    = designNode.appNode.model.name();
-        var vfile      = hub.typeSystem.findFileForServiceModel(appName, model.name());
+        var vfile      = hub.typeSystem.findFileForServiceModel(designNode);
         var cu         = JDTUtils.resolveCompilationUnit(vfile);
 
         var astParser = ASTParser.newParser(AST.JLS15);

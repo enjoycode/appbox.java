@@ -1,4 +1,5 @@
 import appbox.design.MockDeveloperSession;
+import appbox.design.services.CodeGenService;
 import appbox.design.services.PublishService;
 import appbox.entities.Employee;
 import appbox.model.*;
@@ -61,6 +62,10 @@ public class TestServiceCodeGenerator {
         hub.typeSystem.init(); //必须初始化
         hub.typeSystem.languageServer.loadFileDelegate = TestServiceCodeGenerator::loadTestServiceCode;
         hub.designTree.loadNodesForTest(appModel, models);
+
+        //测试服务代理生成
+        var serviceNode = hub.designTree.findModelNode(testServiceModel.id());
+        var proxyCode = CodeGenService.genServiceProxyCode(hub, serviceNode);
 
         //测试转译服务代码
         var codeData = PublishService.compileService(hub, testServiceModel, null);

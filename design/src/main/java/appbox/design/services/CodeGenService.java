@@ -1,8 +1,11 @@
 package appbox.design.services;
 
 import appbox.data.EntityId;
+import appbox.design.DesignHub;
+import appbox.design.services.code.TypeHelper;
 import appbox.design.tree.DataStoreNode;
 import appbox.design.tree.DesignTree;
+import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
 import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
@@ -10,6 +13,9 @@ import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
 import appbox.utils.StringUtil;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,7 +52,7 @@ public class CodeGenService {
      * 根据实体模型生成虚拟代码
      */
     public static String genEntityDummyCode(EntityModel model, String appName, DesignTree designTree) {
-        var sb = new StringBuilder();
+        var sb = new StringBuilder(150);
         sb.append("package ");
         sb.append(appName);
         sb.append(".entities;\n");
@@ -131,6 +137,52 @@ public class CodeGenService {
             default:
                 return "Object";
         }
+    }
+
+    /** 生成服务模型的虚拟代理类 */
+    public static String genServiceProxyCode(DesignHub hub, ModelNode serviceNode) throws JavaModelException {
+        var serviceName = serviceNode.model().name();
+        var sb = new StringBuilder(200);
+
+        sb.append("package ");
+        sb.append(serviceNode.appNode.model.name());
+        sb.append(".services;\n");
+
+        //获取服务实现文件
+        var file = hub.typeSystem.findFileForServiceModel(serviceNode);
+        var unit = JDTUtils.resolveCompilationUnit(file);
+
+        var astParser = ASTParser.newParser(AST.JLS15);
+        astParser.setSource(unit);
+        astParser.setIgnoreMethodBodies(true);
+        astParser.setStatementsRecovery(true);
+        var astNode = (CompilationUnit) astParser.createAST(null);
+
+        for (var ip : astNode.imports()) {
+            sb.append(ip.toString());
+            sb.append('\n');
+        }
+
+        sb.append("public final class ");
+        sb.append(serviceName);
+        sb.append(" {\n");
+
+        var serviceType = (TypeDeclaration) astNode.types().get(0);
+        var methods = serviceType.getMethods();
+        for (var method: methods) {
+            if (TypeHelper.isServiceMethod(method)) {
+                //TODO:MethodInterceptor
+                method.modifiers().add(astNode.getAST().newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+                var rst = astNode.getAST().newReturnStatement();
+                rst.setExpression(astNode.getAST().newNullLiteral());
+                method.getBody().statements().add(rst);
+                sb.append(method.toString());
+            }
+        }
+
+        sb.append("}");
+
+        return sb.toString();
     }
 
 }

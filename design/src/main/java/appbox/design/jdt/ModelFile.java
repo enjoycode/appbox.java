@@ -136,25 +136,31 @@ public final class ModelFile extends ModelResource implements IFile {
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
                 return new ByteArrayInputStream(entityDummyCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {
-                //测试服务通过代理加载(仅用于单元测试)
-                if (RuntimeContext.current() instanceof MockRuntimeContext) {
-                    return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
-                }
-
-                //TODO:**直接加载为utf8 bytes,避免字符串转换
-                if (modelNode.isCheckoutByMe()) {
-                    var stagedCode = StagedService.loadServiceCode(modelNode.model().id()).get();
-                    if (stagedCode != null) {
-                        Log.debug(String.format("Load model code[%s] from Staged.", this.getName()));
-                        return new ByteArrayInputStream(stagedCode.getBytes(StandardCharsets.UTF_8));
+                if (getProject().getName().equals(TypeSystem.PROJECT_MODELS)) { //服务代理
+                    var proxyCode = CodeGenService.genServiceProxyCode(hub, modelNode);
+                    Log.debug("生成服务代理虚拟代码:" + this.getName());
+                    return new ByteArrayInputStream(proxyCode.getBytes(StandardCharsets.UTF_8));
+                } else { //服务实现
+                    //测试服务通过代理加载(仅用于单元测试)
+                    if (RuntimeContext.current() instanceof MockRuntimeContext) {
+                        return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
                     }
-                }
 
-                var res = ModelStore.loadServiceCodeAsync(modelNode.model().id()).get();
-                Log.debug(String.format("Load model code[%s] from ModelStore.", this.getName()));
-                return new ByteArrayInputStream(res.sourceCode.getBytes(StandardCharsets.UTF_8));
+                    //TODO:**直接加载为utf8 bytes,避免字符串转换
+                    if (modelNode.isCheckoutByMe()) {
+                        var stagedCode = StagedService.loadServiceCode(modelNode.model().id()).get();
+                        if (stagedCode != null) {
+                            Log.debug(String.format("Load model code[%s] from Staged.", this.getName()));
+                            return new ByteArrayInputStream(stagedCode.getBytes(StandardCharsets.UTF_8));
+                        }
+                    }
+
+                    var res = ModelStore.loadServiceCodeAsync(modelNode.model().id()).get();
+                    Log.debug(String.format("Load model code[%s] from ModelStore.", this.getName()));
+                    return new ByteArrayInputStream(res.sourceCode.getBytes(StandardCharsets.UTF_8));
+                }
             } else {
-                throw new RuntimeException("未实现");
+                throw new RuntimeException("未实现加载ModelFile: " + getFullPath().toString());
             }
         } catch (Exception ex) {
             Log.warn(String.format("Can't load model's source code: %s", this.getFullPath().toString()));

@@ -4,12 +4,15 @@ import appbox.design.DesignHub;
 import appbox.design.jdt.ModelFile;
 import appbox.design.services.CodeGenService;
 import appbox.design.tree.ModelNode;
+import appbox.design.utils.CodeHelper;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.runtime.IService;
 import appbox.store.SqlStore;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -77,7 +80,7 @@ public final class TypeSystem {
         //TODO:其他类型模型
         try {
             if (model.modelType() == ModelType.Service) {
-                //不再需要加载源码, 注意已签出先从Staged中加载
+                //创建服务模型的虚拟工程及代码
                 var projectName = languageServer.makeServiceProjectName(node);
                 var project = languageServer.createProject(projectName,
                         new IClasspathEntry[]{
@@ -87,23 +90,29 @@ public final class TypeSystem {
 
                 var file = project.getFile(fileName);
                 file.create(null, true, null);
-                //TODO:服务模型创建虚拟代理
+                //创建服务模型的虚拟代理(暂放在modelsProject内)
+                createModelFile(appName, "services", fileName);
             } else if (model.modelType() == ModelType.Entity) {
                 //需要包含目录,如sys/entities/Order.java
-                var appFolder = modelsProject.getFolder(appName);
-                if (!appFolder.exists()) {
-                    appFolder.create(true, true, null);
-                }
-                var typeFolder = appFolder.getFolder("entities");
-                if (!typeFolder.exists()) {
-                    typeFolder.create(true, true, null);
-                }
-                var file = typeFolder.getFile(fileName);
-                file.create(null, true, null);
+                createModelFile(appName, "entities", fileName);
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private IFile createModelFile(String appName, String type, String fileName) throws CoreException {
+        var appFolder = modelsProject.getFolder(appName);
+        if (!appFolder.exists()) {
+            appFolder.create(true, true, null);
+        }
+        var typeFolder = appFolder.getFolder(type);
+        if (!typeFolder.exists()) {
+            typeFolder.create(true, true, null);
+        }
+        var file = typeFolder.getFile(fileName);
+        file.create(null, true, null);
+        return file;
     }
 
     /** 注意：服务模型也会更新，如不需要由调用者忽略 */
@@ -169,18 +178,18 @@ public final class TypeSystem {
             var typeFolder = file.getParent();
             var appFolder  = typeFolder.getParent();
             var appNode    = hub.designTree.findApplicationNodeByName(appFolder.getName());
-            //TODO:其他类型
-            return hub.designTree.findModelNodeByName(appNode.model.id(), ModelType.Entity, fileName);
+            var modelType = CodeHelper.getModelTypeFromLCC(typeFolder.getName());
+            return hub.designTree.findModelNodeByName(appNode.model.id(), modelType, fileName);
         } else {
-            var projectName   = project.getName();
+            var projectName = project.getName();
             return hub.designTree.findModelNode(Long.parseUnsignedLong(projectName));
         }
     }
 
     /** 找到服务模型对应的虚拟文件 */
-    public ModelFile findFileForServiceModel(String appName, String serviceName) {
-        var fileName    = String.format("%s.java", serviceName);
-        var projectName = String.format("%s_services_%s", appName, serviceName);
+    public ModelFile findFileForServiceModel(ModelNode serviceNode) {
+        var fileName    = String.format("%s.java", serviceNode.model().name());
+        var projectName = languageServer.makeServiceProjectName(serviceNode);
         var project     = languageServer.jdtWorkspace.getRoot().getProject(projectName);
         return (ModelFile) project.findMember(fileName);
     }

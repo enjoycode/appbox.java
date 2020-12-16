@@ -10,7 +10,7 @@ public final class CodeHelper {
     }
 
     /**
-     * 获取模型类型的复数名称
+     * 获取模型类型的复数名称(大驼峰)
      */
     public static String getPluralStringOfModelType(ModelType modelType) {
         switch (modelType) {
@@ -36,4 +36,28 @@ public final class CodeHelper {
                 return "Unknown";
         }
     }
+
+    public static ModelType getModelTypeFromLCC(String type) {
+        switch (type) {
+            case "entities":
+                return ModelType.Entity;
+            case "enums":
+                return ModelType.Enum;
+            case "services":
+                return ModelType.Service;
+            case "views":
+                return ModelType.View;
+            case "events":
+                return ModelType.Event;
+            case "permissions":
+                return ModelType.Permission;
+            case "reports":
+                return ModelType.Report;
+            case "workflows":
+                return ModelType.Workflow;
+            default:
+                throw new RuntimeException("Unknown type: " + type);
+        }
+    }
+
 }
