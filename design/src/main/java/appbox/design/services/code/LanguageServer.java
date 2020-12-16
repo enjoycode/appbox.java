@@ -156,8 +156,8 @@ public final class LanguageServer {
     }
 
     //region ====create XXX====
-    public String makeServiceProjectName(String appName, String serviceName) {
-        return String.format("%s_services_%s", appName, serviceName);
+    public String makeServiceProjectName(ModelNode serviceNode) {
+        return Long.toUnsignedString(serviceNode.model().id());
     }
 
     /**
@@ -210,7 +210,7 @@ public final class LanguageServer {
 
         var appName     = node.appNode.model.name();
         var fileName    = String.format("%s.java", node.model().name());
-        var projectName = String.format("%s_services_%s", appName, node.model().name());
+        var projectName = makeServiceProjectName(node);
 
         var project = jdtWorkspace.getRoot().getProject(projectName);
         var file    = (IFile) project.findMember(fileName);
@@ -313,9 +313,9 @@ public final class LanguageServer {
     }
 
     public String[] hover(Document doc, int line, int column) {
-        List<String> res = new ArrayList<>();
-        var unit = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
-        var monitor = new ProgressMonitor();
+        List<String> res     = new ArrayList<>();
+        var          unit    = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+        var          monitor = new ProgressMonitor();
         try {
             var elements = JDTUtils.findElementsAtSelection(unit, line, column, lsPreferenceManager, monitor);
             if (elements == null || elements.length == 0)
@@ -323,7 +323,7 @@ public final class LanguageServer {
 
             IJavaElement curr = null;
             if (elements.length != 1) {
-                IPackageFragment packageFragment = (IPackageFragment)unit.getParent();
+                IPackageFragment packageFragment = (IPackageFragment) unit.getParent();
                 IJavaElement found = Stream.of(elements)
                         .filter((e) -> e.equals(packageFragment))
                         .findFirst().orElse(null);
@@ -353,10 +353,10 @@ public final class LanguageServer {
     }
 
     /** 根据行号列号找到服务方法相关信息,找不到返回null */
-    public ServiceMethodInfo findServiceMethod(String appName, String serviceName, int line, int column) {
-        var     projectName = makeServiceProjectName(appName, serviceName);
+    public ServiceMethodInfo findServiceMethod(ModelNode serviceNode, int line, int column) {
+        var     projectName = makeServiceProjectName(serviceNode);
         var     project     = jdtWorkspace.getRoot().getProject(projectName);
-        var     file        = project.getFile(String.format("%s.java", serviceName));
+        var     file        = project.getFile(String.format("%s.java", serviceNode.model().name()));
         var     cu          = JDTUtils.resolveCompilationUnit(file);
         IBuffer buffer      = null;
         try {

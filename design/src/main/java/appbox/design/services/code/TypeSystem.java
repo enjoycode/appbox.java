@@ -78,7 +78,7 @@ public final class TypeSystem {
         try {
             if (model.modelType() == ModelType.Service) {
                 //不再需要加载源码, 注意已签出先从Staged中加载
-                var projectName = languageServer.makeServiceProjectName(appName, model.name());
+                var projectName = languageServer.makeServiceProjectName(node);
                 var project = languageServer.createProject(projectName,
                         new IClasspathEntry[]{
                                 JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null),
@@ -173,10 +173,7 @@ public final class TypeSystem {
             return hub.designTree.findModelNodeByName(appNode.model.id(), ModelType.Entity, fileName);
         } else {
             var projectName   = project.getName();
-            var firstSepIndex = projectName.indexOf('_');
-            var appName       = projectName.substring(0, firstSepIndex);
-            var appNode       = hub.designTree.findApplicationNodeByName(appName);
-            return hub.designTree.findModelNodeByName(appNode.model.id(), ModelType.Service, fileName);
+            return hub.designTree.findModelNode(Long.parseUnsignedLong(projectName));
         }
     }
 

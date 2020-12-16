@@ -23,7 +23,7 @@ public final class GetServiceMethod implements IDesignHandler {
             return CompletableFuture.failedFuture(new RuntimeException("Can't find service node"));
 
         var servieMethodInfo = hub.typeSystem.languageServer.findServiceMethod(
-                modelNode.appNode.model.name(), modelNode.model().name(), line, column);
+                modelNode, line, column);
         if (servieMethodInfo == null) {
             return CompletableFuture.failedFuture(new RuntimeException("Can't find service method"));
         }
