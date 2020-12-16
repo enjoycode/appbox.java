@@ -67,10 +67,10 @@ public final class NewServiceModel implements IDesignHandler {
 
                 //保存至Staged
                 var appName = node.appNode.model.name();
-                var initServiceCode = String.format("public class %s\n{\n}",model.name());//TODO java version code
+                var initServiceCode = String.format("public class %s\n{\n}",model.name());
                 return node.saveAsync(new Object[] { initServiceCode }).thenApply(re->{
                      hub.typeSystem.createModelDocument(node);
-                     return new NewNodeResult((int)parentNode.nodeType().value,parentNode.id(),node,rootNodeHasCheckout ? null : rootNode.id(),insertIndex);
+                     return new NewNodeResult(parentNode.nodeType().value,parentNode.id(),node,rootNodeHasCheckout ? null : rootNode.id(),insertIndex);
                 });
             });
         }).thenApply(JsonResult::new);

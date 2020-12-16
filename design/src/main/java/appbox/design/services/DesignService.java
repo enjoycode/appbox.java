@@ -6,6 +6,7 @@ import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.*;
 import appbox.design.handlers.store.NewDataStore;
 import appbox.design.handlers.store.SaveDataStore;
+import appbox.design.handlers.view.NewViewModel;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArgs;
 import appbox.runtime.RuntimeContext;
@@ -44,6 +45,8 @@ public final class DesignService implements IService {
         put("GetServiceMethod", new GetServiceMethod());
         put("NewServiceModel", new NewServiceModel());
         put("GetHover", new GetHover());
+        //----view----
+        put("NewViewModel", new NewViewModel());
     }};
 
     @Override

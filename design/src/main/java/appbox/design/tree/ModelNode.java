@@ -113,6 +113,15 @@ public final class ModelNode extends DesignNode {
                         }
                         return StagedService.saveServiceCodeAsync(_model.id(), sourceCode);
                     }
+                    case View:
+                    {
+                        //TODO View模型保存
+//                        if (modelInfos != null)
+//                        {
+//                            return StagedService.saveViewCodeAsync(_model.id(), (String)modelInfos[0], (String)modelInfos[1], (String)modelInfos[2])
+//                                    .thenCompose(re->StagedService.saveViewRuntimeCodeAsync(_model.id(), (String)modelInfos[3]));
+//                        }
+                    }
                     default:
                         return CompletableFuture.completedFuture(null);
                 }
