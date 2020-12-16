@@ -18,6 +18,7 @@ public final class BytesSegment {
             throw new IllegalArgumentException("prev is null");
         var obj = pool.rent();
         obj._first = prev._first;
+        prev._next = obj;
         return obj;
     }
 
