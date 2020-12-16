@@ -102,21 +102,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
 
         //Build PrimaryKey
         if (model.sqlStoreOptions().hasPrimaryKeys()) {
-            //使用模型标识作为PK名称以避免重命名影响
-            sb.append("ALTER TABLE \"");
-            sb.append(tableName);
-            sb.append("\" ADD CONSTRAINT \"PK_");
-            sb.append(Long.toUnsignedString(model.id()));
-            sb.append("\" PRIMARY KEY (");
-            for (int i = 0; i < model.sqlStoreOptions().primaryKeys().length; i++) {
-                var mm = (DataFieldModel) model.getMember(model.sqlStoreOptions().primaryKeys()[i].memberId);
-                if (i != 0)
-                    sb.append(',');
-                sb.append("\"");
-                sb.append(mm.sqlColName());
-                sb.append("\"");
-            }
-            sb.append(");");
+            buildPrimaryKey(model, tableName, sb, false);
         }
 
         //加入EntityRef引用外键
@@ -135,8 +121,6 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
 
     @Override
     protected List<DbCommand> makeAlterTable(EntityModel model, IDesignContext ctx) {
-        //TODO:***处理主键变更
-
         String tableName = model.getSqlTableName(false, ctx);
 
         StringBuilder   sb          = new StringBuilder(200);
@@ -168,20 +152,19 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                 }
             }
 
-            String cmdText = sb.toString();
             if (needCommand) {
                 //加入删除的外键SQL
                 for (String fk : fks) {
                     sb.insert(0, fk);
-                    sb.append("\n");
                 }
-                commands.add(new DbCommand(cmdText));
+                commands.add(new DbCommand(sb.toString()));
             }
             //#endregion
         }
 
         //reset
         needCommand = false;
+        sb.delete(0, sb.length());
         fks.clear();
 
         //处理新增的成员
@@ -195,7 +178,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                     needCommand = true;
                     sb.append(String.format("ALTER TABLE \"%s\" ADD COLUMN ", tableName));
                     buildFieldDefine((DataFieldModel) m, sb, false);
-                    sb.append(";");
+                    sb.append(';');
                 } else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef) {
                     EntityRefModel rm = (EntityRefModel) m;
                     if (!rm.isAggregationRef()) //只有非聚合引合创建外键
@@ -206,7 +189,6 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                 }
             }
 
-            String cmdText = sb.toString();
             if (needCommand) {
                 //加入关系
                 sb.append("\n");
@@ -214,13 +196,14 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                     sb.append(fk).append("\n");
                 }
 
-                commands.add(new DbCommand(cmdText));
+                commands.add(new DbCommand(sb.toString()));
             }
             //#endregion
         }
 
         //reset
         needCommand = false;
+        sb.delete(0, sb.length());
         fks.clear();
 
         //处理修改的成员
@@ -245,6 +228,7 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                             sb.append(String.format(",ALTER COLUMN \"%s\" SET NOT NULL,ALTER COLUMN \"%s\" SET DEFAULT %s", dfm.sqlColOriginalName(), dfm.sqlColOriginalName(), defaultValue));
                         }
                         commands.add(new DbCommand(sb.toString()));
+                        sb.delete(0, sb.length());
                     }
 
                     //再处理重命名列
@@ -258,6 +242,12 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
                 //因为ModelFirst的外键名称为FK_{MemberId}；CodeFirst为导入的名称
             }
             //#endregion
+        }
+
+        //处理主键变更
+        if (model.sqlStoreOptions().isPrimaryKeysChanged()) {
+            buildPrimaryKey(model, tableName, sb, true);
+            commands.add(new DbCommand(sb.toString()));
         }
 
         //处理索引变更
@@ -365,6 +355,37 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         }
 
         return defaultValue;
+    }
+
+    private static void buildPrimaryKey(EntityModel model, String tableName, StringBuilder sb, boolean forAlter) {
+        //使用模型标识作为PK名称以避免重命名影响
+        sb.append("ALTER TABLE \"");
+        sb.append(tableName);
+        sb.append('"');
+
+        if (forAlter) {
+            sb.append(" DROP CONSTRAINT IF EXISTS \"PK_");
+            sb.append(Long.toUnsignedString(model.id()));
+            if (model.sqlStoreOptions().hasPrimaryKeys()) {
+                sb.append("\",");
+            } else {
+                sb.append("\";");
+                return; //改为没有主键只删除
+            }
+        }
+
+        sb.append(" ADD CONSTRAINT \"PK_");
+        sb.append(Long.toUnsignedString(model.id()));
+        sb.append("\" PRIMARY KEY (");
+        for (int i = 0; i < model.sqlStoreOptions().primaryKeys().length; i++) {
+            var mm = (DataFieldModel) model.getMember(model.sqlStoreOptions().primaryKeys()[i].memberId);
+            if (i != 0)
+                sb.append(',');
+            sb.append('"');
+            sb.append(mm.sqlColName());
+            sb.append('"');
+        }
+        sb.append(");");
     }
 
     private static CharSequence buildForeignKey(EntityRefModel rm, IDesignContext ctx, String tableName) {

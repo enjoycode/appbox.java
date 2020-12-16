@@ -10,6 +10,7 @@ import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class SqlStoreOptions implements IEntityStoreOption {
@@ -48,6 +49,8 @@ public final class SqlStoreOptions implements IEntityStoreOption {
 
     public FieldWithOrder[] primaryKeys() { return _primaryKeys; }
 
+    public boolean isPrimaryKeysChanged() { return _primaryKeysHasChanged; }
+
     @Override
     public boolean hasIndexes() {
         return _indexes != null && _indexes.size() > 0;
@@ -77,6 +80,12 @@ public final class SqlStoreOptions implements IEntityStoreOption {
     public void setPrimaryKeys(FieldWithOrder[] fields) {
         owner.checkDesignMode();
         _primaryKeys           = fields;
+
+        //同时设置成员的AllowNull = false
+        for(var pk : fields) {
+            owner.getMember(pk.memberId).setAllowNull(false);
+        }
+
         _primaryKeysHasChanged = true;
         owner.onPropertyChanged();
     }
@@ -169,9 +178,25 @@ public final class SqlStoreOptions implements IEntityStoreOption {
         writer.writeKeyValue("StoreKind", _dataStoreModel_cached.kind().value);
 
         writer.writeKey("PrimaryKeys");
-        writer.startArray();
-        //TODO:
-        writer.endArray();
+        if (hasPrimaryKeys()) {
+            //注意: 需要将主键成员中是EntityRef's的外键成员转换为EntityRef成员Id,以方便前端显示
+            //eg: OrderId => Order，否则前端会找不到OrderId成员无法显示相应的名称
+            var pks = new ArrayList<>(Arrays.asList(_primaryKeys));
+            var refs = new ArrayList<FieldWithOrder>();
+            for (int i = pks.size() - 1; i >= 0 ; i--) {
+                var memberModel = (DataFieldModel) owner.getMember(pks.get(i).memberId);
+                var refMemberModel = memberModel.getEntityRefModelByForeignKey();
+                if (refMemberModel != null && refs.stream().noneMatch(t -> t.memberId == refMemberModel.memberId())) {
+                    var item = new FieldWithOrder(refMemberModel.memberId(), pks.get(i).orderByDesc);
+                    refs.add(0, item);
+                    pks.remove(i);
+                }
+            }
+            pks.addAll(refs);
+            writer.writeList(pks);
+        } else {
+            writer.writeEmptyArray();
+        }
 
         writer.writeKey("Indexes");
         writer.startArray();

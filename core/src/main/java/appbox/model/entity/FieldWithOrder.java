@@ -1,19 +1,16 @@
 package appbox.model.entity;
 
-import appbox.serialization.IBinSerializable;
-import appbox.serialization.IInputStream;
-import appbox.serialization.IOutputStream;
+import appbox.serialization.*;
 
 /**
  * 带排序标记的字段
  */
-public final class FieldWithOrder implements IBinSerializable { //TODO: rename to OrderedField
+public final class FieldWithOrder implements IBinSerializable, IJsonSerializable { //TODO: rename to OrderedField
 
     public short   memberId;
     public boolean orderByDesc;
 
-    FieldWithOrder() {
-    }
+    FieldWithOrder() {}
 
     public FieldWithOrder(short memberId) {
         this.memberId    = memberId;
@@ -35,5 +32,13 @@ public final class FieldWithOrder implements IBinSerializable { //TODO: rename t
     public void readFrom(IInputStream bs) {
         memberId    = bs.readShort();
         orderByDesc = bs.readBool();
+    }
+
+    @Override
+    public void writeToJson(IJsonWriter writer) {
+        writer.startObject();
+        writer.writeKeyValue("MemberId", memberId);
+        writer.writeKeyValue("OrderByDesc", orderByDesc);
+        writer.endObject();
     }
 }

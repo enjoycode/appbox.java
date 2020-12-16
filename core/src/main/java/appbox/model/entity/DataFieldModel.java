@@ -126,10 +126,16 @@ public final class DataFieldModel extends EntityMemberModel {
         }
     }
 
+    public boolean isDataTypeChanged() {
+        return _isDataTypeChanged;
+    }
+
     @Override
     public void setAllowNull(boolean value) {
-        _allowNull = value;
-        onDataTypeChanged(); //TODO: !allowNull -> allowNull
+        if (_allowNull != value) {
+            _allowNull = value;
+            onDataTypeChanged(); //TODO: !allowNull -> allowNull
+        }
     }
 
     public void setLength(int value) {
@@ -142,7 +148,7 @@ public final class DataFieldModel extends EntityMemberModel {
             case String:
                 _defaultValue = value; break;
             case DateTime:
-                _defaultValue = DateFormat.getDateInstance().parse(value);break;
+                _defaultValue = DateFormat.getDateInstance().parse(value); break;
             case Byte:
                 _defaultValue = Byte.parseByte(value); break;
             case Short:
@@ -167,6 +173,23 @@ public final class DataFieldModel extends EntityMemberModel {
 
         if (!_allowNull)
             onDataTypeChanged();
+    }
+
+    /** 如果当前是外键成员，则获取对应的EntityRefModel,  eg: OrderId成员对应的Order成员 */
+    public EntityRefModel getEntityRefModelByForeignKey() {
+        if (!_isForeignKey)
+            return null;
+
+        for (var m : owner.getMembers()) {
+            if (m.type() == EntityMemberType.EntityRef) {
+                var rm = (EntityRefModel) m;
+                for (var fk : rm.getFKMemberIds()) {
+                    if (fk == memberId())
+                        return rm;
+                }
+            }
+        }
+        throw new RuntimeException("Can't find EntityRef: " + owner.name() + "." + name());
     }
     //endregion
 
@@ -244,9 +267,6 @@ public final class DataFieldModel extends EntityMemberModel {
             writer.writeKeyValue("Length", _length);
             writer.writeKeyValue("Decimals", _decimals);
         }
-    }
-    public boolean isDataTypeChanged() {
-        return _isDataTypeChanged;
     }
     //endregion
 
