@@ -2,12 +2,14 @@ package appbox.design.handlers.entity;
 
 import appbox.data.JsonResult;
 import appbox.data.PersistentState;
+import appbox.data.SqlEntityKVO;
 import appbox.data.SysEntityKVO;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
+import appbox.store.query.SqlQuery;
 import appbox.store.query.TableScan;
 
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +30,10 @@ public final class LoadEntityData implements IDesignHandler {
 
         if (model.sysStoreOptions() != null) {
             var q = new TableScan<>(modelId, SysEntityKVO.class);
+            q.take(20);
+            return q.toListAsync().thenApply(JsonResult::new);
+        } else if (model.sqlStoreOptions() != null) {
+            var q = new SqlQuery<>(modelId, SqlEntityKVO.class);
             q.take(20);
             return q.toListAsync().thenApply(JsonResult::new);
         }

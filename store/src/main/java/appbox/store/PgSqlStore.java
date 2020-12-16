@@ -10,6 +10,7 @@ import appbox.model.entity.IndexModelBase;
 import appbox.store.query.ISqlSelectQuery;
 import com.alibaba.fastjson.JSON;
 import com.github.jasync.sql.db.Connection;
+import com.github.jasync.sql.db.ConnectionPoolConfiguration;
 import com.github.jasync.sql.db.pool.ConnectionPool;
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection;
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder;
@@ -23,15 +24,16 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
     private final ConnectionPool<PostgreSQLConnection> _connectionPool;
 
     public PgSqlStore(String settings) {
-        String connectionString = null;
         if (settings.startsWith("{")) { //TODO:暂简单判断
             var s = JSON.parseObject(settings, SqlStoreSettings.class);
-            connectionString = String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s"
-                    , s.Host, s.Port, s.Database, s.User, s.Password);
+            //connectionString = String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s"
+            //        , s.Host, s.Port, s.Database, s.User, s.Password);
+            var poolConfig = new ConnectionPoolConfiguration(s.Host, Integer.parseInt(s.Port)
+                    , s.Database, s.User, s.Password, 100);
+            _connectionPool = PostgreSQLConnectionBuilder.createConnectionPool(poolConfig);
         } else { //only for test
-            connectionString = settings;
+            _connectionPool = PostgreSQLConnectionBuilder.createConnectionPool(settings);
         }
-        _connectionPool = PostgreSQLConnectionBuilder.createConnectionPool(connectionString);
     }
 
     @Override

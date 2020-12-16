@@ -13,4 +13,8 @@ public interface ISqlSelectQuery extends ISqlQuery {
 
     List<SqlSelectItemExpression> getSelects();
 
+    int getSkipSize();
+
+    int getTakeSize();
+
 }

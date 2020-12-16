@@ -20,4 +20,14 @@ public final class SqlFromQuery extends SqlQueryBase implements ISqlSelectQuery 
     public Expression getFilter() {
         return null;
     }
+
+    @Override
+    public int getSkipSize() {
+        return 0;
+    }
+
+    @Override
+    public int getTakeSize() {
+        return 0;
+    }
 }

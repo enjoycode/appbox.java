@@ -17,13 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSqlStore {
 
-    private static final String      connection  = "jdbc:postgresql://127.0.0.1:5432/db1?user=postgres&password=123456";
+    private static final String      connection  = "jdbc:postgresql://10.211.55.2:54321/ABStore?user=lushuaijun&password=";
     private static final long        testStoreId = 1;
     private static       EntityModel model;
 
     @BeforeAll
     public static void init() throws Exception {
-        model = new EntityModel(ELog.MODEL_ID, "ELog2");
+        model = new EntityModel(ELog.MODEL_ID, "ELog");
         model.bindToSqlStore(testStoreId);
         var idMember   = new DataFieldModel(model, "Id", DataFieldModel.DataFieldType.Int, false);
         var nameMember = new DataFieldModel(model, "Name", DataFieldModel.DataFieldType.String, true);

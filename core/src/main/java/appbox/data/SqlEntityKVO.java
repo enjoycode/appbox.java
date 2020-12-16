@@ -1,21 +1,16 @@
 package appbox.data;
 
 import appbox.model.EntityModel;
-import appbox.model.entity.DataFieldModel;
-import appbox.model.entity.EntityMemberModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IJsonSerializable;
 import appbox.serialization.IJsonWriter;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public final class SysEntityKVO extends SysEntity implements IJsonSerializable {
+public final class SqlEntityKVO extends SqlEntity implements IJsonSerializable {
 
     private final EntityKVO kvo;
 
-    public SysEntityKVO(EntityModel model) {
+    public SqlEntityKVO(EntityModel model) {
         super(model.id());
 
         kvo = new EntityKVO(model);
@@ -35,4 +30,5 @@ public final class SysEntityKVO extends SysEntity implements IJsonSerializable {
     public void writeToJson(IJsonWriter writer) {
         kvo.writeToJson(writer);
     }
+
 }

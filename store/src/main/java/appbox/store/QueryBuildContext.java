@@ -64,6 +64,14 @@ final class QueryBuildContext {
 
     public QueryBuildStep getBuildStep() { return currentQueryInfo.buildStep; }
 
+    public void append(char ch) {
+        currentQueryInfo.getOut().append(ch);
+    }
+
+    public void append(int value) {
+        currentQueryInfo.getOut().append(value);
+    }
+
     public void append(String sql) {
         currentQueryInfo.getOut().append(sql);
     }

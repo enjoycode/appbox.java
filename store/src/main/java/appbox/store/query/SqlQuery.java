@@ -1,6 +1,7 @@
 package appbox.store.query;
 
 import appbox.data.SqlEntity;
+import appbox.data.SqlEntityKVO;
 import appbox.expressions.BinaryExpression;
 import appbox.expressions.EntityBaseExpression;
 import appbox.expressions.EntityExpression;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlSelectQuery {
 
@@ -24,6 +26,8 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     private       QueryPurpose                  _purpose;
     private       Expression                    _filter;
     private       List<SqlSelectItemExpression> _selects;
+    private       int                           _skip = 0;
+    private       int                           _take = 0;
 
     public SqlQuery(long modelId, Class<T> clazz) {
         t      = new EntityExpression(modelId, this);
@@ -43,6 +47,26 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     @Override
     public List<SqlSelectItemExpression> getSelects() {
         return _selects;
+    }
+
+    @Override
+    public int getSkipSize() {
+        return _skip;
+    }
+
+    @Override
+    public int getTakeSize() {
+        return _take;
+    }
+
+    public SqlQuery<T> skip(int rows) {
+        _skip = rows;
+        return this;
+    }
+
+    public SqlQuery<T> take(int rows) {
+        _take = rows;
+        return this;
     }
 
     //region ====Where Methods====
@@ -98,9 +122,23 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
             var rowReader = new SqlRowReader(rows.columnNames());
             var list      = new ArrayList<T>(rows.size());
             try {
+                Supplier<T> creator;
+                if (_clazz == SqlEntityKVO.class) {
+                    creator = () -> (T) new SqlEntityKVO(model);
+                } else {
+                    final var ctor = _clazz.getDeclaredConstructor();
+                    creator = () -> {
+                        try {
+                            return ctor.newInstance();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    };
+                }
+
                 for (RowData row : rows) {
                     rowReader.rowData = row;
-                    var obj = _clazz.getDeclaredConstructor().newInstance();
+                    var obj = creator.get();
                     fillEntity(obj, model, rowReader);
                     list.add(obj);
                 }

@@ -63,7 +63,10 @@ final class PgSqlQueryBuilder {
         } else {
             var         q     = (SqlQuery<?>) ctx.currentQuery;
             EntityModel model = RuntimeContext.current().getModel(q.t.modelId);
-            ctx.append(String.format("\"%s\" %s", model.getSqlTableName(false, null), q.aliasName));
+            ctx.append('"');
+            ctx.append(model.getSqlTableName(false, null));
+            ctx.append("\" ");
+            ctx.append(q.aliasName);
         }
 
         //构建Where
@@ -91,18 +94,24 @@ final class PgSqlQueryBuilder {
         //}
         //ctx.BuildQueryAutoJoins(q1); //再处理自动联接
 
-        ////处理Skip and Take
-        //if (query.Purpose != QueryPurpose.Count)
-        //{
-        //    ctx.CurrentQueryInfo.BuildStep = BuildQueryStep.BuildSkipAndTake;
-        //    if (query.SkipSize > 0)
-        //        ctx.AppendFormat(" Offset {0}", query.SkipSize);
-        //    if (query.Purpose == QueryPurpose.ToSingleEntity)
-        //        ctx.Append(" Limit 1 ");
-        //    else if (query.TakeSize > 0)
-        //        ctx.AppendFormat(" Limit {0} ", query.TakeSize);
-        //}
-        //
+        //处理Skip and Take
+        if (query.getPurpose() != ISqlSelectQuery.QueryPurpose.Count) {
+            ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildSkipAndTake);
+            if (query.getSkipSize() > 0) {
+                ctx.append(" Offset ");
+                ctx.append(query.getSkipSize());
+                ctx.append(' ');
+            }
+
+            if (query.getPurpose() == ISqlSelectQuery.QueryPurpose.ToSingle) {
+                ctx.append(" Limit 1 ");
+            } else if (query.getTakeSize() > 0) {
+                ctx.append(" Limit ");
+                ctx.append(query.getTakeSize());
+                ctx.append(' ');
+            }
+        }
+
         ////构建分组、Having及排序
         //BuildGroupBy(query, ctx);
 
@@ -117,12 +126,17 @@ final class PgSqlQueryBuilder {
             //判断当前查询是否等于Select项的所有者，否则表示Select项的所有者的外部查询引用该Select项
             var ownerAliasName = ctx.currentQuery == item.owner ?
                     ctx.getQueryAliasName(si.owner) : ctx.getQueryAliasName(item.owner);
-            ctx.append(String.format("%s.\"%s\"", ownerAliasName, si.aliasName));
+            ctx.append(ownerAliasName);
+            ctx.append(".\"");
+            ctx.append(si.aliasName);
+            ctx.append('"');
 
             //处理选择项别名
             if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildSelect /* && !ctx.isBuildCteSelect*/) {
                 if (!item.aliasName.equals(si.aliasName)) {
-                    ctx.append(String.format(" \"%s\"", item.aliasName));
+                    ctx.append(" \"");
+                    ctx.append(item.aliasName);
+                    ctx.append('"');
                 }
             }
         } else { //----上面为FromQuery的Select项，下面为Query或SubQuery的Select项----
@@ -130,7 +144,10 @@ final class PgSqlQueryBuilder {
             if (ctx.currentQuery == item.owner) {
                 buildExpression(item.expression, ctx);
             } else {
-                ctx.append(String.format("%s.\"%s\"", ctx.getQueryAliasName(item.owner), item.aliasName));
+                ctx.append(ctx.getQueryAliasName(item.owner));
+                ctx.append(".\"");
+                ctx.append(item.aliasName);
+                ctx.append('"');
             }
 
             //处理选择项别名
@@ -139,8 +156,11 @@ final class PgSqlQueryBuilder {
                 if (item.expression instanceof EntityBaseExpression) {
                     needAlias = !((EntityBaseExpression) item.expression).name.equals(item.aliasName);
                 }
-                if (needAlias)
-                    ctx.append(String.format(" \"%s\"", item.aliasName));
+                if (needAlias) {
+                    ctx.append(" \"");
+                    ctx.append(item.aliasName);
+                    ctx.append('"');
+                }
             }
         }
     }
@@ -199,13 +219,22 @@ final class PgSqlQueryBuilder {
     private static void buildFieldExpression(EntityFieldExpression exp, QueryBuildContext ctx) {
         //判断上下文是否在处理Update的Set
         if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildUpdateSet) {
-            ctx.append(String.format("\"%s\"", exp.name));
+            ctx.append('"');
+            ctx.append(exp.name);
+            ctx.append('"');
         } else if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildUpsertSet) {
             EntityModel model = RuntimeContext.current().getModel(exp.owner.modelId);
-            ctx.append(String.format("\"%s\".\"%s\"", model.name(), exp.name));
+            ctx.append('"');
+            ctx.append(model.name());
+            ctx.append("\".\"");
+            ctx.append(exp.name);
+            ctx.append('"');
         } else {
             buildEntityExpression(exp.owner, ctx);
-            ctx.append(String.format("%s.\"%s\"", exp.owner.getAliasName(), exp.name));
+            ctx.append(exp.owner.getAliasName());
+            ctx.append(".\"");
+            ctx.append(exp.name);
+            ctx.append('"');
         }
     }
 
@@ -228,10 +257,10 @@ final class PgSqlQueryBuilder {
             buildBinaryOperator(exp, ctx);
             //右表达式, 暂在这里特殊处理Like等通配符
             if (exp.binaryType == BinaryExpression.BinaryOperatorType.Like)
-                ctx.append("%");
+                ctx.append('%');
             buildExpression(exp.rightOperand, ctx);
             if (exp.binaryType == BinaryExpression.BinaryOperatorType.Like)
-                ctx.append("%");
+                ctx.append('%');
         }
     }
 
