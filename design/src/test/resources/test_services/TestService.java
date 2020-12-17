@@ -30,7 +30,7 @@ public class TestService {
         var obj = new sys.entities.Employee();
 
         var q = new SqlQuery<sys.entities.Employee>();
-        q.where(e -> e.name == obj.name);
+        q.where(e -> e.name + "a" == obj.name);
         return q.toListAsync().thenApply(r -> (Object) r);
     }
 

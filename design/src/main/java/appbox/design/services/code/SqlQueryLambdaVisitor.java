@@ -101,6 +101,10 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
             return "ge";
         } else if (op == InfixExpression.Operator.GREATER) {
             return "gt";
+        } else if (op == InfixExpression.Operator.PLUS) {
+            return "plus";
+        } else if (op == InfixExpression.Operator.MINUS) {
+            return "minus";
         } else {
             throw new RuntimeException("未实现: " + op);
         }
