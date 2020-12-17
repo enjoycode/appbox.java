@@ -62,6 +62,12 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
     }
 
     @Override
+    public boolean visit(ParenthesizedExpression node) {
+        //TODO:转换为GroupExpression
+        return super.visit(node);
+    }
+
+    @Override
     public boolean visit(InfixExpression node) {
         node.getLeftOperand().accept(this);
         node.getRightOperand().accept(this);
