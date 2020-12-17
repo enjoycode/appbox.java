@@ -302,6 +302,16 @@ public interface IOutputStream extends IEntityMemberWriter {
         }
     }
 
+    default void writeListShort(List<Short> list) {
+        if (checkNullOrSerialized(list))
+            return;
+
+        writeVariant(list.size());
+        for (var element : list) {
+            writeShort(element);
+        }
+    }
+
     default boolean checkNullOrSerialized(Object obj) {
         if (obj == null) {
             writeVariant(-1);

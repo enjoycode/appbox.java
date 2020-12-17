@@ -270,6 +270,18 @@ public interface IInputStream extends IEntityMemberReader {
         }
         return list;
     }
+
+    default List<Short> readListShort() {
+        var count = readVariant();
+        if (count == -1)
+            return null;
+
+        var list = new ArrayList<Short>(count);
+        for (int i = 0; i < count; i++) {
+            list.add(readShort());
+        }
+        return list;
+    }
     //endregion
 
     //region ====IEntityMemberReader====

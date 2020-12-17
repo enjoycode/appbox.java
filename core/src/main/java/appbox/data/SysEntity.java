@@ -1,8 +1,10 @@
 package appbox.data;
 
-public abstract class SysEntity extends Entity implements IKVRow {
-    private final EntityId        _id              = new EntityId();
-    private       PersistentState _persistentState = PersistentState.Detached;
+import appbox.serialization.IInputStream;
+import appbox.serialization.IOutputStream;
+
+public abstract class SysEntity extends DBEntity implements IKVRow {
+    private final EntityId _id = new EntityId();
 
     public SysEntity(long modelId) {
         super(modelId);
@@ -12,12 +14,17 @@ public abstract class SysEntity extends Entity implements IKVRow {
         return _id;
     }
 
-    protected final PersistentState persistentState() { return _persistentState; }
+    @Override
+    public final void writeTo(IOutputStream bs) {
+        super.writeTo(bs);
 
-    protected final void onPropertyChanged(short memberId) {
-        //TODO: track member changes
-        if (_persistentState == PersistentState.Unchnaged) {
-            _persistentState = PersistentState.Modified;
-        }
+        _id.writeTo(bs);
+    }
+
+    @Override
+    public final void readFrom(IInputStream bs) {
+        super.readFrom(bs);
+
+        _id.readFrom(bs);
     }
 }

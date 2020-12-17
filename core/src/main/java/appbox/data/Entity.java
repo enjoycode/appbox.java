@@ -18,42 +18,29 @@ public abstract class Entity implements IBinSerializable {
 
     //region ====Serialization====
     @Override
-    public final void writeTo(IOutputStream bs) {
+    public void writeTo(IOutputStream bs) {
         bs.writeLong(_modelId);
-
-        if (this instanceof SysEntity) {
-            ((SysEntity) this).id().writeTo(bs);
-        }
 
         //write members
         var model = model(); //TODO:考虑判断model.schemaVersion与entity是否一致
         for (var m : model.getMembers()) {
             writeMember(m.memberId(), bs, IEntityMemberWriter.SF_NONE);
         }
-        bs.writeShort((short) 0); //end write members
-
-        //TODO:写入扩展信息
+        bs.finishWriteFields(); //end write members
     }
 
     @Override
-    public final void readFrom(IInputStream bs) {
+    public void readFrom(IInputStream bs) {
         _modelId = bs.readLong();
-
-        if (this instanceof SysEntity) {
-            ((SysEntity) this).id().readFrom(bs);
-        }
 
         //read members
         short memberId;
         while (true) {
             memberId = bs.readShort();
-            if (memberId == 0) {
+            if (memberId == 0)
                 break;
-            }
             readMember(memberId, bs, IEntityMemberReader.SF_NONE);
         }
-
-        //TODO:读取扩展信息
     }
 
     /**
