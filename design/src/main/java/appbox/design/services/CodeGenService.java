@@ -171,7 +171,8 @@ public class CodeGenService {
         var methods = serviceType.getMethods();
         for (var method: methods) {
             if (TypeHelper.isServiceMethod(method)) {
-                //TODO:MethodInterceptor
+                sb.append("@sys.MethodInterceptor(name=\"InvokeService\")\n");
+
                 method.modifiers().add(astNode.getAST().newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
                 var rst = astNode.getAST().newReturnStatement();
                 rst.setExpression(astNode.getAST().newNullLiteral());

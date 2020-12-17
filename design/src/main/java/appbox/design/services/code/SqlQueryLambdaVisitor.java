@@ -13,7 +13,6 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
     private final MethodInvocation     method;
     private final LambdaExpression     lambda;
     private final ServiceCodeGenerator generator;
-    private       ASTNode              current = null;
 
     private final Map<String, Object> lambdaParameters = new HashMap<>();
 
@@ -43,15 +42,19 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
             if (node.getQualifier().isQualifiedName()) {
                 visit((QualifiedName) node.getQualifier()); //继续向上转换
             }
+
+            var newQualifier = (ASTNode) generator.astRewrite.get(node, QualifiedName.QUALIFIER_PROPERTY);
+            if (newQualifier.getParent() != null)
+                newQualifier = ASTNode.copySubtree(generator.ast, newQualifier);
+
             var newNode = generator.ast.newMethodInvocation();
             newNode.setName(generator.ast.newSimpleName("m"));
-            newNode.setExpression((Expression) ASTNode.copySubtree(generator.ast, node.getQualifier()));
+            newNode.setExpression((Expression) newQualifier);
             var memberName = StringUtil.firstUpperCase(node.getName().getIdentifier()); //TODO:暂强制转换
             var member     = generator.ast.newStringLiteral();
             member.setLiteralValue(memberName);
             newNode.arguments().add(member);
             generator.astRewrite.replace(node, newNode, null);
-            current = newNode;
             return false;
         } else {
             return generator.visit(node);
@@ -61,21 +64,23 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
     @Override
     public boolean visit(InfixExpression node) {
         node.getLeftOperand().accept(this);
-        //TODO:根据current==null判断左边非表达式，需要转换为PrimitiveExpression
-        var left = current == null ? node.getLeftOperand() : current;
-        current = null;
         node.getRightOperand().accept(this);
-        var right = current == null ? node.getRightOperand() : current;
-        current = null;
-        //根据类型进行转换 e.name == "Rick" -> e.m("Name").eq("Rick")
+
+        //TODO:判断左边非表达式，需要转换为PrimitiveExpression
+        var newLeft = (ASTNode) generator.astRewrite.get(node, InfixExpression.LEFT_OPERAND_PROPERTY);
+        var newRight = (ASTNode) generator.astRewrite.get(node, InfixExpression.RIGHT_OPERAND_PROPERTY);
+        if (newLeft.getParent() != null) //newLeft.getStartPosition() != -1
+            newLeft = ASTNode.copySubtree(generator.ast, newLeft);
+        if (newRight.getParent() != null)
+            newRight = ASTNode.copySubtree(generator.ast, newRight);
+
         var opMethod = getOperator(node.getOperator());
         var newNode  = generator.ast.newMethodInvocation();
         newNode.setName(generator.ast.newSimpleName(opMethod));
-        newNode.setExpression((Expression) ASTNode.copySubtree(generator.ast, left));
-        newNode.arguments().add(ASTNode.copySubtree(generator.ast, right));
-        generator.astRewrite.replace(node, newNode, null);
+        newNode.setExpression((Expression) newLeft);
+        newNode.arguments().add(newRight);
 
-        current = newNode;
+        generator.astRewrite.replace(node, newNode, null);
         return false;
     }
 

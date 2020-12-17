@@ -24,6 +24,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     private static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
         put("SqlQueryWhere", new SqlQueryWhereInterceptor());
+        put("InvokeService", new InvokeServiceInterceptor());
     }};
     //endregion
 
@@ -261,21 +262,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 invokeEx.arguments().add(para);
             }
 
-            var castEx = ast.newMethodInvocation(); //暂全部转换为CompletableFuture<Object>
-            castEx.setName(ast.newSimpleName("thenApply"));
-            var castLambda = ast.newLambdaExpression();
-            //castLambda.setParentheses(false);
-            var lambdaPara = ast.newVariableDeclarationFragment();
-            lambdaPara.setName(ast.newSimpleName("r"));
-            castLambda.parameters().add(lambdaPara);
-            var lambdaBody = ast.newCastExpression();
-            lambdaBody.setType(ast.newSimpleType(ast.newSimpleName("Object")));
-            lambdaBody.setExpression(ast.newSimpleName("r"));
-            castLambda.setBody(lambdaBody);
-
-            castEx.setExpression(invokeEx);
-            castEx.arguments().add(castLambda);
-
+            //TODO: 暂全部转换为CompletableFuture<Object>，忽略已经是该类型的
+            var castEx = makeFutureCast(invokeEx, ast.newSimpleType(ast.newSimpleName("Object")));
             var returnSt = ast.newReturnStatement();
             returnSt.setExpression(castEx);
             switchSt.statements().add(returnSt);
@@ -333,6 +321,26 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         }
 
         return getMethod;
+    }
+
+    protected MethodInvocation makeFutureCast(Expression expression, Type castType) {
+        var castEx = ast.newMethodInvocation();
+        castEx.setName(ast.newSimpleName("thenApply"));
+
+        var castLambda = ast.newLambdaExpression();
+        castLambda.setParentheses(false);
+        var lambdaPara = ast.newVariableDeclarationFragment();
+        lambdaPara.setName(ast.newSimpleName("r"));
+        castLambda.parameters().add(lambdaPara);
+        var lambdaBody = ast.newCastExpression();
+        lambdaBody.setType(castType);
+        lambdaBody.setExpression(ast.newSimpleName("r"));
+        castLambda.setBody(lambdaBody);
+
+        castEx.setExpression(expression);
+        castEx.arguments().add(castLambda);
+
+        return castEx;
     }
 
 }

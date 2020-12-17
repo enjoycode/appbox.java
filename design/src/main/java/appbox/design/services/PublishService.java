@@ -85,8 +85,10 @@ public final class PublishService {
         astNode.accept(serviceCodeGenerator);
         serviceCodeGenerator.finish();
 
-        var edits  = astRewrite.rewriteAST();
+        var options = new HashMap<String, String>();
+        options.put("org.eclipse.jdt.core.formatter.lineSplit", "500"); //防止格式化换行造成行号改变
         var newdoc = new Document(cu.getSource());
+        var edits  = astRewrite.rewriteAST(newdoc, options);
         edits.apply(newdoc);
 
         var runtimeCode       = newdoc.get();
