@@ -28,6 +28,9 @@ public final class HostRuntimeContext implements IRuntimeContext {
     static {
         //暂在这里Hack CompletableFuture's ASYNC_POOL
         var async_pool = CompletableFuture.completedFuture(true).defaultExecutor();
+        //TODO:待尝试ForkJoinPool的AsyncMode
+        //Log.debug("ForkJoinPool: Parallelism=" + ForkJoinPool.commonPool().getParallelism()
+        //        + " AsyncMode=" + ForkJoinPool.commonPool().getAsyncMode());
         if (async_pool instanceof ExecutorService) {
             async_pool = TtlExecutors.getTtlExecutorService((ExecutorService) async_pool);
         } else {
