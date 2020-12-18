@@ -6,8 +6,10 @@ import appbox.data.JsonResult;
 import appbox.entities.Employee;
 import appbox.entities.OrgUnit;
 import appbox.logging.Log;
+import appbox.model.EntityModelInfo;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArgs;
+import appbox.runtime.RuntimeContext;
 import appbox.store.EntityStore;
 import appbox.store.StoreInitiator;
 import appbox.store.query.IndexGet;
@@ -85,6 +87,9 @@ public final class SystemService implements IService {
             return StoreInitiator.initAsync().thenApply(ok -> ok);
         } else if (method.equals("Login")) {
             return login(args.getLong(), args.getString());
+        } else if (method.equals("GetModelInfo")) {
+            var res = new EntityModelInfo(RuntimeContext.current().getModel(args.getLong()));
+            return CompletableFuture.completedFuture(res);
         } else {
             var ex = new NoSuchMethodException("SystemService can't find method: " + method.toString());
             return CompletableFuture.failedFuture(ex);

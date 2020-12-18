@@ -7,6 +7,7 @@ import appbox.expressions.PrimitiveExpression;
 import appbox.logging.Log;
 import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
+import appbox.model.EntityModelInfo;
 import appbox.model.ServiceModel;
 import appbox.serialization.serializers.*;
 
@@ -19,6 +20,7 @@ public abstract class TypeSerializer {
     private static final HashMap<Byte, TypeSerializer>     _sysKnownTypes = new HashMap<>();
 
     static {
+        //实例创建返回null表示不支持反序列化
         Log.debug("开始注册序列化器...");
         registerKnownType(IntSerializer.instance);
         registerKnownType(ByteSerializer.instance);
@@ -27,12 +29,13 @@ public abstract class TypeSerializer {
         registerKnownType(UUIDSerializer.instance);
         registerKnownType(EntityIdSerializer.instance);
 
-        registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null/*不支持*/));
+        registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null));
 
         //----模型相关----
         registerKnownType(new UserSerializer(PayloadType.DataStoreModel, DataStoreModel.class, DataStoreModel::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
         registerKnownType(new UserSerializer(PayloadType.ServiceModel, ServiceModel.class, ServiceModel::new));
+        registerKnownType(new UserSerializer(PayloadType.EntityModelInfo, EntityModelInfo.class, () -> null));
 
         //----表达式相关(目前都不支持反序列化)----
         registerKnownType(new UserSerializer(PayloadType.BinaryExpression, BinaryExpression.class, () -> null));

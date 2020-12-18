@@ -1,5 +1,6 @@
 package appbox.serialization;
 
+import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.utils.IdUtil;
 
@@ -30,6 +31,10 @@ public interface IOutputStream extends IEntityMemberWriter {
             return;
         } else if (obj == Boolean.FALSE) {
             writeByte(PayloadType.BooleanFalse);
+            return;
+        } else if (obj instanceof Entity) {
+            writeByte(PayloadType.Entity);
+            ((Entity)obj).writeTo(this);
             return;
         }
 
