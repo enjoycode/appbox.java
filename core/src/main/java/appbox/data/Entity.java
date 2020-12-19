@@ -26,7 +26,7 @@ public abstract class Entity implements IBinSerializable {
         for (var m : model.getMembers()) {
             writeMember(m.memberId(), bs, IEntityMemberWriter.SF_NONE);
         }
-        bs.finishWriteFields(); //end write members
+        bs.writeShort((short) 0); //end write members
     }
 
     @Override
