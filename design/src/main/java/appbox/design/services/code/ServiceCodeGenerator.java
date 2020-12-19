@@ -65,13 +65,11 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     @Override
     public boolean visit(SimpleType node) {
-        var entityType = TypeHelper.isEntityClass(node);
+        var entityType = TypeHelper.getEntityType(node);
         if (entityType != null) {
-            var entityModelNode = getUsedEntity(entityType);
             //转换为运行时类型
             if (!node.isVar()) {
-                var entityClassName   = EntityCodeGenerator.makeEntityClassName(entityModelNode);
-                var entityRuntimeType = ast.newSimpleType(ast.newName(entityClassName));
+                var entityRuntimeType = makeEntityRuntimeType(entityType);
                 astRewrite.replace(node, entityRuntimeType, null);
             }
             return false;
@@ -263,7 +261,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             }
 
             //TODO: 暂全部转换为CompletableFuture<Object>，忽略已经是该类型的
-            var castEx = makeFutureCast(invokeEx, ast.newSimpleType(ast.newSimpleName("Object")));
+            var castEx   = makeFutureCast(invokeEx, ast.newSimpleType(ast.newSimpleName("Object")));
             var returnSt = ast.newReturnStatement();
             returnSt.setExpression(castEx);
             switchSt.statements().add(returnSt);
@@ -309,10 +307,17 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 throw new RuntimeException("未实现");
             }
         } else if (paraType.isSimpleType()) {
-            var simpleType = (SimpleType) paraType;
-            var typeName   = simpleType.getName().getFullyQualifiedName();
+            var          simpleType = (SimpleType) paraType;
+            var          typeName   = simpleType.getName().getFullyQualifiedName();
+            ITypeBinding entityType;
             if (typeName.equals("String")) {
                 getMethod.setName(ast.newSimpleName("getString"));
+            } else if ((entityType = TypeHelper.getEntityType(simpleType)) != null) {
+                var entityRuntimeType = makeEntityRuntimeType(entityType);
+                var creation = ast.newCreationReference();
+                creation.setType(entityRuntimeType);
+                getMethod.setName(ast.newSimpleName("getEntity"));
+                getMethod.arguments().add(creation);
             } else {
                 throw new RuntimeException("未实现");
             }
@@ -343,4 +348,9 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         return castEx;
     }
 
+    private SimpleType makeEntityRuntimeType(ITypeBinding entityType) {
+        var entityModelNode   = getUsedEntity(entityType);
+        var entityClassName   = EntityCodeGenerator.makeEntityClassName(entityModelNode);
+        return ast.newSimpleType(ast.newName(entityClassName));
+    }
 }

@@ -4,7 +4,7 @@ import org.eclipse.jdt.core.dom.*;
 
 public final class TypeHelper {
 
-    public static ITypeBinding isEntityClass(SimpleType node) {
+    public static ITypeBinding getEntityType(SimpleType node) {
         //TODO:忽略常规类型如String
         var type = node.resolveBinding();
         return isEntityType(type) ? type : null;
@@ -17,9 +17,7 @@ public final class TypeHelper {
         var pkg = type.getPackage().getJavaElement();
         if (pkg == null)
             return false;
-        if (pkg.getPath().lastSegment().equals("entities"))
-            return true;
-        return false;
+        return pkg.getPath().lastSegment().equals("entities");
     }
 
     public static boolean isDataStoreType(ITypeBinding type) {
