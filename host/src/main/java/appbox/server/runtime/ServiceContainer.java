@@ -59,7 +59,8 @@ public final class ServiceContainer {
         //TODO:暂并发时会多余加载，待修改
         return ModelStore.loadServiceAssemblyAsync(serviceFullName).handle((r, ex) -> {
             if (ex != null || r == null) {
-                Log.error("Load service assembly[" + service + "] error:" + ex.getMessage());
+                String error = ex == null ? "Not exists" : ex.toString();
+                Log.error("Load service assembly[" + service + "] error: " + error);
                 return null;
             }
 

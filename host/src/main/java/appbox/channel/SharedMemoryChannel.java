@@ -134,15 +134,13 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
         long sourceId = 0; //TODO:fix
 
         var mws = MessageWriteStream.rentFromPool(msg.MessageType(),
-                id, sourceId, flag,
-                () -> NativeSmq.SMQ_GetChunkForWriting(_sendQueue, -1),
-                (s) -> NativeSmq.SMQ_PostChunk(_sendQueue, s));
+                id, sourceId, flag, _sendQueue);
         try {
             msg.writeTo(mws);
-            mws.finish(); //必须
+            mws.finish(false);
         } catch (Exception e) {
             //发生异常，则通知接收端取消挂起的消息
-            mws.flushWhenCancelled();
+            mws.finish(true);
             //记录日志并重新抛出异常
             Log.warn(e.toString());
             throw e;

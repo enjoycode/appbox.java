@@ -13,7 +13,26 @@ import java.util.function.Function;
  */
 public final class ModelStore {
 
-    //public static final ExecutorService LoadModelExecutor = Executors.newSingleThreadExecutor();
+    // ManagedBlocker示例
+    //class BlockingGetUnicorns implements ForkJoinPool.ManagedBlocker {
+    //    List<String> unicorns;
+    //    public boolean block() {
+    //        unicorns = unicornService.getUnicorns();
+    //        return true;
+    //    }
+    //    public boolean isReleasable() { return false; }
+    //}
+    //CompletableFuture<List<String>> fetchUnicorns  =
+    //        CompletableFuture.supplyAsync(() -> {
+    //            BlockingGetUnicorns getThem = new BlockingGetUnicorns();
+    //            try {
+    //                ForkJoinPool.managedBlock(getThem);
+    //            } catch (InterruptedException ex) {
+    //                throw new AssertionError();
+    //            }
+    //            return getThem.unicorns;
+    //        });
+
 
     /**
      * 创建新的应用，成功返回应用对应的存储Id

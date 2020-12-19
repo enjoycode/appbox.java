@@ -119,7 +119,7 @@ public final class MessageDispatcher {
         try {
             IHostMessageChannel.deserialize(pendingItem.response, first);
         } catch (Exception ex) {
-            CompletableFuture.runAsync(() -> pendingItem.future.completeExceptionally(ex)); //同样必须异步
+            pendingItem.completeAsync(ex);
             Log.warn("反序列化StoreResponse错误: ");
             ex.printStackTrace();
             return;
@@ -127,8 +127,8 @@ public final class MessageDispatcher {
             channel.returnAllChunks(first);
         }
 
-        //正常响应，注意必须异步，还在Loop线程内 TODO:**考虑GetModel类响应用专用线程,防止同步阻塞
-        pendingItem.completeAsync();
+        //正常响应，注意必须异步，还在Loop线程内
+        pendingItem.completeAsync(null);
     }
 
 }

@@ -15,13 +15,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * 注意: 所有响应不抛出异常，调用者根据响应的ErrorCode作相应的处理
  */
 public final class SysStoreApi {
+
     /** 等待存储响应的请求 */
     public static final class PendingItem<T extends StoreResponse> {
         public CompletableFuture<T> future;
         public T                    response;
 
-        public void completeAsync() {
-            future.completeAsync(() -> response);
+        public void completeAsync(Exception ex) {
+            if (ex == null)
+                future.completeAsync(() -> response);
+            else
+                CompletableFuture.runAsync(() -> future.completeExceptionally(ex));
         }
     }
 
@@ -29,8 +33,7 @@ public final class SysStoreApi {
     private static final ConcurrentHashMap<Integer, PendingItem<? extends StoreResponse>> _pendings
             = new ConcurrentHashMap<>(100);
 
-    private SysStoreApi() {
-    }
+    private SysStoreApi() {}
 
     public static void init(IMessageChannel channel) {
         _channel = channel;
@@ -64,7 +67,9 @@ public final class SysStoreApi {
             return pending.future;
         }
 
+        //从Loop线程回到默认线程池继续执行
         return pending.future.thenApply(m -> {
+            //Log.debug("收到存储响应: " + m.reqId + " at:" + Thread.currentThread().getName());
             //先恢复会话信息
             RuntimeContext.current().setCurrentSession(session);
             //再返回响应消息
@@ -98,7 +103,7 @@ public final class SysStoreApi {
     }
 
     protected static CompletableFuture<MetaGenModelIdResponse> metaGenModelIdAsync(int appId, boolean devLayer) {
-        var req = new MetaGenModelIdRequire( appId, devLayer);
+        var req = new MetaGenModelIdRequire(appId, devLayer);
         return makeTaskAndSendRequest(req, new MetaGenModelIdResponse());
     }
 

@@ -8,6 +8,9 @@ public class NativeSmq {
     }
 
     //====MessageChunk常量====
+    /** 消息头+数据的大小 */
+    public static final int CHUNK_SIZE      = 232;
+    public static final int CHUNK_HEAD_SIZE = 16;
     public static final int CHUNK_DATA_SIZE = 216;
 
     //====打开/关闭====
@@ -110,15 +113,15 @@ public class NativeSmq {
         sb.append(Long.toHexString(Pointer.nativeValue(getMsgFirst(chunk))));
         sb.append(" NXT=");
         sb.append(Long.toHexString(Pointer.nativeValue(getMsgNext(chunk))));
-        sb.append("\n");
         if (withData) {
+            sb.append("\n");
             var dataPtr = getDataPtr(chunk);
             var dataLen = getMsgDataLen(chunk);
             sb.append("--------DataStart--------\n");
             int  v;
             char c1, c2;
             for (int i = 0; i < dataLen; i++) {
-                v = dataPtr.getByte(i) & 0xFF;
+                v  = dataPtr.getByte(i) & 0xFF;
                 c1 = HEX_ARRAY[v >>> 4];
                 c2 = HEX_ARRAY[v & 0x0F];
                 sb.append(c1);

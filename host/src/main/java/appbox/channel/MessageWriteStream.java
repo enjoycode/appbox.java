@@ -1,103 +1,107 @@
 package appbox.channel;
 
 import appbox.cache.ObjectPool;
+import appbox.logging.Log;
 import appbox.serialization.IOutputStream;
 import com.sun.jna.Pointer;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * 消息发送流, 注意目前实现边写边发
  */
-public final class MessageWriteStream extends OutputStream implements IOutputStream /*暂继承OutputStream方便写Json*/ {
+final class MessageWriteStream extends OutputStream implements IOutputStream /*暂继承OutputStream方便写Json*/ {
 
     //region ====ObjectPool====
     private static final ObjectPool<MessageWriteStream> pool = new ObjectPool<>(MessageWriteStream::new, 32);
 
     public static MessageWriteStream rentFromPool(byte msgType, int msgId, long sourceId, byte msgFlag,
-                                                  Supplier<Pointer> maker, Consumer<Pointer> sender) {
+                                                  Pointer sendQueue) {
         var obj = pool.rent();
-        obj._curChunk = null; //必须设置，否则缓存重用有问题
-        obj._msgType  = msgType;
-        obj._msgId    = msgId;
-        obj._sourceId = sourceId;
-        obj._msgFlag  = msgFlag;
-
-        obj._maker  = maker;
-        obj._sender = sender;
-
-        obj.createChunk();
+        obj.initChunk(msgType, msgId, sourceId, msgFlag);
+        obj._sender = sendQueue;
         return obj;
     }
 
     public static void backToPool(MessageWriteStream obj) {
+        obj._sender = Pointer.NULL;
+        obj._first  = Pointer.NULL;
         pool.back(obj);
     }
     //endregion
 
-    private Pointer _curChunk;
-    private Pointer _dataPtr;
-    private int     _index;
 
-    private byte _msgType;
-    private int  _msgId;
-    private byte _msgFlag;
-    private long _sourceId;
+    private final byte[]  _buf = new byte[NativeSmq.CHUNK_SIZE];
+    private       int     _index;
+    private       Pointer _sender;
+    private       Pointer _first;
 
-    private Supplier<Pointer> _maker;
-    private Consumer<Pointer> _sender;
+    private void initChunk(byte msgType, int msgId, long sourceId, byte msgFlag) {
+        _index = NativeSmq.CHUNK_HEAD_SIZE;
 
-    private void createChunk() {
-        var preChunk = _curChunk;
-        _curChunk = _maker.get();
         //初始化包的消息头
-        NativeSmq.setMsgType(_curChunk, _msgType);
-        NativeSmq.setMsgId(_curChunk, _msgId);
-        NativeSmq.setMsgFlag(_curChunk, _msgFlag);
-        NativeSmq.setMsgSource(_curChunk, _sourceId);
-        NativeSmq.setMsgDataLen(_curChunk, (short) NativeSmq.CHUNK_DATA_SIZE);
-        //设置消息链表
-        NativeSmq.setMsgNext(_curChunk, Pointer.NULL);
-        if (preChunk == Pointer.NULL) {
-            NativeSmq.setMsgFirst(_curChunk, _curChunk);
-            NativeSmq.setMsgFlag(_curChunk, (byte) (_msgFlag | MessageFlag.FirstChunk));
-        } else {
-            NativeSmq.setMsgNext(preChunk, _curChunk);
-            NativeSmq.setMsgFirst(_curChunk, NativeSmq.getMsgFirst(preChunk));
-        }
-        //设置数据指针
-        _dataPtr = NativeSmq.getDataPtr(_curChunk);
-        _index   = 0;
-        //直接发送前一包
-        if (_sender != null && preChunk != Pointer.NULL) {
-            _sender.accept(preChunk);
-        }
+        _buf[0] = msgType;
+        _buf[1] = msgFlag;
+
+        _buf[2] = (byte) (NativeSmq.CHUNK_DATA_SIZE & 0xFF);
+        _buf[3] = (byte) ((NativeSmq.CHUNK_DATA_SIZE >> 8) & 0xFF);
+
+        _buf[4] = (byte) (msgId & 0xFF);
+        _buf[5] = (byte) ((msgId >> 8) & 0xFF);
+        _buf[6] = (byte) ((msgId >> 16) & 0xFF);
+        _buf[7] = (byte) ((msgId >> 24) & 0xFF);
+
+        _buf[8]  = (byte) (sourceId & 0xFF);
+        _buf[9]  = (byte) ((sourceId >> 8) & 0xFF);
+        _buf[10] = (byte) ((sourceId >> 16) & 0xFF);
+        _buf[11] = (byte) ((sourceId >> 24) & 0xFF);
+        _buf[12] = (byte) ((sourceId >> 32) & 0xFF);
+        _buf[13] = (byte) ((sourceId >> 40) & 0xFF);
+        _buf[14] = (byte) ((sourceId >> 48) & 0xFF);
+        _buf[15] = (byte) ((sourceId >> 56) & 0xFF);
     }
 
-    public void finish() {
-        //设置当前消息包的长度
-        NativeSmq.setMsgDataLen(_curChunk, (short) _index);
-        //将当前消息包标为完整消息结束
-        NativeSmq.setMsgFlag(_curChunk, (byte) (NativeSmq.getMsgFlag(_curChunk) | MessageFlag.LastChunk));
-        //直接发送最后一包
-        if (_sender != null) {
-            _sender.accept(_curChunk);
-            _curChunk = Pointer.NULL;
+    private void sendChunk(boolean isLast, boolean isCancelled) {
+        var chunk = NativeSmq.SMQ_GetChunkForWriting(_sender, -1);
+        //复制数据给MessageChunk
+        if (isCancelled)
+            chunk.write(0, _buf, 0, NativeSmq.CHUNK_HEAD_SIZE);
+        else
+            chunk.write(0, _buf, 0, _index);
+
+        byte flag = _buf[1];
+        if (_first == Pointer.NULL) {
+            _first = chunk;
+            flag |= MessageFlag.FirstChunk;
+            if (isLast) {
+                flag |= MessageFlag.LastChunk;
+                NativeSmq.setMsgDataLen(chunk, (short) (_index - NativeSmq.CHUNK_HEAD_SIZE));
+            }
+            NativeSmq.setMsgFlag(chunk, flag);
+        } else if (isLast) {
+            flag |= MessageFlag.LastChunk;
+            if (isCancelled) {
+                flag |= MessageFlag.SerializeError;
+                NativeSmq.setMsgDataLen(chunk, (short) 0);
+            } else {
+                NativeSmq.setMsgDataLen(chunk, (short) (_index - NativeSmq.CHUNK_HEAD_SIZE));
+            }
+            NativeSmq.setMsgFlag(chunk, flag);
         }
+        //直接发送,不用设置消息链表,接收端会处理
+        //Log.debug(NativeSmq.getDebugInfo(chunk, false));
+        NativeSmq.SMQ_PostChunk(_sender, chunk);
+
+        _index = NativeSmq.CHUNK_HEAD_SIZE;
     }
 
     /**
-     * 用于发生错误时将当前消息转换为取消状态，并发送给接收端，由接收端丢弃其他包
+     * 完成消息写入，发送最后一包
+     * @param isCancelled 用于发生错误时将当前消息转换为取消状态，并发送给接收端，由接收端丢弃其他包
      */
-    protected void flushWhenCancelled() {
-        NativeSmq.setMsgDataLen(_curChunk, (short) 0);
-        NativeSmq.setMsgFlag(_curChunk, (byte) (NativeSmq.getMsgFlag(_curChunk)
-                | MessageFlag.LastChunk | MessageFlag.SerializeError));
-        if (_sender != null)
-            _sender.accept(_curChunk);
+    public void finish(boolean isCancelled) {
+        sendChunk(true, isCancelled);
     }
 
     @Override
@@ -107,26 +111,27 @@ public final class MessageWriteStream extends OutputStream implements IOutputStr
 
     @Override
     public void writeByte(byte value) {
-        if (_index >= NativeSmq.CHUNK_DATA_SIZE) {
-            createChunk();
+        if (_index >= NativeSmq.CHUNK_SIZE) {
+            sendChunk(false, false);
         }
-        _dataPtr.setByte(_index++, value);
+        _buf[_index++] = value;
     }
 
     @Override
     public void write(byte[] src, int offset, int count) {
-        var left = NativeSmq.CHUNK_DATA_SIZE - _index;
+        var left = NativeSmq.CHUNK_SIZE - _index;
         if (left > 0) {
             if (left >= count) {
-                _dataPtr.write(_index, src, offset, count);
+                System.arraycopy(src, offset, _buf, _index, count);
                 _index += count;
             } else {
-                _dataPtr.write(_index, src, offset, left);
-                createChunk();
+                System.arraycopy(src, offset, _buf, _index, left);
+                _index += left;
+                sendChunk(false, false);
                 write(src, offset + left, count - left);
             }
         } else {
-            createChunk();
+            sendChunk(false, false);
             write(src, offset, count);
         }
     }
