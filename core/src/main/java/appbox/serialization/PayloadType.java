@@ -23,9 +23,11 @@ public final class PayloadType {
     /** 扩展类型 */
     public static final byte ExtKnownType = 21;
     /** 对象引用 */
-    public static final byte ObjectRef    = 22;
-    /** 未知类型 */
-    public static final byte UnknownType  = 23;
+    public static final byte ObjectRef  = 22;
+    /** Json对象 */
+    public static final byte JsonObject = 23;
+    /** 其他未知类型 */
+    public static final byte Object = 24;
 
     //----模型相关----
     public static final byte DataStoreModel  = 45;

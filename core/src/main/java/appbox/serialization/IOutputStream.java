@@ -34,11 +34,22 @@ public interface IOutputStream extends IEntityMemberWriter {
             return;
         } else if (obj instanceof Entity) {
             writeByte(PayloadType.Entity);
-            ((Entity)obj).writeTo(this);
+            ((Entity) obj).writeTo(this);
             return;
         }
 
-        var type       = obj.getClass();
+        var type = obj.getClass();
+        if (List.class.isAssignableFrom(type)) {
+            var list = (List<?>) obj;
+            writeByte(PayloadType.List);
+            writeByte(PayloadType.Object);
+            writeVariant(list.size());
+            for (var item : list) {
+                serialize(item);
+            }
+            return;
+        }
+
         var serializer = TypeSerializer.getSerializer(type);
         if (serializer == null) {
             throw new RuntimeException("暂未实现未知类型的反射序列化: " + type.getName());

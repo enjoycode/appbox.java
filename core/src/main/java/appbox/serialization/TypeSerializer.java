@@ -29,7 +29,7 @@ public abstract class TypeSerializer {
         registerKnownType(UUIDSerializer.instance);
         registerKnownType(EntityIdSerializer.instance);
 
-        registerKnownType(new UserSerializer(PayloadType.UnknownType, JsonResult.class, () -> null));
+        registerKnownType(new UserSerializer(PayloadType.JsonObject, JsonResult.class, () -> null));
 
         //----模型相关----
         registerKnownType(new UserSerializer(PayloadType.DataStoreModel, DataStoreModel.class, DataStoreModel::new));
