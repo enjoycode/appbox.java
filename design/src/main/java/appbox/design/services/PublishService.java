@@ -76,7 +76,11 @@ public final class PublishService {
         var problems = ((CompilationUnit) astNode).getProblems();
         if (problems != null && problems.length > 0) {
             //TODO:友好提示及忽略警告
-            throw new RuntimeException("Has problems.");
+            boolean hasError = false;
+            for (var pb : problems) {
+                if (pb.isError())
+                    throw new RuntimeException("Has problems.");
+            }
         }
 
         //开始转换编译服务模型的运行时代码
