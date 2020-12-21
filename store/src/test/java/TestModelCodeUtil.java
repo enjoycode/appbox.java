@@ -15,7 +15,20 @@ public class TestModelCodeUtil {
         Boolean isDeclare   = false;
         var     serviceCode = ModelCodeUtil.decodeServiceCode(encodedData);
         assertEquals(src, serviceCode.sourceCode);
-        assertEquals(true, serviceCode.isDeclare);
+        assertTrue(serviceCode.isDeclare);
+    }
+
+    @Test
+    public void testEncodeAndDecodeViewCode() throws IOException {
+        var template = "AAAAAAAA";
+        var script = "BBBBBBBB";
+        var style = "CCCCCCCC";
+
+        var encodedData = ModelCodeUtil.encodeViewCode(template, script, style);
+        var viewCode = ModelCodeUtil.decodeViewCode(encodedData);
+        assertEquals(template, viewCode.Template);
+        assertEquals(script, viewCode.Script);
+        assertEquals(style, viewCode.Style);
     }
 
 }

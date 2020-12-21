@@ -1,7 +1,10 @@
 package appbox.store.utils;
 
 import appbox.compression.BrotliUtil;
+import appbox.serialization.BytesInputStream;
+import appbox.serialization.BytesOutputStream;
 import appbox.store.ServiceCode;
+import appbox.store.ViewCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -60,29 +63,36 @@ public final class ModelCodeUtil {
     }
 
     public static byte[] encodeViewCode(String templateCode, String scriptCode, String styleCode) {
-        var out = new ByteArrayOutputStream();
+        var out = new BytesOutputStream(2048);
         //写入1字节压缩类型标记
         out.write(1);
-        var templateCodeBytes = templateCode.getBytes(StandardCharsets.UTF_8);
-        var scriptCodeBytes = scriptCode.getBytes(StandardCharsets.UTF_8);
-        var styleCodeBytes = styleCode.getBytes(StandardCharsets.UTF_8);
-        out.write(templateCodeBytes.length);
-        out.write(scriptCodeBytes.length);
-        out.write(styleCodeBytes.length);
+        var    templateCodeBytes = templateCode.getBytes(StandardCharsets.UTF_8);
+        var    scriptCodeBytes   = scriptCode.getBytes(StandardCharsets.UTF_8);
+        byte[] styleCodeBytes    = null; //可能为空
+        if (styleCode != null && styleCode.length() > 0)
+            styleCodeBytes = styleCode.getBytes(StandardCharsets.UTF_8);
+        //暂不同C#版本（写入字符数）
+        out.writeVariant(templateCodeBytes.length);
+        out.writeVariant(scriptCodeBytes.length);
+        out.writeVariant(styleCodeBytes != null ? styleCodeBytes.length : 0);
         //再写入压缩的utf8
         try {
-            BrotliUtil.compressTo(templateCodeBytes, out);
-            BrotliUtil.compressTo(scriptCodeBytes, out);
-            BrotliUtil.compressTo(styleCodeBytes, out);
+            try(var compress = BrotliUtil.makeCompressStream(out)) {
+                compress.write(templateCodeBytes);
+                compress.write(scriptCodeBytes);
+                if (styleCodeBytes != null)
+                    compress.write(styleCodeBytes);
+            }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+
         return out.toByteArray();
     }
 
     public static byte[] encodeViewRuntimeCode(String runtimeCode) {
         var utf8data = runtimeCode.getBytes(StandardCharsets.UTF_8);
-        var out = new ByteArrayOutputStream();
+        var out      = new ByteArrayOutputStream();
         //写入1字节压缩类型标记
         out.write(1);
         //再写入压缩的utf8
@@ -93,4 +103,33 @@ public final class ModelCodeUtil {
         }
         return out.toByteArray();
     }
+
+    public static ViewCode decodeViewCode(byte[] data) {
+        var viewCode = new ViewCode();
+
+        var input = new BytesInputStream(data);
+        //读压缩类型
+        input.readByte();
+        //读取utf8编码后的长度
+        var templateCodeLen = input.readVariant();
+        var scriptCodeLen = input.readVariant();
+        var styleCodeLen = input.readVariant();
+        try {
+            try (var decompress = BrotliUtil.makeDecompressStream(input)) {
+                byte[] utf8data = decompress.readNBytes(templateCodeLen);
+                viewCode.Template = new String(utf8data, StandardCharsets.UTF_8);
+                utf8data = decompress.readNBytes(scriptCodeLen);
+                viewCode.Script = new String(utf8data, StandardCharsets.UTF_8);
+                if (styleCodeLen > 0){
+                    utf8data = decompress.readNBytes(styleCodeLen);
+                    viewCode.Style = new String(utf8data, StandardCharsets.UTF_8);
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        return viewCode;
+    }
+
 }

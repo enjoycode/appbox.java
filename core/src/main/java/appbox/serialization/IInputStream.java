@@ -16,7 +16,7 @@ public interface IInputStream extends IEntityMemberReader {
     //region ====abstract====
     byte readByte();
 
-    void read(byte[] dest, int offset, int count);
+    void readBytes(byte[] dest, int offset, int count);
 
     /**
      * 流内剩余字节数
@@ -63,7 +63,7 @@ public interface IInputStream extends IEntityMemberReader {
             return null;
         }
         var data = new byte[left];
-        read(data, 0, data.length);
+        readBytes(data, 0, data.length);
         return data;
     }
 
@@ -139,7 +139,7 @@ public interface IInputStream extends IEntityMemberReader {
         int len = readVariant();
         if (len < 0) return null;
         var bytes = new byte[len];
-        read(bytes, 0, len);
+        readBytes(bytes, 0, len);
         return bytes;
     }
 
@@ -300,7 +300,7 @@ public interface IInputStream extends IEntityMemberReader {
             return readString();
         int size  = flags >>> 8; //TODO:优化读utf8
         var bytes = new byte[size];
-        read(bytes, 0, size);
+        readBytes(bytes, 0, size);
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
@@ -338,7 +338,7 @@ public interface IInputStream extends IEntityMemberReader {
         int size  = flags >>> 8;
         var bytes = new byte[size];
         if (size > 0)
-            read(bytes, 0, size);
+            readBytes(bytes, 0, size);
         return bytes;
     }
 

@@ -158,7 +158,7 @@ public final class InvokeArgs implements IInputStream {
     }
 
     @Override
-    public void read(byte[] dest, int offset, int count) {
+    public void readBytes(byte[] dest, int offset, int count) {
         var left = _current.getDataSize() - _pos;
         if (left > 0) {
             if (left >= count) {
@@ -167,11 +167,11 @@ public final class InvokeArgs implements IInputStream {
             } else {
                 System.arraycopy(_current.buffer, _pos, dest, offset, left);
                 moveToNext();
-                read(dest, offset + left, count - left);
+                readBytes(dest, offset + left, count - left);
             }
         } else {
             moveToNext();
-            read(dest, offset, count);
+            readBytes(dest, offset, count);
         }
     }
 

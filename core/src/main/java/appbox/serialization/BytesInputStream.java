@@ -1,17 +1,11 @@
 package appbox.serialization;
 
-public final class BytesInputStream implements IInputStream {
-    public final byte[] data;
-    private      int    pos;
+import java.io.ByteArrayInputStream;
 
-    public BytesInputStream(int size) {
-        data = new byte[size];
-        pos  = 0;
-    }
+public final class BytesInputStream extends ByteArrayInputStream implements IInputStream {
 
     public BytesInputStream(byte[] data) {
-        this.data = data;
-        pos       = 0;
+        super(data);
     }
 
     public int getPosition() { return pos; }
@@ -25,17 +19,18 @@ public final class BytesInputStream implements IInputStream {
 
     @Override
     public int remaining() {
-        return data.length - pos;
+        return buf.length - pos;
     }
 
     @Override
     public byte readByte() {
-        return data[pos++];
+        return buf[pos++];
     }
 
     @Override
-    public void read(byte[] dest, int offset, int count) {
-        System.arraycopy(data, pos, dest, offset, count);
+    public void readBytes(byte[] dest, int offset, int count) {
+        System.arraycopy(buf, pos, dest, offset, count);
         pos += count;
     }
+
 }

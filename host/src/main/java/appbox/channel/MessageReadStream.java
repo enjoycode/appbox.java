@@ -97,7 +97,7 @@ public final class MessageReadStream implements IInputStream {
     }
 
     @Override
-    public void read(byte[] dest, int offset, int count) {
+    public void readBytes(byte[] dest, int offset, int count) {
         var left = left();
         if (left > 0) {
             if (left >= count) {
@@ -106,11 +106,11 @@ public final class MessageReadStream implements IInputStream {
             } else {
                 _dataPtr.read(_index, dest, offset, left);
                 moveToNext();
-                read(dest, offset + left, count - left);
+                readBytes(dest, offset + left, count - left);
             }
         } else {
             moveToNext();
-            read(dest, offset, count);
+            readBytes(dest, offset, count);
         }
     }
 

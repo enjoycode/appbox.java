@@ -128,7 +128,7 @@ public final class EntityId {
     }
 
     public void readFrom(IInputStream bs) {
-        bs.read(_data, 0, 16);
+        bs.readBytes(_data, 0, 16);
     }
 
     /** 仅用于系统存储写索引
