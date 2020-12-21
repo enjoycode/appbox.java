@@ -24,6 +24,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     private static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
         put("SqlQueryWhere", new SqlQueryWhereInterceptor());
+        put("SqlQueryMapper", new SqlQueryMapperInterceptor());
         put("InvokeService", new InvokeServiceInterceptor());
     }};
     //endregion
@@ -121,14 +122,18 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var ownerType = owner.resolveTypeBinding();
         if (TypeHelper.isEntityType(ownerType)) {
             //TODO:判断是否实体属性
+
+            owner.accept(this);
+            var newOwner = (ASTNode) astRewrite.get(node, QualifiedName.QUALIFIER_PROPERTY);
+            if (newOwner.getParent() != null)
+                newOwner = ASTNode.copySubtree(ast, newOwner);
+
             var newNode = ast.newMethodInvocation();
             newNode.setName(ast.newSimpleName("get"
                     + StringUtil.firstUpperCase(node.getName().getIdentifier())));
-            var newOwner = (Expression) ASTNode.copySubtree(ast, owner);
-            newNode.setExpression(newOwner);
+            newNode.setExpression((Expression) newOwner);
             astRewrite.replace(node, newNode, null);
 
-            //newOwner.accept(this);
             return false;
         } else if (TypeHelper.isDataStoreType(ownerType) && owner.isSimpleName()) {
             String storeName     = node.getName().getIdentifier();
@@ -256,7 +261,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             invokeEx.setName(ast.newSimpleName(method.getName().getIdentifier()));
             //处理参数
             for (int i = 0; i < method.parameters().size(); i++) {
-                var para = makeInvokeArgsGet((SingleVariableDeclaration) method.parameters().get(i), i);
+                var para = makeInvokeArgsGet((SingleVariableDeclaration) method.parameters().get(i));
                 invokeEx.arguments().add(para);
             }
 
@@ -291,7 +296,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         return invokeMethod;
     }
 
-    private MethodInvocation makeInvokeArgsGet(SingleVariableDeclaration para, int index) {
+    private MethodInvocation makeInvokeArgsGet(SingleVariableDeclaration para) {
         var getMethod = ast.newMethodInvocation();
         getMethod.setExpression(ast.newSimpleName("args"));
 
@@ -352,5 +357,25 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var entityModelNode   = getUsedEntity(entityType);
         var entityClassName   = EntityCodeGenerator.makeEntityClassName(entityModelNode);
         return ast.newSimpleType(ast.newName(entityClassName));
+    }
+
+    /** t.name转换为t.m("Name") */
+    protected MethodInvocation makeEntityExpression(Expression exp, String memberName) {
+        var newNode = ast.newMethodInvocation();
+        newNode.setName(ast.newSimpleName("m"));
+        newNode.setExpression(exp);
+        var member     = ast.newStringLiteral();
+        member.setLiteralValue(StringUtil.firstUpperCase(memberName)); //TODO:暂强制转换
+        newNode.arguments().add(member);
+        return newNode;
+    }
+
+    /** 获取e.City.Name or e.Name的e */
+    protected static String getIdentifier(Name node) {
+        if (node.isSimpleName()) {
+            return ((SimpleName) node).getIdentifier();
+        } else {
+            return getIdentifier(((QualifiedName) node).getQualifier());
+        }
     }
 }

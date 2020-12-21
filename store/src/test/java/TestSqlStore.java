@@ -104,10 +104,23 @@ public class TestSqlStore {
         var q = new SqlQuery<>(ELog.MODEL_ID, ELog.class);
         q.where(q.m("Id").eq(200)); //t->t.Id == 200
 
+        //内部使用
+        //var list = q.toListAsync(r -> new Object() {
+        //    final int eid = r.getInt(0);
+        //    final String ename = r.getString(1);
+        //}, q.m("Id"), q.m("Name")).get();
+
+        //运行时转换方法1
+        //var list = q.toListAsync(r -> new Object() {
+        //    final int eid = r.getInt(0);
+        //    final String ename = r.getString(1);
+        //}, t-> new EntityBaseExpression[]{t.m("Id"), t.m("Name")}).get();
+
+        //运行时转换方法2
         var list = q.toListAsync(r -> new Object() {
             final int eid = r.getInt(0);
             final String ename = r.getString(1);
-        }, q.m("Id"), q.m("Name")).get();
+        }, t-> t.select(t.m("Id"), t.m("Name"))).get();
 
         assertNotNull(list);
         for (var item : list) {

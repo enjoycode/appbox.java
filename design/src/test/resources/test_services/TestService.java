@@ -34,6 +34,15 @@ public class TestService {
     //    return q.toListAsync().thenApply(r -> (Object) r);
     //}
 
+    public CompletableFuture<?> query2() {
+        var q = new SqlQuery<sys.entities.Employee>();
+        return q.toListAsync(r -> new Object() {
+            final String Name = r.name;
+            final boolean MaleFlag = r.male;
+            final String Male = r.male ? "男" : "女";
+        });
+    }
+
     public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
         return CompletableFuture.completedFuture(emp);
     }

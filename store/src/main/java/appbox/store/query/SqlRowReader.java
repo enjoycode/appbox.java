@@ -23,6 +23,8 @@ public final class SqlRowReader implements IEntityMemberReader {
     }
 
     //====GetXXX Methods, 用于填充动态类型的成员====
+    public boolean getBool(int col) { return rowData.getBoolean(col); }
+
     public int getInt(int col) {
         return rowData.getInt(col);
     }

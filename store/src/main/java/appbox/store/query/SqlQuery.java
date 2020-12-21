@@ -106,6 +106,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         _selects.add(item);
     }
 
+    public EntityBaseExpression[] select(EntityBaseExpression... items) {
+        return items;
+    }
+
     public CompletableFuture<List<T>> toListAsync() {
         _purpose = QueryPurpose.ToList;
         EntityModel model = RuntimeContext.current().getModel(t.modelId);
@@ -147,6 +151,11 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
             }
             return list;
         });
+    }
+
+    public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,
+        Function<SqlQuery<T>, EntityBaseExpression[]> selects) {
+        return toListAsync(mapper, selects.apply(this));
     }
 
     public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,

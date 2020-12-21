@@ -3,23 +3,21 @@ package appbox.design.services.code;
 import appbox.logging.Log;
 import appbox.utils.StringUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.internal.corext.dom.GenericVisitor;
 
 import java.util.HashMap;
 import java.util.Map;
 
-final class SqlQueryLambdaVisitor extends GenericVisitor {
+final class SqlQueryLambdaVisitor extends ServiceCodeGeneratorProxy {
 
-    private final MethodInvocation     method;
-    private final LambdaExpression     lambda;
-    private final ServiceCodeGenerator generator;
+    private final MethodInvocation method;
+    private final LambdaExpression lambda;
 
     private final Map<String, Object> lambdaParameters = new HashMap<>();
 
     public SqlQueryLambdaVisitor(MethodInvocation method, LambdaExpression lambda, ServiceCodeGenerator generator) {
-        this.method    = method;
-        this.lambda    = lambda;
-        this.generator = generator;
+        super(generator);
+        this.method = method;
+        this.lambda = lambda;
 
         for (var lp : lambda.parameters()) {
             if (lp instanceof VariableDeclarationFragment) {
@@ -36,7 +34,7 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
     public boolean visit(QualifiedName node) {
         //eg: e.name or e.customer.name
         //TODO:检查EntitySet成员报错 eg: e.orderItems
-        var identifier = getIdentifier(node);
+        var identifier = ServiceCodeGenerator.getIdentifier(node);
         if (lambdaParameters.containsKey(identifier)
             /*&& TypeHelper.isEntityType(node.getQualifier().resolveTypeBinding())*/) {
             if (node.getQualifier().isQualifiedName()) {
@@ -47,13 +45,8 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
             if (newQualifier.getParent() != null)
                 newQualifier = ASTNode.copySubtree(generator.ast, newQualifier);
 
-            var newNode = generator.ast.newMethodInvocation();
-            newNode.setName(generator.ast.newSimpleName("m"));
-            newNode.setExpression((Expression) newQualifier);
-            var memberName = StringUtil.firstUpperCase(node.getName().getIdentifier()); //TODO:暂强制转换
-            var member     = generator.ast.newStringLiteral();
-            member.setLiteralValue(memberName);
-            newNode.arguments().add(member);
+            var newNode = generator.makeEntityExpression((Expression) newQualifier,
+                    node.getName().getIdentifier());
             generator.astRewrite.replace(node, newNode, null);
             return false;
         } else {
@@ -73,7 +66,7 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
         node.getRightOperand().accept(this);
 
         //TODO:判断左边非表达式，需要转换为PrimitiveExpression
-        var newLeft = (ASTNode) generator.astRewrite.get(node, InfixExpression.LEFT_OPERAND_PROPERTY);
+        var newLeft  = (ASTNode) generator.astRewrite.get(node, InfixExpression.LEFT_OPERAND_PROPERTY);
         var newRight = (ASTNode) generator.astRewrite.get(node, InfixExpression.RIGHT_OPERAND_PROPERTY);
         if (newLeft.getParent() != null) //newLeft.getStartPosition() != -1
             newLeft = ASTNode.copySubtree(generator.ast, newLeft);
@@ -116,11 +109,4 @@ final class SqlQueryLambdaVisitor extends GenericVisitor {
         }
     }
 
-    private static String getIdentifier(Name node) {
-        if (node.isSimpleName()) {
-            return ((SimpleName) node).getIdentifier();
-        } else {
-            return getIdentifier(((QualifiedName) node).getQualifier());
-        }
-    }
 }
