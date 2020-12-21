@@ -28,6 +28,8 @@ public abstract class TypeSerializer {
         registerKnownType(StringSerializer.instance);
         registerKnownType(UUIDSerializer.instance);
         registerKnownType(EntityIdSerializer.instance);
+        registerKnownType(ViewModelSerializer.instance);
+
 
         registerKnownType(new UserSerializer(PayloadType.JsonObject, JsonResult.class, () -> null));
 
