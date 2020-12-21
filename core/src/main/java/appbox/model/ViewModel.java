@@ -70,6 +70,7 @@ public class ViewModel extends ModelBase implements IJsonSerializable, IBinSeria
     }
     //endregion
 
+    public ViewModel() {}
 
     public ViewModel(long id, String name) {
         super(id, name);
