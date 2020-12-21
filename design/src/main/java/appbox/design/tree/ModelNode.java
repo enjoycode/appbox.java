@@ -102,8 +102,25 @@ public final class ModelNode extends DesignNode {
                     case Service: {
                         //TODO:更新服务模型代理类
                         //保存服务模型代码
-                        var doc = designTree().designHub.typeSystem.languageServer.findOpenedDocument(_model.id());
-                        return StagedService.saveServiceCodeAsync(_model.id(), doc.getContents());
+                        String sourceCode;
+                        if (modelInfos != null && modelInfos.length == 1)
+                        {
+                            sourceCode = (String)modelInfos[0];
+                        }
+                        else {
+                            var doc = designTree().designHub.typeSystem.languageServer.findOpenedDocument(_model.id());
+                            sourceCode = doc.getContents();
+                        }
+                        return StagedService.saveServiceCodeAsync(_model.id(), sourceCode);
+                    }
+                    case View:
+                    {
+                        //View模型保存
+                        if (modelInfos != null)
+                        {
+                            return StagedService.saveViewCodeAsync(_model.id(), (String)modelInfos[0], (String)modelInfos[1], (String)modelInfos[2])
+                                    .thenCompose(re->StagedService.saveViewRuntimeCodeAsync(_model.id(), (String)modelInfos[3]));
+                        }
                     }
                     default:
                         return CompletableFuture.completedFuture(null);

@@ -59,4 +59,38 @@ public final class ModelCodeUtil {
         return serviceCode;
     }
 
+    public static byte[] encodeViewCode(String templateCode, String scriptCode, String styleCode) {
+        var out = new ByteArrayOutputStream();
+        //写入1字节压缩类型标记
+        out.write(1);
+        var templateCodeBytes = templateCode.getBytes(StandardCharsets.UTF_8);
+        var scriptCodeBytes = scriptCode.getBytes(StandardCharsets.UTF_8);
+        var styleCodeBytes = styleCode.getBytes(StandardCharsets.UTF_8);
+        out.write(templateCodeBytes.length);
+        out.write(scriptCodeBytes.length);
+        out.write(styleCodeBytes.length);
+        //再写入压缩的utf8
+        try {
+            BrotliUtil.compressTo(templateCodeBytes, out);
+            BrotliUtil.compressTo(scriptCodeBytes, out);
+            BrotliUtil.compressTo(styleCodeBytes, out);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        return out.toByteArray();
+    }
+
+    public static byte[] encodeViewRuntimeCode(String runtimeCode) {
+        var utf8data = runtimeCode.getBytes(StandardCharsets.UTF_8);
+        var out = new ByteArrayOutputStream();
+        //写入1字节压缩类型标记
+        out.write(1);
+        //再写入压缩的utf8
+        try {
+            BrotliUtil.compressTo(utf8data, out);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        return out.toByteArray();
+    }
 }

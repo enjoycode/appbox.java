@@ -87,18 +87,18 @@ public final class StagedService {
     //    });
     //}
 
-    ///**
-    // * 专用于保存视图模型代码
-    // * @param modelId
-    // * @param templateCode
-    // * @param scriptCode
-    // * @param styleCode
-    // * @return
-    // */
-    //public static CompletableFuture<Void> saveViewCodeAsync(long modelId, String templateCode, String scriptCode, String styleCode) {
-    //    var data = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
-    //    return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
-    //}
+    /**
+     * 专用于保存视图模型代码
+     * @param modelId
+     * @param templateCode
+     * @param scriptCode
+     * @param styleCode
+     * @return
+     */
+    public static CompletableFuture<Void> saveViewCodeAsync(long modelId, String templateCode, String scriptCode, String styleCode) {
+        var data = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
+        return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
+    }
 
     //public static CompletableFuture<Quartet<Boolean, String, String, String>> loadViewCodeAsync(long modelId) {
     //    return loadCodeDataAsync(modelId).thenCompose(r -> {
@@ -110,14 +110,14 @@ public final class StagedService {
     //    });
     //}
     //
-    //public static CompletableFuture<Void> saveViewRuntimeCodeAsync(long modelId, String runtimeCode) {
-    //    if (StringUtils.isEmpty(runtimeCode)){
-    //        return CompletableFuture.completedFuture(null);
-    //    }else{
-    //        var data = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
-    //        return saveAsync(StagedType.ViewRuntimeCode, String.valueOf(modelId), data);
-    //    }
-    //}
+    public static CompletableFuture<Void> saveViewRuntimeCodeAsync(long modelId, String runtimeCode) {
+        if (runtimeCode==null||runtimeCode.equals("")){
+            return CompletableFuture.completedFuture(null);
+        }else{
+            var data = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
+            return saveAsync(StagedType.ViewRuntimeCode, String.valueOf(modelId), data);
+        }
+    }
     //
     //public static CompletableFuture<String> loadViewRuntimeCode(long viewModelId) {
     //    var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();

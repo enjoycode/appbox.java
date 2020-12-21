@@ -5,10 +5,7 @@ import appbox.expressions.BinaryExpression;
 import appbox.expressions.KVFieldExpression;
 import appbox.expressions.PrimitiveExpression;
 import appbox.logging.Log;
-import appbox.model.DataStoreModel;
-import appbox.model.EntityModel;
-import appbox.model.EntityModelInfo;
-import appbox.model.ServiceModel;
+import appbox.model.*;
 import appbox.serialization.serializers.*;
 
 import java.util.HashMap;
@@ -33,6 +30,7 @@ public abstract class TypeSerializer {
 
         //----模型相关----
         registerKnownType(new UserSerializer(PayloadType.DataStoreModel, DataStoreModel.class, DataStoreModel::new));
+        registerKnownType(new UserSerializer(PayloadType.ViewModel, ViewModel.class, ViewModel::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
         registerKnownType(new UserSerializer(PayloadType.ServiceModel, ServiceModel.class, ServiceModel::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModelInfo, EntityModelInfo.class, () -> null));

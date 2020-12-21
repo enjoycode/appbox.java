@@ -165,5 +165,12 @@ public class ModelFolder implements IBinSerializable {
             }
         } while (propIndex != 0);
     }
+
+    public ModelFolder getRoot()
+    {
+        if (_parent != null)
+            return _parent.getRoot();
+        return this;
+    }
     //endregion
 }

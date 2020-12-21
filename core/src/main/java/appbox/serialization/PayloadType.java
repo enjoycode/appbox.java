@@ -31,6 +31,7 @@ public final class PayloadType {
 
     //----模型相关----
     public static final byte DataStoreModel  = 45;
+    public static final byte ViewModel = 46;
     public static final byte ServiceModel    = 49;
     public static final byte EntityModel     = 50;
     public static final byte EntityModelInfo = 51; //专用于封送给前端
