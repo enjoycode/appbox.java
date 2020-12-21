@@ -166,6 +166,12 @@ public final class ModelStore {
                 .thenApply(KVGetAssemblyResponse::getAssemblyData);
     }
 
+    public static CompletableFuture<ViewCode> loadViewCodeAsync(long modelId) {
+        var req = new KVGetModelCodeRequest(modelId);
+        return SysStoreApi.execKVGetAsync(req, new KVGetModelCodeResponse())
+                .thenApply(r -> (ViewCode) r.sourceCode);
+    }
+
     //endregion
 
     //region ====Read Methods====

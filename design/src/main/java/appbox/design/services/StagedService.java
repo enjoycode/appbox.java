@@ -9,6 +9,7 @@ import appbox.runtime.RuntimeContext;
 import appbox.serialization.IBinSerializable;
 import appbox.store.EntityStore;
 import appbox.store.KVTransaction;
+import appbox.store.ViewCode;
 import appbox.store.query.TableScan;
 import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
@@ -20,18 +21,18 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class StagedService {
 
-    public static CompletableFuture<byte[]> loadCodeDataAsync(long modelId) {
+    private static CompletableFuture<byte[]> loadCodeDataAsync(long modelId) {
         var devId = RuntimeContext.current().currentSession().leafOrgUnitId();
         var q     = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
         q.where(StagedModel.DEVELOPER.eq(devId)
                 .and(StagedModel.MODEL.eq(Long.toUnsignedString(modelId)))
                 .and(StagedModel.TYPE.eq(StagedType.SourceCode.value)));
 
-        return q.toListAsync().thenCompose(r -> {
+        return q.toListAsync().thenApply(r -> {
             if (r == null || r.size() == 0) {
-                return CompletableFuture.completedFuture(null);
+                return null;
             } else {
-                return CompletableFuture.completedFuture(r.get(0).getData());
+                return r.get(0).getData();
             }
         });
     }
@@ -58,17 +59,10 @@ public final class StagedService {
 
     /** 专用于加载服务模型代码 */
     public static CompletableFuture<String> loadServiceCode(long serviceModelId) {
-        var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
-
-        var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
-        q.where(StagedModel.TYPE.eq(StagedType.SourceCode.value)
-                .and(StagedModel.MODEL.eq(Long.toUnsignedString(serviceModelId)))
-                .and(StagedModel.DEVELOPER.eq(developerID)));
-
-        return q.toListAsync().thenApply(r -> {
-            if (r == null || r.size() == 0)
+        return loadCodeDataAsync(serviceModelId).thenApply(data -> {
+            if (data == null)
                 return null;
-            return ModelCodeUtil.decodeServiceCode(r.get(0).getData()).sourceCode;
+            return ModelCodeUtil.decodeServiceCode(data).sourceCode;
         });
     }
 
@@ -87,33 +81,24 @@ public final class StagedService {
     //    });
     //}
 
-    /**
-     * 专用于保存视图模型代码
-     * @param modelId
-     * @param templateCode
-     * @param scriptCode
-     * @param styleCode
-     * @return
-     */
+    /** 专用于保存视图模型代码 */
     public static CompletableFuture<Void> saveViewCodeAsync(long modelId, String templateCode, String scriptCode, String styleCode) {
         var data = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
         return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
     }
 
-    //public static CompletableFuture<Quartet<Boolean, String, String, String>> loadViewCodeAsync(long modelId) {
-    //    return loadCodeDataAsync(modelId).thenCompose(r -> {
-    //        if (r == null) {return CompletableFuture.completedFuture(Quartet.with(false, null, null, null));}
-    //        else {
-    //            Map res =ModelCodeUtil.decodeViewCode(r);
-    //            return CompletableFuture.completedFuture(Quartet.with(false, (String)res.get("templateCode"),(String) res.get("scriptCode"), (String)res.get("styleCode")));
-    //        }
-    //    });
-    //}
-    //
+    public static CompletableFuture<ViewCode> loadViewCodeAsync(long viewModelId) {
+        return loadCodeDataAsync(viewModelId).thenApply(data -> {
+            if (data == null)
+                return null;
+            return ModelCodeUtil.decodeViewCode(data);
+        });
+    }
+
     public static CompletableFuture<Void> saveViewRuntimeCodeAsync(long modelId, String runtimeCode) {
-        if (runtimeCode==null||runtimeCode.equals("")){
+        if (runtimeCode == null || runtimeCode.equals("")) {
             return CompletableFuture.completedFuture(null);
-        }else{
+        } else {
             var data = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
             return saveAsync(StagedType.ViewRuntimeCode, String.valueOf(modelId), data);
         }

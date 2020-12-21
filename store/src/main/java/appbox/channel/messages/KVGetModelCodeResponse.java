@@ -18,7 +18,9 @@ public final class KVGetModelCodeResponse extends KVGetResponse {
             var modelType = ModelType.fromValue(bs.readByte());
             var codeData  = bs.readRemaining();
             if (modelType == ModelType.Service) {
-                sourceCode = ModelCodeUtil.decodeServiceCode(codeData);
+                sourceCode = ModelCodeUtil.decodeServiceCode(codeData); //TODO:直接从流中读取
+            } else if (modelType == ModelType.View) {
+                sourceCode = ModelCodeUtil.decodeViewCode(codeData);
             } else {
                 throw new RuntimeException("暂未实现");
             }
