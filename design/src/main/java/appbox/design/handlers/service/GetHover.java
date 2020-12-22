@@ -34,10 +34,10 @@ public final class GetHover implements IDesignHandler {
         if (contents == null || contents.length == 0)
             return CompletableFuture.completedFuture(null);
 
-        var res    = new HoverInfo();
+        var res = new HoverInfo();
         res.contents = new MarkdownString[contents.length];
         for (int i = 0; i < contents.length; i++) {
-            res.contents[i] = new MarkdownString();
+            res.contents[i]       = new MarkdownString();
             res.contents[i].value = contents[i];
         }
 

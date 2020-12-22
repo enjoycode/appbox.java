@@ -340,9 +340,9 @@ public final class LanguageServer {
             if (signature != null)
                 res.add(signature.getValue());
 
-            var javadoc = HoverInfoProvider.computeJavadoc(curr);
-            if (javadoc != null)
-                res.add(javadoc.getValue());
+            //var javadoc = HoverInfoProvider.computeJavadoc(curr);
+            //if (javadoc != null)
+            //    res.add(javadoc.getValue());
 
             return res.toArray(String[]::new);
         } catch (Exception ex) {
