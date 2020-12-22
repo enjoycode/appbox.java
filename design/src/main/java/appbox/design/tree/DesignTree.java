@@ -152,6 +152,8 @@ public final class DesignTree {
                 return findModelNode(ModelType.Entity, Long.parseUnsignedLong(id));
             case ServiceModelNode:
                 return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
+            case ViewModelNode:
+                return findModelNode(ModelType.View, Long.parseUnsignedLong(id));
             case DataStoreNode:
                 return storeRootNode.nodes.find(n -> n.id().equals(id));
             case ModelRootNode:

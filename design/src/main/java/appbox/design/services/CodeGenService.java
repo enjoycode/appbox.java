@@ -13,7 +13,6 @@ import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
 import appbox.utils.StringUtil;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
@@ -33,7 +32,7 @@ public class CodeGenService {
         sb.append("public final class DataStore {\n");
 
         for (int i = 0; i < designTree.storeRootNode().nodes.count(); i++) {
-            var node = (DataStoreNode)designTree.storeRootNode().nodes.get(i);
+            var node = (DataStoreNode) designTree.storeRootNode().nodes.get(i);
             sb.append("public static final ");
             if (node.model().kind() == DataStoreModel.DataStoreKind.Sql) {
                 sb.append("SqlStore ");
@@ -140,9 +139,9 @@ public class CodeGenService {
     }
 
     /** 生成服务模型的虚拟代理类 */
-    public static String genServiceProxyCode(DesignHub hub, ModelNode serviceNode) throws JavaModelException {
+    public static String genServiceProxyCode(DesignHub hub, ModelNode serviceNode) {
         var serviceName = serviceNode.model().name();
-        var sb = new StringBuilder(200);
+        var sb          = new StringBuilder(200);
 
         sb.append("package ");
         sb.append(serviceNode.appNode.model.name());
@@ -168,8 +167,8 @@ public class CodeGenService {
         sb.append(" {\n");
 
         var serviceType = (TypeDeclaration) astNode.types().get(0);
-        var methods = serviceType.getMethods();
-        for (var method: methods) {
+        var methods     = serviceType.getMethods();
+        for (var method : methods) {
             if (TypeHelper.isServiceMethod(method)) {
                 sb.append("@sys.MethodInterceptor(name=\"InvokeService\")\n");
 
@@ -184,6 +183,88 @@ public class CodeGenService {
         sb.append("}");
 
         return sb.toString();
+    }
+
+    public static String genServiceDeclareCode(DesignHub hub, ModelNode serviceNode) {
+        var serviceName = serviceNode.model().name();
+
+        //获取服务实现文件
+        var file = hub.typeSystem.findFileForServiceModel(serviceNode);
+        var unit = JDTUtils.resolveCompilationUnit(file);
+
+        var astParser = ASTParser.newParser(AST.JLS15);
+        astParser.setSource(unit);
+        astParser.setResolveBindings(true); //需要解析类型
+        astParser.setIgnoreMethodBodies(true);
+        astParser.setStatementsRecovery(true);
+        var astNode = (CompilationUnit) astParser.createAST(null);
+
+        var sb = new StringBuilder(200);
+        sb.append("declare namespace ");
+        sb.append(serviceNode.appNode.model.name());
+        sb.append(".Services.");
+        sb.append(serviceName);
+        sb.append('{');
+
+        var serviceType = (TypeDeclaration) astNode.types().get(0);
+        var methods     = serviceType.getMethods();
+        for (var method : methods) {
+            if (TypeHelper.isServiceMethod(method)) {
+                sb.append("function ");
+                sb.append(method.getName().getIdentifier());
+                sb.append('(');
+                //处理参数列表
+                boolean sep = false;
+                for (var para : method.parameters()) {
+                    var p = (SingleVariableDeclaration) para;
+                    if (sep)
+                        sb.append(',');
+                    else
+                        sep = true;
+                    sb.append(p.getName().getIdentifier());
+                    sb.append(':');
+                    sb.append(toScriptType(p.getType()));
+                }
+                sb.append("):Promise<");
+                //处理返回类型，皆为Promise<?>类型
+                var returnType = (ParameterizedType) method.getReturnType2();
+                sb.append(toScriptType((Type) returnType.typeArguments().get(0)));
+                sb.append(">;");
+            }
+        }
+
+        sb.append('}');
+        return sb.toString();
+    }
+
+    /** 转为类型为前端typescript的类型 */
+    private static String toScriptType(Type type) {
+        //TODO:集合类型处理
+        if (type.isPrimitiveType()) {
+            var primitiveType = (PrimitiveType) type;
+            var typeCode      = primitiveType.getPrimitiveTypeCode();
+            if (typeCode == PrimitiveType.BOOLEAN) {
+                return "boolean";
+            } else if (typeCode == PrimitiveType.VOID) {
+                return "void";
+            } else {
+                return "number";
+            }
+        } else if (type.isSimpleType()) {
+            var          simpleType = (SimpleType) type;
+            var          typeName   = simpleType.getName().getFullyQualifiedName();
+            ITypeBinding entityType;
+            if (typeName.equals("String")) {
+                return "string";
+            } else if ((entityType = TypeHelper.getEntityType(simpleType)) != null) {
+                return String.format("%s.Entities.%s",
+                        entityType.getPackage().getNameComponents()[0],
+                        entityType.getName());
+            } else {
+                return "any";
+            }
+        }
+        return "any";
     }
 
 }

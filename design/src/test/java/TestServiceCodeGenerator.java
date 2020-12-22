@@ -66,6 +66,8 @@ public class TestServiceCodeGenerator {
         //测试服务代理生成
         var serviceNode = hub.designTree.findModelNode(testServiceModel.id());
         var proxyCode = CodeGenService.genServiceProxyCode(hub, serviceNode);
+        //测试前端声明生成
+        var declareCode = CodeGenService.genServiceDeclareCode(hub, serviceNode);
 
         //测试转译服务代码
         var codeData = PublishService.compileService(hub, testServiceModel, null);

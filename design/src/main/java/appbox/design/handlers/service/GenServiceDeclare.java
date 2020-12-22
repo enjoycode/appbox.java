@@ -3,11 +3,11 @@ package appbox.design.handlers.service;
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
+import appbox.design.handlers.TypeScriptDeclare;
+import appbox.design.services.CodeGenService;
 import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
-import appbox.serialization.IJsonSerializable;
-import appbox.serialization.IJsonWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,28 +30,20 @@ public final class GenServiceDeclare implements IDesignHandler {
         }
 
         var list = new ArrayList<TypeScriptDeclare>();
-        //TODO:生成TypeScript声明代码
+        //生成TypeScript声明代码
+        for (var node : serviceNodes) {
+            var name    = String.format("%s.Services.%s", node.appNode.model.name(), node.model().name());
+            var declare = CodeGenService.genServiceDeclareCode(hub, node);
+            list.add(new TypeScriptDeclare(name, declare));
+        }
+
+        //初次加载时添加系统服务声明
+        if (modelId == null) {
+            var adminServiceDeclare = "declare namespace sys.Services.AdminService {function LoadPermissionNodes():Promise<object[]>;function SavePermission(id:string, orgunits:string[]):Promise<void>;}";
+            list.add(new TypeScriptDeclare("sys.Services.AdminService", adminServiceDeclare));
+        }
+
         return CompletableFuture.completedFuture(new JsonResult(list));
-    }
-
-    public static final class TypeScriptDeclare implements IJsonSerializable {
-
-        public String name;
-        public String declare;
-
-        public TypeScriptDeclare() {
-        }
-
-        public TypeScriptDeclare(String name, String declare) {
-            this.name = name;
-            this.declare = declare;
-        }
-
-        @Override
-        public void writeToJson(IJsonWriter writer) {
-            throw new RuntimeException("未实现");
-        }
-
     }
 
 }

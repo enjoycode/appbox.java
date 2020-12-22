@@ -14,10 +14,16 @@ public final class SaveModel implements IDesignHandler {
         var nodeType = DesignNodeType.fromValue((byte) args.getInt());
         var modelId  = args.getString();
 
+        Object[] modelInfo = null;
         if (nodeType == DesignNodeType.ViewModelNode) {
-            throw new RuntimeException("未实现");
+            modelInfo    = new Object[4];
+            modelInfo[0] = args.getString();
+            modelInfo[1] = args.getString();
+            modelInfo[2] = args.getString();
+            modelInfo[3] = args.getString();
         } else if (nodeType == DesignNodeType.ReportModelNode) {
-            throw new RuntimeException("未实现");
+            modelInfo    = new Object[1];
+            modelInfo[0] = args.getString();
         }
 
         var node = hub.designTree.findNode(nodeType, modelId);
@@ -25,6 +31,6 @@ public final class SaveModel implements IDesignHandler {
             return CompletableFuture.failedFuture(new RuntimeException("Can't find node"));
 
         var modelNode = (ModelNode) node;
-        return modelNode.saveAsync(null).thenApply(r -> null);
+        return modelNode.saveAsync(modelInfo).thenApply(r -> null);
     }
 }
