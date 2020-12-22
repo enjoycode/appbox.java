@@ -118,14 +118,19 @@ public abstract class ModelBase implements IBinSerializable {
 
     //region ====Serialization====
     public static ModelBase makeModelByType(byte type) {
-        if (type == ModelType.Entity.value) {
-            return new EntityModel();
-        } else if (type == ModelType.Service.value) {
-            return new ServiceModel();
-        } else if (type == ModelType.DataStore.value) {
-            return new DataStoreModel();
+        var modelType = ModelType.fromValue(type);
+        switch (modelType) {
+            case Entity:
+                return new EntityModel();
+            case Service:
+                return new ServiceModel();
+            case View:
+                return new ViewModel();
+            case DataStore:
+                return new DataStoreModel();
+            default:
+                throw new RuntimeException("Unknown model type: " + type);
         }
-        throw new RuntimeException("Unknown model type: " + type);
     }
 
     @Override
