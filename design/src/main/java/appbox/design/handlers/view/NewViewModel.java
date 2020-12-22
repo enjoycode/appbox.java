@@ -23,18 +23,18 @@ public class NewViewModel implements IDesignHandler {
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
         //读取参数
-        int selectedNodeType = args.getInt();
-        String selectedNodeId = args.getString();
-        String newname = args.getString();
+        int    selectedNodeType = args.getInt();
+        String selectedNodeId   = args.getString();
+        String newname          = args.getString();
 
         //先判断名称有效性
-        if (newname==null||newname.equals(""))
+        if (newname == null || newname.equals(""))
             throw new RuntimeException("名称不能为空");
         if (!CodeHelper.isValidIdentifier(newname))
             throw new RuntimeException("名称包含无效字符");
 
         //获取选择的节点
-        var selectedNode = hub.designTree.findNode(DesignNodeType.fromValue((byte)selectedNodeType), selectedNodeId);
+        var selectedNode = hub.designTree.findNode(DesignNodeType.fromValue((byte) selectedNodeType), selectedNodeId);
         if (selectedNode == null)
             throw new RuntimeException("无法找到当前节点");
 
@@ -48,22 +48,22 @@ public class NewViewModel implements IDesignHandler {
             throw new RuntimeException("View name has exists");
 
         //判断当前模型根节点有没有签出
-        var rootNode = hub.designTree.findModelRootNode(appNode.model.id(), ModelType.View);
+        var     rootNode            = hub.designTree.findModelRootNode(appNode.model.id(), ModelType.View);
         boolean rootNodeHasCheckout = rootNode.isCheckoutByMe();
 
-        return rootNode.checkout().thenCompose(r->{
-            if(!r){
-                throw new RuntimeException(String.format("Can't checkout: %s",rootNode.fullName()));
+        return rootNode.checkout().thenCompose(r -> {
+            if (!r) {
+                throw new RuntimeException(String.format("Can't checkout: %s", rootNode.fullName()));
             }
             //生成模型标识号并新建模型及节点 //TODO:fix Layer
-            return ModelStore.genModelIdAsync(appNode.model.id(), ModelType.View, ModelLayer.DEV).thenCompose(modelId->{
+            return ModelStore.genModelIdAsync(appNode.model.id(), ModelType.View, ModelLayer.DEV).thenCompose(modelId -> {
                 var model = new ViewModel(modelId, newname);
-                var node = new ModelNode(model, hub);
+                var node  = new ModelNode(model, hub);
                 //添加至设计树
                 var insertIndex = parentNode.nodes.add(node);
                 //设置文件夹
                 if (parentNode.nodeType() == DesignNodeType.FolderNode)
-                    model.setFolderId(((FolderNode)parentNode).getFolder().getId());
+                    model.setFolderId(((FolderNode) parentNode).getFolder().getId());
                 //添加至根节点索引内
                 rootNode.addModelIndex(node);
 
@@ -73,9 +73,10 @@ public class NewViewModel implements IDesignHandler {
 
                 //保存至本地
                 var templateCode = "<div>Hello Future!</div>";
-                var scriptCode = String.format("@Component\nexport default class %s extends Vue {{\n\n}}\n",model.name());
-                return node.saveAsync(new Object[] { templateCode, scriptCode, "", "" })
-                        .thenApply(re-> new NewNodeResult(parentNode.nodeType().value,parentNode.id(),node,rootNodeHasCheckout ? null : rootNode.id(),insertIndex));
+                var scriptCode   = String.format("@Component\nexport default class %s extends Vue {\n\n}\n", model.name());
+                return node.saveAsync(new Object[]{templateCode, scriptCode, "", ""})
+                        .thenApply(re -> new NewNodeResult(parentNode.nodeType().value
+                                , parentNode.id(), node, rootNodeHasCheckout ? null : rootNode.id(), insertIndex));
             });
         }).thenApply(JsonResult::new);
     }
