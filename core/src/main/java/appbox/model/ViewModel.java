@@ -1,37 +1,26 @@
 package appbox.model;
 
 import appbox.serialization.IBinSerializable;
-import appbox.serialization.IJsonSerializable;
 import appbox.serialization.IJsonWriter;
 
-public class ViewModel extends ModelBase implements IJsonSerializable, IBinSerializable {
+public class ViewModel extends ModelBase implements IBinSerializable {
 
     //region ====Fields & Properties====
-    private ModelType modelType=ModelType.View;
-
-    private ViewModelFlag flag;
-
-    /**
-     * 自定义路由的上级，指向视图名称eg: sys.Home
-     */
-    private String routeParent;
-
+    private ViewModelFlag flag = ViewModelFlag.None;
+    /** 自定义路由的上级，指向视图名称eg: sys.Home */
+    private String        routeParent;
     /**
      * 自定义路由的路径，未定义则采用默认路径如: /erp/CustomerList
      * 如设置RouteParent但不定义，则为/Parent/thisViewName
      */
-    private String routePath;
+    private String        routePath;
+    /** 列入路由或菜单所对应的权限模型标识 */
+    private long          permissionID;
 
-    /**
-     * 列入路由或菜单所对应的权限模型标识
-     */
-    private long permissionID;
-
-    /**
-     * 仅用于模型存储
-     */
-    private String routeStoredPath;
-//            string.IsNullOrEmpty(RouteParent) ? RoutePath : $"{RouteParent};{RoutePath}";
+    @Override
+    public ModelType modelType() {
+        return ModelType.View;
+    }
 
     public ViewModelFlag getFlag() {
         return flag;
@@ -65,8 +54,9 @@ public class ViewModel extends ModelBase implements IJsonSerializable, IBinSeria
         this.permissionID = permissionID;
     }
 
+    /** 仅用于模型存储 */
     public String getRouteStoredPath() {
-        return routeParent==null||routeParent.equals("") ? routePath : String.format("%s;%s",routeParent,routePath);
+        return routeParent == null || routeParent.equals("") ? routePath : String.format("%s;%s", routeParent, routePath);
     }
     //endregion
 
@@ -76,21 +66,13 @@ public class ViewModel extends ModelBase implements IJsonSerializable, IBinSeria
         super(id, name);
     }
 
-    @Override
-    public ModelType modelType() {
-        return modelType;
-    }
-
-    @Override
     public void writeToJson(IJsonWriter writer) {
-        //TODO
-//        writer.WriteBoolean("Route", (Flag & ViewModelFlag.ListInRouter) == ViewModelFlag.ListInRouter);
-//        writer.WriteString("RouteParent", RouteParent);
-//        writer.WriteString("RoutePath", RoutePath);
+        writer.writeKeyValue("Route", (flag.value & ViewModelFlag.ListInRouter.value) == ViewModelFlag.ListInRouter.value);
+        writer.writeKeyValue("RouteParent", routeParent);
+        writer.writeKeyValue("RoutePath", routePath);
     }
 
-    public enum ViewModelFlag
-    {
+    public enum ViewModelFlag {
         None(0), ListInRouter(1);
         public final byte value;
 
