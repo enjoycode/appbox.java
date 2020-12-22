@@ -1,8 +1,9 @@
 package appbox.design.handlers.entity;
 
+import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
-import appbox.design.handlers.service.GenServiceDeclare;
+import appbox.design.handlers.TypeScriptDeclare;
 import appbox.design.tree.ModelNode;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
@@ -31,20 +32,21 @@ public class GenEntityDeclare implements IDesignHandler {
             modelNodes.add(node);
         }
 
-        List<GenServiceDeclare.TypeScriptDeclare> list = new ArrayList<>();
+        List<TypeScriptDeclare> list = new ArrayList<>();
         for (ModelNode node : modelNodes) {
-            list.add(new GenServiceDeclare.TypeScriptDeclare(node.appNode.model.name(), buildDeclare(node, hub)));
+            var name = String.format("%s.Entities.%s", node.appNode.model.name(), node.model().name());
+            list.add(new TypeScriptDeclare(name, buildDeclare(node, hub)));
         }
 
-        return CompletableFuture.completedFuture(list);
+        return CompletableFuture.completedFuture(new JsonResult(list));
     }
 
     private static String buildDeclare(ModelNode node, DesignHub hub) {
         var app   = node.appNode.model.name();
         var model = (EntityModel) node.model();
         var sb    = new StringBuilder();
-        sb.append(String.format("declare namespace %s.Entities{{", app));
-        sb.append(String.format("declare class %s extends EntityBase{{", model.name()));
+        sb.append(String.format("declare namespace %s.Entities{", app));
+        sb.append(String.format("declare class %s extends EntityBase{", model.name()));
         //注意：前端不关注成员是否readonly，以方便UI绑定如主键值
         for (EntityMemberModel m : model.getMembers()) {
             String type = "any";
