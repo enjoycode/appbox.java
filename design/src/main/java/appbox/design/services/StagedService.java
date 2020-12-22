@@ -68,7 +68,7 @@ public final class StagedService {
 
     //public static CompletableFuture<Void> saveReportCodeAsync(long modelId, String code) {
     //    var data = ModelCodeUtil.compressCode(code);
-    //    return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
+    //    return saveAsync(StagedType.SourceCode, Long.toUnsignedString(modelId), data);
     //}
     //
     //public static CompletableFuture<String> loadReportCodeAsync(long modelId) {
@@ -84,7 +84,7 @@ public final class StagedService {
     /** 专用于保存视图模型代码 */
     public static CompletableFuture<Void> saveViewCodeAsync(long modelId, String templateCode, String scriptCode, String styleCode) {
         var data = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
-        return saveAsync(StagedType.SourceCode, String.valueOf(modelId), data);
+        return saveAsync(StagedType.SourceCode, Long.toUnsignedString(modelId), data);
     }
 
     public static CompletableFuture<ViewCode> loadViewCodeAsync(long viewModelId) {
@@ -100,10 +100,10 @@ public final class StagedService {
             return CompletableFuture.completedFuture(null);
         } else {
             var data = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
-            return saveAsync(StagedType.ViewRuntimeCode, String.valueOf(modelId), data);
+            return saveAsync(StagedType.ViewRuntimeCode, Long.toUnsignedString(modelId), data);
         }
     }
-    //
+
     //public static CompletableFuture<String> loadViewRuntimeCode(long viewModelId) {
     //    var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
     //    var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
