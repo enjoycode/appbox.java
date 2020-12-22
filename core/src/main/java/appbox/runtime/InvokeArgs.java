@@ -119,10 +119,12 @@ public final class InvokeArgs implements IInputStream {
 
     public String getString() {
         var payloadType = readByte();
+        if (payloadType == PayloadType.Null)
+            return null;
         if (payloadType == PayloadType.String) {
             return readString();
         }
-        throw new RuntimeException("PayloadType Error");
+        throw new RuntimeException("PayloadType Error: " + payloadType);
     }
 
     public <E extends Entity> E getEntity(Supplier<E> creator) {
