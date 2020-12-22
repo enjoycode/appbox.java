@@ -31,6 +31,8 @@ public abstract class TypeSerializer {
         //----模型相关----
         registerKnownType(new UserSerializer(PayloadType.DataStoreModel, DataStoreModel.class, DataStoreModel::new));
         registerKnownType(new UserSerializer(PayloadType.ViewModel, ViewModel.class, ViewModel::new));
+        registerKnownType(new UserSerializer(PayloadType.EnumModel, EnumModel.class, EnumModel::new));
+        registerKnownType(new UserSerializer(PayloadType.EnumModelItem, EnumModelItem.class, EnumModelItem::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
         registerKnownType(new UserSerializer(PayloadType.ServiceModel, ServiceModel.class, ServiceModel::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModelInfo, EntityModelInfo.class, () -> null));

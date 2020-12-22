@@ -30,6 +30,8 @@ public final class PayloadType {
     public static final byte Object = 24;
 
     //----模型相关----
+    public static final byte EnumModel = 28;
+    public static final byte EnumModelItem = 29;
     public static final byte DataStoreModel  = 45;
     public static final byte ViewModel = 46;
     public static final byte ServiceModel    = 49;
