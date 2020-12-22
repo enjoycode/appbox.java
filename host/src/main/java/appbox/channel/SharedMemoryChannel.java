@@ -142,7 +142,8 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
             //发生异常，则通知接收端取消挂起的消息
             mws.finish(true);
             //记录日志并重新抛出异常
-            Log.warn(e.toString());
+            Log.warn("sendMessage error: " + e.toString());
+            //e.printStackTrace();
             throw e;
         } finally {
             MessageWriteStream.backToPool(mws);

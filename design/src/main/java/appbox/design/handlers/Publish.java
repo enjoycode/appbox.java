@@ -6,6 +6,7 @@ import appbox.design.services.PublishService;
 import appbox.design.services.StagedItems;
 import appbox.logging.Log;
 import appbox.model.ModelBase;
+import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
 
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +29,12 @@ public final class Publish implements IDesignHandler {
             } else if (change instanceof StagedItems.StagedSourceCode) {
                 var code = (StagedItems.StagedSourceCode) change;
                 pkg.sourceCodes.put(code.ModelId, code.CodeData);
+            } else if (change instanceof StagedItems.StagedViewRuntimeCode) {
+                var viewAsm = (StagedItems.StagedViewRuntimeCode) change;
+                var viewModelNode = hub.designTree.findModelNode(ModelType.View, viewAsm.ModelId);
+                var asmName = String.format("%s.%s",
+                        viewModelNode.appNode.model.name(), viewModelNode.model().name());
+                pkg.viewAssemblies.put(asmName, viewAsm.CodeData);
             } else {
                 Log.warn("Unknow pending change: " + change.getClass().getSimpleName());
             }

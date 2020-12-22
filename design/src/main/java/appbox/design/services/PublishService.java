@@ -210,7 +210,11 @@ public final class PublishService {
                     r -> ModelStore.upsertAssemblyAsync(true, entry.getKey(), entry.getValue(), txn));
         }
 
-        //TODO:保存视图模型编译好的运行时组件
+        //保存视图模型编译好的运行时组件
+        for (var entry: pkg.viewAssemblies.entrySet()) {
+            task = task.thenCompose(
+                    r -> ModelStore.upsertAssemblyAsync(false, entry.getKey(), entry.getValue(), txn));
+        }
 
         return task;
     }
