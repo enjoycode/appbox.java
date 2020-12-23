@@ -6,6 +6,7 @@ import appbox.design.services.StagedService;
 import appbox.design.services.code.TypeSystem;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
+import appbox.model.EnumModel;
 import appbox.model.ModelType;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
@@ -135,7 +136,15 @@ public final class ModelFile extends ModelResource implements IFile {
                         (EntityModel) modelNode.model(), modelNode.appNode.model.name(), null);
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
                 return new ByteArrayInputStream(entityDummyCode.getBytes(StandardCharsets.UTF_8));
-            } else if (modelNode.model().modelType() == ModelType.Service) {
+            }
+            else if (modelNode.model().modelType() == ModelType.Enum) {
+                //通过CodeGenService生成虚拟代码
+                var entityDummyCode = CodeGenService.genEnumDummyCode(
+                        (EnumModel) modelNode.model(), modelNode.appNode.model.name(), null);
+                Log.debug("生成枚举模型虚拟代码:" + this.getName());
+                return new ByteArrayInputStream(entityDummyCode.getBytes(StandardCharsets.UTF_8));
+            }
+            else if (modelNode.model().modelType() == ModelType.Service) {
                 if (getProject().getName().equals(TypeSystem.PROJECT_MODELS)) { //服务代理
                     var proxyCode = CodeGenService.genServiceProxyCode(hub, modelNode);
                     Log.debug("生成服务代理虚拟代码:" + this.getName());

@@ -45,6 +45,8 @@ public class NewEnumItem implements IDesignHandler {
         if (comment!=null&&!comment.equals("")) {
             item.setComment(comment);
         }
+        item.setName(itemName);
+        item.setValue(value);
         model.items.add(item);
 
         // 保存到本地

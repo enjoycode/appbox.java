@@ -9,6 +9,7 @@ import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
 import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
+import appbox.model.EnumModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
@@ -25,7 +26,9 @@ import java.util.UUID;
  */
 public class CodeGenService {
 
-    /** 生成所有存储的虚拟代码 */
+    /**
+     * 生成所有存储的虚拟代码
+     */
     public static String getStoresDummyCode(DesignTree designTree) {
         var sb = new StringBuilder();
         sb.append("import sys.*;");
@@ -88,6 +91,36 @@ public class CodeGenService {
         return sb.toString();
     }
 
+    /**
+     * 根据枚举模型生成虚拟代码
+     */
+    public static String genEnumDummyCode(EnumModel model, String appName, DesignTree designTree) {
+        var sb = new StringBuilder(150);
+        sb.append("package " + appName + ".enums;\n");
+        var className = StringUtil.firstUpperCase(model.name());
+        sb.append("public enum " + className + "{\n");
+        var items = model.getItems();
+        for (int i = 0; i < items.size(); i++) {
+            if (i < items.size() - 1) {
+                sb.append("\t" + items.get(i).getName() + "(" + items.get(i).getValue() + "),\n");
+            } else {
+                sb.append("\t" + items.get(i).getName() + "(" + items.get(i).getValue() + ");\n");
+            }
+        }
+        sb.append("\t" + "public final int value;\n");
+        sb.append("\t" + className + "(int v) {value = v;}\n");
+        sb.append("\t" + "public static " + className + " fromValue(int v) {\n");
+        sb.append("\t\t" + "for (" + className + " item : " + className + ".values()) {\n");
+        sb.append("\t\t\t" + "if (item.value == v) {\n");
+        sb.append("\t\t\t" + "return item;\n");
+        sb.append("\t\t\t" + "}\n");
+        sb.append("\t\t" + "}\n");
+        sb.append("\t}\n");
+        sb.append("}");
+        return sb.toString();
+    }
+
+
     private static void genDataFieldMember(DataFieldModel field, StringBuilder sb) {
         sb.append("\tpublic ");
         sb.append(getDataFieldTypeString(field));
@@ -138,10 +171,12 @@ public class CodeGenService {
         }
     }
 
-    /** 生成服务模型的虚拟代理类 */
+    /**
+     * 生成服务模型的虚拟代理类
+     */
     public static String genServiceProxyCode(DesignHub hub, ModelNode serviceNode) {
         var serviceName = serviceNode.model().name();
-        var sb          = new StringBuilder(200);
+        var sb = new StringBuilder(200);
 
         sb.append("package ");
         sb.append(serviceNode.appNode.model.name());
@@ -167,7 +202,7 @@ public class CodeGenService {
         sb.append(" {\n");
 
         var serviceType = (TypeDeclaration) astNode.types().get(0);
-        var methods     = serviceType.getMethods();
+        var methods = serviceType.getMethods();
         for (var method : methods) {
             if (TypeHelper.isServiceMethod(method)) {
                 sb.append("@sys.MethodInterceptor(name=\"InvokeService\")\n");
@@ -207,7 +242,7 @@ public class CodeGenService {
         sb.append('{');
 
         var serviceType = (TypeDeclaration) astNode.types().get(0);
-        var methods     = serviceType.getMethods();
+        var methods = serviceType.getMethods();
         for (var method : methods) {
             if (TypeHelper.isServiceMethod(method)) {
                 sb.append("function ");
@@ -237,12 +272,14 @@ public class CodeGenService {
         return sb.toString();
     }
 
-    /** 转为类型为前端typescript的类型 */
+    /**
+     * 转为类型为前端typescript的类型
+     */
     private static String toScriptType(Type type) {
         //TODO:集合类型处理
         if (type.isPrimitiveType()) {
             var primitiveType = (PrimitiveType) type;
-            var typeCode      = primitiveType.getPrimitiveTypeCode();
+            var typeCode = primitiveType.getPrimitiveTypeCode();
             if (typeCode == PrimitiveType.BOOLEAN) {
                 return "boolean";
             } else if (typeCode == PrimitiveType.VOID) {
@@ -251,8 +288,8 @@ public class CodeGenService {
                 return "number";
             }
         } else if (type.isSimpleType()) {
-            var          simpleType = (SimpleType) type;
-            var          typeName   = simpleType.getName().getFullyQualifiedName();
+            var simpleType = (SimpleType) type;
+            var typeName = simpleType.getName().getFullyQualifiedName();
             ITypeBinding entityType;
             if (typeName.equals("String")) {
                 return "string";

@@ -1,5 +1,6 @@
 package appbox.design.handlers.enumm;
 
+import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.model.EnumModel;
@@ -17,6 +18,6 @@ public class GetEnumItems implements IDesignHandler {
             throw new RuntimeException("Can't find EnumModel.");
         }
         var enumModel = (EnumModel)modelNode.model();
-        return CompletableFuture.completedFuture(enumModel.items);
+        return CompletableFuture.completedFuture(new JsonResult(enumModel.items));
     }
 }

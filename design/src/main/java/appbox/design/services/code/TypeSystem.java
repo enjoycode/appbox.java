@@ -7,6 +7,7 @@ import appbox.design.tree.ModelNode;
 import appbox.design.utils.CodeHelper;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
+import appbox.model.EnumModel;
 import appbox.model.ModelType;
 import appbox.runtime.IService;
 import appbox.store.SqlStore;
@@ -95,6 +96,8 @@ public final class TypeSystem {
             } else if (model.modelType() == ModelType.Entity) {
                 //需要包含目录,如sys/entities/Order.java
                 createModelFile(appName, "entities", fileName);
+            } else if (model.modelType() == ModelType.Enum) {
+                createModelFile(appName, "enums", fileName);
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -135,7 +138,16 @@ public final class TypeSystem {
                 }
             }
             else if(model.modelType() == ModelType.Enum) {
-                //TODO update Enum
+                var appFolder  = modelsProject.getFolder(appName);
+                var typeFolder = appFolder.getFolder("enums");
+                var file       = typeFolder.getFile(fileName);
+                var cu         = (CompilationUnit) JDTUtils.resolveCompilationUnit(file);
+                if (cu.getBuffer() != null) {
+                    cu.getBuffer().setContents(CodeGenService.genEnumDummyCode(
+                            (EnumModel) model, appName, node.designTree()));
+                    cu.makeConsistent(null);
+                    //Log.debug(cu.getBuffer().getContents());
+                }
             }
             else {
                 Log.warn("updateModelDocument暂未实现: " + model.modelType().name());
