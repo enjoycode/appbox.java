@@ -3,6 +3,8 @@ package appbox.design.services;
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.entity.*;
+import appbox.design.handlers.enumm.GetEnumItems;
+import appbox.design.handlers.enumm.NewEnumItem;
 import appbox.design.handlers.enumm.NewEnumModel;
 import appbox.design.handlers.service.*;
 import appbox.design.handlers.store.NewDataStore;
@@ -52,6 +54,8 @@ public final class DesignService implements IService {
         put("OpenViewModel", new OpenViewModel());
         //----enum----
         put("NewEnumModel", new NewEnumModel());
+        put("GetEnumItems", new GetEnumItems());
+        put("NewEnumItem", new NewEnumItem());
 
     }};
 

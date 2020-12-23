@@ -66,7 +66,12 @@ public class NewEnumModel implements IDesignHandler {
                 //设为签出状态
                 node.setCheckoutInfo(new CheckoutInfo(node.nodeType(), node.checkoutInfoTargetID(), model.version(),
                         hub.session.name(), hub.session.leafOrgUnitId()));
-                return node.saveAsync(null).thenApply(re-> new NewNodeResult(parentNode.nodeType().value,parentNode.id(),node,rootNodeHasCheckout ? null : rootNode.id(),insertIndex));
+                return node.saveAsync(null)
+                        .thenApply(re-> {
+                            //新建虚拟文件
+                            hub.typeSystem.createModelDocument(node);
+                            return new NewNodeResult(parentNode.nodeType().value, parentNode.id(), node, rootNodeHasCheckout ? null : rootNode.id(), insertIndex);
+                        });
             });
 
         }).thenApply(JsonResult::new);

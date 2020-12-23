@@ -133,7 +133,11 @@ public final class TypeSystem {
                     cu.makeConsistent(null);
                     //Log.debug(cu.getBuffer().getContents());
                 }
-            } else {
+            }
+            else if(model.modelType() == ModelType.Enum) {
+                //TODO update Enum
+            }
+            else {
                 Log.warn("updateModelDocument暂未实现: " + model.modelType().name());
             }
         } catch (Exception ex) {
