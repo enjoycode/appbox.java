@@ -12,10 +12,7 @@ import appbox.logging.Log;
 import appbox.model.*;
 import appbox.runtime.RuntimeContext;
 import appbox.serialization.BytesOutputStream;
-import appbox.store.DbTransaction;
-import appbox.store.KVTransaction;
-import appbox.store.ModelStore;
-import appbox.store.SqlStore;
+import appbox.store.*;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
@@ -211,7 +208,7 @@ public final class PublishService {
         }
 
         //保存视图模型编译好的运行时组件
-        for (var entry: pkg.viewAssemblies.entrySet()) {
+        for (var entry : pkg.viewAssemblies.entrySet()) {
             task = task.thenCompose(
                     r -> ModelStore.upsertAssemblyAsync(false, entry.getKey(), entry.getValue(), txn));
         }
@@ -225,7 +222,7 @@ public final class PublishService {
             if (model.modelType() == ModelType.Entity) {
                 return createTableAsync(hub, (EntityModel) model, otherStoreTxns);
             } else if (model.modelType() == ModelType.View) { //TODO:暂在这里保存视图模型的路由
-                return upsertViewRouteAsync(model, txn);
+                return upsertViewRouteAsync(hub, (ViewModel) model, txn);
             }
             return CompletableFuture.completedFuture(null);
         });
@@ -240,7 +237,7 @@ public final class PublishService {
                     } else if (model.modelType() == ModelType.Service) {
                         //TODO:服务模型重命名删除旧的Assembly
                     } else if (model.modelType() == ModelType.View) {
-                        throw new RuntimeException("未实现");
+                        return upsertViewRouteAsync(hub, (ViewModel) model, txn);
                     }
                     return CompletableFuture.completedFuture(null);
                 });
@@ -253,21 +250,52 @@ public final class PublishService {
             if (model.modelType() == ModelType.Entity) {
                 return dropTableAsync(hub, (EntityModel) model, otherStoreTxns);
             } else if (model.modelType() == ModelType.Service) {
-                var app     = hub.designTree.findApplicationNode(model.appId());
-                var asmName = String.format("%s.%s", app.model.name(), model.originalName()); //注意是旧名称
+                var appName    = hub.designTree.findApplicationNode(model.appId()).model.name();
+                var oldAsmName = String.format("%s.%s", appName, model.originalName());
                 return ModelStore.deleteModelCodeAsync(model.id(), txn)
-                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(true, asmName, txn));
+                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(true, oldAsmName, txn));
             } else if (model.modelType() == ModelType.View) {
-                throw new RuntimeException("未实现");
+                var appName     = hub.designTree.findApplicationNode(model.appId()).model.name();
+                var oldViewName = String.format("%s.%s", appName, model.originalName());
+                return ModelStore.deleteModelCodeAsync(model.id(), txn)
+                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(false, oldViewName, txn))
+                        .thenCompose(r2 -> ModelStore.deleteViewRouteAsync(oldViewName, txn));
             }
             return CompletableFuture.completedFuture(null);
         });
     }
 
-    /** 保存视图模型的路由 */
-    private static CompletableFuture<Void> upsertViewRouteAsync(ModelBase model, KVTransaction txn) {
-        Log.warn("保存视图路由未实现");
-        return CompletableFuture.completedFuture(null);
+    /** 保存视图模型的路由,新建与更新的通用 */
+    private static CompletableFuture<Void> upsertViewRouteAsync(DesignHub hub, ViewModel model, KVTransaction txn) {
+        var inRoute = (model.getFlag().value & ViewModel.ViewModelFlag.ListInRouter.value)
+                == ViewModel.ViewModelFlag.ListInRouter.value;
+        //新建且不列入路由的直接返回
+        CompletableFuture<Void> task = null;
+        if (model.persistentState() == PersistentState.Detached) {
+            if (!inRoute) {
+                task = CompletableFuture.completedFuture(null);
+            } else {
+                var appName  = hub.designTree.findApplicationNode(model.appId()).model.name();
+                var viewName = String.format("%s.%s", appName, model.name());
+                task = ModelStore.upsertViewRouteAsync(viewName, model.getRoutePath(), txn);
+            }
+        } else {
+            var appName = hub.designTree.findApplicationNode(model.appId()).model.name();
+            if (!inRoute) {
+                var oldViewName = String.format("%s.%s", appName, model.originalName());
+                task = ModelStore.deleteViewRouteAsync(oldViewName, txn);
+            } else {
+                var viewName = String.format("%s.%s", appName, model.name());
+                task = ModelStore.upsertViewRouteAsync(viewName, model.getRoutePath(), txn);
+                //重命名的需要删除旧的
+                if (model.isNameChanged()) {
+                    var oldViewName = String.format("%s.%s", appName, model.originalName());
+                    task = task.thenCompose(r -> ModelStore.deleteViewRouteAsync(oldViewName, txn));
+                }
+            }
+        }
+
+        return task;
     }
 
     //region ====第三方数据库的数据表操作====

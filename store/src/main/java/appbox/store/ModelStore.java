@@ -147,9 +147,7 @@ public final class ModelStore {
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
-    /**
-     * 仅用于加载服务模型的代码
-     */
+    /** 仅用于加载服务模型的代码 */
     public static CompletableFuture<ServiceCode> loadServiceCodeAsync(long modelId) {
         var req = new KVGetModelCodeRequest(modelId);
         return SysStoreApi.execKVGetAsync(req, new KVGetModelCodeResponse())
@@ -170,6 +168,29 @@ public final class ModelStore {
         var req = new KVGetModelCodeRequest(modelId);
         return SysStoreApi.execKVGetAsync(req, new KVGetModelCodeResponse())
                 .thenApply(r -> (ViewCode) r.sourceCode);
+    }
+
+    //endregion
+
+    //region ====视图模型路由相关====
+
+    /**
+     * 保存视图模型的路由信息
+     * @param viewName eg: sys.CustomerList
+     * @param path     无自定义路由为空，有上级路由;分隔，eg: userInfo;address
+     */
+    public static CompletableFuture<Void> upsertViewRouteAsync(String viewName, String path, KVTransaction txn) {
+        var req = new KVInsertViewRouteRequest(viewName, path, txn.id());
+        return SysStoreApi.execKVInsertAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
+    public static CompletableFuture<Void> deleteViewRouteAsync(String viewName, KVTransaction txn) {
+        var req = new KVDeleteViewRouteRequest(txn.id(), viewName);
+        return SysStoreApi.execKVDeleteAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
     //endregion

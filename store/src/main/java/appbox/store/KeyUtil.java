@@ -17,6 +17,7 @@ public final class KeyUtil {
     public static final byte METACF_MODEL_CODE_PREFIX       = 0x0E;
     public static final byte METACF_SERVICE_ASSEMBLY_PREFIX = (byte) 0xA0;
     public static final byte METACF_VIEW_ASSEMBLY_PREFIX    = (byte) 0xA1;
+    public static final byte METACF_VIEW_ROUTE_PREFIX       = (byte) 0xA2;
 
     public static final byte PARTCF_INDEX             = 4;
     public static final byte PARTCF_GLOBAL_TABLE_FLAG = 0x01;
