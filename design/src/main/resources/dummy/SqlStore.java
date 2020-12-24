@@ -12,4 +12,12 @@ public final class SqlStore {
     public CompletableFuture<Void> insertAsync(SqlEntityBase entity, DbTransaction txn) {
         return null;
     }
+
+    public CompletableFuture<Void> updateAsync(SqlEntityBase entity, DbTransaction txn) {
+        return null;
+    }
+
+    public CompletableFuture<Void> deleteAsync(SqlEntityBase entity, DbTransaction txn) {
+        return null;
+    }
 }

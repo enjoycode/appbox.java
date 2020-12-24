@@ -6,14 +6,15 @@ public class TestService {
         return CompletableFuture.completedFuture("Hello Future!");
     }
 
-    //public CompletableFuture<String> insert() {
-    //    var obj = new sys.entities.Employee();
-    //    obj.name = "Rick";
-    //    obj.male = true;
-    //    return DataStore.DemoDB.insertAsync(obj, null)
-    //            .thenApply(r -> "Hello Future!");
-    //}
-    //
+    public CompletableFuture<String> insert() {
+        var obj = new sys.entities.Employee();
+        obj.name = "Rick";
+        obj.male = true;
+        return obj.saveAsync().thenApply(r -> "Save Done.");
+        //return DataStore.DemoDB.insertAsync(obj, null)
+        //        .thenApply(r -> "Hello Future!");
+    }
+
     //public CompletableFuture<Void> test1() {
     //    return CompletableFuture.completedFuture((Void) null);
     //}
@@ -34,17 +35,17 @@ public class TestService {
     //    return q.toListAsync().thenApply(r -> (Object) r);
     //}
 
-    public CompletableFuture<?> query2() {
-        var q = new SqlQuery<sys.entities.Employee>();
-        return q.toListAsync(r -> new Object() {
-            final String Name = r.name;
-            final boolean MaleFlag = r.male;
-            final String Male = r.male ? "男" : "女";
-        });
-    }
+    //public CompletableFuture<?> query2() {
+    //    var q = new SqlQuery<sys.entities.Employee>();
+    //    return q.toListAsync(r -> new Object() {
+    //        final String Name = r.name;
+    //        final boolean MaleFlag = r.male;
+    //        final String Male = r.male ? "男" : "女";
+    //    });
+    //}
 
-    public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
-        return CompletableFuture.completedFuture(emp);
-    }
+    //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
+    //    return CompletableFuture.completedFuture(emp);
+    //}
 
 }

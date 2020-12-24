@@ -26,6 +26,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         put("SqlQueryWhere", new SqlQueryWhereInterceptor());
         put("SqlQueryMapper", new SqlQueryMapperInterceptor());
         put("InvokeService", new InvokeServiceInterceptor());
+        put("SaveEntity", new SaveEntityInterceptor());
     }};
     //endregion
 
@@ -319,7 +320,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 getMethod.setName(ast.newSimpleName("getString"));
             } else if ((entityType = TypeHelper.getEntityType(simpleType)) != null) {
                 var entityRuntimeType = makeEntityRuntimeType(entityType);
-                var creation = ast.newCreationReference();
+                var creation          = ast.newCreationReference();
                 creation.setType(entityRuntimeType);
                 getMethod.setName(ast.newSimpleName("getEntity"));
                 getMethod.arguments().add(creation);
@@ -354,8 +355,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     private SimpleType makeEntityRuntimeType(ITypeBinding entityType) {
-        var entityModelNode   = getUsedEntity(entityType);
-        var entityClassName   = EntityCodeGenerator.makeEntityClassName(entityModelNode);
+        var entityModelNode = getUsedEntity(entityType);
+        var entityClassName = EntityCodeGenerator.makeEntityClassName(entityModelNode);
         return ast.newSimpleType(ast.newName(entityClassName));
     }
 
@@ -364,7 +365,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var newNode = ast.newMethodInvocation();
         newNode.setName(ast.newSimpleName("m"));
         newNode.setExpression(exp);
-        var member     = ast.newStringLiteral();
+        var member = ast.newStringLiteral();
         member.setLiteralValue(StringUtil.firstUpperCase(memberName)); //TODO:暂强制转换
         newNode.arguments().add(member);
         return newNode;
