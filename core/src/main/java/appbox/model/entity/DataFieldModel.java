@@ -89,9 +89,7 @@ public final class DataFieldModel extends EntityMemberModel {
         return _dataType;
     }
 
-    /**
-     * 保留用于根据规则生成Sql列的名称, eg:相同前缀、命名规则等
-     */
+    /** 保留用于根据规则生成Sql列的名称, eg:相同前缀、命名规则等 */
     public String sqlColName() {
         return name();
     }
@@ -100,11 +98,15 @@ public final class DataFieldModel extends EntityMemberModel {
         return originalName();
     }
 
-    /**
-     * 是否系统存储的分区键
-     */
+    /** 是否系统存储的分区键 */
     public boolean isPartitionKey() {
         return owner.sysStoreOptions() != null && owner.sysStoreOptions().isPartitionKey(memberId());
+    }
+
+    /** 是否主键(Sql or Cql) */
+    public boolean isPrimaryKey() {
+        //TODO:Cql判断
+        return owner.sqlStoreOptions() != null && owner.sqlStoreOptions().isPrimaryKey(memberId());
     }
 
     /** 是否引用外键 */

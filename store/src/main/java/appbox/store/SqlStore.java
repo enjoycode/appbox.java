@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.data.PersistentState;
 import appbox.data.SqlEntity;
 import appbox.design.IDesignContext;
 import appbox.logging.Log;
@@ -7,6 +8,7 @@ import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityMemberModel;
+import appbox.model.entity.FieldWithOrder;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.store.query.ISqlSelectQuery;
 import com.github.jasync.sql.db.Connection;
@@ -99,7 +101,9 @@ public abstract class SqlStore {
     }
     //endregion
 
-    //region ====DML Methods====
+    //region ====DML Insert/Update/Delete Methods====
+
+    /** 根据Entity及其模型生成相应的Insert命令 */
     protected DbCommand buildInsertCommand(SqlEntity entity, EntityModel model) {
         //注意目前实现仅插入非空的字段，并且不缓存命令
         var cmd = new DbCommand();
@@ -138,6 +142,153 @@ public abstract class SqlStore {
         return cmd;
     }
 
+    /** 根据Entity及其模型生成相应的Update命令 */
+    protected DbCommand buildUpdateCommand(SqlEntity entity, EntityModel model) {
+        var cmd       = new DbCommand();
+        var tableName = model.getSqlTableName(false, null);
+        var sb        = new StringBuilder(100);
+
+        sb.append("Update ");
+        sb.append(nameEscaper());
+        sb.append(tableName);
+        sb.append(nameEscaper());
+        sb.append(" Set ");
+
+        boolean        hasChangedMember = false;
+        DataFieldModel dfm              = null;
+        for (var mm : model.getMembers()) {
+            if (mm.type() != EntityMemberModel.EntityMemberType.DataField)
+                continue;
+            dfm = (DataFieldModel) mm;
+            if (dfm.isPrimaryKey()) //跳过主键
+                continue;
+            //TODO:跳过未改变值的字段
+
+            entity.writeMember(mm.memberId(), cmd, IEntityMemberWriter.SF_NONE);
+
+            if (hasChangedMember) {
+                sb.append(',');
+            } else {
+                hasChangedMember = true;
+            }
+
+            sb.append(nameEscaper());
+            sb.append(dfm.sqlColName());
+            sb.append(nameEscaper());
+            sb.append("=?");
+        }
+
+        if (!hasChangedMember)
+            throw new RuntimeException("entity without changed");
+
+        //根据主键生成条件
+        sb.append(" Where ");
+        buildWhereForUpdateOrDeleteEntity(entity, model, cmd, sb);
+
+        cmd.setCommandText(sb.toString());
+        return cmd;
+    }
+
+    /** 根据Entity及其模型生成相应的Delete命令 */
+    protected DbCommand buildDeleteCommand(SqlEntity entity, EntityModel model) {
+        var cmd       = new DbCommand();
+        var tableName = model.getSqlTableName(false, null);
+        var sb        = new StringBuilder(50);
+
+        sb.append("Delete From ");
+        sb.append(nameEscaper());
+        sb.append(tableName);
+        sb.append(nameEscaper());
+
+        sb.append(" Where ");
+        //根据主键生成条件 TODO:没有主键是否直接抛异常
+        buildWhereForUpdateOrDeleteEntity(entity, model, cmd, sb);
+
+        cmd.setCommandText(sb.toString());
+        return cmd;
+    }
+
+    public final CompletableFuture<Void> insertAsync(SqlEntity entity, DbTransaction txn) {
+        if (entity == null || entity.persistentState() != PersistentState.Detached) {
+            tryRollbackTxn(txn);
+            throw new UnsupportedOperationException();
+        }
+        //不需要判断model.sqlStoreOptions() == null，参数已经限制了类型
+
+        var model = entity.model();
+        var cmd   = buildInsertCommand(entity, model);
+        CompletableFuture<Connection> getConnection =
+                txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
+        return getConnection.thenCompose(cmd::execNonQueryAsync)
+                .handle((res, ex) -> {
+                    handleDbCommandResult(txn, cmd, res, ex);
+                    return null;
+                });
+    }
+
+    /** 仅适用于更新具备主键的实体，否则使用SqlUpdateCommand明确字段及条件更新 */
+    public final CompletableFuture<Void> updateAsync(SqlEntity entity, DbTransaction txn) {
+        if (entity == null || entity.persistentState() != PersistentState.Modified) {
+            tryRollbackTxn(txn);
+            throw new UnsupportedOperationException();
+        }
+
+        var model = entity.model();
+        if (!model.sqlStoreOptions().hasPrimaryKeys()) {
+            tryRollbackTxn(txn);
+            throw new UnsupportedOperationException("Can't update entity without primary key");
+        }
+
+        var cmd = buildUpdateCommand(entity, model);
+        CompletableFuture<Connection> getConnection =
+                txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
+        return getConnection.thenCompose(cmd::execNonQueryAsync)
+                .handle((res, ex) -> {
+                    handleDbCommandResult(txn, cmd, res, ex);
+                    return null;
+                });
+    }
+
+    /** 仅适用于删除具备主键的实体，否则使用SqlDeleteCommand明确指定条件删除 */
+    public final CompletableFuture<Void> deleteAsync(SqlEntity entity, DbTransaction txn) {
+        if (entity == null || entity.persistentState() != PersistentState.Deleted) {
+            tryRollbackTxn(txn);
+            throw new UnsupportedOperationException();
+        }
+
+        var model = entity.model();
+        if (!model.sqlStoreOptions().hasPrimaryKeys()) {
+            tryRollbackTxn(txn);
+            throw new UnsupportedOperationException("Can't delete entity without primary key");
+        }
+
+        var cmd = buildDeleteCommand(entity, model);
+        CompletableFuture<Connection> getConnection =
+                txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
+        return getConnection.thenCompose(cmd::execNonQueryAsync)
+                .handle((res, ex) -> {
+                    handleDbCommandResult(txn, cmd, res, ex);
+                    return null;
+                });
+    }
+
+    /** 根据实体持久化状态调用相应的Insert/Update/Delete */
+    public final CompletableFuture<Void> saveAsync(SqlEntity entity, DbTransaction txn) {
+        switch (entity.persistentState()) {
+            case Detached:
+                return insertAsync(entity, txn);
+            case Modified:
+                return updateAsync(entity, txn);
+            case Deleted:
+                return deleteAsync(entity, txn);
+            default:
+                return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    //endregion
+
+    //region ====DML Query Methods====
     protected abstract DbCommand buildQuery(ISqlSelectQuery query);
 
     public final CompletableFuture<QueryResult> runQuery(ISqlSelectQuery query) {
@@ -156,31 +307,47 @@ public abstract class SqlStore {
                     return res;
                 });
     }
+    //endregion
 
-    public final CompletableFuture<Void> insertAsync(SqlEntity entity, DbTransaction txn) {
-        if (entity == null)
-            throw new IllegalArgumentException();
-        //TODO:判断持久化状态
+    //region ====Helper Methods====
 
-        var model = entity.model();
-        if (model.sqlStoreOptions() == null)
-            throw new UnsupportedOperationException("Can't insert entity to sqlstore");
+    /** 删除或更新实体时根据主键生成相应的条件 */
+    private void buildWhereForUpdateOrDeleteEntity(SqlEntity entity, EntityModel model,
+                                                   DbCommand cmd, StringBuilder sb) {
+        FieldWithOrder pk = null;
+        DataFieldModel mm = null;
+        for (int i = 0; i < model.sqlStoreOptions().primaryKeys().length; i++) {
+            pk = model.sqlStoreOptions().primaryKeys()[i];
+            mm = (DataFieldModel) model.getMember(pk.memberId);
 
-        var cmd = buildInsertCommand(entity, model);
-        CompletableFuture<Connection> connectionFuture =
-                txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
-        return connectionFuture.thenCompose(cmd::execNonQueryAsync)
-                .handle((res, ex) -> {
-                    //仅关闭非事务内的连接
-                    if (txn == null && cmd.connection != null /*可能未打开就出现异常*/) {
-                        closeConnection(cmd.connection);
-                    }
-                    if (ex != null) { //TODO:友好错误信息
-                        Log.warn(String.format("Insert to [%s] error:\n%s", model.name(), ex.getMessage()));
-                        throw new RuntimeException(ex); //需要重新抛出异常
-                    }
-                    return null;
-                });
+            entity.writeMember(pk.memberId, cmd, IEntityMemberWriter.SF_NONE);
+
+            if (i != 0)
+                sb.append(" And");
+            sb.append(" ");
+            sb.append(nameEscaper());
+            sb.append(mm.sqlColName());
+            sb.append(nameEscaper());
+            sb.append("=?");
+        }
+    }
+
+    private void handleDbCommandResult(DbTransaction txn, DbCommand cmd, Long res, Throwable ex) {
+        //仅关闭非事务内的连接
+        if (txn == null && cmd.connection != null /*可能未打开就出现异常*/) {
+            closeConnection(cmd.connection);
+        }
+        if (ex != null) { //TODO:友好错误信息
+            tryRollbackTxn(txn);
+            Log.warn(String.format("Run cmd:[%s] error:\n%s", cmd.getCommandText(), ex.getMessage()));
+            throw new RuntimeException(ex); //需要重新抛出异常
+        }
+    }
+
+    private static void tryRollbackTxn(DbTransaction txn) {
+        if (txn != null) {
+            txn.rollback();
+        }
     }
     //endregion
 

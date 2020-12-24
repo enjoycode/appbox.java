@@ -16,7 +16,7 @@ public abstract class DBEntity extends Entity {
         super(modelId);
     }
 
-    protected final PersistentState persistentState() { return _persistentState; }
+    public final PersistentState persistentState() { return _persistentState; }
 
     protected final void onPropertyChanged(short memberId) {
         if (_persistentState == PersistentState.Unchnaged) {
