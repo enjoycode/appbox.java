@@ -104,8 +104,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             var ownerType = owner.resolveTypeBinding();
             if (TypeHelper.isEntityType(ownerType)) {
                 var newNode = ast.newMethodInvocation();
-                newNode.setName(ast.newSimpleName("set"
-                        + StringUtil.firstUpperCase(qfn.getName().getIdentifier())));
+                newNode.setName(ast.newSimpleName("set" + qfn.getName().getIdentifier()));
                 var newOwner = (Expression) ASTNode.copySubtree(ast, owner);
                 newNode.setExpression(newOwner);
                 var newArg = (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
@@ -130,8 +129,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 newOwner = ASTNode.copySubtree(ast, newOwner);
 
             var newNode = ast.newMethodInvocation();
-            newNode.setName(ast.newSimpleName("get"
-                    + StringUtil.firstUpperCase(node.getName().getIdentifier())));
+            newNode.setName(ast.newSimpleName("get" + node.getName().getIdentifier()));
             newNode.setExpression((Expression) newOwner);
             astRewrite.replace(node, newNode, null);
 
@@ -366,7 +364,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         newNode.setName(ast.newSimpleName("m"));
         newNode.setExpression(exp);
         var member = ast.newStringLiteral();
-        member.setLiteralValue(StringUtil.firstUpperCase(memberName)); //TODO:暂强制转换
+        member.setLiteralValue(memberName);
         newNode.arguments().add(member);
         return newNode;
     }

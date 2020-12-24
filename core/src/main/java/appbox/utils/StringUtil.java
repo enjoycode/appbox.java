@@ -6,9 +6,7 @@ public final class StringUtil {
     private StringUtil() {
     }
 
-    /**
-     * 获取字符串HashCode,用以消除平台实现的差异性(与C#一致)
-     */
+    /** 获取字符串HashCode,用以消除平台实现的差异性(与C#一致) */
     public static int getHashCode(String value) {
         int hash1 = 5381;
         int hash2 = hash1;
@@ -26,29 +24,6 @@ public final class StringUtil {
         }
 
         return hash1 + (hash2 * 1566083941);
-    }
-
-    /**
-     * 首字母转化大写
-     */
-    public static String firstUpperCase(String str) {
-        //TODO:已经大写不需要处理
-        if ((str == null) || (str.length() == 0))
-            return str;
-        char[] ch = str.toCharArray();
-        if (ch[0] >= 'a' && ch[0] <= 'z') {
-            ch[0] = (char) (ch[0] - 32);
-        }
-        return new String(ch);
-    }
-
-    public static String firstLowerCase(String str) {
-        //TODO:同上
-        if ((str == null) || (str.length() == 0))
-            return str;
-        char[] ch = str.toCharArray();
-        ch[0] = Character.toLowerCase(ch[0]);
-        return new String(ch);
     }
 
     /** 获取utf8编码长度 */

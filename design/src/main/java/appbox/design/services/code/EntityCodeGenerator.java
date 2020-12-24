@@ -43,7 +43,7 @@ public final class EntityCodeGenerator {
         for (var member : model.getMembers()) {
             if (member.type() == EntityMemberModel.EntityMemberType.DataField) {
                 var dataField = (DataFieldModel) member;
-                var fieldName = "_" + StringUtil.firstLowerCase(member.name());
+                var fieldName = "_" + member.name();
 
                 var vdf = ast.newVariableDeclarationFragment();
                 vdf.setName(ast.newSimpleName(fieldName));
@@ -53,7 +53,7 @@ public final class EntityCodeGenerator {
                 entityClass.bodyDeclarations().add(field);
 
                 var getMethod = ast.newMethodDeclaration();
-                getMethod.setName(ast.newSimpleName("get" + StringUtil.firstUpperCase(member.name())));
+                getMethod.setName(ast.newSimpleName("get" + member.name()));
                 getMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
                 getMethod.setReturnType2(makeDataFieldType(ast, dataField));
                 var getBody   = ast.newBlock();
@@ -64,7 +64,7 @@ public final class EntityCodeGenerator {
                 entityClass.bodyDeclarations().add(getMethod);
 
                 var setMethod = ast.newMethodDeclaration();
-                setMethod.setName(ast.newSimpleName("set" + StringUtil.firstUpperCase(member.name())));
+                setMethod.setName(ast.newSimpleName("set" + member.name()));
                 setMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
                 var setPara = ast.newSingleVariableDeclaration();
                 setPara.setName(ast.newSimpleName("value"));
@@ -89,8 +89,7 @@ public final class EntityCodeGenerator {
 
     /** 生成运行时实体名称 eg: Sys_Employee */
     static String makeEntityClassName(ModelNode modelNode) {
-        return String.format("%s_%s",
-                StringUtil.firstUpperCase(modelNode.appNode.model.name()), modelNode.model().name());
+        return String.format("%s_%s", modelNode.appNode.model.name(), modelNode.model().name());
     }
 
     private static MethodDeclaration makeEntityCtorMethod(AST ast, EntityModel model, String className) {
@@ -139,7 +138,7 @@ public final class EntityCodeGenerator {
             var switchCase = ast.newSwitchCase();
             if (memeber.type() == EntityMemberModel.EntityMemberType.DataField) {
                 var dataField = (DataFieldModel) memeber;
-                var fieldName = "_" + StringUtil.firstLowerCase(dataField.name());
+                var fieldName = "_" + dataField.name();
 
                 var castExp = ast.newCastExpression();
                 castExp.setType(ast.newPrimitiveType(PrimitiveType.SHORT));
@@ -201,7 +200,7 @@ public final class EntityCodeGenerator {
             var switchCase = ast.newSwitchCase();
             if (memeber.type() == EntityMemberModel.EntityMemberType.DataField) {
                 var dataField = (DataFieldModel) memeber;
-                var fieldName = "_" + StringUtil.firstLowerCase(dataField.name());
+                var fieldName = "_" + dataField.name();
 
                 var castExp = ast.newCastExpression();
                 castExp.setType(ast.newPrimitiveType(PrimitiveType.SHORT));

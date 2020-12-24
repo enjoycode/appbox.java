@@ -78,7 +78,7 @@ public class DynamicClassFactory {
         /**
          * 构造setName方法:public void setName(String name);
          */
-        MethodVisitor setName = cw.visitMethod(ACC_PUBLIC, "set"+ StringUtil.firstUpperCase(propertyName), "(" + Type.getDescriptor(descriptorClz) + ")V", null, null);
+        MethodVisitor setName = cw.visitMethod(ACC_PUBLIC, "set"+ propertyName, "(" + Type.getDescriptor(descriptorClz) + ")V", null, null);
         setName.visitCode();
         setName.visitVarInsn(ALOAD, 0);
         setName.visitVarInsn(ALOAD, 1);
@@ -89,7 +89,7 @@ public class DynamicClassFactory {
         /**
          * 构造getName方法:public String getName();
          */
-        MethodVisitor getName = cw.visitMethod(ACC_PUBLIC, "get"+ StringUtil.firstUpperCase(propertyName), "()"+Type.getDescriptor(descriptorClz), null, null);
+        MethodVisitor getName = cw.visitMethod(ACC_PUBLIC, "get"+ propertyName, "()"+Type.getDescriptor(descriptorClz), null, null);
         getName.visitCode();
         getName.visitVarInsn(ALOAD, 0);
         getName.visitFieldInsn(GETFIELD, fullName, propertyName, Type.getDescriptor(descriptorClz));

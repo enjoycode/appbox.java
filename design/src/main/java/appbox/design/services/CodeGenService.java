@@ -58,7 +58,7 @@ public class CodeGenService {
 
         sb.append("import sys.*;");
 
-        var className = StringUtil.firstUpperCase(model.name());
+        var className = model.name();
         sb.append("public class ");
         sb.append(className);
         //根据存储选项继承不同基类
@@ -92,7 +92,7 @@ public class CodeGenService {
         sb.append("\tpublic ");
         sb.append(getDataFieldTypeString(field));
         sb.append(" ");
-        sb.append(StringUtil.firstLowerCase(field.name()));
+        sb.append(field.name());
         sb.append(";\n");
     }
 
