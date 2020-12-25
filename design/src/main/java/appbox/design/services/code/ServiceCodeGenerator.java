@@ -77,11 +77,6 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             return false;
         }
 
-        //在这里转换虚拟类型为运行时类型
-        //if (node.getName().isSimpleName() && node.getName().getFullyQualifiedName().equals("String")) {
-        //    var newType = ast.newSimpleType(ast.newName("Object"));
-        //    astRewrite.replace(node, newType, null);
-        //}
         return super.visit(node);
     }
 
@@ -178,7 +173,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     //endregion
 
-    /** 根据实体名称(eg: sys.entities.Employee)获取对应的ModelNode */
+    /** 根据实体名称(eg: sys.entities.Employee)获取对应的ModelNode，如果不存在加入使用列表 */
     protected ModelNode getUsedEntity(ITypeBinding entityType) {
         var fullName        = entityType.getQualifiedName();
         var entityModelNode = usedEntities.get(fullName);
@@ -191,6 +186,14 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             usedEntities.put(fullName, entityModelNode);
         }
         return entityModelNode;
+    }
+
+    /**
+     * 用于生成实体运行时导航属性时判断
+     * @param entityFullName eg: sys.entities.Employee
+     */
+    protected boolean isUsedEntity(String entityFullName) {
+        return usedEntities.get(entityFullName) != null;
     }
 
     /** 添加为服务方法,如果有重名抛异常 */
@@ -214,7 +217,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
         //附加用到的实体
         for (var modelNode : usedEntities.values()) {
-            listRewrite.insertLast(EntityCodeGenerator.makeEntityRuntimeCode(ast, modelNode), null);
+            listRewrite.insertLast(EntityCodeGenerator.makeEntityRuntimeCode(this, modelNode), null);
         }
     }
 

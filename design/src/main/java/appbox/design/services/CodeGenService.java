@@ -9,10 +9,10 @@ import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
 import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
+import appbox.model.ModelType;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
-import appbox.utils.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
@@ -76,10 +76,10 @@ public class CodeGenService {
                     genDataFieldMember((DataFieldModel) memberModel, sb);
                     break;
                 case EntityRef:
-                    genEntityRefMember((EntityRefModel) memberModel, sb);
+                    genEntityRefMember((EntityRefModel) memberModel, sb, designTree);
                     break;
                 case EntitySet:
-                    genEntitySetMember((EntitySetModel) memberModel, sb);
+                    genEntitySetMember((EntitySetModel) memberModel, sb, designTree);
                     break;
             }
         }
@@ -91,17 +91,41 @@ public class CodeGenService {
     private static void genDataFieldMember(DataFieldModel field, StringBuilder sb) {
         sb.append("\tpublic ");
         sb.append(getDataFieldTypeString(field));
-        sb.append(" ");
+        sb.append(' ');
         sb.append(field.name());
         sb.append(";\n");
     }
 
-    private static void genEntityRefMember(EntityRefModel entityRef, StringBuilder sb) {
-        Log.warn("待实现");
+    private static void genEntityRefMember(EntityRefModel entityRef, StringBuilder sb, DesignTree tree) {
+        sb.append("\tpublic ");
+        if (entityRef.isAggregationRef()) {
+            var baseEntityTypeName = "sys.EntityBase";
+            if (entityRef.owner.sqlStoreOptions() != null)
+                baseEntityTypeName = "sys.SqlEntityBase";
+            else if (entityRef.owner.sysStoreOptions() != null)
+                baseEntityTypeName = "sys.SysEntityBase";
+            sb.append(baseEntityTypeName);
+        } else {
+            var refModelNode = tree.findModelNode(ModelType.Entity, entityRef.getRefModelIds().get(0));
+            var refEntityTypeName = String.format("%s.entities.%s",
+                    refModelNode.appNode.model.name(), refModelNode.model().name());
+            sb.append(refEntityTypeName);
+        }
+        sb.append(' ');
+        sb.append(entityRef.name());
+        sb.append(";\n");
     }
 
-    private static void genEntitySetMember(EntitySetModel entitySet, StringBuilder sb) {
-        Log.warn("待实现");
+    private static void genEntitySetMember(EntitySetModel entitySet, StringBuilder sb, DesignTree tree) {
+        sb.append("\tpublic final "); //暂final
+        sb.append("java.util.List<");
+        var refModelNode = tree.findModelNode(ModelType.Entity, entitySet.refModelId());
+        var refEntityTypeName = String.format("%s.entities.%s",
+                refModelNode.appNode.model.name(), refModelNode.model().name());
+        sb.append(refEntityTypeName);
+        sb.append("> ");
+        sb.append(entitySet.name());
+        sb.append(";\n");
     }
 
     public static String getDataFieldTypeString(DataFieldModel field) {
