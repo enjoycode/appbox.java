@@ -3,6 +3,7 @@ package appbox.design.tree;
 import appbox.data.PersistentState;
 import appbox.design.DesignHub;
 import appbox.design.services.StagedService;
+import appbox.model.EntityModel;
 import appbox.model.ModelBase;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
@@ -79,9 +80,16 @@ public final class ModelNode extends DesignNode {
         writer.writeKeyValue("App",appNode.model.name()); //TODO:考虑不用，由前端处理
         writer.writeKeyValue("ModelType",_model.modelType().value);
 
-        //TODO: EntityModel输出对应的存储标识，方便前端IDE筛选相同存储的实体
-        //ServiceModel输出Language
-        if (_model.modelType() == ModelType.Service) {
+        if (_model.modelType() == ModelType.Entity) {
+            //EntityModel输出对应的存储标识，方便前端IDE筛选相同存储的实体
+            final var entityModel = (EntityModel) model();
+            if (entityModel.sysStoreOptions() != null) {
+                writer.writeKeyValue("StoreId", 0);
+            } else if (entityModel.sqlStoreOptions() != null) {
+                writer.writeKeyValue("StoreId", Long.toUnsignedString(entityModel.sqlStoreOptions().storeModelId()));
+            } //TODO:Cql
+        } else if (_model.modelType() == ModelType.Service) {
+            //ServiceModel输出Language
             writer.writeKey("Language");
             writer.writeValue(((ServiceModel) _model).language().value);
         }

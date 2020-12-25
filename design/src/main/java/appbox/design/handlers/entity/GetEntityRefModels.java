@@ -17,13 +17,14 @@ public final class GetEntityRefModels implements IDesignHandler {
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
         var targetEntityModelID = args.getString();
-        var refModels = hub.designTree.findEntityRefModels(Long.parseUnsignedLong(targetEntityModelID));
-        List<Map> res=new ArrayList<>();
-        for(EntityRefModel refModel:refModels){
-            Map map=new HashMap();
-            map.put("Path",hub.designTree.findApplicationNode(refModel.owner.appId()).model.name()+"."+refModel.owner.name()+"."+refModel.name());
-            map.put("EntityID",String.valueOf(refModel.owner.id()));
-            map.put("MemberID",refModel.memberId());
+        var refModels           = hub.designTree.findEntityRefModels(Long.parseUnsignedLong(targetEntityModelID));
+        var res                 = new ArrayList<>();
+        for (EntityRefModel refModel : refModels) {
+            var map = new HashMap<String, Object>();
+            map.put("Path", hub.designTree.findApplicationNode(refModel.owner.appId()).model.name()
+                    + "." + refModel.owner.name() + "." + refModel.name());
+            map.put("EntityID", Long.toUnsignedString(refModel.owner.id()));
+            map.put("MemberID", refModel.memberId());
             res.add(map);
         }
         return CompletableFuture.completedFuture(new JsonResult(res));
