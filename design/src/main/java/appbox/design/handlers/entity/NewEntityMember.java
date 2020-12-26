@@ -79,6 +79,8 @@ public final class NewEntityMember implements IDesignHandler {
     }
 
     private static EntityMemberModel newEntityRef(DesignHub hub, EntityModel model, String name, InvokeArgs args) {
+        //TODO:***非映射至存储的不需要生成外键成员
+
         var allowNull = args.getBool();
         var refIdStr  = args.getString();
         var isReverse = args.getBool(); //是否反向引用

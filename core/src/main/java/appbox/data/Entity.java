@@ -12,6 +12,10 @@ public abstract class Entity implements IBinSerializable {
         _modelId = modelId;
     }
 
+    public final long modelId() {
+        return _modelId;
+    }
+
     public final EntityModel model() {
         return RuntimeContext.current().getModel(_modelId);
     }

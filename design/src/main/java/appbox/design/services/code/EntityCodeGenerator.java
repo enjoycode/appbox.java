@@ -50,7 +50,7 @@ public final class EntityCodeGenerator {
         //get and set
         for (var member : model.getMembers()) {
             if (member.type() == EntityMemberModel.EntityMemberType.DataField) {
-                makeDataField(ast, entityClass, (DataFieldModel) member);
+                makeEntityMember(generator, entityClass, makeDataFieldType(ast, (DataFieldModel) member), member);
             } else if (member.type() == EntityMemberModel.EntityMemberType.EntityRef) {
                 makeEntityRef(generator, entityClass, (EntityRefModel) member);
             } else if (member.type() == EntityMemberModel.EntityMemberType.EntitySet) {
@@ -89,13 +89,8 @@ public final class EntityCodeGenerator {
         return ctor;
     }
 
-    private static void makeDataField(AST ast, TypeDeclaration entityClass, DataFieldModel dataField) {
-        makeEntityMember(ast, entityClass, makeDataFieldType(ast, dataField), dataField.name());
-    }
-
     private static void makeEntityRef(ServiceCodeGenerator generator
             , TypeDeclaration entityClass, EntityRefModel entityRef) {
-        final var ast          = generator.ast;
         final var tree         = generator.hub.designTree;
         final var refModelNode = tree.findModelNode(ModelType.Entity, entityRef.getRefModelIds().get(0));
         //注意非服务使用到的实体类转换为基类
@@ -104,7 +99,7 @@ public final class EntityCodeGenerator {
                         refModelNode.appNode.model.name(), refModelNode.model().name()));
 
         var entityType = makeNavigationEntityType(refModelNode, useEntityBaseType, generator.ast);
-        makeEntityMember(generator.ast, entityClass, entityType, entityRef.name());
+        makeEntityMember(generator, entityClass, entityType, entityRef);
     }
 
     private static void makeEntitySet(ServiceCodeGenerator generator
@@ -193,16 +188,19 @@ public final class EntityCodeGenerator {
     }
 
     /** DataField or EntityRef's getXXX and setXXX */
-    private static void makeEntityMember(AST ast, TypeDeclaration entityClass, Type memberType, String memberName) {
-        final var fieldName = "_" + memberName;
+    private static void makeEntityMember(ServiceCodeGenerator generator, TypeDeclaration entityClass,
+                                         Type memberType, EntityMemberModel member) {
+        final var ast       = generator.ast;
+        final var fieldName = "_" + member.name();
 
-        makeEntityPrivateField(ast, entityClass, memberType, memberName);
+        makeEntityPrivateField(ast, entityClass, memberType, member.name());
 
         var getMethod = ast.newMethodDeclaration();
-        getMethod.setName(ast.newSimpleName("get" + memberName));
+        getMethod.setName(ast.newSimpleName("get" + member.name()));
         getMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
         getMethod.setReturnType2(memberType);
-        var getBody   = ast.newBlock();
+        var getBody = ast.newBlock();
+        //TODO: EntityRef成员判断外键成员是否有值，有值但私有成员无值则抛未加载异常
         var getReturn = ast.newReturnStatement();
         getReturn.setExpression(ast.newSimpleName(fieldName));
         getBody.statements().add(getReturn);
@@ -210,19 +208,98 @@ public final class EntityCodeGenerator {
         entityClass.bodyDeclarations().add(getMethod);
 
         var setMethod = ast.newMethodDeclaration();
-        setMethod.setName(ast.newSimpleName("set" + memberName));
+        setMethod.setName(ast.newSimpleName("set" + member.name()));
         setMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
         var setPara = ast.newSingleVariableDeclaration();
         setPara.setName(ast.newSimpleName("value"));
         setPara.setType(memberType);
         setMethod.parameters().add(setPara);
-        var setBody       = ast.newBlock();
+        var setBody = ast.newBlock();
+
+        if (member.type() == EntityMemberModel.EntityMemberType.DataField) {
+            final var dataField = (DataFieldModel) member;
+            if (dataField.isForeignKey()) {
+                //如果是外键成员直接清空对应的EntityRef的私有字段, eg: _City = null;
+                var entityRefMember   = dataField.getEntityRefModelByForeignKey();
+                var setEntityRef2Null = ast.newAssignment();
+                setEntityRef2Null.setLeftHandSide(ast.newSimpleName("_" + entityRefMember.name()));
+                setEntityRef2Null.setRightHandSide(ast.newNullLiteral());
+                setBody.statements().add(ast.newExpressionStatement(setEntityRef2Null));
+            }
+        } else if (member.type() == EntityMemberModel.EntityMemberType.EntityRef) {
+            final var entityRef = (EntityRefModel) member;
+            //1.判断不允许null的EntityRef
+            if (!entityRef.allowNull()) {
+                setBody.statements().add(makeCheckNullStatement(ast, "value", "Not allow null"));
+            }
+            //2.映射至存储的需要设置外键成员的值
+            if (entityRef.owner.sqlStoreOptions() != null) {
+                if (entityRef.isAggregationRef()) {
+                    //TODO: eg: setCostSourceFK1(value == null : null ? getCostSourcePK(value, 0))
+                    //其中getConstSourcePK通过实例类型判断
+                    throw new RuntimeException("未实现生成聚合EntityRef成员的setXXX()");
+                } else {
+                    var refModelNode = generator.hub.designTree
+                            .findModelNode(ModelType.Entity, entityRef.getRefModelIds().get(0));
+                    var refModel = (EntityModel) refModelNode.model();
+                    for (int i = 0; i < entityRef.getFKMemberIds().length; i++) {
+                        //eg: setCityId(value == null : null ? value.getId())
+                        var fkMemberName = entityRef.owner.getMember(entityRef.getFKMemberIds()[i]).name();
+                        var pkMemberId   = refModel.sqlStoreOptions().primaryKeys()[i].memberId;
+                        var pkMemberName = refModel.getMember(pkMemberId).name();
+                        var setMember = makeSetEntityMemberValue(ast, fkMemberName,
+                                makeConditionalGetEntityValue(ast, "get" + pkMemberName));
+                        setBody.statements().add(ast.newExpressionStatement(setMember));
+                    }
+                }
+            } else if (entityRef.owner.sysStoreOptions() != null) {
+                var fkMemberName = entityRef.owner.getMember(entityRef.getFKMemberIds()[0]).name();
+                var setMember = makeSetEntityMemberValue(ast, fkMemberName
+                        , makeConditionalGetEntityValue(ast, "id"));
+                setBody.statements().add(ast.newExpressionStatement(setMember));
+            }
+
+            if (entityRef.owner.storeOptions() != null && entityRef.isAggregationRef()) {
+                //eg: setBillType(value == null : null ? value.modelId())
+                var typeMemberName = entityRef.owner.getMember(entityRef.typeMemberId()).name();
+                var setMember = makeSetEntityMemberValue(ast, typeMemberName
+                        , makeConditionalGetEntityValue(ast, "modelId"));
+                setBody.statements().add(ast.newExpressionStatement(setMember));
+            }
+        }
+
         var setAssignment = ast.newAssignment();
         setAssignment.setLeftHandSide(ast.newSimpleName(fieldName));
         setAssignment.setRightHandSide(ast.newSimpleName("value"));
         setBody.statements().add(ast.newExpressionStatement(setAssignment));
+
         setMethod.setBody(setBody);
         entityClass.bodyDeclarations().add(setMethod);
+    }
+
+    private static MethodInvocation makeSetEntityMemberValue(AST ast, String memberName, Expression valueExpression) {
+        var setMember = ast.newMethodInvocation();
+        setMember.setName(ast.newSimpleName("set" + memberName));
+        setMember.arguments().add(valueExpression);
+        return setMember;
+    }
+
+    /** eg: value == null : null ? value.getId() */
+    private static ConditionalExpression makeConditionalGetEntityValue(AST ast, String getMember) {
+        var checkNull = ast.newInfixExpression();
+        checkNull.setOperator(InfixExpression.Operator.EQUALS);
+        checkNull.setLeftOperand(ast.newSimpleName("value"));
+        checkNull.setRightOperand(ast.newNullLiteral());
+
+        var getValue = ast.newMethodInvocation();
+        getValue.setName(ast.newSimpleName(getMember));
+        getValue.setExpression(ast.newSimpleName("value"));
+
+        var conditional = ast.newConditionalExpression();
+        conditional.setExpression(checkNull);
+        conditional.setThenExpression(ast.newNullLiteral());
+        conditional.setElseExpression(getValue);
+        return conditional;
     }
 
     private static MethodDeclaration makeEntityWriteMemberMethod(AST ast, EntityModel model, String className) {
@@ -350,14 +427,41 @@ public final class EntityCodeGenerator {
         return method;
     }
 
+    private static IfStatement makeCheckNullStatement(AST ast, String local, String errorMsg) {
+        var condition = ast.newInfixExpression();
+        condition.setOperator(InfixExpression.Operator.EQUALS);
+        condition.setLeftOperand(ast.newName(local));
+        condition.setRightOperand(ast.newNullLiteral());
+
+        var ifSt = ast.newIfStatement();
+        ifSt.setExpression(condition);
+        ifSt.setThenStatement(makeThrowRuntimeException(ast, errorMsg));
+        return ifSt;
+    }
+
     private static ThrowStatement makeThrowUnknownMember(AST ast, String className) {
-        var throwError = ast.newThrowStatement();
-        var newError   = ast.newClassInstanceCreation();
+        var newError = ast.newClassInstanceCreation();
         newError.setType(ast.newSimpleType(ast.newName(UnknownEntityMember.class.getName())));
         var arg1 = ast.newTypeLiteral();
         arg1.setType(ast.newSimpleType(ast.newSimpleName(className)));
         newError.arguments().add(arg1);
         newError.arguments().add(ast.newSimpleName("id"));
+
+        var throwError = ast.newThrowStatement();
+        throwError.setExpression(newError);
+        return throwError;
+    }
+
+    private static ThrowStatement makeThrowRuntimeException(AST ast, String message) {
+        var newError = ast.newClassInstanceCreation();
+        newError.setType(ast.newSimpleType(ast.newName(RuntimeException.class.getName())));
+        if (message != null && !message.isEmpty()) {
+            var arg = ast.newStringLiteral();
+            arg.setLiteralValue(message);
+            newError.arguments().add(arg);
+        }
+
+        var throwError = ast.newThrowStatement();
         throwError.setExpression(newError);
         return throwError;
     }
