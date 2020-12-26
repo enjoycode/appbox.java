@@ -5,6 +5,7 @@ import appbox.entities.Employee;
 import appbox.model.*;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
+import appbox.model.entity.FieldWithOrder;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
 import appbox.utils.IdUtil;
@@ -45,6 +46,7 @@ public class TestServiceCodeGenerator {
         var entityModel = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Employee");
         //entityModel.bindToSysStore(true, false);
         entityModel.bindToSqlStore(dataStoreModel.id());
+        //memebers
         var nameField = new DataFieldModel(entityModel, "Name", DataFieldModel.DataFieldType.String, false);
         entityModel.addSysMember(nameField, Employee.NAME_ID);
         var maleField = new DataFieldModel(entityModel, "Male", DataFieldModel.DataFieldType.Bool, false);
@@ -55,6 +57,11 @@ public class TestServiceCodeGenerator {
                 new short[]{managerFK.memberId()}, true);
         manager.setAllowNull(true);
         entityModel.addSysMember(manager, Employee.PASSWORD_ID);
+        //pk
+        entityModel.sqlStoreOptions().setPrimaryKeys(new FieldWithOrder[] {
+                new FieldWithOrder(nameField.memberId())
+        });
+
         models.add(entityModel);
         //生成测试服务模型
         var testServiceModel = new ServiceModel(makeServiceModelId(10), "TestService");

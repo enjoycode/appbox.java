@@ -24,6 +24,7 @@ import java.util.UUID;
 
 //TODO:考虑仅生成服务使用到的成员
 
+/** 生成实体的运行时代码 */
 public final class EntityCodeGenerator {
     private EntityCodeGenerator() {}
 
@@ -198,7 +199,7 @@ public final class EntityCodeGenerator {
         var getMethod = ast.newMethodDeclaration();
         getMethod.setName(ast.newSimpleName("get" + member.name()));
         getMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-        getMethod.setReturnType2(memberType);
+        getMethod.setReturnType2((Type) ASTNode.copySubtree(ast, memberType));
         var getBody = ast.newBlock();
         //TODO: EntityRef成员判断外键成员是否有值，有值但私有成员无值则抛未加载异常
         var getReturn = ast.newReturnStatement();
@@ -212,7 +213,7 @@ public final class EntityCodeGenerator {
         setMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
         var setPara = ast.newSingleVariableDeclaration();
         setPara.setName(ast.newSimpleName("value"));
-        setPara.setType(memberType);
+        setPara.setType((Type) ASTNode.copySubtree(ast, memberType));
         setMethod.parameters().add(setPara);
         var setBody = ast.newBlock();
 
@@ -272,6 +273,17 @@ public final class EntityCodeGenerator {
         setAssignment.setLeftHandSide(ast.newSimpleName(fieldName));
         setAssignment.setRightHandSide(ast.newSimpleName("value"));
         setBody.statements().add(ast.newExpressionStatement(setAssignment));
+
+        //如果是DataField且映射至存储，调用onPropertyChanged()
+        if (member.owner.storeOptions() != null && member.type() == EntityMemberModel.EntityMemberType.DataField) {
+            var onChanged = ast.newMethodInvocation();
+            onChanged.setName(ast.newSimpleName("onPropertyChanged"));
+            var cast = ast.newCastExpression();
+            cast.setType(ast.newPrimitiveType(PrimitiveType.SHORT));
+            cast.setExpression(ast.newNumberLiteral(Short.toString(member.memberId())));
+            onChanged.arguments().add(cast);
+            setBody.statements().add(ast.newExpressionStatement(onChanged));
+        }
 
         setMethod.setBody(setBody);
         entityClass.bodyDeclarations().add(setMethod);

@@ -8,8 +8,8 @@ public class TestService {
 
     public CompletableFuture<String> insert() {
         var obj = new sys.entities.Employee();
-        obj.name = "Rick";
-        obj.male = true;
+        obj.Name = "Rick";
+        obj.Male = true;
         return obj.saveAsync().thenApply(r -> "Save Done.");
         //return DataStore.DemoDB.insertAsync(obj, null)
         //        .thenApply(r -> "Hello Future!");
@@ -21,26 +21,26 @@ public class TestService {
     //
     //public CompletableFuture<String> invoke() {
     //    var obj = new sys.entities.Employee();
-    //    obj.name = "Rick";
+    //    obj.Name = "Rick";
     //
     //    //sys.services.TestService.test1();
-    //    return sys.services.TestService.hello(obj.name, 100);
+    //    return sys.services.TestService.hello(obj.Name, 100);
     //}
     //
     //public CompletableFuture<Object> query() {
     //    var obj = new sys.entities.Employee();
     //
     //    var q = new SqlQuery<sys.entities.Employee>();
-    //    q.where(e -> e.name + "a" == obj.name);
+    //    q.where(e -> e.Name + "a" == obj.Name);
     //    return q.toListAsync().thenApply(r -> (Object) r);
     //}
 
     //public CompletableFuture<?> query2() {
     //    var q = new SqlQuery<sys.entities.Employee>();
     //    return q.toListAsync(r -> new Object() {
-    //        final String Name = r.name;
-    //        final boolean MaleFlag = r.male;
-    //        final String Male = r.male ? "男" : "女";
+    //        final String Name = r.Name;
+    //        final boolean MaleFlag = r.Male;
+    //        final String Male = r.Male ? "男" : "女";
     //    });
     //}
 
