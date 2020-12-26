@@ -56,7 +56,7 @@ public class CodeGenService {
         sb.append(appName);
         sb.append(".entities;\n");
 
-        sb.append("import sys.*;");
+        sb.append("import sys.*;\n");
 
         var className = model.name();
         sb.append("public class ");

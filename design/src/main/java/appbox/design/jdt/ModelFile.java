@@ -132,7 +132,7 @@ public final class ModelFile extends ModelResource implements IFile {
             if (modelNode.model().modelType() == ModelType.Entity) {
                 //通过CodeGenService生成虚拟代码
                 var entityDummyCode = CodeGenService.genEntityDummyCode(
-                        (EntityModel) modelNode.model(), modelNode.appNode.model.name(), null);
+                        (EntityModel) modelNode.model(), modelNode.appNode.model.name(), hub.designTree);
                 Log.debug("生成实体模型虚拟代码:" + this.getName());
                 return new ByteArrayInputStream(entityDummyCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {
@@ -164,6 +164,7 @@ public final class ModelFile extends ModelResource implements IFile {
             }
         } catch (Exception ex) {
             Log.warn(String.format("Can't load model's source code: %s", this.getFullPath().toString()));
+            ex.printStackTrace();
             throw new CoreException(new ResourceStatus(ResourceStatus.FAILED_READ_LOCAL, ex.getMessage()));
         }
     }

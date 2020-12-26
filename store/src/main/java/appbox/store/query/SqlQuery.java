@@ -154,7 +154,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     }
 
     public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,
-        Function<SqlQuery<T>, EntityBaseExpression[]> selects) {
+                                                      Function<SqlQuery<T>, EntityBaseExpression[]> selects) {
         return toListAsync(mapper, selects.apply(this));
     }
 
@@ -175,25 +175,21 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         EntityModel model = RuntimeContext.current().getModel(t.modelId);
         var         db    = SqlStore.get(model.sqlStoreOptions().storeModelId());
         return db.runQuery(this).thenApply(res -> {
-            Log.debug("共读取: " + res.getRows().size());
+            //Log.debug("共读取: " + res.getRows().size());
             var rows        = res.getRows();
             var rowReader   = new SqlRowReader(rows.columnNames());
             var list        = new ArrayList<R>(rows.size());
             int extendsFlag = -1; //未知状态
-            try {
-                for (RowData row : rows) {
-                    rowReader.rowData = row;
-                    R obj = mapper.apply(rowReader);
-                    if (extendsFlag == -1) {
-                        extendsFlag = _clazz.isInstance(obj) ? 1 : 0;
-                    }
-                    if (extendsFlag == 1) { //如果是扩展类，则填充本身成员
-                        fillEntity((SqlEntity) obj, model, rowReader);
-                    }
-                    list.add(obj);
+            for (RowData row : rows) {
+                rowReader.rowData = row;
+                R obj = mapper.apply(rowReader);
+                if (extendsFlag == -1) {
+                    extendsFlag = _clazz.isInstance(obj) ? 1 : 0;
                 }
-            } catch (Exception ex) {
-                throw new RuntimeException(ex); //never be here
+                if (extendsFlag == 1) { //如果是扩展类，则填充本身成员
+                    fillEntity((SqlEntity) obj, model, rowReader);
+                }
+                list.add(obj);
             }
 
             return list;

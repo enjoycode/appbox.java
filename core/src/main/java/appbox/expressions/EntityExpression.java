@@ -73,11 +73,11 @@ public final class EntityExpression extends EntityBaseExpression {
         if (_model == null)
             _model = RuntimeContext.current().getModel(modelId);
 
-        var                  m      = _model.tryGetMember(name);
-        EntityBaseExpression member = null;
+        var m = _model.tryGetMember(name);
         if (m == null)
             throw new RuntimeException(String.format("Can't find member: %s.%s", _model.name(), name));
 
+        EntityBaseExpression member = null;
         switch (m.type()) {
             case DataField:
                 member = new EntityFieldExpression(name, this);
