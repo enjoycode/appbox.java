@@ -34,6 +34,13 @@ public abstract class DBEntity extends Entity {
         }
     }
 
+    //TODO: acceptChanges()
+
+    /** 从数据库加载完后变更持久化状态 */
+    public final void fetchDone() {
+        _persistentState = PersistentState.Unchnaged;
+    }
+
     @Override
     public void writeTo(IOutputStream bs) {
         super.writeTo(bs);

@@ -203,11 +203,12 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         for (int i = 0; i < row.columns.size(); i++) {
             fillMember(model, entity, row.columns.get(i), row, i);
         }
-        //不需要obj.AcceptChanges()，新建时已处理持久状态
+        //需要改变实体持久化状态(不同于C#实现)
+        entity.fetchDone();
     }
 
-    private static void fillMember(
-            EntityModel model, SqlEntity entity, String path, SqlRowReader row, int clIndex) {
+    private static void fillMember(EntityModel model, SqlEntity entity,
+                                   String path, SqlRowReader row, int clIndex) {
         if (row.isNull(clIndex))
             return;
 
