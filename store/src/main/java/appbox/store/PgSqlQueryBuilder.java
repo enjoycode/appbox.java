@@ -86,13 +86,13 @@ final class PgSqlQueryBuilder {
         //}
 
         //构建Join
-        //ctx.CurrentQueryInfo.BuildStep = BuildQueryStep.BuildJoin;
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildJoin);
         //SqlQueryBase q1 = (SqlQueryBase)ctx.CurrentQuery;
         //if (q1.HasJoins) //先处理每个手工的联接及每个手工联接相应的自动联接
         //{
         //    BuildJoins(q1.Joins, ctx);
         //}
-        //ctx.BuildQueryAutoJoins(q1); //再处理自动联接
+        ctx.buildQueryAutoJoins((SqlQueryBase) ctx.currentQuery, '\"'); //再处理自动联接
 
         //处理Skip and Take
         if (query.getPurpose() != ISqlSelectQuery.QueryPurpose.Count) {

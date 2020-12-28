@@ -1,6 +1,10 @@
 package appbox.store;
 
 import appbox.expressions.EntityExpression;
+import appbox.model.EntityModel;
+import appbox.model.entity.DataFieldModel;
+import appbox.model.entity.EntityRefModel;
+import appbox.runtime.RuntimeContext;
 import appbox.store.query.ISqlQuery;
 import appbox.store.query.SqlQueryBase;
 
@@ -138,6 +142,50 @@ final class QueryBuildContext {
         //        LoopAddSubQueryJoins((SqlSubQuery)item.Right);
         //    }
         //}
+    }
+
+    /** 用于生成EntityRef的自动Join */
+    public void buildQueryAutoJoins(SqlQueryBase target, char nameEscaper) {
+        if (autoJoins == null)
+            return;
+        var ds = autoJoins.get(target);
+        if (ds == null)
+            return;
+
+        for (var rq : ds.values()) {
+            //Left Join "City" c ON c."Code" = t."CityCode"
+
+            //eg: Customer.City的City
+            EntityModel rqModel = RuntimeContext.current().getModel(rq.modelId);
+            //eg: Customer.City的Customer
+            EntityModel rqOwnerModel = RuntimeContext.current().getModel(rq.owner.modelId);
+            append(" Left Join ");
+            append(nameEscaper);
+            append(rqModel.getSqlTableName(false, null));
+            append(nameEscaper);
+            append(' ');
+            append(rq.getAliasName());
+            append(" ON ");
+            //Build ON Condition, other.pks == this.fks
+            var rm = (EntityRefModel) rqOwnerModel.getMember(rq.name);
+            for (int i = 0; i < rqModel.sqlStoreOptions().primaryKeys().length; i++) {
+                if (i != 0)
+                    append(" And ");
+                var pk = (DataFieldModel) rqModel.getMember(rqModel.sqlStoreOptions().primaryKeys()[i].memberId);
+                var fk = (DataFieldModel) rqOwnerModel.getMember(rm.getFKMemberIds()[i]);
+                append(rq.getAliasName());
+                append('.');
+                append(nameEscaper);
+                append(pk.sqlColName());
+                append(nameEscaper);
+                append('=');
+                append(rq.owner.getAliasName());
+                append('.');
+                append(nameEscaper);
+                append(fk.sqlColName());
+                append(nameEscaper);
+            }
+        }
     }
 
     //region ====QueryInfo & QueryBuildStep====
