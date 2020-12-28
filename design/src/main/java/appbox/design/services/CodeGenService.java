@@ -69,6 +69,22 @@ public class CodeGenService {
 
         //ctor (仅具备主键的sql存储的实体)
         if (model.sqlStoreOptions() != null && model.sqlStoreOptions().hasPrimaryKeys()) {
+            //无参构造用于扩展查询输出
+            sb.append("\tpublic ");
+            sb.append(className);
+            sb.append("(){\n");
+            for (int i = 0; i < model.sqlStoreOptions().primaryKeys().length; i++) {
+                var pk = model.sqlStoreOptions().primaryKeys()[i];
+                var pkField = (DataFieldModel) model.getMember(pk.memberId);
+                sb.append("\t\t");
+                sb.append(pkField.name());
+                sb.append('=');
+                sb.append(getPKDefaultValue(pkField));
+                sb.append(";\n");
+            }
+            sb.append("\t}\n");
+
+            //主键作为参数的构造
             sb.append("\tpublic ");
             sb.append(className);
             sb.append("(");
@@ -186,6 +202,27 @@ public class CodeGenService {
                 return field.allowNull() ? "Double" : "double";
             default:
                 return "Object";
+        }
+    }
+
+    private static String getPKDefaultValue(DataFieldModel field) {
+        switch (field.dataType()) {
+            case String:
+                return "\"\"";
+            case Byte:
+                return "(byte)0";
+            case Short:
+                return "(short)0";
+            case Int:
+            case Enum:
+            case Long:
+            case Float:
+            case Double:
+                return "0";
+            case Bool:
+                return "false";
+            default:
+                return "null";
         }
     }
 
