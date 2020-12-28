@@ -3,8 +3,12 @@ package appbox.design.services.code;
 import appbox.design.DesignHub;
 import appbox.design.tree.ModelNode;
 import appbox.model.DataStoreModel;
+import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
+import appbox.model.entity.EntityMemberModel;
+import appbox.model.entity.EntityRefModel;
+import appbox.model.entity.EntitySetModel;
 import appbox.runtime.InvokeArgs;
 import appbox.store.SqlStore;
 import appbox.utils.StringUtil;
@@ -175,15 +179,37 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     /** 根据实体名称(eg: sys.entities.Employee)获取对应的ModelNode，如果不存在加入使用列表 */
     protected ModelNode getUsedEntity(ITypeBinding entityType) {
-        var fullName        = entityType.getQualifiedName();
+        var pkg     = entityType.getPackage().getJavaElement();
+        var appName = pkg.getPath().segment(1);
+        return getUsedEntity(appName, entityType.getName());
+    }
+
+    private ModelNode getUsedEntity(String appName, String entityName) {
+        var fullName        = String.format("%s.entities.%s", appName, entityName);
         var entityModelNode = usedEntities.get(fullName);
         if (entityModelNode == null) {
-            var pkg     = entityType.getPackage().getJavaElement();
-            var appName = pkg.getPath().segment(1);
             var appNode = hub.designTree.findApplicationNodeByName(appName);
             entityModelNode = hub.designTree.findModelNodeByName(
-                    appNode.model.id(), ModelType.Entity, entityType.getName());
+                    appNode.model.id(), ModelType.Entity, entityName);
             usedEntities.put(fullName, entityModelNode);
+
+            //加入当前实体导航属性使用到的相关实体
+            var entityModel = (EntityModel) entityModelNode.model();
+            for (var member : entityModel.getMembers()) {
+                if (member.type() == EntityMemberModel.EntityMemberType.EntityRef) {
+                    var entityRef = (EntityRefModel) member;
+                    if (!entityRef.isAggregationRef()) { //聚合引用不用处理
+                        var refModelNode = hub.designTree.findModelNode(ModelType.Entity
+                                , entityRef.getRefModelIds().get(0));
+                        getUsedEntity(refModelNode.appNode.model.name(), refModelNode.model().name());
+                    }
+                } else if (member.type() == EntityMemberModel.EntityMemberType.EntitySet) {
+                    var entitySet = (EntitySetModel) member;
+                    var setModelNode = hub.designTree.findModelNode(ModelType.Entity
+                            , entitySet.refModelId());
+                    getUsedEntity(setModelNode.appNode.model.name(), setModelNode.model().name());
+                }
+            }
         }
         return entityModelNode;
     }

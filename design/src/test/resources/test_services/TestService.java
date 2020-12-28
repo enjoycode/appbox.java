@@ -7,8 +7,7 @@ public class TestService {
     }
 
     public CompletableFuture<String> insert() {
-        var obj = new sys.entities.Employee();
-        obj.Name = "Rick";
+        var obj = new sys.entities.Employee("Rick");
         obj.Male = true;
         return obj.saveAsync().thenApply(r -> "Save Done.");
         //return DataStore.DemoDB.insertAsync(obj, null)
@@ -20,8 +19,7 @@ public class TestService {
     //}
     //
     //public CompletableFuture<String> invoke() {
-    //    var obj = new sys.entities.Employee();
-    //    obj.Name = "Rick";
+    //    var obj = new sys.entities.Employee("Rick");
     //
     //    //sys.services.TestService.test1();
     //    return sys.services.TestService.hello(obj.Name, 100);

@@ -81,7 +81,6 @@ public final class EntityExpression extends EntityBaseExpression {
         switch (m.type()) {
             case DataField:
                 member = new EntityFieldExpression(name, this);
-                _cache.put(name, member);
                 break;
             case EntityRef:
                 var rm = (EntityRefModel) m;
@@ -90,9 +89,11 @@ public final class EntityExpression extends EntityBaseExpression {
                 } else {
                     throw new RuntimeException("未实现");
                 }
+                break;
             default:
                 throw new RuntimeException("未实现");
         }
+        _cache.put(name, member);
         return member;
     }
 }

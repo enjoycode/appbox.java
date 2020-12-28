@@ -47,9 +47,7 @@ public class CodeGenService {
         return sb.toString();
     }
 
-    /**
-     * 根据实体模型生成虚拟代码
-     */
+    /** 根据实体模型生成虚拟代码 */
     public static String genEntityDummyCode(EntityModel model, String appName, DesignTree designTree) {
         var sb = new StringBuilder(150);
         sb.append("package ");
@@ -68,6 +66,32 @@ public class CodeGenService {
             sb.append(" extends SqlEntityBase");
         }
         sb.append(" {\n");
+
+        //ctor (仅具备主键的sql存储的实体)
+        if (model.sqlStoreOptions() != null && model.sqlStoreOptions().hasPrimaryKeys()) {
+            sb.append("\tpublic ");
+            sb.append(className);
+            sb.append("(");
+            var sb2 = new StringBuilder(20);
+            for (int i = 0; i < model.sqlStoreOptions().primaryKeys().length; i++) {
+                var pk = model.sqlStoreOptions().primaryKeys()[i];
+                if (i != 0)
+                    sb.append(',');
+                var pkField = (DataFieldModel) model.getMember(pk.memberId);
+                sb.append(getDataFieldTypeString(pkField));
+                sb.append(" pk");
+                sb.append(pkField.name());
+
+                sb2.append("\t\t");
+                sb2.append(pkField.name());
+                sb2.append("=pk");
+                sb2.append(pkField.name());
+                sb2.append(";\n");
+            }
+            sb.append("){\n");
+            sb.append(sb2);
+            sb.append("\t}\n");
+        }
 
         //fields
         for (var memberModel : model.getMembers()) {
@@ -90,6 +114,9 @@ public class CodeGenService {
 
     private static void genDataFieldMember(DataFieldModel field, StringBuilder sb) {
         sb.append("\tpublic ");
+        if (field.isPrimaryKey()) { //主键不允许修改
+            sb.append("final ");
+        }
         sb.append(getDataFieldTypeString(field));
         sb.append(' ');
         sb.append(field.name());

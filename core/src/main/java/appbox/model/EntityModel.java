@@ -35,7 +35,7 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
         return ModelType.Entity;
     }
 
-    public ArrayList<EntityMemberModel> getMembers() {
+    public List<EntityMemberModel> getMembers() {
         return _members;
     }
 

@@ -104,7 +104,7 @@ public final class GetCompletion implements IDesignHandler {
         var column         = args.getInt() - 1; //注意：前端值需要-1
         var wordToComplete = args.getString();
 
-        Log.debug(String.format("%d %s %d-%d %s", type, fileName, line, column, wordToComplete));
+        //Log.debug(String.format("%d %s %d-%d %s", type, fileName, line, column, wordToComplete));
 
         //TODO:待修改以下查找，暂根据名称找到模型
         var firstDot  = fileName.indexOf('.');

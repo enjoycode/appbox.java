@@ -46,7 +46,7 @@ public final class EntityCodeGenerator {
         }
 
         //ctor
-        entityClass.bodyDeclarations().add(makeEntityCtorMethod(ast, model, entityClassName));
+        makeEntityCtorMethod(ast, entityClass, model);
 
         //get and set
         for (var member : model.getMembers()) {
@@ -74,46 +74,71 @@ public final class EntityCodeGenerator {
         return String.format("%s_%s", modelNode.appNode.model.name(), modelNode.model().name());
     }
 
-    private static MethodDeclaration makeEntityCtorMethod(AST ast, EntityModel model, String className) {
+    private static void makeEntityCtorMethod(AST ast, TypeDeclaration entityClass, EntityModel model) {
         var ctor = ast.newMethodDeclaration();
         ctor.setConstructor(true);
-        ctor.setName(ast.newSimpleName(className));
+        ctor.setName(ast.newSimpleName(entityClass.getName().getIdentifier()));
         ctor.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 
-        var body      = ast.newBlock();
-        var superCall = ast.newSuperConstructorInvocation();
-        var arg       = ast.newNumberLiteral(model.id() + "L");
-        superCall.arguments().add(arg);
+        var body          = ast.newBlock();
+        var superCall     = ast.newSuperConstructorInvocation();
+        var supperCallArg = ast.newNumberLiteral(model.id() + "L");
+        superCall.arguments().add(supperCallArg);
         body.statements().add(superCall);
 
         ctor.setBody(body);
-        return ctor;
+        entityClass.bodyDeclarations().add(ctor);
+
+        //绑定至存储且具备主键的生成带主键的构造, eg: Employee(String pkName) { _Name = pkName; }
+        if (model.sqlStoreOptions() != null && model.sqlStoreOptions().hasPrimaryKeys()) {
+            ctor = ast.newMethodDeclaration();
+            ctor.setConstructor(true);
+            ctor.setName(ast.newSimpleName(entityClass.getName().getIdentifier()));
+            ctor.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+
+            for (var pk : model.sqlStoreOptions().primaryKeys()) {
+                var ctorPara = ast.newSingleVariableDeclaration();
+                var pkMember = (DataFieldModel) model.getMember(pk.memberId);
+                ctorPara.setName(ast.newSimpleName("pk" + pkMember.name()));
+                ctorPara.setType(makeDataFieldType(ast, pkMember));
+                ctor.parameters().add(ctorPara);
+            }
+
+            body          = ast.newBlock();
+            superCall     = ast.newSuperConstructorInvocation();
+            supperCallArg = ast.newNumberLiteral(model.id() + "L");
+            superCall.arguments().add(supperCallArg);
+            body.statements().add(superCall);
+
+            for (var pk : model.sqlStoreOptions().primaryKeys()) {
+                var pkMember = (DataFieldModel) model.getMember(pk.memberId);
+                var pkAssign = ast.newAssignment();
+                pkAssign.setLeftHandSide(ast.newSimpleName("_" + pkMember.name()));
+                pkAssign.setRightHandSide(ast.newSimpleName("pk" + pkMember.name()));
+                body.statements().add(ast.newExpressionStatement(pkAssign));
+            }
+
+            ctor.setBody(body);
+            entityClass.bodyDeclarations().add(ctor);
+        }
     }
 
     private static void makeEntityRef(ServiceCodeGenerator generator
             , TypeDeclaration entityClass, EntityRefModel entityRef) {
         final var tree         = generator.hub.designTree;
         final var refModelNode = tree.findModelNode(ModelType.Entity, entityRef.getRefModelIds().get(0));
-        //注意非服务使用到的实体类转换为基类
-        final var useEntityBaseType = entityRef.isAggregationRef() ||
-                generator.isUsedEntity(String.format("%s.entities.%s",
-                        refModelNode.appNode.model.name(), refModelNode.model().name()));
 
-        var entityType = makeNavigationEntityType(refModelNode, useEntityBaseType, generator.ast);
+        var entityType = makeNavigationEntityType(refModelNode, entityRef.isAggregationRef(), generator.ast);
         makeEntityMember(generator, entityClass, entityType, entityRef);
     }
 
     private static void makeEntitySet(ServiceCodeGenerator generator
             , TypeDeclaration entityClass, EntitySetModel entitySet) {
-        final var ast            = generator.ast;
-        final var tree           = generator.hub.designTree;
-        final var refModelNode   = tree.findModelNode(ModelType.Entity, entitySet.refModelId());
-        final var refEntityModel = (EntityModel) refModelNode.model();
-        //注意非服务使用到的实体类转换为基类
-        final var useEntityBaseType = generator.isUsedEntity(String.format("%s.entities.%s",
-                refModelNode.appNode.model.name(), refModelNode.model().name()));
+        final var ast          = generator.ast;
+        final var tree         = generator.hub.designTree;
+        final var setModelNode = tree.findModelNode(ModelType.Entity, entitySet.refModelId());
 
-        var entityType = makeNavigationEntityType(refModelNode, useEntityBaseType, generator.ast);
+        var entityType = makeNavigationEntityType(setModelNode, false, generator.ast);
         var listType   = ast.newParameterizedType(ast.newSimpleType(ast.newName(List.class.getName())));
         listType.typeArguments().add(entityType);
 
@@ -194,7 +219,7 @@ public final class EntityCodeGenerator {
         final var ast       = generator.ast;
         final var fieldName = "_" + member.name();
 
-        makeEntityPrivateField(ast, entityClass, memberType, member.name());
+        makeEntityPrivateField(ast, entityClass, memberType, fieldName);
 
         var getMethod = ast.newMethodDeclaration();
         getMethod.setName(ast.newSimpleName("get" + member.name()));
@@ -207,6 +232,11 @@ public final class EntityCodeGenerator {
         getBody.statements().add(getReturn);
         getMethod.setBody(getBody);
         entityClass.bodyDeclarations().add(getMethod);
+
+        if (member.type() == EntityMemberModel.EntityMemberType.DataField
+                && ((DataFieldModel) member).isPrimaryKey()) {
+            return; //主键成员不生成setXXX()
+        }
 
         var setMethod = ast.newMethodDeclaration();
         setMethod.setName(ast.newSimpleName("set" + member.name()));
