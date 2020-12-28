@@ -69,9 +69,9 @@ public final class EntityCodeGenerator {
         return entityClass;
     }
 
-    /** 生成运行时实体名称 eg: Sys_Employee */
+    /** 生成运行时实体名称 eg: SYS_Employee */
     static String makeEntityClassName(ModelNode modelNode) {
-        return String.format("%s_%s", modelNode.appNode.model.name(), modelNode.model().name());
+        return String.format("%s_%s", modelNode.appNode.model.name().toUpperCase(), modelNode.model().name());
     }
 
     private static void makeEntityCtorMethod(AST ast, TypeDeclaration entityClass, EntityModel model) {
