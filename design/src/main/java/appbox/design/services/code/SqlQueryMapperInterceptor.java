@@ -1,6 +1,8 @@
 package appbox.design.services.code;
 
 import appbox.logging.Log;
+import appbox.model.EntityModel;
+import appbox.model.entity.EntityMemberModel;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -21,7 +23,10 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
 
     @Override
     public boolean visit(MethodInvocation node, ServiceCodeGenerator generator) {
-        var          lambda              = (LambdaExpression) node.arguments().get(node.arguments().size() - 1);
+        var lambda = (LambdaExpression) node.arguments().get(node.arguments().size() - 1);
+        if (!(lambda.getBody() instanceof ClassInstanceCreation))
+            throw new RuntimeException("Mapper must be a ClassInstanceCreation");
+
         final String firstLambdaParaName = lambda.parameters().get(0).toString();
         var          selectLambda        = generator.ast.newLambdaExpression();
 
@@ -64,6 +69,26 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
                 }
             }
         };
+
+        //如果是继承的扩展类型先select all
+        var lambdaBody       = (ClassInstanceCreation) lambda.getBody();
+        var creationTypeName = ((SimpleType) lambdaBody.getType()).getName();
+        var typeName = creationTypeName.isSimpleName() ?
+                ((SimpleName) creationTypeName).getIdentifier() :
+                ((QualifiedName) creationTypeName).getName().getIdentifier();
+        if (!typeName.equals("Object")) {
+            //TODO:验证类型必须与查询类型一致
+            var entityType = lambdaBody.getType().resolveBinding();
+            var entityModelNode = generator.getUsedEntity(entityType);
+            var entityModel = (EntityModel) entityModelNode.model();
+            for(var member : entityModel.getMembers()) {
+                if (member.type() != EntityMemberModel.EntityMemberType.DataField)
+                    continue;
+                selects.add(firstLambdaParaName + "." + member.name());
+                var owner = generator.ast.newSimpleName(firstLambdaParaName);
+                targets.add(generator.makeEntityExpression(owner, member.name()));
+            }
+        }
 
         //开始处理Lambda表达式
         lambda.accept(visitor);

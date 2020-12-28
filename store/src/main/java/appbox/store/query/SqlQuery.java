@@ -140,10 +140,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
                     };
                 }
 
-                for (RowData row : rows) {
+                for (var row : rows) {
                     rowReader.rowData = row;
                     var obj = creator.get();
-                    fillEntity(obj, model, rowReader);
+                    fillEntity(obj, model, rowReader, 0);
                     list.add(obj);
                 }
             } catch (Exception ex) {
@@ -179,15 +179,15 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
             var rows        = res.getRows();
             var rowReader   = new SqlRowReader(rows.columnNames());
             var list        = new ArrayList<R>(rows.size());
-            int extendsFlag = -1; //未知状态
+            int extendsFlag = -1; //-1=未知状态,0=非扩展, >0扩展数量
             for (RowData row : rows) {
                 rowReader.rowData = row;
                 R obj = mapper.apply(rowReader);
                 if (extendsFlag == -1) {
-                    extendsFlag = _clazz.isInstance(obj) ? 1 : 0;
+                    extendsFlag = _clazz.isInstance(obj) ? obj.getClass().getDeclaredFields().length : 0;
                 }
-                if (extendsFlag == 1) { //如果是扩展类，则填充本身成员
-                    fillEntity((SqlEntity) obj, model, rowReader);
+                if (extendsFlag > 0) { //如果是扩展类，则填充本身成员
+                    fillEntity((SqlEntity) obj, model, rowReader, extendsFlag);
                 }
                 list.add(obj);
             }
@@ -198,9 +198,9 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //endregion
 
     //region ====Fetch Entity Methods====
-    private static void fillEntity(SqlEntity entity, EntityModel model, SqlRowReader row) {
+    private static void fillEntity(SqlEntity entity, EntityModel model, SqlRowReader row, int extendsFlag) {
         //填充实体成员
-        for (int i = 0; i < row.columns.size(); i++) {
+        for (int i = 0; i < row.columns.size() - extendsFlag; i++) {
             fillMember(model, entity, row.columns.get(i), row, i);
         }
         //需要改变实体持久化状态(不同于C#实现)

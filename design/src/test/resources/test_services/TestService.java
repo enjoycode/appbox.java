@@ -42,6 +42,13 @@ public class TestService {
     //    });
     //}
 
+    public CompletableFuture<?> query3() {
+        var q = new SqlQuery<sys.entities.Employee>();
+        return q.toListAsync(r -> new sys.entities.Employee() {
+                    final String ParentName = r.Manager.Name;
+                });
+    }
+
     //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
     //    return CompletableFuture.completedFuture(emp);
     //}
