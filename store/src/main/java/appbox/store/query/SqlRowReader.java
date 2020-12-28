@@ -1,13 +1,14 @@
 package appbox.store.query;
 
+import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.serialization.IEntityMemberReader;
 import com.github.jasync.sql.db.RowData;
 
-import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /** 用于包装RowData */
 public final class SqlRowReader implements IEntityMemberReader {
@@ -80,4 +81,15 @@ public final class SqlRowReader implements IEntityMemberReader {
     public EntityId readEntityIdMember(int flags) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public <T extends Entity> T readRefMember(int flags, Supplier<T> creator) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T extends Entity> List<T> readSetMember(int flags, Supplier<T> creator) {
+        throw new UnsupportedOperationException();
+    }
+
 }

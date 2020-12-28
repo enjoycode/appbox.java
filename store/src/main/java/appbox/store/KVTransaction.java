@@ -5,17 +5,17 @@ package appbox.store;
 import appbox.channel.KVRowReader;
 import appbox.channel.messages.KVAddRefRequest;
 import appbox.channel.messages.StoreResponse;
+import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.serialization.IEntityMemberWriter;
-import appbox.utils.IdUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -189,7 +189,7 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
     }
 
     @Override
-    public void writeMember(short id, Optional<Integer> value, byte flags) {
+    public void writeMember(short id, Integer value, byte flags) {
         throw new UnsupportedOperationException();
     }
 
@@ -210,6 +210,16 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
 
     @Override
     public void writeMember(short id, Date value, byte flags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, Entity value, byte flags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, List<Entity> value, byte flags) {
         throw new UnsupportedOperationException();
     }
     //endregion

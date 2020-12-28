@@ -358,7 +358,7 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     @Override
     default void writeMember(short id, String value, byte flags) {
-        if (flags != 0) {
+        if (flags != IEntityMemberWriter.SF_NONE) {
             if (value != null) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
                 //TODO:优化写utf8,另判断长度超出范围
@@ -376,34 +376,34 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     @Override
     default void writeMember(short id, byte value, byte flags) {
-        writeShort(flags == 0 ? id : (short) (id | 1));
+        writeShort(flags == IEntityMemberWriter.SF_NONE ? id : (short) (id | 1));
         writeByte(value);
     }
 
     @Override
     default void writeMember(short id, int value, byte flags) {
-        writeShort(flags == 0 ? id : (short) (id | 4));
+        writeShort(flags == IEntityMemberWriter.SF_NONE ? id : (short) (id | 4));
         writeInt(value);
     }
 
     @Override
-    default void writeMember(short id, Optional<Integer> value, byte flags) {
-        if (value.isPresent()) {
-            writeMember(id, value.get(), flags);
-        } else if (flags != 0 && (flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
+    default void writeMember(short id, Integer value, byte flags) {
+        if (value != null) {
+            writeMember(id, (int) value, flags);
+        } else if (flags != IEntityMemberWriter.SF_NONE && (flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
             writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
         }
     }
 
     @Override
     default void writeMember(short id, long value, byte flags) {
-        writeShort(flags == 0 ? id : (short) (id | 8));
+        writeShort(flags == IEntityMemberWriter.SF_NONE ? id : (short) (id | 8));
         writeLong(value);
     }
 
     @Override
     default void writeMember(short id, UUID value, byte flags) {
-        if (flags != 0) {
+        if (flags != IEntityMemberWriter.SF_NONE) {
             if (value != null) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_16_LEN_FLAG));
                 writeLong(value.getMostSignificantBits());
@@ -420,7 +420,7 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     @Override
     default void writeMember(short id, EntityId value, byte flags) {
-        if (flags != 0) {
+        if (flags != IEntityMemberWriter.SF_NONE) {
             if (value != null) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_16_LEN_FLAG));
                 value.writeTo(this);
@@ -435,7 +435,7 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     @Override
     default void writeMember(short id, byte[] value, byte flags) {
-        if (flags != 0) {
+        if (flags != IEntityMemberWriter.SF_NONE) {
             if (value != null) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_VAR_FLAG));
                 writeStoreVarLen(value.length);
@@ -451,7 +451,7 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     @Override
     default void writeMember(short id, boolean value, byte flags) {
-        if (flags != 0) {
+        if (flags != IEntityMemberWriter.SF_NONE) {
             if (value) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_BOOL_TRUE_FLAG));
             } else {
@@ -465,7 +465,7 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     @Override
     default void writeMember(short id, Date value, byte flags) {
-        if (flags != 0) {
+        if (flags != IEntityMemberWriter.SF_NONE) {
             if (value != null) {
                 writeShort((short) (id | 8));
                 writeLong(value.getTime());
@@ -477,6 +477,34 @@ public interface IOutputStream extends IEntityMemberWriter {
             writeLong(value.getTime());
         }
     }
+
+    @Override
+    default void writeMember(short id, Entity value, byte flags) {
+        if (flags != IEntityMemberWriter.SF_NONE) { //不往存储流写入
+            return;
+        }
+        if (value == null)
+            return;
+
+        writeShort(id);
+        value.writeTo(this);
+    }
+
+    @Override
+    default void writeMember(short id, List<Entity> value, byte flags) {
+        if (flags != IEntityMemberWriter.SF_NONE) { //不往存储流写入
+            return;
+        }
+        if (value == null || value.size() == 0)
+            return;
+
+        writeShort(id);
+        writeVariant(value.size());
+        for(var item : value) {
+            item.writeTo(this);
+        }
+    }
+
     //endregion
 
 }

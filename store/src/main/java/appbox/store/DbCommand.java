@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.logging.Log;
 import appbox.serialization.IEntityMemberWriter;
@@ -86,9 +87,9 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, Optional<Integer> value, byte flags) {
-        if (value.isPresent()) {
-            addParameter(value.get());
+    public void writeMember(short id, Integer value, byte flags) {
+        if (value != null) {
+            addParameter(value);
         } else if ((flags & IEntityMemberWriter.SF_WRITE_NULL) == IEntityMemberWriter.SF_WRITE_NULL) {
             addParameter(null);
         }
@@ -123,6 +124,16 @@ final class DbCommand implements IEntityMemberWriter {
             addParameter(String.valueOf(value.getTime())); //暂转换为字符串，待检查
         else
             addParameter(null);
+    }
+
+    @Override
+    public void writeMember(short id, Entity value, byte flags) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeMember(short id, List<Entity> value, byte flags) {
+        throw new UnsupportedOperationException();
     }
 
     //endregion

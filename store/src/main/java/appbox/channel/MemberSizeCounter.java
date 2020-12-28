@@ -1,11 +1,12 @@
 package appbox.channel;
 
+import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.StringUtil;
 
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 /** 用于存储层计算成员长度，如计算索引Key的长度 */
@@ -39,8 +40,8 @@ public final class MemberSizeCounter implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, Optional<Integer> value, byte flags) {
-        size += 2 + (value.isPresent() ? 4 : 0);
+    public void writeMember(short id, Integer value, byte flags) {
+        size += 2 + (value != null ? 4 : 0);
     }
 
     @Override
@@ -72,5 +73,15 @@ public final class MemberSizeCounter implements IEntityMemberWriter {
         size += 2;
         if (value != null)
             size += 8;
+    }
+
+    @Override
+    public void writeMember(short id, Entity value, byte flags) {
+        //do nothing
+    }
+
+    @Override
+    public void writeMember(short id, List<Entity> value, byte flags) {
+        //do nothing
     }
 }

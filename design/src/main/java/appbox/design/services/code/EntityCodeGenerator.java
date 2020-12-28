@@ -64,7 +64,7 @@ public final class EntityCodeGenerator {
 
         //overrides
         entityClass.bodyDeclarations().add(makeEntityWriteMemberMethod(ast, model, entityClassName));
-        entityClass.bodyDeclarations().add(makeEntityReadMemberMethod(ast, model, entityClassName));
+        entityClass.bodyDeclarations().add(makeEntityReadMemberMethod(generator, model, entityClassName));
 
         return entityClass;
     }
@@ -372,28 +372,21 @@ public final class EntityCodeGenerator {
 
         for (var memeber : model.getMembers()) {
             var switchCase = ast.newSwitchCase();
-            if (memeber.type() == EntityMemberModel.EntityMemberType.DataField) {
-                var dataField = (DataFieldModel) memeber;
-                var fieldName = "_" + dataField.name();
+            //暂DataField\EntityRef\EntitySet通用 TODO:其他特殊类型待定
+            var fieldName = "_" + memeber.name();
 
-                var castExp = ast.newCastExpression();
-                castExp.setType(ast.newPrimitiveType(PrimitiveType.SHORT));
-                castExp.setExpression(ast.newNumberLiteral(Short.toString(memeber.memberId())));
-                switchCase.expressions().add(castExp);
-                switchst.statements().add(switchCase);
+            switchCase.expressions().add(makeCastMemberId(ast, memeber.memberId()));
+            switchst.statements().add(switchCase);
 
-                var invokeExp = ast.newMethodInvocation();
-                invokeExp.setExpression(ast.newSimpleName("bs"));
-                invokeExp.setName(ast.newSimpleName("writeMember"));
-                invokeExp.arguments().add(ast.newSimpleName("id"));
-                invokeExp.arguments().add(ast.newSimpleName(fieldName));
-                invokeExp.arguments().add(ast.newSimpleName("flags"));
-                switchst.statements().add(ast.newExpressionStatement(invokeExp));
+            var invokeExp = ast.newMethodInvocation();
+            invokeExp.setExpression(ast.newSimpleName("bs"));
+            invokeExp.setName(ast.newSimpleName("writeMember"));
+            invokeExp.arguments().add(ast.newSimpleName("id"));
+            invokeExp.arguments().add(ast.newSimpleName(fieldName));
+            invokeExp.arguments().add(ast.newSimpleName("flags"));
+            switchst.statements().add(ast.newExpressionStatement(invokeExp));
 
-                switchst.statements().add(ast.newBreakStatement());
-            } else {
-                //TODO:
-            }
+            switchst.statements().add(ast.newBreakStatement());
         }
 
         //switch default
@@ -405,8 +398,10 @@ public final class EntityCodeGenerator {
         return method;
     }
 
-    private static MethodDeclaration makeEntityReadMemberMethod(AST ast, EntityModel model, String className) {
-        var method = ast.newMethodDeclaration();
+    private static MethodDeclaration makeEntityReadMemberMethod(ServiceCodeGenerator generator
+            , EntityModel model, String className) {
+        final var ast    = generator.ast;
+        var       method = ast.newMethodDeclaration();
         method.setName(ast.newSimpleName("readMember"));
 
         var overrideAnnotation = ast.newMarkerAnnotation();
@@ -433,31 +428,45 @@ public final class EntityCodeGenerator {
         switchst.setExpression(ast.newSimpleName("id"));
 
         for (var memeber : model.getMembers()) {
+            //暂DataField\EntityRef\EntitySet通用 TODO:其他特殊类型待定
             var switchCase = ast.newSwitchCase();
+            switchCase.expressions().add(makeCastMemberId(ast, memeber.memberId()));
+            switchst.statements().add(switchCase);
+
+            var readExp = ast.newMethodInvocation();
+            readExp.setExpression(ast.newSimpleName("bs"));
+            readExp.arguments().add(ast.newSimpleName("flags"));
             if (memeber.type() == EntityMemberModel.EntityMemberType.DataField) {
-                var dataField = (DataFieldModel) memeber;
-                var fieldName = "_" + dataField.name();
-
-                var castExp = ast.newCastExpression();
-                castExp.setType(ast.newPrimitiveType(PrimitiveType.SHORT));
-                castExp.setExpression(ast.newNumberLiteral(Short.toString(memeber.memberId())));
-                switchCase.expressions().add(castExp);
-                switchst.statements().add(switchCase);
-
-                var assignExp = ast.newAssignment();
-                assignExp.setLeftHandSide(ast.newSimpleName(fieldName));
-                var invokeExp = ast.newMethodInvocation();
-                invokeExp.setExpression(ast.newSimpleName("bs"));
-                invokeExp.setName(ast.newSimpleName("read" + getDataFieldType(dataField, true) + "Member"));
-                invokeExp.arguments().add(ast.newSimpleName("flags"));
-                assignExp.setRightHandSide(invokeExp);
-
-                switchst.statements().add(ast.newExpressionStatement(assignExp));
-
-                switchst.statements().add(ast.newBreakStatement());
-            } else {
-                //TODO:
+                readExp.setName(ast.newSimpleName("read"
+                        + getDataFieldType((DataFieldModel) memeber, true) + "Member"));
+            } else if (memeber.type() == EntityMemberModel.EntityMemberType.EntityRef) {
+                readExp.setName(ast.newSimpleName("readRefMember"));
+                var entityRef = (EntityRefModel) memeber;
+                if (entityRef.isAggregationRef()) {
+                    //TODO:专用readAggRefMember()
+                    throw new RuntimeException("未实现");
+                }
+                var refModelNode = generator.hub.designTree.findModelNode(ModelType.Entity,
+                        entityRef.getRefModelIds().get(0));
+                var creatorArg = ast.newCreationReference();
+                creatorArg.setType(ast.newSimpleType(ast.newName(makeEntityClassName(refModelNode))));
+                readExp.arguments().add(creatorArg);
+            } else if (memeber.type() == EntityMemberModel.EntityMemberType.EntitySet) {
+                readExp.setName(ast.newSimpleName("readSetMember"));
+                var entitySet = (EntitySetModel) memeber;
+                var setModelNode = generator.hub.designTree.findModelNode(ModelType.Entity,
+                        entitySet.refModelId());
+                var creatorArg = ast.newCreationReference();
+                creatorArg.setType(ast.newSimpleType(ast.newName(makeEntityClassName(setModelNode))));
+                readExp.arguments().add(creatorArg);
             }
+
+            var assignExp = ast.newAssignment();
+            assignExp.setLeftHandSide(ast.newSimpleName("_" + memeber.name()));
+            assignExp.setRightHandSide(readExp);
+
+            switchst.statements().add(ast.newExpressionStatement(assignExp));
+            switchst.statements().add(ast.newBreakStatement());
         }
 
         //switch default
@@ -467,6 +476,14 @@ public final class EntityCodeGenerator {
         body.statements().add(switchst);
         method.setBody(body);
         return method;
+    }
+
+    /** (short) 128 */
+    private static CastExpression makeCastMemberId(AST ast, short memberId) {
+        var castExp = ast.newCastExpression();
+        castExp.setType(ast.newPrimitiveType(PrimitiveType.SHORT));
+        castExp.setExpression(ast.newNumberLiteral(Short.toString(memberId)));
+        return castExp;
     }
 
     private static IfStatement makeCheckNullStatement(AST ast, String local, String errorMsg) {

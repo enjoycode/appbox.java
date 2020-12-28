@@ -2,10 +2,13 @@ package appbox.serialization;
 
 //注意不需要处理可为空的成员
 
+import appbox.data.Entity;
 import appbox.data.EntityId;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public interface IEntityMemberReader {
     int SF_NONE = 0;
@@ -27,4 +30,11 @@ public interface IEntityMemberReader {
     Date readDateMember(int flags);
 
     EntityId readEntityIdMember(int flags);
+
+    /** EntityRef成员 */
+    <T extends Entity> T readRefMember(int flags, Supplier<T> creator);
+
+    /** EntitySet成员 */
+    <T extends Entity> List<T> readSetMember(int flags, Supplier<T> creator);
+
 }

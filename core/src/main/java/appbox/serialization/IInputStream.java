@@ -1,5 +1,6 @@
 package appbox.serialization;
 
+import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.utils.IdUtil;
 
@@ -296,7 +297,7 @@ public interface IInputStream extends IEntityMemberReader {
 
     @Override
     default String readStringMember(int flags) {
-        if (flags == 0)
+        if (flags == IEntityMemberWriter.SF_NONE)
             return readString();
         int size  = flags >>> 8; //TODO:优化读utf8
         var bytes = new byte[size];
@@ -306,7 +307,7 @@ public interface IInputStream extends IEntityMemberReader {
 
     @Override
     default boolean readBoolMember(int flags) {
-        if (flags == 0)
+        if (flags == IEntityMemberWriter.SF_NONE)
             return readBool();
         return (flags & IdUtil.STORE_FIELD_BOOL_TRUE_FLAG) == IdUtil.STORE_FIELD_BOOL_TRUE_FLAG;
     }
@@ -333,7 +334,7 @@ public interface IInputStream extends IEntityMemberReader {
 
     @Override
     default byte[] readBinaryMember(int flags) {
-        if (flags == 0)
+        if (flags == IEntityMemberWriter.SF_NONE)
             return readByteArray();
         int size  = flags >>> 8;
         var bytes = new byte[size];
@@ -352,6 +353,25 @@ public interface IInputStream extends IEntityMemberReader {
         var id = new EntityId();
         id.readFrom(this);
         return id;
+    }
+
+    @Override
+    default <T extends Entity> T readRefMember(int flags, Supplier<T> creator) {
+        var obj = creator.get();
+        obj.readFrom(this);
+        return obj;
+    }
+
+    @Override
+    default <T extends Entity> List<T> readSetMember(int flags, Supplier<T> creator) {
+        var count = readVariant();
+        var list  = new ArrayList<T>(count);
+        for (int i = 0; i < count; i++) {
+            var obj = creator.get();
+            obj.readFrom(this);
+            list.add(obj);
+        }
+        return list;
     }
 
     //endregion
