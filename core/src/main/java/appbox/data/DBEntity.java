@@ -1,5 +1,6 @@
 package appbox.data;
 
+import appbox.logging.Log;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
@@ -47,6 +48,24 @@ public abstract class DBEntity extends Entity {
 
         bs.writeByte(_persistentState.value);
         bs.writeListShort(_changedMembers);
+
+        //写入匿名类扩展信息,仅用于向前端输出
+        if (this.getClass().isAnonymousClass()) {
+            var fields = this.getClass().getFields();
+            bs.writeVariant(fields.length);
+            try {
+                for (var field : fields) {
+                    field.setAccessible(true);
+                    bs.writeString(field.getName());
+                    bs.serialize(field.get(this));
+                }
+            } catch (Exception ex) {
+                Log.error("序列化实体扩展信息错误: " + ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+            bs.writeVariant(0);
+        }
     }
 
     @Override
@@ -55,5 +74,15 @@ public abstract class DBEntity extends Entity {
 
         _persistentState = PersistentState.fromValue(bs.readByte());
         _changedMembers  = bs.readListShort();
+
+        //读取扩展信息，暂忽略
+        var extFields = bs.readVariant();
+        if (extFields > 0) {
+            for (int i = 0; i < extFields; i++) {
+                var fieldName  = bs.readString();
+                var fieldValue = bs.deserialize();
+                Log.debug("Read ext field: " + fieldName + "=" + fieldValue);
+            }
+        }
     }
 }
