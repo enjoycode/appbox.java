@@ -83,6 +83,37 @@ final class SqlQueryLambdaVisitor extends ServiceCodeGeneratorProxy {
         return false;
     }
 
+    @Override
+    public boolean visit(Assignment node) {
+        var left = node.getLeftHandSide();
+        if (left instanceof QualifiedName) {
+            var qualified  = (QualifiedName) left;
+            var identifier = ServiceCodeGenerator.getIdentifier(qualified);
+            if (lambdaParameters.containsKey(identifier)) {
+                if (qualified.getQualifier().isQualifiedName()) //eg: t.City.Name = "Wuxi"
+                    throw new RuntimeException("EntitySet path not allowed");
+
+                var exp     = generator.ast.newSimpleName(identifier);
+                var newLeft = generator.makeEntityExpression(exp, qualified.getName().getIdentifier());
+
+                node.getRightHandSide().accept(this);
+                var newRight = (ASTNode) generator.astRewrite.get(node, Assignment.RIGHT_HAND_SIDE_PROPERTY);
+                if (newRight.getParent() != null)
+                    newRight = ASTNode.copySubtree(generator.ast, newRight);
+
+                var newNode = generator.ast.newMethodInvocation();
+                newNode.setName(generator.ast.newSimpleName("set"));
+                newNode.setExpression(newLeft);
+                newNode.arguments().add(newRight);
+
+                generator.astRewrite.replace(node, newNode, null);
+                return false;
+            }
+        }
+
+        return super.visit(node);
+    }
+
     private static String getOperator(InfixExpression.Operator op) {
         if (op == InfixExpression.Operator.EQUALS) {
             return "eq";

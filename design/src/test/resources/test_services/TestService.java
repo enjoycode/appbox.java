@@ -42,11 +42,18 @@ public class TestService {
     //    });
     //}
 
-    public CompletableFuture<?> query3() {
-        var q = new SqlQuery<sys.entities.Employee>();
-        return q.toListAsync(r -> new sys.entities.Employee() {
-                    final String ParentName = r.Manager.Name;
-                });
+    //public CompletableFuture<?> query3() {
+    //    var q = new SqlQuery<sys.entities.Employee>();
+    //    return q.toListAsync(r -> new sys.entities.Employee() {
+    //                final String ParentName = r.Manager.Name;
+    //            });
+    //}
+
+    public CompletableFuture<?> update() {
+        var cmd = new SqlUpdateCommand<sys.entities.Employee>();
+        cmd.where(e -> e.Name == "Rick");
+        cmd.update(e -> e.Male = true);
+        return cmd.execAsync();
     }
 
     //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {

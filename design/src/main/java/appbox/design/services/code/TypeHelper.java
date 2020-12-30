@@ -45,30 +45,30 @@ public final class TypeHelper {
         return foundPublicModifier;
     }
 
-    /** 判断是否具有构造拦截器，没有返回null，有则返回拦截器名称 */
-    public static String getCtorInterceptor(ITypeBinding type) {
-        var annotations = type.getAnnotations();
+    private static Object getAnnotationValue(IAnnotationBinding[] annotations, String annotation) {
         if (annotations == null || annotations.length == 0)
             return null;
         for (var item : annotations) {
-            if (item.getName().equals("CtorInterceptor")) {
-                return (String)item.getDeclaredMemberValuePairs()[0].getValue();
+            if (item.getName().equals(annotation)) {
+                return item.getDeclaredMemberValuePairs()[0].getValue();
             }
         }
         return null;
     }
 
+    /** 获取运行时类型，没有返回null */
+    public static String getRuntimeType(ITypeBinding type) {
+        return (String) getAnnotationValue(type.getAnnotations(), "RuntimeType");
+    }
+
+    /** 判断是否具有构造拦截器，没有返回null，有则返回拦截器名称 */
+    public static String getCtorInterceptor(ITypeBinding type) {
+        return (String) getAnnotationValue(type.getAnnotations(), "CtorInterceptor");
+    }
+
     /** 判断是否具有方法调用拦截器，没有返回null，有则返回拦截器名称 */
     public static String getMethodInterceptor(IMethodBinding method) {
-        var annotations = method.getAnnotations();
-        if (annotations == null || annotations.length == 0)
-            return null;
-        for (var item : annotations) {
-            if(item.getName().equals("MethodInterceptor")) {
-                return (String) item.getDeclaredMemberValuePairs()[0].getValue();
-            }
-        }
-        return null;
+        return (String) getAnnotationValue(method.getAnnotations(), "MethodInterceptor");
     }
 
 }

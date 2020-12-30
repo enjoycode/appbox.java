@@ -11,6 +11,8 @@ import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.FieldWithOrder;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.store.query.ISqlSelectQuery;
+import appbox.store.query.SqlRowReader;
+import appbox.store.query.SqlUpdateCommand;
 import com.github.jasync.sql.db.Connection;
 import com.github.jasync.sql.db.QueryResult;
 
@@ -101,7 +103,7 @@ public abstract class SqlStore {
     }
     //endregion
 
-    //region ====DML Insert/Update/Delete Methods====
+    //region ====DML Insert/Update/Delete Entity Methods====
 
     /** 根据Entity及其模型生成相应的Insert命令 */
     protected DbCommand buildInsertCommand(SqlEntity entity, EntityModel model) {
@@ -221,7 +223,7 @@ public abstract class SqlStore {
                 txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
         return getConnection.thenCompose(cmd::execNonQueryAsync)
                 .handle((res, ex) -> {
-                    handleDbCommandResult(txn, cmd, res, ex);
+                    handleDbCommandResult(txn, cmd, ex);
                     return null;
                 });
     }
@@ -244,7 +246,7 @@ public abstract class SqlStore {
                 txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
         return getConnection.thenCompose(cmd::execNonQueryAsync)
                 .handle((res, ex) -> {
-                    handleDbCommandResult(txn, cmd, res, ex);
+                    handleDbCommandResult(txn, cmd, ex);
                     return null;
                 });
     }
@@ -267,7 +269,7 @@ public abstract class SqlStore {
                 txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
         return getConnection.thenCompose(cmd::execNonQueryAsync)
                 .handle((res, ex) -> {
-                    handleDbCommandResult(txn, cmd, res, ex);
+                    handleDbCommandResult(txn, cmd, ex);
                     return null;
                 });
     }
@@ -286,6 +288,39 @@ public abstract class SqlStore {
         }
     }
 
+    //endregion
+
+    //region ====DML Update/Delete Command Methods====
+    protected abstract DbCommand buildUpdateCommand(SqlUpdateCommand updateCommand);
+
+    public final CompletableFuture<Long> execUpdateAsync(SqlUpdateCommand updateCommand, DbTransaction txn) {
+        //暂不支持无条件更新，以防止误操作
+        if (updateCommand.getFilter() == null) {
+            tryRollbackTxn(txn);
+            throw new RuntimeException("SqlUpdateCommand must has where condition");
+        }
+
+        var cmd = buildUpdateCommand(updateCommand);
+        CompletableFuture<Connection> getConnection =
+                txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
+        if (updateCommand.hasOutputs()) {
+            return getConnection.thenCompose(cmd::execQueryAsync).handle((res, ex) -> {
+                handleDbCommandResult(txn, cmd, ex);
+                var rows      = res.getRows();
+                var rowReader = new SqlRowReader(rows.columnNames());
+                for (var row : rows) {
+                    rowReader.rowData = row;
+                    updateCommand.readOutputs(rowReader);
+                }
+                return res.getRowsAffected();
+            });
+        } else {
+            return getConnection.thenCompose(cmd::execNonQueryAsync).handle((res, ex) -> {
+                handleDbCommandResult(txn, cmd, ex);
+                return res;
+            });
+        }
+    }
     //endregion
 
     //region ====DML Query Methods====
@@ -332,7 +367,7 @@ public abstract class SqlStore {
         }
     }
 
-    private void handleDbCommandResult(DbTransaction txn, DbCommand cmd, Long res, Throwable ex) {
+    private void handleDbCommandResult(DbTransaction txn, DbCommand cmd, Throwable ex) {
         //仅关闭非事务内的连接
         if (txn == null && cmd.connection != null /*可能未打开就出现异常*/) {
             closeConnection(cmd.connection);

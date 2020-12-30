@@ -2,12 +2,16 @@ package appbox.store;
 
 import appbox.data.PersistentState;
 import appbox.design.IDesignContext;
+import appbox.expressions.EntityFieldExpression;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.IndexModelBase;
+import appbox.runtime.RuntimeContext;
 import appbox.store.query.ISqlSelectQuery;
+import appbox.store.query.SqlQueryBase;
+import appbox.store.query.SqlUpdateCommand;
 import com.alibaba.fastjson.JSON;
 import com.github.jasync.sql.db.Connection;
 import com.github.jasync.sql.db.ConnectionPoolConfiguration;
@@ -265,6 +269,56 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
     //endregion
 
     //region ====DML Methods====
+    @Override
+    protected DbCommand buildUpdateCommand(SqlUpdateCommand updateCommand) {
+        var cmd = new DbCommand();
+        var ctx = new QueryBuildContext(cmd, updateCommand);
+
+        EntityModel model = RuntimeContext.current().getModel(updateCommand.t.modelId);
+
+        ctx.beginBuildQuery(updateCommand);
+        ctx.append("Update \"");
+        ctx.append(model.getSqlTableName(false, null));
+        ctx.append("\" t Set ");
+
+        //Set
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildUpdateSet);
+        for (int i = 0; i < updateCommand.updateItems.size(); i++) {
+            if (i != 0)
+                ctx.append(',');
+            PgSqlQueryBuilder.buildExpression(updateCommand.updateItems.get(i), ctx);
+        }
+        //Where
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildWhere);
+        if (updateCommand.getFilter() != null) {
+            ctx.append(" Where ");
+            PgSqlQueryBuilder.buildExpression(ctx.currentQuery.getFilter(), ctx);
+        }
+        //Join
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildJoin);
+        var sq = (SqlQueryBase) ctx.currentQuery;
+        if (sq.hasJoins()) { //先处理每个手工的联接及每个手工联接相应的自动联接
+            PgSqlQueryBuilder.buildJoins(sq.getJoins(), ctx);
+        }
+        ctx.buildQueryAutoJoins(sq, nameEscaper()); //再处理自动连接
+        //处理返回值
+        if (updateCommand.hasOutputs()) {
+            ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildWhere); //TODO:暂用BuildWhere
+            ctx.append(" RETURNING ");
+            for (int i = 0; i < updateCommand.outputItems().length; i++) {
+                if (i != 0)
+                    ctx.append(',');
+                var field = (EntityFieldExpression) updateCommand.outputItems()[i];
+                ctx.append(nameEscaper());
+                ctx.append(field.name);
+                ctx.append(nameEscaper());
+            }
+        }
+        //结束用于附加条件，注意：仅在Upsert时这样操作
+        ctx.endBuildQuery(updateCommand, false);
+        return cmd;
+    }
+
     @Override
     public DbCommand buildQuery(ISqlSelectQuery query) {
         return PgSqlQueryBuilder.build(query);

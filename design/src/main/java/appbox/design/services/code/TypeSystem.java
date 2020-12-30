@@ -64,6 +64,7 @@ public final class TypeSystem {
 
             modelsProject.getFile("DataStore.java").create(null, true, null);
             modelsProject.getFile("SqlQuery.java").create(null, true, null);
+            modelsProject.getFile("SqlUpdateCommand.java").create(null, true, null);
 
             //TODO:创建服务代理项目
         } catch (Exception e) {
@@ -178,7 +179,7 @@ public final class TypeSystem {
             var typeFolder = file.getParent();
             var appFolder  = typeFolder.getParent();
             var appNode    = hub.designTree.findApplicationNodeByName(appFolder.getName());
-            var modelType = CodeHelper.getModelTypeFromLCC(typeFolder.getName());
+            var modelType  = CodeHelper.getModelTypeFromLCC(typeFolder.getName());
             return hub.designTree.findModelNodeByName(appNode.model.id(), modelType, fileName);
         } else {
             var projectName = project.getName();
