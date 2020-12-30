@@ -5,12 +5,10 @@ import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.runtime.RuntimeContext;
 import appbox.store.expressions.SqlSelectItemExpression;
-import appbox.store.query.ISqlSelectQuery;
-import appbox.store.query.SqlFromQuery;
-import appbox.store.query.SqlQuery;
-import appbox.store.query.SqlQueryBase;
+import appbox.store.query.*;
 
 import java.util.Collection;
+import java.util.List;
 
 final class PgSqlQueryBuilder {
 
@@ -87,12 +85,12 @@ final class PgSqlQueryBuilder {
 
         //构建Join
         ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildJoin);
-        //SqlQueryBase q1 = (SqlQueryBase)ctx.CurrentQuery;
-        //if (q1.HasJoins) //先处理每个手工的联接及每个手工联接相应的自动联接
-        //{
-        //    BuildJoins(q1.Joins, ctx);
-        //}
-        ctx.buildQueryAutoJoins((SqlQueryBase) ctx.currentQuery, '\"'); //再处理自动联接
+        SqlQueryBase sq = (SqlQueryBase) ctx.currentQuery;
+        //先处理每个手工的联接及每个手工联接相应的自动联接
+        if (sq.hasJoins()) {
+            buildJoins(sq.getJoins(), ctx);
+        }
+        ctx.buildQueryAutoJoins(sq, '\"'); //再处理自动联接
 
         //处理Skip and Take
         if (query.getPurpose() != ISqlSelectQuery.QueryPurpose.Count) {
@@ -165,8 +163,56 @@ final class PgSqlQueryBuilder {
         }
     }
 
+    /** 处理手工联接及其对应的自动联接 */
+    protected static void buildJoins(List<SqlJoin> joins, QueryBuildContext ctx) {
+        for (var item : joins) {
+            //先处理当前的联接
+            ctx.append(getJoinString(item.joinType));
+            if (item.right instanceof SqlQueryJoin) {
+                var         j      = (SqlQueryJoin) item.right;
+                EntityModel jmodel = RuntimeContext.current().getModel(j.t.modelId);
+                ctx.append('\"');
+                ctx.append(jmodel.getSqlTableName(false, null));
+                ctx.append("\" ");
+                ctx.append(j.aliasName);
+                ctx.append(" ON ");
+                buildExpression(item.onCondition, ctx);
+
+                //再处理手工联接的自动联接
+                ctx.buildQueryAutoJoins(j, '\"');
+            } else { //否则表示联接对象是SubQuery，注意：子查询没有自动联接
+                var sq = (SqlSubQuery) item.right;
+                ctx.append('(');
+                buildNormalQuery(sq.target, ctx);
+                ctx.append(") AS ");
+                ctx.append(((SqlQueryBase) sq.target).aliasName);
+                ctx.append(" ON ");
+                buildExpression(item.onCondition, ctx);
+            }
+
+            //最后递归当前联接的右部是否还有手工的联接项
+            if (item.right.hasJoins())
+                buildJoins(item.right.getJoins(), ctx);
+        }
+    }
+
+    private static String getJoinString(SqlJoin.JoinType type) {
+        switch (type) {
+            case Inner:
+                return " Join ";
+            case Left:
+                return " Left Join ";
+            case Right:
+                return " Right Join ";
+            case Full:
+                return " Full Join ";
+            default:
+                throw new RuntimeException("Unknown join type");
+        }
+    }
+
     //region ====Build Expression====
-    private static void buildExpression(Expression exp, QueryBuildContext ctx) {
+    protected static void buildExpression(Expression exp, QueryBuildContext ctx) {
         switch (exp.getType()) {
             case PrimitiveExpression:
                 buildPrimitiveExpression((PrimitiveExpression) exp, ctx); break;
