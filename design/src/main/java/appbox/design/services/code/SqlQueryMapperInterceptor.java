@@ -15,6 +15,8 @@ import java.util.Map;
 //        int quantity = orderItem.quantity;
 //        });
 
+//SqlUpdateCommand.output(e -> e.Amount) -> SqlUpdateCommand.output(e -> e.getString(0), (e) -> e.select(e.m("Name")))
+
 final class SqlQueryMapperInterceptor implements IMethodInterceptor {
 
     private final Map<String, Object>    lambdaParameters = new HashMap<>();
@@ -24,8 +26,8 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
     @Override
     public boolean visit(MethodInvocation node, ServiceCodeGenerator generator) {
         var lambda = (LambdaExpression) node.arguments().get(node.arguments().size() - 1);
-        if (!(lambda.getBody() instanceof ClassInstanceCreation))
-            throw new RuntimeException("Mapper must be a ClassInstanceCreation");
+        if (!(lambda.getBody() instanceof ClassInstanceCreation || lambda.getBody() instanceof QualifiedName))
+            throw new RuntimeException("Mapper must be a ClassInstanceCreation or QualifiedName");
 
         final String firstLambdaParaName = lambda.parameters().get(0).toString();
         var          selectLambda        = generator.ast.newLambdaExpression();
@@ -71,22 +73,24 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
         };
 
         //如果是继承的扩展类型先select all
-        var lambdaBody       = (ClassInstanceCreation) lambda.getBody();
-        var creationTypeName = ((SimpleType) lambdaBody.getType()).getName();
-        var typeName = creationTypeName.isSimpleName() ?
-                ((SimpleName) creationTypeName).getIdentifier() :
-                ((QualifiedName) creationTypeName).getName().getIdentifier();
-        if (!typeName.equals("Object")) {
-            //TODO:验证类型必须与查询类型一致
-            var entityType = lambdaBody.getType().resolveBinding();
-            var entityModelNode = generator.getUsedEntity(entityType);
-            var entityModel = (EntityModel) entityModelNode.model();
-            for(var member : entityModel.getMembers()) {
-                if (member.type() != EntityMemberModel.EntityMemberType.DataField)
-                    continue;
-                selects.add(firstLambdaParaName + "." + member.name());
-                var owner = generator.ast.newSimpleName(firstLambdaParaName);
-                targets.add(generator.makeEntityExpression(owner, member.name()));
+        if (lambda.getBody() instanceof ClassInstanceCreation) {
+            var creationType     = ((ClassInstanceCreation) lambda.getBody()).getType();
+            var creationTypeName = ((SimpleType) creationType).getName();
+            var typeName = creationTypeName.isSimpleName() ?
+                    ((SimpleName) creationTypeName).getIdentifier() :
+                    ((QualifiedName) creationTypeName).getName().getIdentifier();
+            if (!typeName.equals("Object")) {
+                //TODO:验证类型必须与查询类型一致
+                var entityType      = creationType.resolveBinding();
+                var entityModelNode = generator.getUsedEntity(entityType);
+                var entityModel     = (EntityModel) entityModelNode.model();
+                for (var member : entityModel.getMembers()) {
+                    if (member.type() != EntityMemberModel.EntityMemberType.DataField)
+                        continue;
+                    selects.add(firstLambdaParaName + "." + member.name());
+                    var owner = generator.ast.newSimpleName(firstLambdaParaName);
+                    targets.add(generator.makeEntityExpression(owner, member.name()));
+                }
             }
         }
 

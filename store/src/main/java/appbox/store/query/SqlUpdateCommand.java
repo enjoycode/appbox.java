@@ -66,12 +66,26 @@ public final class SqlUpdateCommand extends SqlQueryBase implements ISqlQuery {
     }
 
     public <R> UpdateOutputs<R> output(Function<SqlRowReader, R> selector,
+                                       Function<SqlUpdateCommand, EntityBaseExpression[]> selects) {
+        return output(selector, selects.apply(this));
+    }
+
+
+    public <R> UpdateOutputs<R> output(Function<SqlRowReader, R> selector,
                                        EntityBaseExpression... selects) {
         //TODO:验证
         _outputItems = selects;
         var res = new UpdateOutputs<>(selector);
         _readOutputs = res::onResult;
         return res;
+    }
+
+    public EntityBaseExpression[] select(EntityBaseExpression... items) {
+        for (var item : items) {
+            if (item.owner != t) //only for t.XXX
+                throw new RuntimeException("EntityRef path not allowed");
+        }
+        return items;
     }
 
     public void readOutputs(SqlRowReader reader) {

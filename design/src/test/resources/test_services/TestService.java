@@ -53,7 +53,10 @@ public class TestService {
         var cmd = new SqlUpdateCommand<sys.entities.Employee>();
         cmd.where(e -> e.Name == "Rick");
         cmd.update(e -> e.Male = true);
-        return cmd.execAsync();
+        var outs = cmd.output(e -> e.Name);
+        return cmd.execAsync().thenApply(rows -> {
+           return outs.get(0);
+        });
     }
 
     //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {

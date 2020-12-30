@@ -19,7 +19,7 @@ public final class SqlUpdateCommand<T extends SqlEntityBase> {
     @MethodInterceptor(name = "SqlUpdateSet")
     public SqlUpdateCommand<T> update(Consumer<T> setter) {return this;}
 
-    @MethodInterceptor(name = "SqlUpdateOut")
+    @MethodInterceptor(name = "SqlQueryMapper")
     public <R> UpdateOutputs<R> output(Function<T, R> selector) {return null;}
 
     public CompletableFuture<Long> execAsync() { return null; }
