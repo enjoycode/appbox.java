@@ -1,10 +1,9 @@
 import appbox.expressions.EntityBaseExpression;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
-import java.util.function.BiPredicate;
+import java.util.Objects;
+import java.util.function.*;
 
 public class TestORM {
     public abstract class EntityBase {}
@@ -38,11 +37,17 @@ public class TestORM {
     }
 
     public class SqlQuery<T extends EntityBase> {
+        public Object[] select(Object... item) {return null;}
+
         public SqlQuery<T> where(Predicate<T> filter) {return this;}
 
         public SqlQuery<T> andWhere(Predicate<T> filter) {return this;}
 
         public <J extends EntityBase> void leftJoin(SqlQuery<J> right, BiPredicate<T, J> join) {}
+
+        public SqlQuery<T> groupBy(Function<? super T, Object[]> selector) {
+            return this;
+        }
 
         public List<T> toList() {return null;}
 
@@ -55,7 +60,8 @@ public class TestORM {
 
     public void testSqlQuery() {
         var q = new SqlQuery<OrderItem>();
-        q.where(t -> t.productId == 1 && t.unitPrice >= 100);
+        q.where(t -> t.productId == 1 && t.unitPrice >= 100 && t.product.name.contains("aa"));
+        q.groupBy(t -> q.select(t.productId, t.unitPrice));
 
         var j = new SqlQuery<Product>();
         q.leftJoin(j, (orderItem, product) -> orderItem.productId == product.id);

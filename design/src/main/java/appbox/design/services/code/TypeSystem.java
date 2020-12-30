@@ -66,6 +66,7 @@ public final class TypeSystem {
             modelsProject.getFile("SqlQuery.java").create(null, true, null);
             modelsProject.getFile("SqlUpdateCommand.java").create(null, true, null);
             modelsProject.getFile("SqlDeleteCommand.java").create(null, true, null);
+            modelsProject.getFile("DbFunc.java").create(null, true, null);
 
             //TODO:创建服务代理项目
         } catch (Exception e) {

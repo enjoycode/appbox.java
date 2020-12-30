@@ -10,8 +10,8 @@ import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
 import appbox.runtime.InvokeArgs;
+import appbox.store.DbFunc;
 import appbox.store.SqlStore;
-import appbox.utils.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.corext.dom.GenericVisitor;
@@ -82,6 +82,16 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             return false;
         }
 
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(SimpleName node) {
+        //暂在这里转换静态类型
+        if (node.getIdentifier().equals("DbFunc")) {
+            var newNode = ast.newName(DbFunc.class.getName());
+            astRewrite.replace(node, newNode, null);
+        }
         return super.visit(node);
     }
 

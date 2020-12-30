@@ -211,7 +211,7 @@ final class PgSqlQueryBuilder {
         }
     }
 
-    //region ====Build Expression====
+    //region ====Build Expression TODO:以下考虑移至QueryBuildContext内====
     protected static void buildExpression(Expression exp, QueryBuildContext ctx) {
         switch (exp.getType()) {
             case PrimitiveExpression:
@@ -222,8 +222,10 @@ final class PgSqlQueryBuilder {
                 buildFieldExpression((EntityFieldExpression) exp, ctx); break;
             case BinaryExpression:
                 buildBinaryExpression((BinaryExpression) exp, ctx); break;
+            case DbFuncExpression:
+                buildDbFuncExpression((DbFunc) exp, ctx); break;
             default:
-                throw new RuntimeException("未实现");
+                throw new RuntimeException("未实现: " + exp.getType().name());
         }
     }
 
@@ -234,10 +236,21 @@ final class PgSqlQueryBuilder {
         }
 
         if (exp.value instanceof Collection<?>) { //用于处理In及NotIn的参数
-            throw new RuntimeException("未实现");
+            ctx.append('(');
+            boolean needSep    = false;
+            var     collection = (Collection<?>) exp.value;
+            for (var item : collection) {
+                if (needSep)
+                    ctx.append(',');
+                else
+                    needSep = true;
+                ctx.addParameter(item);
+                ctx.append('?');
+            }
+            ctx.append(')');
         } else {
             ctx.addParameter(exp.value);
-            ctx.append("?");
+            ctx.append('?');
         }
     }
 
@@ -356,6 +369,19 @@ final class PgSqlQueryBuilder {
             default:
                 throw new UnsupportedOperationException();
         }
+    }
+
+    private static void buildDbFuncExpression(DbFunc exp, QueryBuildContext ctx) {
+        ctx.append(exp.name);
+        ctx.append('(');
+        if (exp.arguments != null && exp.arguments.length > 0) {
+            for (int i = 0; i < exp.arguments.length; i++) {
+                if (i != 0)
+                    ctx.append(',');
+                buildExpression(exp.arguments[i], ctx);
+            }
+        }
+        ctx.append(')');
     }
 
     /**
