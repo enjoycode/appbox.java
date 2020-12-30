@@ -10,6 +10,7 @@ import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.IndexModelBase;
 import appbox.runtime.RuntimeContext;
 import appbox.store.query.ISqlSelectQuery;
+import appbox.store.query.SqlDeleteCommand;
 import appbox.store.query.SqlQueryBase;
 import appbox.store.query.SqlUpdateCommand;
 import com.alibaba.fastjson.JSON;
@@ -316,6 +317,36 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
         }
         //结束用于附加条件，注意：仅在Upsert时这样操作
         ctx.endBuildQuery(updateCommand, false);
+        return cmd;
+    }
+
+    @Override
+    protected DbCommand buildDeleteCommand(SqlDeleteCommand deleteCommand) {
+        var cmd = new DbCommand();
+        var ctx = new QueryBuildContext(cmd, deleteCommand);
+
+        EntityModel model = RuntimeContext.current().getModel(deleteCommand.t.modelId);
+
+        ctx.beginBuildQuery(deleteCommand);
+        ctx.append("Delete From \"");
+        ctx.append(model.getSqlTableName(false, null));
+        ctx.append("\" t ");
+
+        //Where
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildWhere);
+        if (deleteCommand.getFilter() != null) {
+            ctx.append(" Where ");
+            PgSqlQueryBuilder.buildExpression(ctx.currentQuery.getFilter(), ctx);
+        }
+        //Join
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildJoin);
+        var sq = (SqlQueryBase) ctx.currentQuery;
+        if (sq.hasJoins()) { //先处理每个手工的联接及每个手工联接相应的自动联接
+            PgSqlQueryBuilder.buildJoins(sq.getJoins(), ctx);
+        }
+        ctx.buildQueryAutoJoins(sq, nameEscaper()); //再处理自动联接
+
+        ctx.endBuildQuery(deleteCommand, false);
         return cmd;
     }
 

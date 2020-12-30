@@ -11,6 +11,7 @@ import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.FieldWithOrder;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.store.query.ISqlSelectQuery;
+import appbox.store.query.SqlDeleteCommand;
 import appbox.store.query.SqlRowReader;
 import appbox.store.query.SqlUpdateCommand;
 import com.github.jasync.sql.db.Connection;
@@ -293,6 +294,8 @@ public abstract class SqlStore {
     //region ====DML Update/Delete Command Methods====
     protected abstract DbCommand buildUpdateCommand(SqlUpdateCommand updateCommand);
 
+    protected abstract DbCommand buildDeleteCommand(SqlDeleteCommand deleteCommand);
+
     public final CompletableFuture<Long> execUpdateAsync(SqlUpdateCommand updateCommand, DbTransaction txn) {
         //暂不支持无条件更新，以防止误操作
         if (updateCommand.getFilter() == null) {
@@ -320,6 +323,22 @@ public abstract class SqlStore {
                 return res;
             });
         }
+    }
+
+    public final CompletableFuture<Long> execDeleteAsync(SqlDeleteCommand deleteCommand, DbTransaction txn) {
+        //暂不支持无条件更新，以防止误操作
+        if (deleteCommand.getFilter() == null) {
+            tryRollbackTxn(txn);
+            throw new RuntimeException("SqlDeleteCommand must has where condition");
+        }
+
+        var cmd = buildDeleteCommand(deleteCommand);
+        CompletableFuture<Connection> getConnection =
+                txn == null ? openConnection() : CompletableFuture.completedFuture(txn.getConnection());
+        return getConnection.thenCompose(cmd::execNonQueryAsync).handle((res, ex) -> {
+            handleDbCommandResult(txn, cmd, ex);
+            return res;
+        });
     }
     //endregion
 
