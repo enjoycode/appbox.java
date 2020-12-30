@@ -8,53 +8,46 @@ import org.apache.commons.math3.fitting.leastsquares.EvaluationRmsChecker;
 public abstract class Expression implements IBinSerializable/*TODO:移至需要的实现*/ {
     public abstract ExpressionType getType();
 
-    public BinaryExpression set(Object value) {
-        var op = BinaryExpression.BinaryOperatorType.Assign;
+    private BinaryExpression makeBinary(Object value, BinaryExpression.BinaryOperatorType op) {
         return value instanceof Expression ?
                 new BinaryExpression(this, (Expression) value, op) :
                 new BinaryExpression(this, new PrimitiveExpression(value), op);
+    }
+
+    public BinaryExpression set(Object value) {
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Assign);
     }
 
     public BinaryExpression eq(Object value) {
-        var op = BinaryExpression.BinaryOperatorType.Equal;
-        return value instanceof Expression ?
-                new BinaryExpression(this, (Expression) value, op) :
-                new BinaryExpression(this, new PrimitiveExpression(value), op);
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Equal);
     }
 
     public BinaryExpression ne(Object value) {
-        var op = BinaryExpression.BinaryOperatorType.NotEqual;
-        return value instanceof Expression ?
-                new BinaryExpression(this, (Expression) value, op) :
-                new BinaryExpression(this, new PrimitiveExpression(value), op);
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.NotEqual);
     }
 
     public BinaryExpression lt(Object value) {
-        var op = BinaryExpression.BinaryOperatorType.Less;
-        return value instanceof Expression ?
-                new BinaryExpression(this, (Expression) value, op) :
-                new BinaryExpression(this, new PrimitiveExpression(value), op);
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Less);
     }
 
     public BinaryExpression le(Object value) {
-        var op = BinaryExpression.BinaryOperatorType.LessOrEqual;
-        return value instanceof Expression ?
-                new BinaryExpression(this, (Expression) value, op) :
-                new BinaryExpression(this, new PrimitiveExpression(value), op);
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.LessOrEqual);
     }
 
     public BinaryExpression gt(Object value) {
-        var op = BinaryExpression.BinaryOperatorType.Greater;
-        return value instanceof Expression ?
-                new BinaryExpression(this, (Expression) value, op) :
-                new BinaryExpression(this, new PrimitiveExpression(value), op);
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Greater);
     }
 
     public BinaryExpression ge(Object value) {
-        var op = BinaryExpression.BinaryOperatorType.GreaterOrEqual;
-        return value instanceof Expression ?
-                new BinaryExpression(this, (Expression) value, op) :
-                new BinaryExpression(this, new PrimitiveExpression(value), op);
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.GreaterOrEqual);
+    }
+
+    public BinaryExpression plus(Object value) {
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Plus);
+    }
+
+    public BinaryExpression minus(Object value) {
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Minus);
     }
 
     public BinaryExpression and(Expression right) {
