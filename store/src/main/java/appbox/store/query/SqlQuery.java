@@ -200,7 +200,11 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //endregion
 
     //region ====SubQuery & FromQuery====
-
+    public SqlSubQuery toSubQuery(Function<SqlQuery<T>, Expression> selects) {
+        var exp = selects.apply(this);
+        addSelect(new SqlSelectItemExpression(exp));
+        return new SqlSubQuery(this);
+    }
     //endregion
 
     //region ====Fetch Entity Methods====

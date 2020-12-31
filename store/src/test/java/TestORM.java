@@ -1,3 +1,9 @@
+import appbox.entities.Employee;
+import kotlin.collections.AbstractCollection;
+
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.*;
 
@@ -32,6 +38,16 @@ public class TestORM {
         public E toEntity() { return null; }
     }
 
+    public static class DbFunc {
+        public static <T> boolean test(T field1, T field2) { throw new RuntimeException(); }
+
+        public static <T extends Number> T sum(T field) {return null;}
+
+        public static <T> boolean in(T field, SqlSubQuery<T> subQuery) { return false; }
+
+        //public static <T> boolean in(T field, Collection<T> subQuery) { return false; }
+    }
+
     public class SqlQuery<T extends EntityBase> {
         public Object[] select(Object... item) {return null;}
 
@@ -52,6 +68,18 @@ public class TestORM {
         public <R, J extends EntityBase> List<R> toList(SqlQuery<J> j, BiFunction<? super T, ? super J, ? extends R> mapper) {
             return null;
         }
+
+        public <R> SqlSubQuery<R> toSubQuery(Function<? super T, ? extends R> select) {
+            return null;
+        }
+
+        //public <R> SqlSubQuery<? super R> toSubQuery(Function<? super T, ? extends R> select) {
+        //    return null;
+        //}
+    }
+
+    public class SqlSubQuery<T> extends ArrayList<T> {
+
     }
 
     public void testSqlQuery() {
@@ -78,6 +106,21 @@ public class TestORM {
         for (var item : list) {
             System.out.println(item.pname);
         }
+    }
+
+    public void testSubQuery() throws ClassNotFoundException {
+        var sq = new SqlQuery<Product>();
+        sq.where(product -> product.name == "aa");
+        var             ssq = sq.toSubQuery(s -> s.name);
+
+        var q = new SqlQuery<OrderItem>();
+        q.where(o -> DbFunc.sum(o.productId) > 0);
+        q.where(o -> DbFunc.test("aa", 1234));
+        q.where(o -> DbFunc.test(o.productId, o.product.name));
+        //q.where(o -> DbFunc.in(o.productId, ssq));
+        q.where(o -> DbFunc.in(o.productId,
+                sq.toSubQuery(s -> s.name)
+        ));
     }
 
     public void testIndexGet() {

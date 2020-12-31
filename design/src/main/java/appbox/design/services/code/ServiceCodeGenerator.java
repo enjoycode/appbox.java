@@ -29,6 +29,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     private static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
         put("SqlQueryWhere", new SqlQueryWhereInterceptor());
         put("SqlQueryMapper", new SqlQueryMapperInterceptor());
+        put("SqlQuerySelect", new SqlQuerySelectInterceptor());
         put("SqlUpdateSet", new SqlUpdateSetInterceptor());
         put("InvokeService", new InvokeServiceInterceptor());
         put("SaveEntity", new SaveEntityInterceptor());
@@ -82,16 +83,6 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             return false;
         }
 
-        return super.visit(node);
-    }
-
-    @Override
-    public boolean visit(SimpleName node) {
-        //暂在这里转换静态类型
-        if (node.getIdentifier().equals("DbFunc")) {
-            var newNode = ast.newName(DbFunc.class.getName());
-            astRewrite.replace(node, newNode, null);
-        }
         return super.visit(node);
     }
 

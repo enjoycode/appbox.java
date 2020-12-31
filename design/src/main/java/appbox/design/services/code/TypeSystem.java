@@ -64,6 +64,7 @@ public final class TypeSystem {
 
             modelsProject.getFile("DataStore.java").create(null, true, null);
             modelsProject.getFile("SqlQuery.java").create(null, true, null);
+            modelsProject.getFile("SqlSubQuery.java").create(null, true, null);
             modelsProject.getFile("SqlUpdateCommand.java").create(null, true, null);
             modelsProject.getFile("SqlDeleteCommand.java").create(null, true, null);
             modelsProject.getFile("DbFunc.java").create(null, true, null);

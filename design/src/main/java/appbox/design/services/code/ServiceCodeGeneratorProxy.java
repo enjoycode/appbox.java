@@ -10,6 +10,8 @@ abstract class ServiceCodeGeneratorProxy extends ASTVisitor {
         this.generator = generator;
     }
 
+    //以下转发的需要与ServiceCodeGenerator重写的一致
+
     @Override
     public boolean visit(TypeDeclaration node) {
         return generator.visit(node);

@@ -22,4 +22,7 @@ public final class SqlQuery<T extends SqlEntityBase> {
     @MethodInterceptor(name = "SqlQueryMapper")
     public <R> CompletableFuture<List<R>> toListAsync(Function<? super T, ? extends R> mapper) {return null;}
 
+    @MethodInterceptor(name = "SqlQuerySelect")
+    public <R> SqlSubQuery<R> toSubQuery(Function<? super T, ? extends R> selects) {return null;}
+
 }

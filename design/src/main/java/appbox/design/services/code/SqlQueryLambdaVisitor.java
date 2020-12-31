@@ -1,7 +1,7 @@
 package appbox.design.services.code;
 
 import appbox.logging.Log;
-import appbox.utils.StringUtil;
+import appbox.store.DbFunc;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.HashMap;
@@ -28,6 +28,16 @@ final class SqlQueryLambdaVisitor extends ServiceCodeGeneratorProxy {
                 lambdaParameters.put(lp.toString(), lp);
             }
         }
+    }
+
+    @Override
+    public boolean visit(SimpleName node) {
+        //暂在这里转换静态类型
+        if (node.getIdentifier().equals("DbFunc")) {
+            var newNode = generator.ast.newName(DbFunc.class.getName());
+            generator.astRewrite.replace(node, newNode, null);
+        }
+        return super.visit(node);
     }
 
     @Override

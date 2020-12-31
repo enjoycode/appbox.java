@@ -6,13 +6,13 @@ public class TestService {
         return CompletableFuture.completedFuture("Hello Future!");
     }
 
-    public CompletableFuture<String> insert() {
-        var obj = new sys.entities.Employee("Rick");
-        obj.Male = true;
-        return obj.saveAsync().thenApply(r -> "Save Done.");
-        //return DataStore.DemoDB.insertAsync(obj, null)
-        //        .thenApply(r -> "Hello Future!");
-    }
+    //public CompletableFuture<String> insert() {
+    //    var obj = new sys.entities.Employee("Rick");
+    //    obj.Male = true;
+    //    return obj.saveAsync().thenApply(r -> "Save Done.");
+    //    //return DataStore.DemoDB.insertAsync(obj, null)
+    //    //        .thenApply(r -> "Hello Future!");
+    //}
 
     //public CompletableFuture<Void> test1() {
     //    return CompletableFuture.completedFuture((Void) null);
@@ -49,14 +49,23 @@ public class TestService {
     //            });
     //}
 
-    public CompletableFuture<?> update() {
-        var cmd = new SqlUpdateCommand<sys.entities.Employee>();
-        cmd.where(e -> e.Name == "Rick");
-        cmd.update(e -> e.Male = true);
-        var outs = cmd.output(e -> e.Name);
-        return cmd.execAsync().thenApply(rows -> {
-           return outs.get(0);
-        });
+    //public CompletableFuture<?> update() {
+    //    var cmd = new SqlUpdateCommand<sys.entities.Employee>();
+    //    cmd.where(e -> e.Name == "Rick");
+    //    cmd.update(e -> e.Male = true);
+    //    var outs = cmd.output(e -> e.Name);
+    //    return cmd.execAsync().thenApply(rows -> {
+    //       return outs.get(0);
+    //    });
+    //}
+
+    public CompletableFuture<?> subquery() {
+        var sq = new SqlQuery<sys.entities.Employee>();
+        sq.where(t -> t.ManagerName == "Rick");
+
+        var q = new SqlQuery<sys.entities.Employee>();
+        q.where(t -> DbFunc.in(t.Name, sq.toSubQuery(s -> s.Name)));
+        return q.toListAsync();
     }
 
     //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {

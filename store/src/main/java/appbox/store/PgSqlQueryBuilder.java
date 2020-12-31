@@ -224,9 +224,17 @@ final class PgSqlQueryBuilder {
                 buildBinaryExpression((BinaryExpression) exp, ctx); break;
             case DbFuncExpression:
                 buildDbFuncExpression((DbFunc) exp, ctx); break;
+            case SubQueryExpression:
+                buildSubQuery((SqlSubQuery) exp, ctx); break;
             default:
                 throw new RuntimeException("未实现: " + exp.getType().name());
         }
+    }
+
+    private static void buildSubQuery(SqlSubQuery exp, QueryBuildContext ctx) {
+        ctx.append('(');
+        buildNormalQuery(exp.target, ctx);
+        ctx.append(')');
     }
 
     private static void buildPrimitiveExpression(PrimitiveExpression exp, QueryBuildContext ctx) {
