@@ -151,8 +151,8 @@ final class PgSqlQueryBuilder {
             //处理选择项别名
             if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildSelect /* && !ctx.isBuildCteSelect*/) {
                 boolean needAlias = true;
-                if (item.expression instanceof EntityBaseExpression) {
-                    needAlias = !((EntityBaseExpression) item.expression).name.equals(item.aliasName);
+                if (item.expression instanceof EntityPathExpression) {
+                    needAlias = !((EntityPathExpression) item.expression).name.equals(item.aliasName);
                 }
                 if (needAlias) {
                     ctx.append(" \"");

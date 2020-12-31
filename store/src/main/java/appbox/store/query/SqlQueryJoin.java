@@ -1,6 +1,6 @@
 package appbox.store.query;
 
-import appbox.expressions.EntityBaseExpression;
+import appbox.expressions.EntityPathExpression;
 import appbox.expressions.EntityExpression;
 
 public final class SqlQueryJoin extends SqlQueryBase implements ISqlQueryJoin {
@@ -11,7 +11,7 @@ public final class SqlQueryJoin extends SqlQueryBase implements ISqlQueryJoin {
         t = new EntityExpression(modelId, this);
     }
 
-    public EntityBaseExpression m(String name) {
+    public EntityPathExpression m(String name) {
         return t.m(name);
     }
 

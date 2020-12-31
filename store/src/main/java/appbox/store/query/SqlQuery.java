@@ -3,7 +3,7 @@ package appbox.store.query;
 import appbox.data.SqlEntity;
 import appbox.data.SqlEntityKVO;
 import appbox.expressions.BinaryExpression;
-import appbox.expressions.EntityBaseExpression;
+import appbox.expressions.EntityPathExpression;
 import appbox.expressions.EntityExpression;
 import appbox.expressions.Expression;
 import appbox.logging.Log;
@@ -34,7 +34,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         _clazz = clazz;
     }
 
-    public EntityBaseExpression m(String name) {
+    public EntityPathExpression m(String name) {
         return t.m(name);
     }
 
@@ -49,6 +49,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         return _selects;
     }
 
+    //region ====Skip & Take====
     @Override
     public int getSkipSize() {
         return _skip;
@@ -68,6 +69,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         _take = rows;
         return this;
     }
+    //endregion
 
     //region ====Where Methods====
     public SqlQuery<T> where(Function<SqlQuery<T>, Expression> condition) {
@@ -98,7 +100,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //endregion
 
     //region ====Select Methods====
-    public void addSelect(SqlSelectItemExpression item) {
+    private void addSelect(SqlSelectItemExpression item) {
         if (_selects == null)
             _selects = new ArrayList<>();
 
@@ -106,7 +108,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         _selects.add(item);
     }
 
-    public EntityBaseExpression[] select(EntityBaseExpression... items) {
+    public EntityPathExpression[] select(EntityPathExpression... items) {
         return items;
     }
 
@@ -154,12 +156,12 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     }
 
     public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,
-                                                      Function<SqlQuery<T>, EntityBaseExpression[]> selects) {
+                                                      Function<SqlQuery<T>, EntityPathExpression[]> selects) {
         return toListAsync(mapper, selects.apply(this));
     }
 
     public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,
-                                                      EntityBaseExpression... selects) {
+                                                      EntityPathExpression... selects) {
         if (selects == null || selects.length == 0)
             throw new IllegalArgumentException("must select some one");
 
@@ -195,6 +197,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
             return list;
         });
     }
+    //endregion
+
+    //region ====SubQuery & FromQuery====
+
     //endregion
 
     //region ====Fetch Entity Methods====

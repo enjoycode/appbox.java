@@ -6,7 +6,7 @@ import appbox.runtime.RuntimeContext;
 
 import java.util.HashMap;
 
-public final class EntityExpression extends EntityBaseExpression {
+public final class EntityExpression extends EntityPathExpression {
 
     /** 用于查询时的别名，不用序列化 */
     protected    String aliasName;
@@ -14,7 +14,7 @@ public final class EntityExpression extends EntityBaseExpression {
     private      Object _user;
 
     private EntityModel                           _model; //only for cache
-    private HashMap<String, EntityBaseExpression> _cache; //only for cache
+    private HashMap<String, EntityPathExpression> _cache; //only for cache
 
     /** New Root EntityExpression */
     public EntityExpression(long modelId, Object user) {
@@ -62,9 +62,9 @@ public final class EntityExpression extends EntityBaseExpression {
 
     /** 根据名称获取成员表达式 */
     @Override
-    public EntityBaseExpression m(String name) {
+    public EntityPathExpression m(String name) {
         //先尝试从缓存中获取
-        EntityBaseExpression exp = _cache == null ? null : _cache.get(name);
+        EntityPathExpression exp = _cache == null ? null : _cache.get(name);
         if (exp != null)
             return exp;
 
@@ -77,7 +77,7 @@ public final class EntityExpression extends EntityBaseExpression {
         if (m == null)
             throw new RuntimeException(String.format("Can't find member: %s.%s", _model.name(), name));
 
-        EntityBaseExpression member = null;
+        EntityPathExpression member = null;
         switch (m.type()) {
             case DataField:
                 member = new EntityFieldExpression(name, this);

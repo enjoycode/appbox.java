@@ -1,6 +1,7 @@
 package appbox.expressions;
 
-public abstract class EntityBaseExpression extends Expression {
+/** 描述实体路径的表达式，eg: t.City */
+public abstract class EntityPathExpression extends Expression {
 
     /**
      * 分以下几种情况：
@@ -13,12 +14,12 @@ public abstract class EntityBaseExpression extends Expression {
 
     public final EntityExpression owner;
 
-    public EntityBaseExpression(String name, EntityExpression owner) {
+    public EntityPathExpression(String name, EntityExpression owner) {
         this.name  = name;
         this.owner = owner;
     }
 
-    public EntityBaseExpression m(String name) {
+    public EntityPathExpression m(String name) {
         throw new UnsupportedOperationException();
     }
 

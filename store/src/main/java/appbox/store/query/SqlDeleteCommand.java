@@ -1,6 +1,6 @@
 package appbox.store.query;
 
-import appbox.expressions.EntityBaseExpression;
+import appbox.expressions.EntityPathExpression;
 import appbox.expressions.EntityExpression;
 import appbox.expressions.Expression;
 import appbox.model.EntityModel;
@@ -20,7 +20,7 @@ public final class SqlDeleteCommand extends SqlQueryBase implements ISqlQuery {
         t = new EntityExpression(entityModelId, this);
     }
 
-    public EntityBaseExpression m(String name) {
+    public EntityPathExpression m(String name) {
         return t.m(name);
     }
 

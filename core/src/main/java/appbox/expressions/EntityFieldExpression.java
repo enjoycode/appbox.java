@@ -1,6 +1,6 @@
 package appbox.expressions;
 
-public final class EntityFieldExpression extends EntityBaseExpression {
+public final class EntityFieldExpression extends EntityPathExpression {
 
     public EntityFieldExpression(String name, EntityExpression owner) {
         super(name, owner);

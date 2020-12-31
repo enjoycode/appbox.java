@@ -1,6 +1,6 @@
 package appbox.store.query;
 
-import appbox.expressions.EntityBaseExpression;
+import appbox.expressions.EntityPathExpression;
 import appbox.expressions.EntityExpression;
 import appbox.expressions.Expression;
 import appbox.model.EntityModel;
@@ -21,14 +21,14 @@ public final class SqlUpdateCommand extends SqlQueryBase implements ISqlQuery {
     public final EntityExpression       t;
     /** 更新表达式 TODO:考虑使用BlockExpression支持多个t=>{t.V1=t.V1+1; t.V2=t.V2+2} */
     public final List<Expression>       updateItems = new ArrayList<>();
-    private      EntityBaseExpression[] _outputItems;
+    private      EntityPathExpression[] _outputItems;
     private      Consumer<SqlRowReader> _readOutputs; //用于读取返回的输出
 
     public SqlUpdateCommand(long entityModelId) {
         t = new EntityExpression(entityModelId, this);
     }
 
-    public EntityBaseExpression m(String name) {
+    public EntityPathExpression m(String name) {
         return t.m(name);
     }
 
@@ -41,7 +41,7 @@ public final class SqlUpdateCommand extends SqlQueryBase implements ISqlQuery {
         return _outputItems != null && _outputItems.length > 0;
     }
 
-    public EntityBaseExpression[] outputItems() {
+    public EntityPathExpression[] outputItems() {
         return _outputItems;
     }
 
@@ -66,13 +66,13 @@ public final class SqlUpdateCommand extends SqlQueryBase implements ISqlQuery {
     }
 
     public <R> UpdateOutputs<R> output(Function<SqlRowReader, R> selector,
-                                       Function<SqlUpdateCommand, EntityBaseExpression[]> selects) {
+                                       Function<SqlUpdateCommand, EntityPathExpression[]> selects) {
         return output(selector, selects.apply(this));
     }
 
 
     public <R> UpdateOutputs<R> output(Function<SqlRowReader, R> selector,
-                                       EntityBaseExpression... selects) {
+                                       EntityPathExpression... selects) {
         //TODO:验证
         _outputItems = selects;
         var res = new UpdateOutputs<>(selector);
@@ -80,7 +80,7 @@ public final class SqlUpdateCommand extends SqlQueryBase implements ISqlQuery {
         return res;
     }
 
-    public EntityBaseExpression[] select(EntityBaseExpression... items) {
+    public EntityPathExpression[] select(EntityPathExpression... items) {
         for (var item : items) {
             if (item.owner != t) //only for t.XXX
                 throw new RuntimeException("EntityRef path not allowed");
