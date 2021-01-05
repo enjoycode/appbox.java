@@ -37,6 +37,31 @@ public final class GetCompletion implements IDesignHandler {
                 wr.writeFieldValue(',', "detail", item.getDetail());
             }
             //wr.writeFieldValue(',', "sortText", item.getSortText());
+
+            if (item.getAdditionalTextEdits() != null && item.getAdditionalTextEdits().size() > 0) {
+                wr.write(',');
+                wr.writeFieldName("additionalTextEdits");
+                wr.write('[');
+                for (var additional : item.getAdditionalTextEdits()) {
+                    var range = additional.getRange();
+                    wr.write('{');
+                    wr.writeFieldName("range");
+                    wr.writeFieldValue('{', "startLineNumber", range.getStart().getLine() + 1);
+                    wr.writeFieldValue(',', "startColumn", range.getStart().getCharacter() + 1);
+                    wr.writeFieldValue(',', "endLineNumber", range.getEnd().getLine() + 1);
+                    wr.writeFieldValue(',', "endColumn", range.getEnd().getCharacter() + 1);
+                    wr.write('}');
+                    if(additional.getNewText() != null) {
+                        wr.writeFieldValue(',', "text", additional.getNewText());
+                    } else {
+                        wr.writeFieldValue(',', "text", "null");
+                    }
+
+                    wr.write('}');
+                }
+                wr.write(']');
+            }
+
             wr.write('}');
         });
     }
