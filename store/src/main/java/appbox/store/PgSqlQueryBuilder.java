@@ -348,11 +348,11 @@ final class PgSqlQueryBuilder {
                 ctx.append(" / "); break;
             case Assign:
             case Equal:
-                ctx.append(" = "); break;
+                ctx.append("="); break;
             case Greater:
-                ctx.append(" > "); break;
+                ctx.append(">"); break;
             case GreaterOrEqual:
-                ctx.append(" >= "); break;
+                ctx.append(">="); break;
             case In:
                 ctx.append(" In "); break;
             case NotIn:
@@ -362,19 +362,19 @@ final class PgSqlQueryBuilder {
             case IsNot:
                 ctx.append(" Is Not "); break;
             case Less:
-                ctx.append(" < "); break;
+                ctx.append("<"); break;
             case LessOrEqual:
-                ctx.append(" <= "); break;
+                ctx.append("<="); break;
             case Like:
                 ctx.append(" Like "); break;
             case Minus:
-                ctx.append(" - "); break;
+                ctx.append("-"); break;
             case Multiply:
-                ctx.append(" * "); break;
+                ctx.append("*"); break;
             case NotEqual:
                 ctx.append(" <> "); break;
             case Plus:
-                ctx.append(checkNeedConvertStringAddOperator(exp) ? " || " : " + "); break;
+                ctx.append(checkNeedConvertStringAddOperator(exp) ? " || " : "+"); break;
             default:
                 throw new UnsupportedOperationException();
         }
