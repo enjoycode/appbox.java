@@ -16,6 +16,7 @@ import com.github.jasync.sql.db.RowData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -71,9 +72,32 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     }
     //endregion
 
+    //region ====Join====
+    public ISqlQueryJoin leftJoin(ISqlQueryJoin target, BiFunction<SqlQuery<T>, ISqlQueryJoin, Expression> onCondition) {
+        return join(SqlJoin.JoinType.Left, target, onCondition.apply(this, target));
+    }
+
+    public ISqlQueryJoin rightJoin(ISqlQueryJoin target, BiFunction<SqlQuery<T>, ISqlQueryJoin, Expression> onCondition) {
+        return join(SqlJoin.JoinType.Right, target, onCondition.apply(this, target));
+    }
+
+    public ISqlQueryJoin innerJoin(ISqlQueryJoin target, BiFunction<SqlQuery<T>, ISqlQueryJoin, Expression> onCondition) {
+        return join(SqlJoin.JoinType.Inner, target, onCondition.apply(this, target));
+    }
+
+    public ISqlQueryJoin fullJoin(ISqlQueryJoin target, BiFunction<SqlQuery<T>, ISqlQueryJoin, Expression> onCondition) {
+        return join(SqlJoin.JoinType.Full, target, onCondition.apply(this, target));
+    }
+    //endregion
+
     //region ====Where Methods====
     public SqlQuery<T> where(Function<SqlQuery<T>, Expression> condition) {
         _filter = condition.apply(this);
+        return this;
+    }
+
+    public SqlQuery<T> where(ISqlQueryJoin join, BiFunction<SqlQuery<T>, ISqlQueryJoin, Expression> condition) {
+        _filter = condition.apply(this, join);
         return this;
     }
 

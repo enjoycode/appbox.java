@@ -1,5 +1,6 @@
 package appbox.store.query;
 
+import appbox.expressions.EntityPathExpression;
 import appbox.expressions.Expression;
 import appbox.expressions.ExpressionType;
 
@@ -48,6 +49,11 @@ public final class SqlSubQuery extends Expression implements ISqlQueryJoin {
 
         getJoins().add(new SqlJoin(target, type, onCondition));
         return target;
+    }
+
+    @Override
+    public EntityPathExpression m(String name) {
+        throw new RuntimeException("未实现");
     }
     //endregion
 

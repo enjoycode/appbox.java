@@ -59,12 +59,21 @@ public class TestService {
     //    });
     //}
 
-    public CompletableFuture<?> subquery() {
-        var sq = new SqlQuery<sys.entities.Employee>();
-        sq.where(t -> t.ManagerName == "Rick");
+    //public CompletableFuture<?> subquery() {
+    //    var sq = new SqlQuery<sys.entities.Employee>();
+    //    sq.where(t -> t.ManagerName == "Rick");
+    //
+    //    var q = new SqlQuery<sys.entities.Employee>();
+    //    q.where(t -> DbFunc.in(t.Name, sq.toSubQuery(s -> s.Name)));
+    //    return q.toListAsync();
+    //}
 
+    public CompletableFuture<?> join() {
         var q = new SqlQuery<sys.entities.Employee>();
-        q.where(t -> DbFunc.in(t.Name, sq.toSubQuery(s -> s.Name)));
+        var j = new SqlQueryJoin<sys.entities.Employee>();
+
+        q.leftJoin(j, (l, r) -> l.ManagerName == r.Name);
+        q.where(j, (l, r) -> r.Name == "Rick");
         return q.toListAsync();
     }
 

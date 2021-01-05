@@ -7,6 +7,8 @@ import appbox.model.entity.EntityRefModel;
 import appbox.runtime.RuntimeContext;
 import appbox.store.query.ISqlQuery;
 import appbox.store.query.SqlQueryBase;
+import appbox.store.query.SqlQueryJoin;
+import appbox.store.query.SqlSubQuery;
 
 import java.util.HashMap;
 
@@ -131,17 +133,27 @@ final class QueryBuildContext {
             autoJoins = new HashMap<>();
         autoJoins.put(query, new HashMap<>());
 
-        //TODO:
-        //if (query.HasJoins)
-        //{
-        //    foreach (var item in query.Joins)
-        //    {
-        //        if (item.Right is SqlQueryJoin) //注意：子查询不具备自动联接
-        //        LoopAddQueryJoins((SqlQueryBase)item.Right);
-        //            else
-        //        LoopAddSubQueryJoins((SqlSubQuery)item.Right);
-        //    }
-        //}
+        if (query.hasJoins()) {
+            for (var item : query.getJoins()) {
+                if (item.right instanceof SqlQueryJoin) { //注意：子查询不具备自动联接
+                    loopAddQueryJoins((SqlQueryBase) item.right);
+                } else {
+                    loopAddSubQueryJoins((SqlSubQuery) item.right);
+                }
+            }
+        }
+    }
+
+    private void loopAddSubQueryJoins(SqlSubQuery query) {
+        if (query.hasJoins()) {
+            for (var item : query.getJoins()) {
+                if (item.right instanceof SqlQueryJoin) { //注意：子查询不具备自动联接
+                    loopAddQueryJoins((SqlQueryBase) item.right);
+                } else {
+                    loopAddSubQueryJoins((SqlSubQuery) item.right);
+                }
+            }
+        }
     }
 
     /** 用于生成EntityRef的自动Join */

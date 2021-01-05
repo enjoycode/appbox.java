@@ -61,9 +61,11 @@ public final class TypeSystem {
             sysFolder.getFile("RuntimeType.java").create(null, true, null);
             sysFolder.getFile("CtorInterceptor.java").create(null, true, null);
             sysFolder.getFile("MethodInterceptor.java").create(null, true, null);
+            sysFolder.getFile("ISqlQueryJoin.java").create(null, true, null);
 
             modelsProject.getFile("DataStore.java").create(null, true, null);
             modelsProject.getFile("SqlQuery.java").create(null, true, null);
+            modelsProject.getFile("SqlQueryJoin.java").create(null, true, null);
             modelsProject.getFile("SqlSubQuery.java").create(null, true, null);
             modelsProject.getFile("SqlUpdateCommand.java").create(null, true, null);
             modelsProject.getFile("SqlDeleteCommand.java").create(null, true, null);

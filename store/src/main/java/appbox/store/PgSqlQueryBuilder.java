@@ -41,7 +41,8 @@ final class PgSqlQueryBuilder {
         } else {
             var selects = query.getSelects();
             if (selects == null || selects.size() == 0) {
-                ctx.append("*");
+                ctx.append(((SqlQueryBase) query).aliasName);
+                ctx.append(".*");
             } else {
                 boolean needSep = false;
                 for (var s : selects) {
