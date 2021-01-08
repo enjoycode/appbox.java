@@ -5,20 +5,20 @@ import appbox.expressions.Expression;
 import appbox.expressions.ExpressionType;
 import appbox.store.query.ISqlSelectQuery;
 
-public final class SqlSelectItemExpression extends Expression {
+public final class SqlSelectItem extends Expression { //对应旧的SqlSelectItemExpression
 
-    public String          aliasName;
-    public ISqlSelectQuery owner;
-    public Expression      expression;
+    public       String          aliasName;
+    public       ISqlSelectQuery owner;
+    public final Expression      expression;
 
-    public SqlSelectItemExpression(Expression expression) {
+    public SqlSelectItem(Expression expression) {
         this.expression = expression;
         switch (expression.getType()) {
             case FieldExpression:
                 aliasName = ((EntityFieldExpression) expression).name;
                 break;
             case SelectItemExpression:
-                aliasName = ((SqlSelectItemExpression) expression).aliasName;
+                aliasName = ((SqlSelectItem) expression).aliasName;
                 break;
             default:
                 aliasName = "unnamed";
@@ -26,7 +26,7 @@ public final class SqlSelectItemExpression extends Expression {
         }
     }
 
-    public SqlSelectItemExpression(Expression expression, String aliasName) {
+    public SqlSelectItem(Expression expression, String aliasName) {
         this.expression = expression;
         this.aliasName  = aliasName;
     }

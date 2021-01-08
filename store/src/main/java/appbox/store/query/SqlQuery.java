@@ -10,7 +10,7 @@ import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
 import appbox.store.SqlStore;
-import appbox.store.expressions.SqlSelectItemExpression;
+import appbox.store.expressions.SqlSelectItem;
 import com.github.jasync.sql.db.RowData;
 
 import java.util.ArrayList;
@@ -22,19 +22,25 @@ import java.util.function.Supplier;
 
 public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlSelectQuery {
 
-    public final  EntityExpression              t;
-    private final Class<T>                      _clazz;
-    private       QueryPurpose                  _purpose;
-    private       Expression                    _filter;
-    private       List<SqlSelectItemExpression> _selects;
-    private       int                           _skip = 0;
-    private       int                           _take = 0;
+    public final  EntityExpression    t;
+    private final Class<T>            _clazz;
+    private       QueryPurpose        _purpose;
+    private       Expression          _filter;
+    private       List<SqlSelectItem> _selects;
+    private       int                 _skip = 0;
+    private       int                 _take = 0;
+    //order by
+    private       List<SqlOrderBy>    _orderBy;
+    //group by and having
+    private       List<SqlSelectItem> _groupBy;
+    private       Expression          _havingFilter;
 
     public SqlQuery(long modelId, Class<T> clazz) {
         t      = new EntityExpression(modelId, this);
         _clazz = clazz;
     }
 
+    //region ====Properties====
     public EntityPathExpression m(String name) {
         return t.m(name);
     }
@@ -46,9 +52,21 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     public Expression getFilter() { return _filter;}
 
     @Override
-    public List<SqlSelectItemExpression> getSelects() {
+    public List<SqlSelectItem> getSelects() {
         return _selects;
     }
+
+    @Override
+    public List<SqlSelectItem> getGroupBy() { return _groupBy; }
+
+    @Override
+    public Expression getHavingFilter() { return _havingFilter; }
+
+    @Override
+    public List<SqlOrderBy> getOrderBy() {
+        return _orderBy;
+    }
+    //endregion
 
     //region ====Skip & Take====
     @Override
@@ -123,8 +141,26 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     }
     //endregion
 
+    //region ====OderBy Methods====
+    public SqlQuery<T> orderBy(Function<SqlQuery<T>, Expression> select) {
+        var item = new SqlOrderBy(select.apply(this));
+        if (_orderBy == null)
+            _orderBy = new ArrayList<>();
+        _orderBy.add(item);
+        return this;
+    }
+
+    public SqlQuery<T> orderByDesc(Function<SqlQuery<T>, Expression> select) {
+        var item = new SqlOrderBy(select.apply(this), true);
+        if (_orderBy == null)
+            _orderBy = new ArrayList<>();
+        _orderBy.add(item);
+        return this;
+    }
+    //endregion
+
     //region ====Select Methods====
-    private void addSelect(SqlSelectItemExpression item) {
+    private void addSelect(SqlSelectItem item) {
         if (_selects == null)
             _selects = new ArrayList<>();
 
@@ -180,12 +216,12 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     }
 
     public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,
-                                                      Function<SqlQuery<T>, EntityPathExpression[]> selects) {
+                                                      Function<SqlQuery<T>, Expression[]> selects) {
         return toListAsync(mapper, selects.apply(this));
     }
 
     public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,
-                                                      EntityPathExpression... selects) {
+                                                      Expression... selects) {
         if (selects == null || selects.length == 0)
             throw new IllegalArgumentException("must select some one");
 
@@ -195,7 +231,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         if (_selects != null)
             _selects.clear();
         for (var select : selects) {
-            addSelect(new SqlSelectItemExpression(select));
+            addSelect(new SqlSelectItem(select));
         }
 
         EntityModel model = RuntimeContext.current().getModel(t.modelId);
@@ -226,8 +262,24 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //region ====SubQuery & FromQuery====
     public SqlSubQuery toSubQuery(Function<SqlQuery<T>, Expression> selects) {
         var exp = selects.apply(this);
-        addSelect(new SqlSelectItemExpression(exp));
+        addSelect(new SqlSelectItem(exp));
         return new SqlSubQuery(this);
+    }
+    //endregion
+
+    //region ====GroupBy Methods====
+    public SqlQuery<T> groupBy(Function<SqlQuery<T>, Expression> select) {
+        var key = new SqlSelectItem(select.apply(this));
+        key.owner = this;
+        if (_groupBy == null)
+            _groupBy = new ArrayList<>();
+        _groupBy.add(key);
+        return this;
+    }
+
+    public SqlQuery<T> having(Function<SqlQuery<T>, Expression> condition) {
+        _havingFilter = condition.apply(this);
+        return this;
     }
     //endregion
 

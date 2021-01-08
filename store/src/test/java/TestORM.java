@@ -57,10 +57,6 @@ public class TestORM {
 
         public <J extends EntityBase> void leftJoin(SqlQuery<J> right, BiPredicate<T, J> join) {}
 
-        public SqlQuery<T> groupBy(Function<? super T, Object[]> selector) {
-            return this;
-        }
-
         public List<T> toList() {return null;}
 
         public <R> List<R> toList(Function<? super T, ? extends R> mapper) {return null;}
@@ -76,6 +72,10 @@ public class TestORM {
         //public <R> SqlSubQuery<? super R> toSubQuery(Function<? super T, ? extends R> select) {
         //    return null;
         //}
+
+        public <R> SqlQuery<T> groupBy(Function<? super T, ? extends R> select) {return null;}
+
+        public SqlQuery<T> having(Predicate<T> filter) {return this;}
     }
 
     public class SqlSubQuery<T> extends ArrayList<T> {
@@ -121,6 +121,12 @@ public class TestORM {
         q.where(o -> DbFunc.in(o.productId,
                 sq.toSubQuery(s -> s.name)
         ));
+    }
+
+    public void testGroupBy() {
+        var q = new SqlQuery<OrderItem>();
+        q.groupBy(t -> t.productId)
+                .having(t -> DbFunc.sum(t.quantity) > 0);
     }
 
     public void testIndexGet() {

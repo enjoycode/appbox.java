@@ -123,17 +123,10 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var ownerType = owner.resolveTypeBinding();
         if (TypeHelper.isEntityType(ownerType)) {
             //TODO:判断是否实体属性
-
-            owner.accept(this);
-            var newOwner = (ASTNode) astRewrite.get(node, QualifiedName.QUALIFIER_PROPERTY);
-            if (newOwner.getParent() != null)
-                newOwner = ASTNode.copySubtree(ast, newOwner);
-
-            var newNode = ast.newMethodInvocation();
-            newNode.setName(ast.newSimpleName("get" + node.getName().getIdentifier()));
-            newNode.setExpression((Expression) newOwner);
+            var newNode = makeEntityGetMember(node);
             astRewrite.replace(node, newNode, null);
 
+            owner.accept(this);
             return false;
         } else if (TypeHelper.isDataStoreType(ownerType) && owner.isSimpleName()) {
             String storeName     = node.getName().getIdentifier();
@@ -171,7 +164,10 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     public boolean visit(MethodInvocation node) {
         var methodInterceptor = TypeHelper.getMethodInterceptor(node.resolveMethodBinding());
         if (methodInterceptor != null) {
-            return methodInterceptors.get(methodInterceptor).visit(node, this);
+            var res =  methodInterceptors.get(methodInterceptor).visit(node, this);
+            //注意类似q.groupBy().having()的调用
+            node.getExpression().accept(this);
+            return res;
         }
 
         return super.visit(node);
@@ -389,7 +385,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         return ast.newSimpleType(ast.newName(entityClassName));
     }
 
-    /** t.name转换为t.m("Name") */
+    /** t.Name 转换为 t.m("Name") */
     protected MethodInvocation makeEntityExpression(Expression exp, String memberName) {
         var newNode = ast.newMethodInvocation();
         newNode.setName(ast.newSimpleName("m"));
@@ -397,6 +393,18 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var member = ast.newStringLiteral();
         member.setLiteralValue(memberName);
         newNode.arguments().add(member);
+        return newNode;
+    }
+
+    /** t.Name 转换为 t.getName() */
+    protected MethodInvocation makeEntityGetMember(QualifiedName node) {
+        var newOwner = astRewrite.createCopyTarget(node.getQualifier());
+
+        var newNode = ast.newMethodInvocation();
+        newNode.setName(ast.newSimpleName("get" + node.getName().getIdentifier()));
+        newNode.setExpression((Expression) newOwner);
+        astRewrite.replace(node, newNode, null);
+
         return newNode;
     }
 

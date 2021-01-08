@@ -51,6 +51,8 @@ public class TestServiceCodeGenerator {
         entityModel.addSysMember(nameField, Employee.NAME_ID);
         var maleField = new DataFieldModel(entityModel, "Male", DataFieldModel.DataFieldType.Bool, false);
         entityModel.addSysMember(maleField, Employee.MALE_ID);
+        var ageField = new DataFieldModel(entityModel, "Age", DataFieldModel.DataFieldType.Int, false);
+        entityModel.addSysMember(ageField, Employee.BIRTHDAY_ID);
         var managerFK = new DataFieldModel(entityModel, "ManagerName", DataFieldModel.DataFieldType.String, true, true);
         entityModel.addSysMember(managerFK, Employee.ACCOUNT_ID);
         var manager = new EntityRefModel(entityModel, "Manager", IdUtil.SYS_EMPLOYEE_MODEL_ID,

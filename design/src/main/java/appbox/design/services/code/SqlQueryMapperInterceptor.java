@@ -3,6 +3,7 @@ package appbox.design.services.code;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.entity.EntityMemberModel;
+import appbox.store.DbFunc;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -48,27 +49,80 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
         }
 
         var visitor = new ServiceCodeGeneratorProxy(generator) {
+            private boolean inDbFunc = false;
+
+            @Override
+            public boolean visit(SimpleName node) {
+                if (node.getIdentifier().equals("DbFunc")) {
+                    var newNode = generator.ast.newName(DbFunc.class.getName());
+                    generator.astRewrite.replace(node, newNode, null);
+                    return false;
+                }
+
+                return super.visit(node);
+            }
 
             @Override
             public boolean visit(QualifiedName node) {
                 //注意需要排除相同成员的引用
                 var identifier = ServiceCodeGenerator.getIdentifier(node);
                 if (lambdaParameters.containsKey(identifier)) {
-                    //final String CityName = t.City.Name
-                    int pos = findSelectIndex(node.getFullyQualifiedName());
-                    if (pos < 0) {
-                        selects.add(node.getFullyQualifiedName());
-                        pos = selects.size() - 1;
-                        //添加选择的表达式 eg: t.m("Name")至targets列表内备用
-                        targets.add(makeExpression(node, generator));
+                    if (!inDbFunc) {
+                        //final String CityName = t.City.Name
+                        int pos = findSelectIndex(node.getFullyQualifiedName());
+                        if (pos < 0) {
+                            selects.add(node.getFullyQualifiedName());
+                            pos = selects.size() - 1;
+                            //添加选择的表达式 eg: t.m("Name")至targets列表内备用
+                            targets.add(makeExpression(node, generator));
+                        }
+                        //根据类型转换目标 t.name -> t.getString(1)
+                        var newNode = makeSqlReaderGet(
+                                node.resolveTypeBinding(), firstLambdaParaName, pos, generator.ast);
+                        generator.astRewrite.replace(node, newNode, null);
+                    } else {
+                        //final int Totals = DbFunc.sum(t.Quantity)
+                        var newNode = makeExpression(node, generator);
+                        generator.astRewrite.replace(node, newNode, null);
                     }
-                    //根据类型转换目标 t.name -> t.getString(1)
-                    var newNode = makeSqlReaderGet(node, firstLambdaParaName, pos, generator.ast);
-                    generator.astRewrite.replace(node, newNode, null);
                     return false;
-                } else {
-                    return generator.visit(node);
                 }
+                return generator.visit(node);
+            }
+
+            @Override
+            public boolean visit(InfixExpression node) {
+                //if (inDbFunc) {
+                //    return SqlQueryLambdaVisitor.transformInfixExpression(node, this, generator, null);
+                //}
+                return super.visit(node);
+            }
+
+            @Override
+            public boolean visit(MethodInvocation node) {
+                //DbFunc.XXX特殊处理
+                if (node.getExpression() instanceof SimpleName
+                        && ((SimpleName) node.getExpression()).getIdentifier().equals("DbFunc")) {
+                    inDbFunc = true;
+
+                    //暂不考虑相同的
+                    selects.add(node.toString());
+                    node.getExpression().accept(this);
+                    for (var arg : node.arguments()) {
+                        ((ASTNode) arg).accept(this);
+                    }
+                    targets.add((MethodInvocation) generator.astRewrite.createMoveTarget(node));
+
+                    //根据DbFunc返回类型转换
+                    var pos = selects.size() - 1;
+                    var newNode = makeSqlReaderGet(
+                            node.resolveTypeBinding(), firstLambdaParaName, pos, generator.ast);
+                    generator.astRewrite.replace(node, newNode, null);
+
+                    inDbFunc = false;
+                    return false;
+                }
+                return super.visit(node);
             }
         };
 
@@ -134,29 +188,30 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
     }
 
     private static MethodInvocation makeSqlReaderGet(
-            QualifiedName name, String firstLambdaParaName, int pos, AST ast) {
+            ITypeBinding type, String firstLambdaParaName, int pos, AST ast) {
         var getMethod = ast.newMethodInvocation();
         getMethod.setExpression(ast.newSimpleName(firstLambdaParaName));
         getMethod.arguments().add(ast.newNumberLiteral(Integer.toString(pos)));
 
-        var paraType = name.resolveTypeBinding();
-        var typeName = paraType.getName();
-        if (paraType.isPrimitive()) {
+        var typeName = type.getName();
+        if (type.isPrimitive()) {
             if (typeName.equals("boolean")) {
                 getMethod.setName(ast.newSimpleName("getBool"));
             } else if (typeName.equals("int")) {
                 getMethod.setName(ast.newSimpleName("getInt"));
             } else {
-                throw new RuntimeException("未实现:" + paraType.getName());
+                throw new RuntimeException("未实现:" + type.getName());
             }
-        } else if (paraType.isClass()) {
-            if (paraType.getName().equals("String")) {
+        } else if (type.isClass()) {
+            if (typeName.equals("String")) {
                 getMethod.setName(ast.newSimpleName("getString"));
+            } else if (typeName.equals("Integer")) {
+                getMethod.setName(ast.newSimpleName("getInt"));
             } else {
-                throw new RuntimeException("未实现:" + paraType.getName());
+                throw new RuntimeException("未实现:" + type.getName());
             }
         } else {
-            throw new RuntimeException("未实现:" + paraType.getName());
+            throw new RuntimeException("未实现:" + type.getName());
         }
 
         return getMethod;

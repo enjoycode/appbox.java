@@ -2,9 +2,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class TestService {
 
-    public CompletableFuture<String> hello(String name, int age) {
-        return CompletableFuture.completedFuture("Hello Future!");
-    }
+    //public CompletableFuture<String> hello(String name, int age) {
+    //    return CompletableFuture.completedFuture("Hello Future!");
+    //}
 
     //public CompletableFuture<String> insert() {
     //    var obj = new sys.entities.Employee("Rick");
@@ -17,21 +17,24 @@ public class TestService {
     //public CompletableFuture<Void> test1() {
     //    return CompletableFuture.completedFuture((Void) null);
     //}
-    //
+
     //public CompletableFuture<String> invoke() {
     //    var obj = new sys.entities.Employee("Rick");
     //
     //    //sys.services.TestService.test1();
     //    return sys.services.TestService.hello(obj.Name, 100);
     //}
-    //
-    //public CompletableFuture<Object> query() {
-    //    var obj = new sys.entities.Employee();
-    //
-    //    var q = new SqlQuery<sys.entities.Employee>();
-    //    q.where(e -> e.Name + "a" == obj.Name);
-    //    return q.toListAsync().thenApply(r -> (Object) r);
-    //}
+
+    public CompletableFuture<Object> query() {
+        var obj = new sys.entities.Employee();
+        int value = 100;
+
+        var q = new SqlQuery<sys.entities.Employee>();
+        //q.where(e -> e.Manager.Name + "a" == obj.Name + "b");
+        //q.where(e -> DbFunc.sum(e.Age) + 1 > value + 2);
+        q.where(e -> e.Name + obj.Name == "Rick");
+        return q.toListAsync().thenApply(r -> (Object) r);
+    }
 
     //public CompletableFuture<?> query2() {
     //    var q = new SqlQuery<sys.entities.Employee>();
@@ -64,18 +67,28 @@ public class TestService {
     //    sq.where(t -> t.ManagerName == "Rick");
     //
     //    var q = new SqlQuery<sys.entities.Employee>();
-    //    q.where(t -> DbFunc.in(t.Name, sq.toSubQuery(s -> s.Name)));
+    //    q.where(t -> t.Age > 30 && DbFunc.in(t.Name, sq.toSubQuery(s -> s.Name)) );
     //    return q.toListAsync();
     //}
 
-    public CompletableFuture<?> join() {
-        var q = new SqlQuery<sys.entities.Employee>();
-        var j = new SqlQueryJoin<sys.entities.Employee>();
+    //public CompletableFuture<?> join() {
+    //    var q = new SqlQuery<sys.entities.Employee>();
+    //    var j = new SqlQueryJoin<sys.entities.Employee>();
+    //
+    //    q.leftJoin(j, (l, r) -> l.ManagerName == r.Name);
+    //    q.where(j, (l, r) -> r.Name == "Rick");
+    //    return q.toListAsync();
+    //}
 
-        q.leftJoin(j, (l, r) -> l.ManagerName == r.Name);
-        q.where(j, (l, r) -> r.Name == "Rick");
-        return q.toListAsync();
-    }
+    //public CompletableFuture<?> groupBy() {
+    //    var q = new SqlQuery<sys.entities.Employee>();
+    //    q.groupBy(t -> t.ManagerName)
+    //            .having(t -> DbFunc.sum(t.Age) + 3 > 0);
+    //    return q.toListAsync(t -> new Object() {
+    //        final String manager = t.ManagerName;
+    //        final int ages = DbFunc.sum(t.Age + 1) + 2;
+    //    });
+    //}
 
     //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
     //    return CompletableFuture.completedFuture(emp);

@@ -1,6 +1,7 @@
 package appbox.store.query;
 
-import appbox.store.expressions.SqlSelectItemExpression;
+import appbox.expressions.Expression;
+import appbox.store.expressions.SqlSelectItem;
 
 import java.util.List;
 
@@ -11,10 +12,20 @@ public interface ISqlSelectQuery extends ISqlQuery {
 
     QueryPurpose getPurpose();
 
-    List<SqlSelectItemExpression> getSelects();
-
     int getSkipSize();
 
     int getTakeSize();
+
+    List<SqlOrderBy> getOrderBy();
+
+    default boolean hasOrderBy() {
+        return getOrderBy() != null && getOrderBy().size() > 0;
+    }
+
+    List<SqlSelectItem> getSelects();
+
+    List<SqlSelectItem> getGroupBy();
+
+    Expression getHavingFilter();
 
 }

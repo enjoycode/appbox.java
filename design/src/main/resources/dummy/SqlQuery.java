@@ -31,6 +31,18 @@ public final class SqlQuery<T extends SqlEntityBase> {
     @MethodInterceptor(name = "SqlQuerySelect")
     public <R> SqlSubQuery<R> toSubQuery(Function<? super T, ? extends R> selects) {return null;}
 
+    @MethodInterceptor(name = "SqlQuerySelect")
+    public <R> SqlQuery<T> orderBy(Function<? super T, ? extends R> select) {return null;}
+
+    @MethodInterceptor(name = "SqlQuerySelect")
+    public <R> SqlQuery<T> orderByDesc(Function<? super T, ? extends R> select) {return null;}
+
+    @MethodInterceptor(name = "SqlQuerySelect")
+    public <R> SqlQuery<T> groupBy(Function<? super T, ? extends R> select) {return null;}
+
+    @MethodInterceptor(name = "SqlQueryWhere")
+    public SqlQuery<T> having(Predicate<T> filter) {return this;}
+
     @MethodInterceptor(name = "SqlQueryWhere")
     public <R> ISqlQueryJoin<R> leftJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {
         return null;

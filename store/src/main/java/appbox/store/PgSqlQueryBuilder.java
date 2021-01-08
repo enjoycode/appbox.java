@@ -4,7 +4,7 @@ import appbox.expressions.*;
 import appbox.model.EntityModel;
 import appbox.model.entity.DataFieldModel;
 import appbox.runtime.RuntimeContext;
-import appbox.store.expressions.SqlSelectItemExpression;
+import appbox.store.expressions.SqlSelectItem;
 import appbox.store.query.*;
 
 import java.util.Collection;
@@ -76,13 +76,12 @@ final class PgSqlQueryBuilder {
         }
 
         //非分组的情况下构建Order By
-        //if (query.getPurpose() != ISqlSelectQuery.QueryPurpose.Count) {
-        //if (query.GroupByKeys == null && query.HasSortItems)
-        //{
-        //    ctx.CurrentQueryInfo.BuildStep = BuildQueryStep.BuildOrderBy;
-        //    BuildOrderBy(query, ctx);
-        //}
-        //}
+        if (query.getPurpose() != ISqlSelectQuery.QueryPurpose.Count) {
+            if (query.getGroupBy() == null && query.hasOrderBy()) {
+                ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildOrderBy);
+                buildOrderBy(query, ctx);
+            }
+        }
 
         //构建Join
         ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildJoin);
@@ -111,56 +110,46 @@ final class PgSqlQueryBuilder {
             }
         }
 
-        ////构建分组、Having及排序
-        //BuildGroupBy(query, ctx);
+        //构建分组、Having及排序
+        buildGroupBy(query, ctx);
 
         //结束上下文
         ctx.endBuildQuery(query, false);
     }
 
-    private static void buildSelectItem(SqlSelectItemExpression item, QueryBuildContext ctx) {
-        //判断item.Expression是否是子Select项,是则表示外部查询（FromQuery）引用的Select项
-        if (item.expression.getType() == ExpressionType.SelectItemExpression) {
-            var si = (SqlSelectItemExpression) item.expression;
-            //判断当前查询是否等于Select项的所有者，否则表示Select项的所有者的外部查询引用该Select项
-            var ownerAliasName = ctx.currentQuery == item.owner ?
-                    ctx.getQueryAliasName(si.owner) : ctx.getQueryAliasName(item.owner);
-            ctx.append(ownerAliasName);
-            ctx.append(".\"");
-            ctx.append(si.aliasName);
-            ctx.append('"');
+    private static void buildOrderBy(ISqlSelectQuery query, QueryBuildContext ctx) {
+        ctx.append(" Order By ");
+        for (int i = 0; i < query.getOrderBy().size(); i++) {
+            if (i != 0)
+                ctx.append(',');
+            var item = query.getOrderBy().get(i);
+            buildExpression(item.expression, ctx);
+            if (item.desc)
+                ctx.append(" DESC");
+        }
+    }
 
-            //处理选择项别名
-            if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildSelect /* && !ctx.isBuildCteSelect*/) {
-                if (!item.aliasName.equals(si.aliasName)) {
-                    ctx.append(" \"");
-                    ctx.append(item.aliasName);
-                    ctx.append('"');
-                }
-            }
-        } else { //----上面为FromQuery的Select项，下面为Query或SubQuery的Select项----
-            //判断当前查询是否等于Select项的所有者，否则表示Select项的所有者的外部查询引用该Select项
-            if (ctx.currentQuery == item.owner) {
-                buildExpression(item.expression, ctx);
-            } else {
-                ctx.append(ctx.getQueryAliasName(item.owner));
-                ctx.append(".\"");
-                ctx.append(item.aliasName);
-                ctx.append('"');
-            }
+    private static void buildGroupBy(ISqlSelectQuery query, QueryBuildContext ctx) {
+        if (query.getGroupBy() == null || query.getGroupBy().size() == 0)
+            return;
 
-            //处理选择项别名
-            if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildSelect /* && !ctx.isBuildCteSelect*/) {
-                boolean needAlias = true;
-                if (item.expression instanceof EntityPathExpression) {
-                    needAlias = !((EntityPathExpression) item.expression).name.equals(item.aliasName);
-                }
-                if (needAlias) {
-                    ctx.append(" \"");
-                    ctx.append(item.aliasName);
-                    ctx.append('"');
-                }
-            }
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildGroupBy);
+        ctx.append(" Group By ");
+        for (int i = 0; i < query.getGroupBy().size(); i++) {
+            if (i != 0)
+                ctx.append(',');
+            buildExpression(query.getGroupBy().get(i), ctx);
+        }
+
+        if (query.getHavingFilter() != null) {
+            ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildHaving);
+            ctx.append(" Having ");
+            buildExpression(query.getHavingFilter(), ctx);
+        }
+
+        if (query.getOrderBy() != null && query.getOrderBy().size() > 0) {
+            ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildOrderBy);
+            buildOrderBy(query, ctx);
         }
     }
 
@@ -223,12 +212,60 @@ final class PgSqlQueryBuilder {
                 buildFieldExpression((EntityFieldExpression) exp, ctx); break;
             case BinaryExpression:
                 buildBinaryExpression((BinaryExpression) exp, ctx); break;
+            case SelectItemExpression:
+                buildSelectItem((SqlSelectItem) exp, ctx); break;
             case DbFuncExpression:
                 buildDbFuncExpression((DbFunc) exp, ctx); break;
             case SubQueryExpression:
                 buildSubQuery((SqlSubQuery) exp, ctx); break;
             default:
                 throw new RuntimeException("未实现: " + exp.getType().name());
+        }
+    }
+
+    private static void buildSelectItem(SqlSelectItem item, QueryBuildContext ctx) {
+        //判断item.Expression是否是子Select项,是则表示外部查询（FromQuery）引用的Select项
+        if (item.expression.getType() == ExpressionType.SelectItemExpression) {
+            var si = (SqlSelectItem) item.expression;
+            //判断当前查询是否等于Select项的所有者，否则表示Select项的所有者的外部查询引用该Select项
+            var ownerAliasName = ctx.currentQuery == item.owner ?
+                    ctx.getQueryAliasName(si.owner) : ctx.getQueryAliasName(item.owner);
+            ctx.append(ownerAliasName);
+            ctx.append(".\"");
+            ctx.append(si.aliasName);
+            ctx.append('"');
+
+            //处理选择项别名
+            if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildSelect /* && !ctx.isBuildCteSelect*/) {
+                if (!item.aliasName.equals(si.aliasName)) {
+                    ctx.append(" \"");
+                    ctx.append(item.aliasName);
+                    ctx.append('"');
+                }
+            }
+        } else { //----上面为FromQuery的Select项，下面为Query或SubQuery的Select项----
+            //判断当前查询是否等于Select项的所有者，否则表示Select项的所有者的外部查询引用该Select项
+            if (ctx.currentQuery == item.owner) {
+                buildExpression(item.expression, ctx);
+            } else {
+                ctx.append(ctx.getQueryAliasName(item.owner));
+                ctx.append(".\"");
+                ctx.append(item.aliasName);
+                ctx.append('"');
+            }
+
+            //处理选择项别名
+            if (ctx.getBuildStep() == QueryBuildContext.QueryBuildStep.BuildSelect /* && !ctx.isBuildCteSelect*/) {
+                boolean needAlias = true;
+                if (item.expression instanceof EntityPathExpression) {
+                    needAlias = !((EntityPathExpression) item.expression).name.equals(item.aliasName);
+                }
+                if (needAlias) {
+                    ctx.append(" \"");
+                    ctx.append(item.aliasName);
+                    ctx.append('"');
+                }
+            }
         }
     }
 
