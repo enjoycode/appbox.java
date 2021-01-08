@@ -92,9 +92,11 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
 
             @Override
             public boolean visit(InfixExpression node) {
-                //if (inDbFunc) {
-                //    return SqlQueryLambdaVisitor.transformInfixExpression(node, this, generator, null);
-                //}
+                if (inDbFunc) {
+                    var infixRewrite = new InfixRewrite(lambdaParameters, generator);
+                    var result       = infixRewrite.visit(node);
+                    generator.astRewrite.replace(node, result.newNode, null);
+                }
                 return super.visit(node);
             }
 

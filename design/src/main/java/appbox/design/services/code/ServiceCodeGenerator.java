@@ -26,7 +26,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         put("SqlQuery", new SqlQueryCtorInterceptor());
     }};
 
-    private static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
+    protected static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
         put("SqlQueryWhere", new SqlQueryWhereInterceptor());
         put("SqlQueryMapper", new SqlQueryMapperInterceptor());
         put("SqlQuerySelect", new SqlQuerySelectInterceptor());

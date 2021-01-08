@@ -26,24 +26,26 @@ public class TestService {
     //}
 
     public CompletableFuture<Object> query() {
-        var obj = new sys.entities.Employee();
+        var obj   = new sys.entities.Employee();
         int value = 100;
 
         var q = new SqlQuery<sys.entities.Employee>();
-        //q.where(e -> e.Manager.Name + "a" == obj.Name + "b");
-        //q.where(e -> DbFunc.sum(e.Age) + 1 > value + 2);
-        q.where(e -> e.Name + obj.Name == "Rick");
+        q.where(e -> e.Age + e.Age * 1 > 100);
+        q.where(e -> e.Age + 1 * value > 100);
+        q.where(e -> e.Manager.Name + "a" == obj.Name + "b");
+        q.where(e -> DbFunc.sum(e.Age) + 1 > value + 2);
+        q.where(e -> e.Name + obj.Name + "c" == "Rick");
         return q.toListAsync().thenApply(r -> (Object) r);
     }
 
-    //public CompletableFuture<?> query2() {
-    //    var q = new SqlQuery<sys.entities.Employee>();
-    //    return q.toListAsync(r -> new Object() {
-    //        final String Name = r.Name;
-    //        final boolean MaleFlag = r.Male;
-    //        final String Male = r.Male ? "男" : "女";
-    //    });
-    //}
+    public CompletableFuture<?> query2() {
+        var q = new SqlQuery<sys.entities.Employee>();
+        return q.toListAsync(r -> new Object() {
+            final String Name = r.Name;
+            final boolean MaleFlag = r.Male;
+            final String Male = r.Male ? "男" : "女";
+        });
+    }
 
     //public CompletableFuture<?> query3() {
     //    var q = new SqlQuery<sys.entities.Employee>();
@@ -52,43 +54,43 @@ public class TestService {
     //            });
     //}
 
-    //public CompletableFuture<?> update() {
-    //    var cmd = new SqlUpdateCommand<sys.entities.Employee>();
-    //    cmd.where(e -> e.Name == "Rick");
-    //    cmd.update(e -> e.Male = true);
-    //    var outs = cmd.output(e -> e.Name);
-    //    return cmd.execAsync().thenApply(rows -> {
-    //       return outs.get(0);
-    //    });
-    //}
+    public CompletableFuture<?> update() {
+        var cmd = new SqlUpdateCommand<sys.entities.Employee>();
+        cmd.where(e -> e.Name == "Rick");
+        cmd.update(e -> e.Male = true);
+        var outs = cmd.output(e -> e.Name);
+        return cmd.execAsync().thenApply(rows -> {
+           return outs.get(0);
+        });
+    }
 
-    //public CompletableFuture<?> subquery() {
-    //    var sq = new SqlQuery<sys.entities.Employee>();
-    //    sq.where(t -> t.ManagerName == "Rick");
-    //
-    //    var q = new SqlQuery<sys.entities.Employee>();
-    //    q.where(t -> t.Age > 30 && DbFunc.in(t.Name, sq.toSubQuery(s -> s.Name)) );
-    //    return q.toListAsync();
-    //}
+    public CompletableFuture<?> subquery() {
+        var sq = new SqlQuery<sys.entities.Employee>();
+        sq.where(t -> t.ManagerName == "Rick");
 
-    //public CompletableFuture<?> join() {
-    //    var q = new SqlQuery<sys.entities.Employee>();
-    //    var j = new SqlQueryJoin<sys.entities.Employee>();
-    //
-    //    q.leftJoin(j, (l, r) -> l.ManagerName == r.Name);
-    //    q.where(j, (l, r) -> r.Name == "Rick");
-    //    return q.toListAsync();
-    //}
+        var q = new SqlQuery<sys.entities.Employee>();
+        q.where(t -> t.Age > 30 && DbFunc.in(t.Name, sq.toSubQuery(s -> s.Name)) );
+        return q.toListAsync();
+    }
 
-    //public CompletableFuture<?> groupBy() {
-    //    var q = new SqlQuery<sys.entities.Employee>();
-    //    q.groupBy(t -> t.ManagerName)
-    //            .having(t -> DbFunc.sum(t.Age) + 3 > 0);
-    //    return q.toListAsync(t -> new Object() {
-    //        final String manager = t.ManagerName;
-    //        final int ages = DbFunc.sum(t.Age + 1) + 2;
-    //    });
-    //}
+    public CompletableFuture<?> join() {
+        var q = new SqlQuery<sys.entities.Employee>();
+        var j = new SqlQueryJoin<sys.entities.Employee>();
+
+        q.leftJoin(j, (l, r) -> l.ManagerName == r.Name);
+        q.where(j, (l, r) -> r.Name == "Rick");
+        return q.toListAsync();
+    }
+
+    public CompletableFuture<?> groupBy() {
+        var q = new SqlQuery<sys.entities.Employee>();
+        q.groupBy(t -> t.ManagerName)
+                .having(t -> DbFunc.sum(t.Age) + 3 > 0);
+        return q.toListAsync(t -> new Object() {
+            final String manager = t.ManagerName;
+            final int ages = DbFunc.sum(t.Age + 1) + 2;
+        });
+    }
 
     //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
     //    return CompletableFuture.completedFuture(emp);

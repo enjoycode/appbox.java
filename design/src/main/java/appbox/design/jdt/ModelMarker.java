@@ -139,7 +139,7 @@ public class ModelMarker implements IMarker {
     }
 
     protected MarkerInfo getInfo() {
-        Log.warn("未实现");
+        //Log.warn("未实现");
         return null;
         //return getWorkspace().getMarkerManager().findMarkerInfo(resource, id);
     }
@@ -216,7 +216,7 @@ public class ModelMarker implements IMarker {
 
     @Override
     public void setAttributes(String[] attributeNames, Object[] values) throws CoreException {
-        Log.warn("未实现");
+        Log.warn("编译问题:" + values[0]);
         //Assert.isNotNull(attributeNames);
         //Assert.isNotNull(values);
         //Workspace workspace = getWorkspace();

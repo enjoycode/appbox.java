@@ -3,7 +3,6 @@ package appbox.expressions;
 import appbox.serialization.IBinSerializable;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
-import org.apache.commons.math3.fitting.leastsquares.EvaluationRmsChecker;
 
 public abstract class Expression implements IBinSerializable/*TODO:移至需要的实现*/ {
     public abstract ExpressionType getType();
@@ -48,6 +47,14 @@ public abstract class Expression implements IBinSerializable/*TODO:移至需要�
 
     public final BinaryExpression minus(Object value) {
         return makeBinary(value, BinaryExpression.BinaryOperatorType.Minus);
+    }
+
+    public final BinaryExpression times(Object value) {
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Multiply);
+    }
+
+    public final BinaryExpression div(Object value) {
+        return makeBinary(value, BinaryExpression.BinaryOperatorType.Divide);
     }
 
     public final BinaryExpression and(Expression right) {

@@ -168,7 +168,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         _selects.add(item);
     }
 
-    public EntityPathExpression[] select(EntityPathExpression... items) {
+    public Expression[] select(Expression... items) {
         return items;
     }
 
