@@ -27,15 +27,31 @@ public final class SqlRowReader implements IEntityMemberReader {
     public boolean getBool(int col) { return rowData.getBoolean(col); }
 
     public int getInt(int col) {
-        return rowData.getInt(col);
+        var v = rowData.get(col);
+        if (v instanceof Long) { //sum等会转换成long
+            return ((Long) v).intValue();
+        } else {
+            return (int) v;
+        }
+    }
+
+    public long getLong(int col) {
+        return rowData.getLong(col);
+    }
+
+    public float getFloat(int col) {
+        return rowData.getFloat(col);
+    }
+
+    public double getDouble(int col) {
+        return rowData.getDouble(col);
     }
 
     public String getString(int col) {
         return rowData.getString(col);
     }
 
-    //====以下用于填充实体，其中flags是列序号====
-
+    //region ====以下用于填充实体，其中flags是列序号====
     @Override
     public String readStringMember(int flags) {
         return rowData.getString(flags);
@@ -91,5 +107,6 @@ public final class SqlRowReader implements IEntityMemberReader {
     public <T extends Entity> List<T> readSetMember(int flags, Supplier<T> creator) {
         throw new UnsupportedOperationException();
     }
+    //endregion
 
 }

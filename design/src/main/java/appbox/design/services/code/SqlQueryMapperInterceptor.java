@@ -195,25 +195,36 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
         getMethod.setExpression(ast.newSimpleName(firstLambdaParaName));
         getMethod.arguments().add(ast.newNumberLiteral(Integer.toString(pos)));
 
+        //TODO:*** others
         var typeName = type.getName();
         if (type.isPrimitive()) {
-            if (typeName.equals("boolean")) {
-                getMethod.setName(ast.newSimpleName("getBool"));
-            } else if (typeName.equals("int")) {
-                getMethod.setName(ast.newSimpleName("getInt"));
-            } else {
-                throw new RuntimeException("未实现:" + type.getName());
+            switch (typeName) {
+                case "boolean":
+                    getMethod.setName(ast.newSimpleName("getBool")); break;
+                case "int":
+                    getMethod.setName(ast.newSimpleName("getInt")); break;
+                case "long":
+                    getMethod.setName(ast.newSimpleName("getLong")); break;
+                case "float":
+                    getMethod.setName(ast.newSimpleName("getFloat")); break;
+                case "double":
+                    getMethod.setName(ast.newSimpleName("getDouble")); break;
+                default:
+                    throw new RuntimeException("未实现:" + typeName);
             }
         } else if (type.isClass()) {
-            if (typeName.equals("String")) {
-                getMethod.setName(ast.newSimpleName("getString"));
-            } else if (typeName.equals("Integer")) {
-                getMethod.setName(ast.newSimpleName("getInt"));
-            } else {
-                throw new RuntimeException("未实现:" + type.getName());
+            switch (typeName) {
+                case "String":
+                    getMethod.setName(ast.newSimpleName("getString")); break;
+                case "Integer":
+                    getMethod.setName(ast.newSimpleName("getInt")); break;
+                case "Long":
+                    getMethod.setName(ast.newSimpleName("getLong")); break;
+                default:
+                    throw new RuntimeException("未实现:" + typeName);
             }
         } else {
-            throw new RuntimeException("未实现:" + type.getName());
+            throw new RuntimeException("未实现:" + typeName);
         }
 
         return getMethod;
