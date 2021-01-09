@@ -2,6 +2,7 @@ package appbox.expressions;
 
 import appbox.model.EntityModel;
 import appbox.model.entity.EntityRefModel;
+import appbox.model.entity.EntitySetModel;
 import appbox.runtime.RuntimeContext;
 
 import java.util.HashMap;
@@ -87,8 +88,11 @@ public final class EntityExpression extends EntityPathExpression {
                 if (!rm.isAggregationRef()) {
                     member = new EntityExpression(name, rm.getRefModelIds().get(0), this);
                 } else {
-                    throw new RuntimeException("未实现");
+                    throw new RuntimeException("尚未实现聚合引用对象的表达式");
                 }
+                break;
+            case EntitySet:
+                member = new EntitySetExpression(name, this, ((EntitySetModel) m).refModelId());
                 break;
             default:
                 throw new RuntimeException("未实现");
