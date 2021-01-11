@@ -27,9 +27,9 @@ public interface IEntityMemberWriter {
 
     void writeMember(short id, UUID value, byte flags);
 
-    void writeMember(short id, byte[] data, byte flags);
+    void writeMember(short id, byte[] value, byte flags);
 
-    void writeMember(short id, boolean male, byte flags);
+    void writeMember(short id, boolean value, byte flags);
 
     void writeMember(short id, Date value, byte flags);
 
@@ -37,6 +37,6 @@ public interface IEntityMemberWriter {
     void writeMember(short id, Entity value, byte flags);
 
     /** EntitySet成员值 */
-    void writeMember(short id, List<Entity> value, byte flags);
+    void writeMember(short id, List<? extends Entity> value, byte flags);
 
 }

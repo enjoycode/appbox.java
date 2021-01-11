@@ -19,7 +19,7 @@ public final class SqlQuery<T extends SqlEntityBase> {
     @MethodInterceptor(name = "SqlQueryWhere")
     public <J> SqlQuery<T> where(ISqlQueryJoin<J> join, BiPredicate<T, J> filter) {return this;}
 
-    public CompletableFuture<List<T>> toListAsync() { return null; }
+    public CompletableFuture<List<T>> toListAsync() {return null;}
 
     @MethodInterceptor(name = "SqlQueryMapper")
     public <R> CompletableFuture<List<R>> toListAsync(Function<? super T, ? extends R> mapper) {return null;}
@@ -27,6 +27,9 @@ public final class SqlQuery<T extends SqlEntityBase> {
     @MethodInterceptor(name = "SqlQueryMapper")
     public <J, R> CompletableFuture<List<R>> toListAsync(ISqlQueryJoin<J> join,
                                                          BiFunction<? super T, J, ? extends R> mapper) {return null;}
+
+    @MethodInterceptor(name = "SqlQuerySelect")
+    public CompletableFuture<List<T>> toTreeAsync(Function<? super T, List<T>> children) {return null;}
 
     @MethodInterceptor(name = "SqlQuerySelect")
     public <R> SqlSubQuery<R> toSubQuery(Function<? super T, ? extends R> selects) {return null;}
@@ -44,23 +47,15 @@ public final class SqlQuery<T extends SqlEntityBase> {
     public SqlQuery<T> having(Predicate<T> filter) {return this;}
 
     @MethodInterceptor(name = "SqlQueryWhere")
-    public <R> ISqlQueryJoin<R> leftJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {
-        return null;
-    }
+    public <R> ISqlQueryJoin<R> leftJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {return null;}
 
     @MethodInterceptor(name = "SqlQueryWhere")
-    public <R> ISqlQueryJoin<R> innerJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {
-        return null;
-    }
+    public <R> ISqlQueryJoin<R> innerJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {return null;}
 
     @MethodInterceptor(name = "SqlQueryWhere")
-    public <R> ISqlQueryJoin<R> rightJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {
-        return null;
-    }
+    public <R> ISqlQueryJoin<R> rightJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {return null;}
 
     @MethodInterceptor(name = "SqlQueryWhere")
-    public <R> ISqlQueryJoin<R> fullJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {
-        return null;
-    }
+    public <R> ISqlQueryJoin<R> fullJoin(ISqlQueryJoin<R> target, BiPredicate<T, R> condition) {return null;}
 
 }

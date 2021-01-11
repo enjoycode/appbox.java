@@ -132,7 +132,7 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, List<Entity> value, byte flags) {
+    public void writeMember(short id, List<? extends Entity> value, byte flags) {
         throw new UnsupportedOperationException();
     }
 

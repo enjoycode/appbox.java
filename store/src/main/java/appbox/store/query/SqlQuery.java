@@ -2,18 +2,22 @@ package appbox.store.query;
 
 import appbox.data.SqlEntity;
 import appbox.data.SqlEntityKVO;
-import appbox.expressions.BinaryExpression;
-import appbox.expressions.EntityPathExpression;
-import appbox.expressions.EntityExpression;
-import appbox.expressions.Expression;
+import appbox.entities.EntityMemberValueGetter;
+import appbox.entities.EntityMemberValueSetter;
+import appbox.expressions.*;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
+import appbox.model.entity.EntityMemberModel;
+import appbox.model.entity.EntityRefModel;
+import appbox.model.entity.EntitySetModel;
 import appbox.runtime.RuntimeContext;
+import appbox.serialization.IEntityMemberWriter;
 import appbox.store.SqlStore;
 import appbox.store.expressions.SqlSelectItem;
 import com.github.jasync.sql.db.RowData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
@@ -34,6 +38,9 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //group by and having
     private       List<SqlSelectItem> _groupBy;
     private       Expression          _havingFilter;
+
+    //cache for tree query
+    private EntityRefModel _treeParentMember;
 
     public SqlQuery(long modelId, Class<T> clazz) {
         t      = new EntityExpression(modelId, this);
@@ -65,6 +72,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     @Override
     public List<SqlOrderBy> getOrderBy() {
         return _orderBy;
+    }
+
+    public EntityRefModel getTreeParentMember() {
+        return _treeParentMember;
     }
     //endregion
 
@@ -160,6 +171,18 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //endregion
 
     //region ====Select Methods====
+    protected static void addAllSelects(SqlQuery<?> query, EntityModel model, EntityExpression t, String fullPath) {
+        //TODO:考虑特殊SqlSelectItemExpression with *，但只能在fullpath==null时使用
+        for (var member : model.getMembers()) {
+            if (member.type() == EntityMemberModel.EntityMemberType.DataField) {
+                String alias = fullPath == null ? member.name() :
+                        String.format("%s.%s", fullPath, member.name());
+                var si = new SqlSelectItem(t.m(member.name()), alias);
+                query.addSelect(si);
+            }
+        }
+    }
+
     private void addSelect(SqlSelectItem item) {
         if (_selects == null)
             _selects = new ArrayList<>();
@@ -187,32 +210,36 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
             var rows      = res.getRows();
             var rowReader = new SqlRowReader(rows.columnNames());
             var list      = new ArrayList<T>(rows.size());
-            try {
-                Supplier<T> creator;
-                if (_clazz == SqlEntityKVO.class) {
-                    creator = () -> (T) new SqlEntityKVO(model);
-                } else {
-                    final var ctor = _clazz.getDeclaredConstructor();
-                    creator = () -> {
-                        try {
-                            return ctor.newInstance();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    };
-                }
-
-                for (var row : rows) {
-                    rowReader.rowData = row;
-                    var obj = creator.get();
-                    fillEntity(obj, model, rowReader, 0);
-                    list.add(obj);
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
+            var creator   = getEntityCreator(model);
+            for (var row : rows) {
+                rowReader.rowData = row;
+                var obj = creator.get();
+                fillEntity(obj, model, rowReader, 0);
+                list.add(obj);
             }
+
             return list;
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private Supplier<T> getEntityCreator(EntityModel model) {
+        if (_clazz == SqlEntityKVO.class) {
+            return () -> (T) new SqlEntityKVO(model);
+        }
+
+        try {
+            final var ctor = _clazz.getDeclaredConstructor();
+            return () -> {
+                try {
+                    return ctor.newInstance();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            };
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public <R> CompletableFuture<List<R>> toListAsync(Function<SqlRowReader, ? extends R> mapper,
@@ -254,6 +281,65 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
                 list.add(obj);
             }
 
+            return list;
+        });
+    }
+
+    /**
+     * 返回树状结构的实体集合
+     * @param childrenMember eg: q.t.m("Children")
+     */
+    public CompletableFuture<List<T>> toTreeAsync(Function<SqlQuery<T>, Expression> childrenMember) {
+        var         children      = (EntitySetExpression) childrenMember.apply(this);
+        EntityModel model         = RuntimeContext.current().getModel(t.modelId);
+        var         childrenModel = (EntitySetModel) model.getMember(children.name);
+        _treeParentMember = (EntityRefModel) model.getMember(childrenModel.refMemberId());
+
+        addAllSelects(this, model, t, null);
+
+        //TODO:EntitySet自动排序
+
+        //如果没有设置任何条件，则设置默认条件为查询根级开始
+        if (_filter == null) {
+            for (var fk : _treeParentMember.getFKMemberIds()) {
+                var con = t.m(model.getMember(fk).name()).eq(null);
+                _filter = _filter == null ? con : _filter.and(con);
+            }
+        }
+
+        _purpose = QueryPurpose.ToTreeList;
+        var db = SqlStore.get(model.sqlStoreOptions().storeModelId());
+        return db.runQuery(this).thenApply(res -> {
+            var rows      = res.getRows();
+            var rowReader = new SqlRowReader(rows.columnNames());
+            var list      = new ArrayList<T>(rows.size());
+            var creator   = getEntityCreator(model);
+            var dic       = new HashMap<Object, T>(rows.size());
+            var getter    = new EntityMemberValueGetter();
+            var setter    = new EntityMemberValueSetter();
+            for (var row : rows) {
+                rowReader.rowData = row;
+                var obj = creator.get();
+                fillEntity(obj, model, rowReader, 1);
+                var treeLevel = row.getInt(row.size() - 1);
+                if (treeLevel == 0) {
+                    list.add(obj);
+                } else {
+                    var parent = dic.get(getFKS(_treeParentMember, obj, getter));
+                    parent.writeMember(childrenModel.memberId(), getter, IEntityMemberWriter.SF_NONE);
+                    @SuppressWarnings("unchecked")
+                    var parentChilds = (List<T>) getter.value;
+                    if (parentChilds == null) {
+                        parentChilds = new ArrayList<>();
+                        setter.value = parentChilds;
+                        parent.readMember(childrenModel.memberId(), setter, IEntityMemberWriter.SF_NONE);
+                    }
+                    parentChilds.add(obj);
+                }
+                dic.put(getPKS(model, obj, getter), obj);
+            }
+
+            dic.clear();
             return list;
         });
     }
@@ -300,7 +386,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
 
         var indexOfDot = path.indexOf('.');
         if (indexOfDot < 0) {
-            var member = model.tryGetMember(path);
+            var member = model.tryGetMember(path); //TODO:考虑生成运行时简化代码，直接映射Name->Id
             if (member == null) { //不存在通过反射处理, 如扩展的引用字段
                 Log.warn(String.format("未找到实体成员%s.%s", model.name(), path));
             } else {
@@ -309,6 +395,36 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         } else {
             throw new RuntimeException("未实现");
         }
+    }
+
+    /** 单主键直接返回主键值，多主键List（不能使用Array） */
+    private static Object getPKS(EntityModel model, SqlEntity entity, EntityMemberValueGetter getter) {
+        var options = model.sqlStoreOptions();
+        if (options.primaryKeys().length == 1) {
+            entity.writeMember(options.primaryKeys()[0].memberId, getter, IEntityMemberWriter.SF_NONE);
+            return getter.value;
+        }
+
+        var list = new ArrayList<Object>(options.primaryKeys().length);
+        for (var pk : options.primaryKeys()) {
+            entity.writeMember(pk.memberId, getter, IEntityMemberWriter.SF_NONE);
+            list.add(getter.value);
+        }
+        return list;
+    }
+
+    private static Object getFKS(EntityRefModel entityRefModel, SqlEntity entity, EntityMemberValueGetter getter) {
+        if (entityRefModel.getFKMemberIds().length == 1) {
+            entity.writeMember(entityRefModel.getFKMemberIds()[0], getter, IEntityMemberWriter.SF_NONE);
+            return getter.value;
+        }
+
+        var list = new ArrayList<Object>(entityRefModel.getFKMemberIds().length);
+        for (var fk : entityRefModel.getFKMemberIds()) {
+            entity.writeMember(fk, getter, IEntityMemberWriter.SF_NONE);
+            list.add(getter.value);
+        }
+        return list;
     }
     //endregion
 

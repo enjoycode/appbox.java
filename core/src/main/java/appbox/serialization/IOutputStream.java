@@ -491,7 +491,7 @@ public interface IOutputStream extends IEntityMemberWriter {
     }
 
     @Override
-    default void writeMember(short id, List<Entity> value, byte flags) {
+    default void writeMember(short id, List<? extends Entity> value, byte flags) {
         if (flags != IEntityMemberWriter.SF_NONE) { //不往存储流写入
             return;
         }

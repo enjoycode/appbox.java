@@ -12,12 +12,14 @@ import java.util.List;
 
 final class PgSqlQueryBuilder {
 
+    private static final String TREE_LEVEL = "__tree_level";
+
     public static DbCommand build(ISqlSelectQuery query) {
         var cmd = new DbCommand();
         var ctx = new QueryBuildContext(cmd, query);
 
         if (query.getPurpose() == ISqlSelectQuery.QueryPurpose.ToTreeList) {
-            throw new RuntimeException("未实现");
+            buildTreeQuery(query, ctx);
         } else if (query.getPurpose() == ISqlSelectQuery.QueryPurpose.ToTreeNodePath) {
             throw new RuntimeException("未实现");
         } else {
@@ -115,6 +117,98 @@ final class PgSqlQueryBuilder {
 
         //结束上下文
         ctx.endBuildQuery(query, false);
+    }
+
+    //  With RECURSIVE cte ("Name","Age","City","ParentName",__tree_level)
+    //  AS
+    //  (Select t."Name",t."Age",t."City",t."ParentName",0 From "Demo" AS t Where t."Name"='Rick'
+    //  Union All
+    //  Select t."Name",t."Age",t."City",t."ParentName",__tree_level+1 From "Demo" AS t
+    //      Inner Join cte AS d ON t."ParentName"=d."Name")
+    //  Select t.* From cte t
+    private static void buildTreeQuery(ISqlSelectQuery query, QueryBuildContext ctx) {
+        ctx.beginBuildQuery(query);
+        ctx.append("With RECURSIVE cte (");
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildWithCTE);
+
+        for (var si : query.getSelects()) {
+            if (si.expression instanceof EntityFieldExpression) {
+                var fsi = (EntityFieldExpression) si.expression;
+                if (fsi.owner.owner == null) {
+                    ctx.append('\"');
+                    ctx.append(fsi.name);
+                    ctx.append("\",");
+                }
+            }
+        }
+        ctx.append(TREE_LEVEL);
+        ctx.append(") AS (Select ");
+
+        //Select Anchor
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildSelect);
+        buildCteSelectItems(query, ctx, false);
+        ctx.append("0 From ");
+        //From Anchor
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildFrom);
+        EntityModel model = RuntimeContext.current().getModel(((SqlQuery<?>) query).t.modelId);
+        ctx.append('\"');
+        ctx.append(model.getSqlTableName(false, null));
+        ctx.append('\"');
+        ctx.append(" AS ");
+        ctx.append(((SqlQueryBase) query).aliasName);
+        //Where Anchor
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildWhere);
+        if (query.getFilter() != null) {
+            ctx.append(" Where ");
+            buildExpression(query.getFilter(), ctx);
+        }
+        //End Anchor
+        ctx.endBuildCurrentQuery();
+
+        //Union all
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildSelect);
+        ctx.append(" Union All Select ");
+        //Select 2
+        buildCteSelectItems(query, ctx, false);
+        ctx.append(TREE_LEVEL);
+        ctx.append("+1 From ");
+        //From 2
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildFrom);
+        ctx.append('\"');
+        ctx.append(model.getSqlTableName(false, null));
+        ctx.append('\"');
+        ctx.append(" AS ");
+        ctx.append(((SqlQueryBase) query).aliasName);
+        //Inner Join
+        ctx.append(" Inner Join cte AS d ON ");
+        var treeParentMember = ((SqlQuery<?>) query).getTreeParentMember();
+        for (int i = 0; i < treeParentMember.getFKMemberIds().length; i++) {
+            if (i != 0) ctx.append(" And ");
+            var fkName = model.getMember(treeParentMember.getFKMemberIds()[i]).name();
+            buildFieldExpression((EntityFieldExpression) ((SqlQuery<?>) query).m(fkName), ctx);
+            ctx.append("=d.\"");
+            var pkName = model.getMember(model.sqlStoreOptions().primaryKeys()[i].memberId).name();
+            ctx.append(pkName);
+            ctx.append('\"');
+        }
+        ctx.append(") Select t.* From cte t"); //需要tree_level用于判断层级
+        //构建自动联接Join
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildJoin);
+        ctx.buildQueryAutoJoins((SqlQueryBase) query, '\"');
+        //最后处理OrderBy
+        ctx.setBuildStep(QueryBuildContext.QueryBuildStep.BuildOrderBy);
+        if (query.hasOrderBy()) {
+            ctx.append(" Order By t.");
+            ctx.append(TREE_LEVEL);
+            for (var order : query.getOrderBy()) {
+                ctx.append(',');
+                buildExpression(order.expression, ctx);
+                if (order.desc)
+                    ctx.append(" DESC");
+            }
+        }
+
+        ctx.endBuildQuery(query, true);
     }
 
     private static void buildOrderBy(ISqlSelectQuery query, QueryBuildContext ctx) {
@@ -428,6 +522,33 @@ final class PgSqlQueryBuilder {
             }
         }
         ctx.append(')');
+    }
+
+    private static void buildCteSelectItems(ISqlSelectQuery query, QueryBuildContext ctx, boolean forTreeNodePath) {
+        for (var si : query.getSelects()) {
+            if (si.expression instanceof EntityFieldExpression) {
+                var fsi = (EntityFieldExpression) si.expression;
+                if (fsi.owner.owner == null) {
+                    ctx.append("t.\"");
+                    ctx.append(fsi.name);
+                    ctx.append('\"');
+                    if (forTreeNodePath) {
+                        ctx.append(" \"");
+                        ctx.append(si.aliasName);
+                        ctx.append('\"');
+                    }
+                    ctx.append(',');
+                }
+            }
+            //else if (forTreeNodePath) { //TODO:
+            //    var aggRefField = si.Expression as AggregationRefFieldExpression;
+            //    if (!object.Equals(null, aggRefField))
+            //    {
+            //        BuildAggregationRefFieldExpression(aggRefField, ctx);
+            //        ctx.AppendFormat(" \"{0}\",", si.AliasName);
+            //    }
+            //}
+        }
     }
 
     /**

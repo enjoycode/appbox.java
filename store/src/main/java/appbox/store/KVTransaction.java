@@ -5,30 +5,28 @@ package appbox.store;
 import appbox.channel.KVRowReader;
 import appbox.channel.messages.KVAddRefRequest;
 import appbox.channel.messages.StoreResponse;
-import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
+import appbox.entities.EntityMemberValueGetter;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.serialization.IEntityMemberWriter;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class KVTransaction implements IKVTransaction, IEntityMemberWriter, AutoCloseable {
+public final class KVTransaction implements IKVTransaction, /*IEntityMemberWriter,*/ AutoCloseable {
     private final KVTxnId                    _txnId  = new KVTxnId();
     private final AtomicInteger              _status = new AtomicInteger(0);
     private       ArrayList<KVAddRefRequest> _refs;
-    private       EntityId                   _tempTargetId; //外键引用的目标实体标识
+
+    private EntityMemberValueGetter _memberValueGetter;
+    private EntityId                _tempTargetId; //外键引用的目标实体标识
     //private       long                       _tempTypeModelId;
 
-    private KVTransaction() {
-    }
+    private KVTransaction() {}
 
     @Override
     public KVTxnId id() {
@@ -104,7 +102,10 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
         assert fromEntity.id().raftGroupId() != 0;
 
         synchronized (this) {
-            fromEntity.writeMember(entityRef.getFKMemberIds()[0], this, IEntityMemberWriter.SF_NONE);
+            if (_memberValueGetter == null)
+                _memberValueGetter = new EntityMemberValueGetter();
+            fromEntity.writeMember(entityRef.getFKMemberIds()[0], _memberValueGetter, IEntityMemberWriter.SF_NONE);
+            _tempTargetId = (EntityId) _memberValueGetter.value;
             if (_tempTargetId == null)
                 return;
             int fromTableId = KeyUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
@@ -144,8 +145,7 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
                 continue;
 
             if (task == null) {
-                task = SysStoreApi.execKVAddRefAsync(r)
-                        .thenAccept(StoreResponse::checkStoreError);
+                task = SysStoreApi.execKVAddRefAsync(r).thenAccept(StoreResponse::checkStoreError);
             } else {
                 task = task.thenCompose(res -> SysStoreApi.execKVAddRefAsync(r))
                         .thenAccept(StoreResponse::checkStoreError);
@@ -161,67 +161,4 @@ public final class KVTransaction implements IKVTransaction, IEntityMemberWriter,
     public void close() {
         rollback();
     }
-
-    //region ====IEntityMemberWriter 实现此接口仅为获取引用目标的EntityId或聚合类型====
-    @Override
-    public void writeMember(short id, EntityId value, byte flags) {
-        _tempTargetId = value; //maybe null
-    }
-
-    @Override
-    public void writeMember(short id, long value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, String value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, byte value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, int value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, Integer value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, UUID value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, byte[] data, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, boolean male, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, Date value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, Entity value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeMember(short id, List<Entity> value, byte flags) {
-        throw new UnsupportedOperationException();
-    }
-    //endregion
-
 }

@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -148,7 +149,7 @@ public final class EntityCodeGenerator {
         var getMethod = ast.newMethodDeclaration();
         getMethod.setName(ast.newSimpleName("get" + entitySet.name()));
         getMethod.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-        getMethod.setReturnType2(listType);
+        getMethod.setReturnType2((Type) ASTNode.copySubtree(generator.ast, listType));
         var getBody = ast.newBlock();
 
         var ifcon1 = ast.newInfixExpression();
@@ -172,8 +173,10 @@ public final class EntityCodeGenerator {
         ifst.setExpression(ifcondition);
         var assignment = ast.newAssignment();
         assignment.setLeftHandSide(ast.newSimpleName(fieldName));
+        var arrayListType = ast.newParameterizedType(ast.newSimpleType(ast.newName(ArrayList.class.getName())));
+        arrayListType.typeArguments().add(makeNavigationEntityType(setModelNode, false, generator.ast));
         var creation = ast.newClassInstanceCreation();
-        creation.setType(listType);
+        creation.setType(arrayListType);
         assignment.setRightHandSide(creation);
         ifst.setThenStatement(ast.newExpressionStatement(assignment));
         getBody.statements().add(ifst);

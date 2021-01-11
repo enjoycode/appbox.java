@@ -129,6 +129,7 @@ public final class HostRuntimeContext implements IRuntimeContext {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends ModelBase> T getModel(long modelId) {
         var model = models.get(modelId);

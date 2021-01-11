@@ -64,6 +64,10 @@ final class QueryBuildContext {
         }
     }
 
+    public void endBuildCurrentQuery() {
+        currentQueryInfo.endBuildQuery();
+    }
+
     public void setBuildStep(QueryBuildStep step) {
         currentQueryInfo.buildStep = step;
     }

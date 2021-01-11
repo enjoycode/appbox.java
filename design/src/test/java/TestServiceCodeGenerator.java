@@ -5,6 +5,7 @@ import appbox.entities.Employee;
 import appbox.model.*;
 import appbox.model.entity.DataFieldModel;
 import appbox.model.entity.EntityRefModel;
+import appbox.model.entity.EntitySetModel;
 import appbox.model.entity.FieldWithOrder;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
@@ -59,8 +60,10 @@ public class TestServiceCodeGenerator {
                 new short[]{managerFK.memberId()}, true);
         manager.setAllowNull(true);
         entityModel.addSysMember(manager, Employee.PASSWORD_ID);
+        var underling = new EntitySetModel(entityModel, "Underling", IdUtil.SYS_EMPLOYEE_MODEL_ID, manager.memberId());
+        entityModel.addSysMember(underling, (short) (7 << IdUtil.MEMBERID_SEQ_OFFSET));
         //pk
-        entityModel.sqlStoreOptions().setPrimaryKeys(new FieldWithOrder[] {
+        entityModel.sqlStoreOptions().setPrimaryKeys(new FieldWithOrder[]{
                 new FieldWithOrder(nameField.memberId())
         });
 
