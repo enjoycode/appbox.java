@@ -10,7 +10,7 @@ public final class EntitySetExpression extends EntityPathExpression {
         _setModelId = setModelId;
     }
 
-    protected EntityExpression rootEntityExpression() {
+    public EntityExpression rootEntityExpression() {
         if (_root == null)
             _root = new EntityExpression(_setModelId, null /*必须null,后面设置*/);
         return _root;

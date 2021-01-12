@@ -42,7 +42,7 @@ public class Employee extends SysEntity {
         }
     }
 
-    public boolean isMale() {
+    public boolean getMale() {
         return _male;
     }
 

@@ -38,9 +38,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     //group by and having
     private       List<SqlSelectItem> _groupBy;
     private       Expression          _havingFilter;
-
+    //用于EagerLoad导航属性
+    private       SqlIncluder         _rootIncluder;
     //cache for tree query
-    private EntityRefModel _treeParentMember;
+    private       EntityRefModel      _treeParentMember;
 
     public SqlQuery(long modelId, Class<T> clazz) {
         t      = new EntityExpression(modelId, this);
@@ -98,6 +99,14 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
     public SqlQuery<T> take(int rows) {
         _take = rows;
         return this;
+    }
+    //endregion
+
+    //region ====Include Methods====
+    public SqlIncluder include(Function<EntityExpression, EntityPathExpression> select) {
+        if (_rootIncluder == null)
+            _rootIncluder = new SqlIncluder(t);
+        return _rootIncluder.thenInclude(select);
     }
     //endregion
 
@@ -183,7 +192,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         }
     }
 
-    private void addSelect(SqlSelectItem item) {
+    protected void addSelect(SqlSelectItem item) {
         if (_selects == null)
             _selects = new ArrayList<>();
 
@@ -199,10 +208,11 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
         _purpose = QueryPurpose.ToList;
         EntityModel model = RuntimeContext.current().getModel(t.modelId);
 
-        //TODO:添加选择项,暂默认*
-        //AddAllSelects(this, model, T, null);
-        //if (_rootIncluder != null)
-        //    await _rootIncluder.AddSelects(this, model);
+        //添加选择项,暂默认*
+        if (_rootIncluder != null) {
+            addAllSelects(this, model, t, null);
+            _rootIncluder.addSelects(this, model, null);
+        }
 
         var db = SqlStore.get(model.sqlStoreOptions().storeModelId());
         return db.runQuery(this).thenApply(res -> {
@@ -335,6 +345,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
                         parent.readMember(childrenModel.memberId(), setter, IEntityMemberWriter.SF_NONE);
                     }
                     parentChilds.add(obj);
+                    //TODO:set child.Parent = parent
                 }
                 dic.put(getPKS(model, obj, getter), obj);
             }
@@ -393,6 +404,12 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
                 entity.readMember(member.memberId(), row, clIndex);
             }
         } else {
+            var name = path.substring(0, indexOfDot);
+            var entityRefModel = (EntityRefModel)model.getMember(name);
+            if (entityRefModel.isAggregationRef())
+                throw new RuntimeException("未实现");
+
+
             throw new RuntimeException("未实现");
         }
     }

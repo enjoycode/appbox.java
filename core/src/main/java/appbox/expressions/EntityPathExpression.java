@@ -23,4 +23,9 @@ public abstract class EntityPathExpression extends Expression {
         throw new UnsupportedOperationException();
     }
 
+    /** Customer.Name -> CustomerName */
+    public String getFieldAlias() {
+        return owner == null ? name : String.format("%s.%s", owner.getFieldAlias(), name);
+    }
+
 }

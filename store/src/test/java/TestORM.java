@@ -1,9 +1,4 @@
-import appbox.entities.Employee;
-import kotlin.collections.AbstractCollection;
-
-import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.*;
 
@@ -12,9 +7,24 @@ public class TestORM {
 
     public abstract class IndexBase<T extends EntityBase> {}
 
-    public class Product extends EntityBase {
-        public int    id;
+    public class ProductCatelog extends EntityBase {
+        public String code;
         public String name;
+    }
+
+    public class Product extends EntityBase {
+        public int            id;
+        public String         name;
+        public ProductCatelog catelog;
+    }
+
+    public class Customer extends EntityBase {
+        public String name;
+    }
+
+    public class Order extends EntityBase {
+        public       Customer        customer;
+        public final List<OrderItem> items = new ArrayList<>();
     }
 
     public class OrderItem extends EntityBase {
@@ -48,7 +58,29 @@ public class TestORM {
         //public static <T> boolean in(T field, Collection<T> subQuery) { return false; }
     }
 
-    public class SqlQuery<T extends EntityBase> {
+    public interface ISqlIncluder<T> {
+
+        //default <P> ISqlIncludable<T, P> include(Function<? super T, ? extends P> property) {return null;}
+
+        default <P> ISqlIncludable<T, P> include(Function<T, P> property) {return null;}
+
+        default <P> ISqlIncludable<T, P> includeAll(Function<T, List<P>> property) {return null;}
+        //default <P> ISqlIncludabeSet<T, List<P>> include(Function<T, List<P>> property) {return null;}
+    }
+
+    public interface ISqlIncludable<T, P> extends ISqlIncluder<T> {
+        default <R> ISqlIncludable<T, R> thenInclude(Function<P, R> property) {return null;}
+
+        default <R> ISqlIncludable<T, R> thenIncludeAll(Function<P, List<R>> property) {return null;}
+
+        //default <R> ISqlIncludable<T, R> thenInclude(Function<P, R> property) {return null;}
+    }
+
+    public interface ISqlIncludabeSet<T, P> extends ISqlIncluder<T> {
+        default <R> ISqlIncludable<T, R> thenInclude(Function<P, R> property) {return null;}
+    }
+
+    public class SqlQuery<T extends EntityBase> implements ISqlIncluder<T> {
         public Object[] select(Object... item) {return null;}
 
         public SqlQuery<T> where(Predicate<T> filter) {return this;}
@@ -111,7 +143,7 @@ public class TestORM {
     public void testSubQuery() throws ClassNotFoundException {
         var sq = new SqlQuery<Product>();
         sq.where(product -> product.name == "aa");
-        var             ssq = sq.toSubQuery(s -> s.name);
+        var ssq = sq.toSubQuery(s -> s.name);
 
         var q = new SqlQuery<OrderItem>();
         q.where(o -> DbFunc.sum(o.productId) > 0);
@@ -135,4 +167,14 @@ public class TestORM {
         var r1 = q.toIndexRow();
         var r2 = q.toEntity();
     }
+
+    public void testInclude() {
+        var q = new SqlQuery<Order>();
+        q.includeAll(order -> order.items)
+                .thenInclude(orderItem -> orderItem.product)
+                    .thenInclude(product -> product.catelog);
+
+
+    }
+
 }
