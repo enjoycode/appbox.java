@@ -182,6 +182,11 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         return getUsedEntity(appName, entityType.getName());
     }
 
+    protected ModelNode getUsedEntity(long modelId) {
+        var entityModelNode = hub.designTree.findModelNode(ModelType.Entity, modelId);
+        return getUsedEntity(entityModelNode.appNode.model.name(), entityModelNode.model().name());
+    }
+
     private ModelNode getUsedEntity(String appName, String entityName) {
         var fullName        = String.format("%s.entities.%s", appName, entityName);
         var entityModelNode = usedEntities.get(fullName);

@@ -17,6 +17,7 @@ public abstract class DBEntity extends Entity {
         super(modelId);
     }
 
+    /** 实体持久化状态 */
     public final PersistentState persistentState() { return _persistentState; }
 
     protected final void onPropertyChanged(short memberId) {
@@ -40,6 +41,14 @@ public abstract class DBEntity extends Entity {
     /** 从数据库加载完后变更持久化状态 */
     public final void fetchDone() {
         _persistentState = PersistentState.Unchnaged;
+    }
+
+    /**
+     * 从数据库加载时根据名称获取导航属性实例
+     * @return EntityRef成员返回DbEntity实例，EntitySet成员返回List<DbEntity>
+     */
+    public Object getNaviPropForFetch(String propName) {
+        throw new UnsupportedOperationException(propName);
     }
 
     @Override

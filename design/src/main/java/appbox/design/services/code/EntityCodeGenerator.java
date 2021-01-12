@@ -26,6 +26,7 @@ import java.util.UUID;
 //TODO:考虑仅生成服务使用到的成员
 
 /** 生成实体的运行时代码 */
+@SuppressWarnings("unchecked")
 public final class EntityCodeGenerator {
     private EntityCodeGenerator() {}
 
@@ -49,14 +50,17 @@ public final class EntityCodeGenerator {
         //ctor
         makeEntityCtorMethod(ast, entityClass, model);
 
+        var naviProperties = new ArrayList<EntityMemberModel>();
         //get and set
         for (var member : model.getMembers()) {
             if (member.type() == EntityMemberModel.EntityMemberType.DataField) {
                 makeEntityMember(generator, entityClass, makeDataFieldType(ast, (DataFieldModel) member), member);
             } else if (member.type() == EntityMemberModel.EntityMemberType.EntityRef) {
                 makeEntityRef(generator, entityClass, (EntityRefModel) member);
+                naviProperties.add(member);
             } else if (member.type() == EntityMemberModel.EntityMemberType.EntitySet) {
                 makeEntitySet(generator, entityClass, (EntitySetModel) member);
+                naviProperties.add(member);
             } else {
                 //TODO:
                 Log.warn("暂未实现生成实体运行时代码，成员类型: " + member.type().name());
@@ -66,6 +70,9 @@ public final class EntityCodeGenerator {
         //overrides
         entityClass.bodyDeclarations().add(makeEntityWriteMemberMethod(ast, model, entityClassName));
         entityClass.bodyDeclarations().add(makeEntityReadMemberMethod(generator, model, entityClassName));
+        if (model.storeOptions() != null && naviProperties.size() > 0) {
+            entityClass.bodyDeclarations().add(makeGetNaviPropertyMethod(generator, naviProperties, entityClassName));
+        }
 
         return entityClass;
     }
@@ -347,13 +354,11 @@ public final class EntityCodeGenerator {
         return conditional;
     }
 
+    /** 实现writeMember */
     private static MethodDeclaration makeEntityWriteMemberMethod(AST ast, EntityModel model, String className) {
         var method = ast.newMethodDeclaration();
         method.setName(ast.newSimpleName("writeMember"));
-
-        var overrideAnnotation = ast.newMarkerAnnotation();
-        overrideAnnotation.setTypeName(ast.newSimpleName("Override"));
-        method.modifiers().add(overrideAnnotation);
+        method.modifiers().add(makeOverrideAnnotation(ast));
         method.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 
         var para1 = ast.newSingleVariableDeclaration();
@@ -401,15 +406,13 @@ public final class EntityCodeGenerator {
         return method;
     }
 
+    /** 实现readMember */
     private static MethodDeclaration makeEntityReadMemberMethod(ServiceCodeGenerator generator
             , EntityModel model, String className) {
         final var ast    = generator.ast;
         var       method = ast.newMethodDeclaration();
         method.setName(ast.newSimpleName("readMember"));
-
-        var overrideAnnotation = ast.newMarkerAnnotation();
-        overrideAnnotation.setTypeName(ast.newSimpleName("Override"));
-        method.modifiers().add(overrideAnnotation);
+        method.modifiers().add(makeOverrideAnnotation(ast));
         method.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
 
         var para1 = ast.newSingleVariableDeclaration();
@@ -475,6 +478,84 @@ public final class EntityCodeGenerator {
         //switch default
         switchst.statements().add(ast.newSwitchCase());
         switchst.statements().add(makeThrowUnknownMember(ast, className));
+
+        body.statements().add(switchst);
+        method.setBody(body);
+        return method;
+    }
+
+    private static MethodDeclaration makeGetNaviPropertyMethod(ServiceCodeGenerator generator
+            , List<EntityMemberModel> naviProperties, String className) {
+        final var ast    = generator.ast;
+        var       method = ast.newMethodDeclaration();
+        method.setName(ast.newSimpleName("getNaviPropForFetch"));
+        method.modifiers().add(makeOverrideAnnotation(ast));
+        method.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        method.setReturnType2(ast.newSimpleType(ast.newSimpleName("Object")));
+
+        var para = ast.newSingleVariableDeclaration();
+        para.setName(ast.newSimpleName("propName"));
+        para.setType(ast.newSimpleType(ast.newSimpleName("String")));
+        method.parameters().add(para);
+
+        var body = ast.newBlock();
+
+        var switchst = ast.newSwitchStatement();
+        switchst.setExpression(ast.newSimpleName("propName"));
+
+        for (var memeber : naviProperties) {
+            var switchCase = ast.newSwitchCase();
+            var caseValue  = ast.newStringLiteral();
+            caseValue.setLiteralValue(memeber.name());
+            switchCase.expressions().add(caseValue);
+            switchst.statements().add(switchCase);
+
+            var creation = ast.newClassInstanceCreation();
+            if (memeber.type() == EntityMemberModel.EntityMemberType.EntityRef) {
+                var entityRefMember = (EntityRefModel) memeber;
+                if (entityRefMember.isAggregationRef())
+                    throw new RuntimeException("未实现");
+                var entityRefTargetModel = generator.getUsedEntity(entityRefMember.getRefModelIds().get(0));
+                var entityTypeName       = makeEntityClassName(entityRefTargetModel);
+                var creationType         = ast.newSimpleType(ast.newName(entityTypeName));
+                creation.setType(creationType);
+            } else if (memeber.type() == EntityMemberModel.EntityMemberType.EntitySet) {
+                var entitySetMember      = (EntitySetModel) memeber;
+                var entitySetTargetModel = generator.getUsedEntity(entitySetMember.refModelId());
+                var entityTypeName       = makeEntityClassName(entitySetTargetModel);
+                var entityType           = ast.newSimpleType(ast.newName(entityTypeName));
+                var creationType         = ast.newParameterizedType(ast.newSimpleType(ast.newName(ArrayList.class.getName())));
+                creationType.typeArguments().add(entityType);
+                creation.setType(creationType);
+            }
+
+            var assignExp = ast.newAssignment();
+            assignExp.setLeftHandSide(ast.newSimpleName("_" + memeber.name()));
+            assignExp.setRightHandSide(creation);
+
+            var ifcondition = ast.newInfixExpression();
+            ifcondition.setOperator(InfixExpression.Operator.EQUALS);
+            ifcondition.setLeftOperand(ast.newSimpleName("_" + memeber.name()));
+            ifcondition.setRightOperand(ast.newNullLiteral());
+
+            var ifSt = ast.newIfStatement();
+            ifSt.setExpression(ifcondition);
+            ifSt.setThenStatement(ast.newExpressionStatement(assignExp));
+
+            var returnSt = ast.newReturnStatement();
+            returnSt.setExpression(ast.newSimpleName("_" + memeber.name()));
+
+            //var block = ast.newBlock();
+            //block.statements().add(ifSt);
+            //block.statements().add(returnSt);
+            //switchst.statements().add(block);
+            switchst.statements().add(ifSt);
+            switchst.statements().add(returnSt);
+        }
+
+        //switch default
+        switchst.statements().add(ast.newSwitchCase());
+        switchst.statements().add(makeThrowRuntimeException(ast, className));
 
         body.statements().add(switchst);
         method.setBody(body);
@@ -587,6 +668,12 @@ public final class EntityCodeGenerator {
             default:
                 return field.dataType().name();
         }
+    }
+
+    private static MarkerAnnotation makeOverrideAnnotation(AST ast) {
+        var overrideAnnotation = ast.newMarkerAnnotation();
+        overrideAnnotation.setTypeName(ast.newSimpleName("Override"));
+        return overrideAnnotation;
     }
 
 }
