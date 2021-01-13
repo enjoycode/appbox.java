@@ -4,6 +4,8 @@ import appbox.serialization.IBinSerializable;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
+import java.util.Objects;
+
 public abstract class Expression implements IBinSerializable/*TODO:移至需要的实现*/ {
     public abstract ExpressionType getType();
 
@@ -66,6 +68,7 @@ public abstract class Expression implements IBinSerializable/*TODO:移至需要�
     }
 
     public final BinaryExpression contains(CharSequence right) {
+        Objects.requireNonNull(right);
         return new BinaryExpression(this, new PrimitiveExpression(right), BinaryExpression.BinaryOperatorType.Like);
     }
 

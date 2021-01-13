@@ -455,11 +455,15 @@ final class PgSqlQueryBuilder {
             //操作符
             buildBinaryOperator(exp, ctx);
             //右表达式, 暂在这里特殊处理Like等通配符
-            if (exp.binaryType == BinaryExpression.BinaryOperatorType.Like)
-                ctx.append('%');
-            buildExpression(exp.rightOperand, ctx);
-            if (exp.binaryType == BinaryExpression.BinaryOperatorType.Like)
-                ctx.append('%');
+            if (exp.binaryType == BinaryExpression.BinaryOperatorType.Like
+                    && exp.rightOperand instanceof PrimitiveExpression) {
+                var primitive = (PrimitiveExpression) exp.rightOperand;
+                var pattern   = "%" + primitive.value.toString() + "%";
+                ctx.addParameter(pattern);
+                ctx.append('?');
+            } else {
+                buildExpression(exp.rightOperand, ctx);
+            }
         }
     }
 
