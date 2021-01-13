@@ -47,7 +47,7 @@ public abstract class DBEntity extends Entity {
      * 从数据库加载时根据名称获取导航属性实例
      * @return EntityRef成员返回DbEntity实例，EntitySet成员返回List<DbEntity>
      */
-    public Object getNaviPropForFetch(String propName) {
+    public Object getNaviPropForFetch(String propName) { //TODO:考虑参数baseType:long用于聚合引用
         throw new UnsupportedOperationException(propName);
     }
 

@@ -326,7 +326,6 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
             var creator   = getEntityCreator(model);
             var dic       = new HashMap<Object, T>(rows.size());
             var getter    = new EntityMemberValueGetter();
-            var setter    = new EntityMemberValueSetter();
             for (var row : rows) {
                 rowReader.rowData = row;
                 var obj = creator.get();
@@ -336,16 +335,10 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
                     list.add(obj);
                 } else {
                     var parent = dic.get(getFKS(_treeParentMember, obj, getter));
-                    parent.writeMember(childrenModel.memberId(), getter, IEntityMemberWriter.SF_NONE);
+                    //TODO:*** set child.Parent = parent
                     @SuppressWarnings("unchecked")
-                    var parentChilds = (List<T>) getter.value;
-                    if (parentChilds == null) {
-                        parentChilds = new ArrayList<>();
-                        setter.value = parentChilds;
-                        parent.readMember(childrenModel.memberId(), setter, IEntityMemberWriter.SF_NONE);
-                    }
-                    parentChilds.add(obj);
-                    //TODO:set child.Parent = parent
+                    var childrenList = (List<T>) parent.getNaviPropForFetch(childrenModel.name());
+                    childrenList.add(obj);
                 }
                 dic.put(getPKS(model, obj, getter), obj);
             }
@@ -408,9 +401,9 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
             var entityRefModel = (EntityRefModel)model.getMember(name);
             if (entityRefModel.isAggregationRef())
                 throw new RuntimeException("未实现");
-
-
-            throw new RuntimeException("未实现");
+            var entityRef = (SqlEntity) entity.getNaviPropForFetch(name);
+            fillMember(entityRef.model(), entityRef, path.substring(indexOfDot + 1), row, clIndex);
+            entityRef.fetchDone(); //TODO:暂每填完一个成员调用一次
         }
     }
 

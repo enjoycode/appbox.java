@@ -62,6 +62,8 @@ public final class TypeSystem {
             sysFolder.getFile("CtorInterceptor.java").create(null, true, null);
             sysFolder.getFile("MethodInterceptor.java").create(null, true, null);
             sysFolder.getFile("ISqlQueryJoin.java").create(null, true, null);
+            sysFolder.getFile("ISqlIncluder.java").create(null, true, null);
+            sysFolder.getFile("ISqlIncludable.java").create(null, true, null);
 
             modelsProject.getFile("DataStore.java").create(null, true, null);
             modelsProject.getFile("SqlQuery.java").create(null, true, null);

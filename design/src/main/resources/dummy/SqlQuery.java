@@ -9,7 +9,7 @@ import sys.*;
 
 @RuntimeType(type = "appbox.store.query.SqlQuery")
 @CtorInterceptor(name = "SqlQuery")
-public final class SqlQuery<T extends SqlEntityBase> {
+public final class SqlQuery<T extends SqlEntityBase> implements ISqlIncluder<T> {
 
     public SqlQuery() {}
 
