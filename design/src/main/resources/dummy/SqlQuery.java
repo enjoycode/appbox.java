@@ -13,11 +13,21 @@ public final class SqlQuery<T extends SqlEntityBase> implements ISqlIncluder<T> 
 
     public SqlQuery() {}
 
+    public SqlQuery<T> skip(int rows) {return this;}
+
+    public SqlQuery<T> take(int rows) {return this;}
+
     @MethodInterceptor(name = "SqlQueryWhere")
     public SqlQuery<T> where(Predicate<T> filter) {return this;}
 
     @MethodInterceptor(name = "SqlQueryWhere")
     public <J> SqlQuery<T> where(ISqlQueryJoin<J> join, BiPredicate<T, J> filter) {return this;}
+
+    @MethodInterceptor(name = "SqlQueryWhere")
+    public SqlQuery<T> andWhere(Predicate<T> filter) {return this;}
+
+    @MethodInterceptor(name = "SqlQueryWhere")
+    public SqlQuery<T> orWhere(Predicate<T> filter) {return this;}
 
     public CompletableFuture<List<T>> toListAsync() {return null;}
 

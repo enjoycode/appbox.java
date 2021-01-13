@@ -38,6 +38,12 @@ public abstract class DBEntity extends Entity {
 
     //TODO: acceptChanges()
 
+    /** 标记实体为删除状态 */
+    public final void markDeleted() {
+        //TODO:新建的考虑报错
+        _persistentState = PersistentState.Deleted;
+    }
+
     /** 从数据库加载完后变更持久化状态 */
     public final void fetchDone() {
         _persistentState = PersistentState.Unchnaged;

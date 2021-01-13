@@ -6,6 +6,9 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class SqlEntityBase extends EntityBase {
 
+    /** 标记实体为删除状态 */
+    public final void markDeleted() {}
+
     /** 根据实体持久化状态保存 */
     @MethodInterceptor(name = "SaveEntity")
     public final CompletableFuture<Void> saveAsync() {return null;}
