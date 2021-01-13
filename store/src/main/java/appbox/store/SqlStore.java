@@ -108,6 +108,7 @@ public abstract class SqlStore {
 
     /** 根据Entity及其模型生成相应的Insert命令 */
     protected DbCommand buildInsertCommand(SqlEntity entity, EntityModel model) {
+        //TODO: cache SqlText to EntityModel's SqlStoreOptions
         //注意目前实现仅插入非空的字段，并且不缓存命令
         var cmd = new DbCommand();
         var sb  = new StringBuilder(100);
