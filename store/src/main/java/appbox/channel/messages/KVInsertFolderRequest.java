@@ -25,7 +25,7 @@ public final class KVInsertFolderRequest extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeFolderKey(bs, folder.appId(), folder.targetModelType(), false);
+        KeyUtil.writeFolderKey(bs, folder.appId(), folder.targetModelType(), true);
         //refs
         bs.writeVariant(0);
         //data
