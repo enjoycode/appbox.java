@@ -4,6 +4,7 @@ import appbox.serialization.IBinSerializable;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,25 +13,33 @@ import java.util.UUID;
  */
 public class ModelFolder implements IBinSerializable {
 
-    private String            _name;
-    private ModelFolder       _parent;
-    private int               _appId;
-    private ModelType         _targetModelType;
-    private UUID              _id;
-    private int               _sortNum;
-    private int               _version;
+    private UUID              _id;               //root = null
+    private String            _name;             //root = null
+    private ModelFolder       _parent;           //root = null
+    private int               _appId;            //仅root序列化
+    private ModelType         _targetModelType;  //仅root序列化
+    private int               _sortNum;          //仅child有效
     private List<ModelFolder> _childs;
-    private boolean           _isDeleted;
+    private int               _version;          //仅root有效
+    private boolean           _isDeleted;        //仅root有效
 
-    ModelFolder() { }
+    public ModelFolder() { }
 
-    ModelFolder(int appID, ModelType targetModelType) {
+    private ModelFolder(ModelFolder parent) {
+        _parent          = parent;
+        _appId           = parent._appId;
+        _targetModelType = parent._targetModelType;
+    }
+
+    /** Create root folder */
+    public ModelFolder(int appID, ModelType targetModelType) {
         this._appId           = appID;
         this._targetModelType = targetModelType;
     }
 
-    ModelFolder(ModelFolder parent, String name) {
-        this._id         = UUID.randomUUID();
+    /** Create child folder */
+    public ModelFolder(ModelFolder parent, String name) {
+        _id              = UUID.randomUUID();
         _appId           = parent._appId;
         _parent          = parent;
         _name            = name;
@@ -39,81 +48,39 @@ public class ModelFolder implements IBinSerializable {
     }
 
     //region ====Properties====
-    public boolean hasChild() {
-        return _childs != null && _childs.size() > 0;
-    }
+    public boolean hasChild() { return _childs != null && _childs.size() > 0;}
 
-    public String getName() {
-        return _name;
-    }
+    public String getName() { return _name;}
 
-    public void setName(String _name) {
-        this._name = _name;
-    }
+    public void setName(String _name) { this._name = _name;}
 
-    public ModelFolder getParent() {
-        return _parent;
-    }
+    public ModelFolder getParent() { return _parent;}
 
-    public void setParent(ModelFolder _parent) {
-        this._parent = _parent;
-    }
+    public int getAppId() { return _appId;}
 
-    public int getAppId() {
-        return _appId;
-    }
+    public ModelType getTargetModelType() { return _targetModelType;}
 
-    public void setAppId(int _appId) {
-        this._appId = _appId;
-    }
+    public UUID getId() { return _id;}
 
-    public ModelType getTargetModelType() {
-        return _targetModelType;
-    }
+    public int getSortNum() { return _sortNum;}
 
-    public void setTargetModelType(ModelType _targetModelType) {
-        this._targetModelType = _targetModelType;
-    }
+    public void setSortNum(int _sortNum) { _sortNum = _sortNum;}
 
-    public UUID getId() {
-        return _id;
-    }
+    public int getVersion() { return _version;}
 
-    public void setId(UUID _id) {
-        this._id = _id;
-    }
-
-    public int getSortNum() {
-        return _sortNum;
-    }
-
-    public void setSortNum(int _sortNum) {
-        this._sortNum = _sortNum;
-    }
-
-    public int getVersion() {
-        return _version;
-    }
-
-    public void setVersion(int _version) {
-        this._version = _version;
-    }
+    public void setVersion(int _version) { _version = _version;}
 
     public List<ModelFolder> getChilds() {
+        if (_childs == null)
+            _childs = new ArrayList<>();
         return _childs;
     }
 
-    public void setChilds(List<ModelFolder> _childs) {
-        this._childs = _childs;
-    }
+    public boolean isDeleted() { return _isDeleted;}
 
-    public boolean isDeleted() {
-        return _isDeleted;
-    }
+    public void setDeleted(boolean deleted) { _isDeleted = deleted;}
 
-    public void setDeleted(boolean deleted) {
-        _isDeleted = deleted;
-    }
+    public ModelFolder getRoot() { return _parent == null ? this : _parent.getRoot();}
     //endregion
 
     //region ====Serialization====
@@ -122,19 +89,18 @@ public class ModelFolder implements IBinSerializable {
         if (_parent != null) {
             bs.writeUUIDField(_id, 1);
             bs.writeStringField(_name, 2);
-            bs.serialize(_parent, 4);
             if (_targetModelType == ModelType.Permission) //仅权限文件夹排序
                 bs.writeIntField(_sortNum, 8);
         } else {
             bs.writeIntField(_version, 3);
+            bs.writeIntField(_appId, 6);
+            bs.writeByteField(_targetModelType.value, 7);
             bs.writeBoolField(_isDeleted, 9);
         }
         if (hasChild())
             bs.writeList(_childs, 5, false);
-        bs.writeIntField(_appId, 6);
-        bs.writeByteField(_targetModelType.value, 7);
 
-        bs.writeInt(0);
+        bs.finishWriteFields();
     }
 
     @Override
@@ -144,33 +110,27 @@ public class ModelFolder implements IBinSerializable {
             propIndex = bs.readVariant();
             switch (propIndex) {
                 case 1:
-                    _id = bs.readUUID();
-                    break;
+                    _id = bs.readUUID(); break;
                 case 2:
-                    _name = bs.readString();
-                    break;
+                    _name = bs.readString(); break;
                 case 3:
-                    _version = bs.readInt();
-                    break;
-                case 4:
-                    _parent = (ModelFolder) bs.deserialize();
-                    break;
+                    _version = bs.readInt(); break;
                 case 5:
-                    _childs = bs.readList(ModelFolder::new, false);
-                    break;
+                    _childs = bs.readList(() -> new ModelFolder(this), false); break;
+                case 6:
+                    _appId = bs.readInt(); break;
+                case 7:
+                    _targetModelType = ModelType.fromValue(bs.readByte()); break;
+                case 8:
+                    _sortNum = bs.readInt(); break;
+                case 9:
+                    _isDeleted = bs.readBool(); break;
                 case 0:
                     break;
                 default:
                     throw new RuntimeException("Unknown field id:" + propIndex);
             }
         } while (propIndex != 0);
-    }
-
-    public ModelFolder getRoot()
-    {
-        if (_parent != null)
-            return _parent.getRoot();
-        return this;
     }
     //endregion
 }
