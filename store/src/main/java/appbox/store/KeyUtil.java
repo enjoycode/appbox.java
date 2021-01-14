@@ -1,6 +1,7 @@
 package appbox.store;
 
 import appbox.data.EntityId;
+import appbox.model.ModelType;
 import appbox.serialization.IOutputStream;
 
 import java.nio.charset.StandardCharsets;
@@ -15,6 +16,7 @@ public final class KeyUtil {
     public static final byte METACF_APP_PREFIX              = 0x0C;
     public static final byte METACF_MODEL_PREFIX            = 0x0D;
     public static final byte METACF_MODEL_CODE_PREFIX       = 0x0E;
+    public static final byte METACF_FOLDER_PREFIX           = 0x0F;
     public static final byte METACF_SERVICE_ASSEMBLY_PREFIX = (byte) 0xA0;
     public static final byte METACF_VIEW_ASSEMBLY_PREFIX    = (byte) 0xA1;
     public static final byte METACF_VIEW_ROUTE_PREFIX       = (byte) 0xA2;
@@ -51,6 +53,15 @@ public final class KeyUtil {
         }
         bs.writeByte(KeyUtil.METACF_MODEL_CODE_PREFIX);
         bs.writeLongBE(modelId);
+    }
+
+    public static void writeFolderKey(IOutputStream bs, int appId, ModelType modelType, boolean withSize) {
+        if (withSize) {
+            bs.writeNativeVariant(6);
+        }
+        bs.writeByte(KeyUtil.METACF_FOLDER_PREFIX);
+        bs.writeIntBE(appId);
+        bs.writeByte(modelType.value);
     }
 
     public static void writeAssemblyKey(IOutputStream bs, boolean isService, String asmName, boolean withSize) {

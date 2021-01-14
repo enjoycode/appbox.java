@@ -63,7 +63,7 @@ public class NewViewModel implements IDesignHandler {
                 var insertIndex = parentNode.nodes.add(node);
                 //设置文件夹
                 if (parentNode.nodeType() == DesignNodeType.FolderNode)
-                    model.setFolderId(((FolderNode) parentNode).getFolder().getId());
+                    model.setFolderId(((FolderNode) parentNode).folder.id());
                 //添加至根节点索引内
                 rootNode.addModelIndex(node);
 

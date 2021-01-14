@@ -81,7 +81,7 @@ public final class StagedItems {
                 ModelFolder folder = (ModelFolder) item;
                 int         index  = -1;
                 for (ModelFolder t : storedFolders) {
-                    if (t.getAppId() == folder.getAppId() && t.getTargetModelType() == folder.getTargetModelType()) {
+                    if (t.appId() == folder.appId() && t.targetModelType() == folder.targetModelType()) {
                         index = 1;
                     }
                 }

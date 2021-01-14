@@ -3,23 +3,25 @@ package appbox.design.tree;
 import appbox.data.PersistentState;
 import appbox.design.utils.CodeHelper;
 import appbox.model.ModelBase;
+import appbox.model.ModelFolder;
 import appbox.model.ModelType;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.*;
 
 public final class ModelRootNode extends DesignNode {
 
-    public final  ModelType                targetType;
-    private final HashMap<Long, ModelNode> _models = new HashMap<>();
+    public final ModelType   targetType;
+    private      ModelFolder _rootFolder; //根文件夹
+
+    private final Map<Long, ModelNode>  _models  = new HashMap<>();
+    private final Map<UUID, FolderNode> _folders = new HashMap<>();
 
     public ModelRootNode(ModelType targetType) {
         this.targetType = targetType;
         text            = CodeHelper.getPluralStringOfModelType(targetType);
     }
 
-    public String fullName(){
+    public String fullName() {
         return getParent().text();
     }
 
@@ -39,20 +41,34 @@ public final class ModelRootNode extends DesignNode {
         return DesignNodeType.ModelRootNode;
     }
 
+    public ModelFolder rootFolder() {
+        if (_rootFolder == null)
+            _rootFolder = new ModelFolder(((ApplicationNode) getParent()).model.id(), targetType);
+        return _rootFolder;
+    }
+
     //region ====Add & Remove Child Methods====
 
-    /**
-     * 仅用于加载设计树时添加节点并绑定签出信息
-     */
+    /** 用于新建时添加至字典表 */
+    public void addFolderIndex(FolderNode node) {
+        _folders.put(node.folder.id(), node);
+    }
+
+    /** 仅用于加载设计树时添加节点并绑定签出信息 */
     protected ModelNode addModel(ModelBase model) {
         //注意：入参model可能被签出的本地替换掉，所以相关操作必须指向node.model()
         var tree = designTree();
         var node = new ModelNode(model, tree.designHub);
         tree.bindCheckoutInfo(node, model.persistentState() == PersistentState.Detached);
 
-        //TODO:加入指定文件夹
-        nodes.add(node);
-        _models.put(node.model().id(), node); //加入字典表方便查找
+        var folderNode = _folders.get(node.model().getFolderId());
+        if (folderNode == null)
+            nodes.add(node);
+        else
+            folderNode.nodes.add(node);
+
+        //加入字典表方便查找
+        _models.put(node.model().id(), node);
         return node;
     }
 
@@ -61,7 +77,7 @@ public final class ModelRootNode extends DesignNode {
         _models.put(node.model().id(), node);
     }
 
-    /**  删除并移除字典表中对应的键 */
+    /** 删除并移除字典表中对应的键 */
     public void removeModel(ModelNode node) {
         node.getParent().nodes.remove(node);
         _models.remove(node.model().id());

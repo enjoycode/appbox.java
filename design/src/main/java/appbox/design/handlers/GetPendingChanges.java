@@ -35,7 +35,7 @@ public final class GetPendingChanges implements IDesignHandler {
                             var folder = (ModelFolder) item;
                             var change = new ChangedInfo();
                             change.ModelType = ModelType.Folder.name();
-                            change.ModelID   = folder.getTargetModelType().name();
+                            change.ModelID   = folder.targetModelType().name();
                             list.add(change);
                         }
                     }

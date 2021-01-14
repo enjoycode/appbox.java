@@ -8,9 +8,7 @@ import appbox.utils.IdUtil;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-/**
- * 模型存储实现
- */
+/** 模型存储实现 */
 public final class ModelStore {
 
     // ManagedBlocker示例
@@ -108,6 +106,13 @@ public final class ModelStore {
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
+    public static CompletableFuture<Void> upsertFolderAsync(ModelFolder folder, KVTransaction txn) {
+        var req = new KVInsertFolderRequest(folder, txn.id());
+        return SysStoreApi.execKVInsertAsync(req)
+                .thenAccept(StoreResponse::checkStoreError)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
     //region ====模型代码及Assembly相关操作====
 
     /**
@@ -197,36 +202,28 @@ public final class ModelStore {
 
     //region ====Read Methods====
 
-    /**
-     * 用于设计时加载所有ApplicationModel
-     */
+    /** 用于设计时加载所有ApplicationModel */
     public static CompletableFuture<ApplicationModel[]> loadAllApplicationAsync() {
         var req = new KVScanAppsRequest();
         return SysStoreApi.execKVScanAsync(req, new KVScanAppsResponse())
                 .thenApply(r -> r.apps);
     }
 
-    /**
-     * 用于运行时加载单个应用模型
-     */
+    /** 用于运行时加载单个应用模型 */
     public static CompletableFuture<ApplicationModel> loadApplicationAsync(int appId) {
         var req = new KVGetApplicationRequest(appId);
         return SysStoreApi.execKVGetAsync(req, new KVGetApplicationResponse())
                 .thenApply(KVGetApplicationResponse::getApplicationModel);
     }
 
-    /**
-     * 用于设计时加载所有Model
-     */
+    /** 用于设计时加载所有Model */
     public static CompletableFuture<ModelBase[]> loadAllModelAsync() {
         var req = new KVScanModelsRequest();
         return SysStoreApi.execKVScanAsync(req, new KVScanModelsResponse())
                 .thenApply(r -> r.models);
     }
 
-    /**
-     * 用于运行时加载单个模型
-     */
+    /** 用于运行时加载单个模型 */
     public static CompletableFuture<ModelBase> loadModelAsync(long modelId) {
         var req = new KVGetModelRequest(modelId);
         return SysStoreApi.execKVGetAsync(req, new KVGetModelResponse())

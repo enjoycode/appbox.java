@@ -253,9 +253,7 @@ public final class DesignTree {
 
     //region ====Find for Create====
 
-    /**
-     * 用于新建时检查相同名称的模型是否已存在
-     */
+    /** 用于新建时检查相同名称的模型是否已存在 */
     public ModelNode findModelNodeByName(int appId, ModelType type, String name) {
         //TODO:***** 考虑在这里加载存储有没有相同名称的存在,或发布时检测，如改为全局Workspace没有此问题
         // dev1 -> load tree -> checkout -> add model -> publish
@@ -281,6 +279,20 @@ public final class DesignTree {
         }
 
         return findNewModelParentNode(node.getParent(), newModelType);
+    }
+
+    /**
+     * 根据当前选择的节点查找新建文件夹节点的上级节点
+     * @return ModelRootNode or FolderNode or null
+     */
+    public static DesignNode findNewFolderParentNode(DesignNode selected) {
+        if (selected instanceof ModelRootNode)
+            return selected;
+        if (selected.nodeType() == DesignNodeType.FolderNode)
+            return selected;
+        if (selected instanceof ModelNode)
+            return selected.getParent();
+        return null;
     }
 
     /** 向上递归查找指定节点所属的应用节点 */

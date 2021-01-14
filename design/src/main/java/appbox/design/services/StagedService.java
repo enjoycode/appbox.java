@@ -48,7 +48,8 @@ public final class StagedService {
         if (folder.getParent() != null)
             throw new RuntimeException("仅允许保存模型类型的根目录");
         var data = IBinSerializable.serialize(folder, false);
-        return saveAsync(StagedType.Folder, folder.getAppId() + "-" + folder.getTargetModelType().value /*不要使用folder.Id*/, data);
+        return saveAsync(StagedType.Folder,
+                folder.appId() + "-" + folder.targetModelType().value /*不要使用folder.Id*/, data);
     }
 
     /** 专用于保存服务模型代码 */

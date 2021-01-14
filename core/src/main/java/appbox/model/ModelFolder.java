@@ -21,7 +21,7 @@ public class ModelFolder implements IBinSerializable {
     private int               _sortNum;          //仅child有效
     private List<ModelFolder> _childs;
     private int               _version;          //仅root有效
-    private boolean           _isDeleted;        //仅root有效
+    private boolean           _isDeleted;        //仅root有效 //TODO:remove it,清空子级表示删除
 
     public ModelFolder() { }
 
@@ -44,23 +44,19 @@ public class ModelFolder implements IBinSerializable {
         _parent          = parent;
         _name            = name;
         _targetModelType = parent._targetModelType;
-        _parent._childs.add(this);
+        _parent.children().add(this);
     }
 
     //region ====Properties====
-    public boolean hasChild() { return _childs != null && _childs.size() > 0;}
-
-    public String getName() { return _name;}
-
-    public void setName(String _name) { this._name = _name;}
+    public String name() { return _name;}
 
     public ModelFolder getParent() { return _parent;}
 
-    public int getAppId() { return _appId;}
+    public int appId() { return _appId;}
 
-    public ModelType getTargetModelType() { return _targetModelType;}
+    public ModelType targetModelType() { return _targetModelType;}
 
-    public UUID getId() { return _id;}
+    public UUID id() { return _id;}
 
     public int getSortNum() { return _sortNum;}
 
@@ -70,7 +66,9 @@ public class ModelFolder implements IBinSerializable {
 
     public void setVersion(int _version) { _version = _version;}
 
-    public List<ModelFolder> getChilds() {
+    public boolean hasChildren() { return _childs != null && _childs.size() > 0;}
+
+    public List<ModelFolder> children() {
         if (_childs == null)
             _childs = new ArrayList<>();
         return _childs;
@@ -97,7 +95,7 @@ public class ModelFolder implements IBinSerializable {
             bs.writeByteField(_targetModelType.value, 7);
             bs.writeBoolField(_isDeleted, 9);
         }
-        if (hasChild())
+        if (hasChildren())
             bs.writeList(_childs, 5, false);
 
         bs.finishWriteFields();

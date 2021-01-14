@@ -1,23 +1,39 @@
 package appbox.design.tree;
 
+import appbox.design.common.CheckoutInfo;
+import appbox.design.services.StagedService;
 import appbox.model.ModelFolder;
 
-public class FolderNode extends DesignNode{
+import java.util.concurrent.CompletableFuture;
 
-    private ModelFolder folder;
+public final class FolderNode extends DesignNode {
 
-    private int version;
+    public final ModelFolder folder;
+
+    public FolderNode(ModelFolder folder) {
+        this.folder = folder;
+        text        = folder.name();
+    }
 
     @Override
     public DesignNodeType nodeType() {
         return DesignNodeType.FolderNode;
     }
 
-    public String id(){
-        return folder.getId().toString();
+    @Override
+    public String id() {
+        return folder.id().toString();
     }
 
-    public int getVersion() {
+    @Override
+    public CheckoutInfo getCheckoutInfo() {
+        //注意：返回相应的模型根节点的签出信息
+        var rootNode = designTree().findModelRootNode(folder.appId(), folder.targetModelType());
+        return rootNode.getCheckoutInfo();
+    }
+
+    @Override
+    public int version() {
         return folder.getRoot().getVersion();
     }
 
@@ -25,11 +41,8 @@ public class FolderNode extends DesignNode{
         folder.getRoot().setVersion(version);
     }
 
-    public ModelFolder getFolder() {
-        return folder;
+    public CompletableFuture<Void> saveAsync() {
+        return StagedService.saveFolderAsync(folder.getRoot()); //保存的是根文件夹
     }
 
-    public void setFolder(ModelFolder folder) {
-        this.folder = folder;
-    }
 }

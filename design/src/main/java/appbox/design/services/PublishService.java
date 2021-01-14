@@ -173,12 +173,16 @@ public final class PublishService {
 
     private static CompletableFuture<Void> saveModelsAsync(
             DesignHub hub, PublishPackage pkg, KVTransaction txn, Map<Long, DbTransaction> otherStoreTxns) {
-        //TODO:保存文件夹
+        CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
+        //保存文件夹
+        for (var folder : pkg.folders) {
+            //TODO:考虑删除空的根文件夹
+            task = task.thenCompose(r -> ModelStore.upsertFolderAsync(folder, txn));
+        }
 
         //保存模型，注意:
         //1.映射至系统存储的实体模型的变更与删除暂由ModelStore处理，映射至SqlStore的DDL暂在这里处理
         //2.删除的模型同时删除相关代码及编译好的组件，包括视图模型的相关路由
-        CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
         for (var model : pkg.models) {
             switch (model.persistentState()) {
                 case Detached:

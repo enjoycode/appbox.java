@@ -4,6 +4,7 @@ import appbox.serialization.IJsonSerializable;
 import appbox.serialization.IJsonWriter;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * 子节点，添加时自动排序
@@ -57,7 +58,7 @@ public final class NodeCollection implements IJsonSerializable {
         list.clear();
     }
 
-    public DesignNode find(java.util.function.Predicate<DesignNode> match) {
+    public DesignNode find(Predicate<DesignNode> match) {
         for (DesignNode node : list) {
             if (match.test(node)) {
                 return node;
@@ -66,7 +67,7 @@ public final class NodeCollection implements IJsonSerializable {
         return null;
     }
 
-    public boolean exists(java.util.function.Predicate<DesignNode> match) {
+    public boolean exists(Predicate<DesignNode> match) {
         for (DesignNode node : list) {
             if (match.test(node)) {
                 return true;

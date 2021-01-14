@@ -28,6 +28,7 @@ public final class DesignService implements IService {
         put("DeleteNode", new DeleteNode());
         put("GetPendingChanges", new GetPendingChanges());
         put("Publish", new Publish());
+        put("NewFolder", new NewFolder());
         //----DataStore----
         put("NewDataStore", new NewDataStore());
         put("SaveDataStore", new SaveDataStore());

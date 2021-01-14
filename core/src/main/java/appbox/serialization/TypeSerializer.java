@@ -33,6 +33,8 @@ public abstract class TypeSerializer {
         registerKnownType(new UserSerializer(PayloadType.ViewModel, ViewModel.class, ViewModel::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModel, EntityModel.class, EntityModel::new));
         registerKnownType(new UserSerializer(PayloadType.ServiceModel, ServiceModel.class, ServiceModel::new));
+        registerKnownType(new UserSerializer(PayloadType.PermissionModel, PermissionModel.class, PermissionModel::new));
+        registerKnownType(new UserSerializer(PayloadType.ModelFolder, ModelFolder.class, ModelFolder::new));
         registerKnownType(new UserSerializer(PayloadType.EntityModelInfo, EntityModelInfo.class, () -> null));
 
         //----表达式相关(目前都不支持反序列化)----
