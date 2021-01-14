@@ -216,6 +216,13 @@ public final class ModelStore {
                 .thenApply(KVGetApplicationResponse::getApplicationModel);
     }
 
+    /** 用于设计时加载所有ModelFolder */
+    public static CompletableFuture<ModelFolder[]> loadAllFolderAsync() {
+        var req = new KVScanFoldersRequest();
+        return SysStoreApi.execKVScanAsync(req, new KVScanFoldersResponse())
+                .thenApply(r -> r.folders);
+    }
+
     /** 用于设计时加载所有Model */
     public static CompletableFuture<ModelBase[]> loadAllModelAsync() {
         var req = new KVScanModelsRequest();

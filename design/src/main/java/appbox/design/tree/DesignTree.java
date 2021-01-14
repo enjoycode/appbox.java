@@ -80,10 +80,19 @@ public final class DesignTree {
             for (ApplicationModel app : apps) {
                 appRootNode.nodes.add(new ApplicationNode(this, app));
             }
+            return ModelStore.loadAllFolderAsync(); //加载所有文件夹
+        }).thenCompose(folders -> {
+            var mergedFolders = new ArrayList<>(Arrays.asList(folders));
+            //从staged中添加新建的并更新修改的文件夹
+            staged.updateFolders(mergedFolders);
+            //加入Folders
+            for (var folder : mergedFolders) {
+                findModelRootNode(folder.appId(), folder.targetModelType()).addFolder(folder, null);
+            }
 
             return ModelStore.loadAllModelAsync(); //加载所有模型
         }).thenCompose(models -> {
-            var mergedModels = new ArrayList<ModelBase>(Arrays.asList(models));
+            var mergedModels = new ArrayList<>(Arrays.asList(models));
             //添加系统默认存储模型
             var defaultStoreModel = new DataStoreModel(DataStoreModel.DataStoreKind.Future, "", "Default");
             defaultStoreModel.acceptChanges();

@@ -39,7 +39,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         return parent;
     }
 
-    public final void setParent(DesignNode value) {
+    protected final void setParent(DesignNode value) {
         parent = value;
     }
 
@@ -140,6 +140,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
     //region ====Comparable====
     @Override
     public final int compareTo(DesignNode designNode) {
+        //TODO:特殊类型排序
         if (nodeType() == designNode.nodeType()) {
             return String.CASE_INSENSITIVE_ORDER.compare(text(), designNode.text());
         }

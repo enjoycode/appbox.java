@@ -49,9 +49,38 @@ public final class ModelRootNode extends DesignNode {
 
     //region ====Add & Remove Child Methods====
 
+    /** 仅用于设计树加载时从顶级开始递归添加文件夹节点 */
+    protected void addFolder(ModelFolder folder, DesignNode parent) {
+        DesignNode parentNode = this;
+        if (folder.getParent() != null) {
+            var node = new FolderNode(folder);
+            parentNode = node;
+            //不再检查本地有没有挂起的修改,由DesignTree加载时处理好
+            if (parent == null)
+                nodes.add(node);
+            else
+                parent.nodes.add(node);
+            _folders.put(folder.id(), node);
+        } else {
+            _rootFolder = folder;
+        }
+
+        if (folder.hasChildren()) {
+            for (var item : folder.children()) {
+                addFolder(item, parentNode);
+            }
+        }
+    }
+
     /** 用于新建时添加至字典表 */
     public void addFolderIndex(FolderNode node) {
         _folders.put(node.folder.id(), node);
+    }
+
+    /** 删除并移除字典表索引 */
+    public void removeFolder(FolderNode node) {
+        node.getParent().nodes.remove(node);
+        _folders.remove(node.folder.id());
     }
 
     /** 仅用于加载设计树时添加节点并绑定签出信息 */

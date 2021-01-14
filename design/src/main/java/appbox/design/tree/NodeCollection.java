@@ -22,10 +22,12 @@ public final class NodeCollection implements IJsonSerializable {
     public int add(DesignNode item) {
         item.setParent(owner);
         //特定owner找到插入点
-        if (owner != null && (owner.nodeType() == DesignNodeType.ModelRootNode || owner.nodeType() == DesignNodeType.FolderNode)) {
+        if (owner != null &&
+                (owner.nodeType() == DesignNodeType.ModelRootNode
+                        || owner.nodeType() == DesignNodeType.FolderNode)) {
             int index = -1;
             for (var i = 0; i < list.size(); i++) {
-                if (!item.equals(list.get(i))) {
+                if (item.compareTo(list.get(i)) < 0) {
                     index = i;
                     break;
                 }

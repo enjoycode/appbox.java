@@ -76,19 +76,25 @@ public final class StagedItems {
     /** 用挂起的文件夹更新从存储加载的文件夹 */
     public void updateFolders(List<ModelFolder> storedFolders) {
         if (items == null) return;
+
+        var listSize = storedFolders.size();
         for (Object item : items) {
             if (item instanceof ModelFolder) {
                 ModelFolder folder = (ModelFolder) item;
-                int         index  = -1;
-                for (ModelFolder t : storedFolders) {
+
+                int index = -1;
+                for (int i = 0; i < listSize; i++) {
+                    var t = storedFolders.get(i);
                     if (t.appId() == folder.appId() && t.targetModelType() == folder.targetModelType()) {
-                        index = 1;
+                        index = i;
+                        break;
                     }
                 }
+
                 if (index < 0) {
                     storedFolders.add(folder);
                 } else {
-                    storedFolders.add(index, folder);
+                    storedFolders.set(index, folder);
                 }
             }
         }
