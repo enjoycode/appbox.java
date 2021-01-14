@@ -312,9 +312,8 @@ public interface IOutputStream extends IEntityMemberWriter {
         for (E element : list) {
             if (elementNullable)
                 writeBool(element != null);
-            if (element != null) {
+            if (element != null)
                 element.writeTo(this);
-            }
         }
     }
 
@@ -500,7 +499,7 @@ public interface IOutputStream extends IEntityMemberWriter {
 
         writeShort(id);
         writeVariant(value.size());
-        for(var item : value) {
+        for (var item : value) {
             item.writeTo(this);
         }
     }

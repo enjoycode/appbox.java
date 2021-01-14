@@ -23,8 +23,7 @@ public abstract class ModelBase implements IBinSerializable {
     /**
      * only for Serialization
      */
-    public ModelBase() {
-    }
+    public ModelBase() {}
 
     public ModelBase(long id, String name) {
         _designMode      = true;

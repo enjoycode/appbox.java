@@ -1,6 +1,7 @@
 package appbox.data;
 
 import appbox.runtime.RuntimeContext;
+import appbox.serialization.IBinSerializable;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
@@ -8,7 +9,7 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class EntityId {
+public final class EntityId implements IBinSerializable {
     private static final AtomicInteger peerSeq = new AtomicInteger(0); //Peer流水号计数器
 
     //private long _data1;
@@ -123,10 +124,12 @@ public final class EntityId {
         System.arraycopy(from._data, 0, _data, 0, 16);
     }
 
+    @Override
     public void writeTo(IOutputStream bs) {
         bs.write(_data, 0, 16);
     }
 
+    @Override
     public void readFrom(IInputStream bs) {
         bs.readBytes(_data, 0, 16);
     }
