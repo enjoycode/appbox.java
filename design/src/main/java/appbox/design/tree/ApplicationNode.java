@@ -61,7 +61,7 @@ public final class ApplicationNode extends DesignNode {
 
     /** 签入当前应用节点下所有子节点 */
     void checkinAllNodes() {
-        for (int i = 0; i < nodes.count(); i++) {
+        for (int i = 0; i < nodes.size(); i++) {
             if (nodes.get(i) instanceof ModelRootNode)
                 ((ModelRootNode) nodes.get(i)).checkinAllNodes();
         }

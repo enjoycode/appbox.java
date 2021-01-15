@@ -4,6 +4,7 @@ import appbox.design.DesignHub;
 import appbox.design.jdt.ModelContainer;
 import appbox.design.jdt.ModelFile;
 import appbox.design.services.CodeGenService;
+import appbox.design.tree.ApplicationNode;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.CodeHelper;
 import appbox.logging.Log;
@@ -19,6 +20,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
@@ -89,6 +91,8 @@ public final class TypeSystem {
         }
     }
 
+    //region ====Dummy Files====
+
     /** 在指定目录下创建虚拟文件 */
     private static void createDummyFiles(IContainer container, String[] files) throws CoreException {
         var modelContainer = (ModelContainer) container;
@@ -114,12 +118,44 @@ public final class TypeSystem {
     }
 
     public static boolean isDataStoreFile(IFile file) {
-        var parent = file.getParent();
-        if (parent instanceof IProject && parent.getName().equals(PROJECT_MODELS)) {
-            return file.getName().equals("DataStore.java");
+        if (file.getName().equals("DataStore.java")) {
+            var parent = file.getParent();
+            return parent instanceof IProject && parent.getName().equals(PROJECT_MODELS);
         }
         return false;
     }
+
+    public static boolean isPermissionsFile(IFile file) {
+        if (file.getName().equals("Permissions.java")) {
+            var parent = file.getParent();
+            return parent.getParent() != null && parent.getParent() instanceof IProject
+                    && parent.getParent().getName().equals(PROJECT_MODELS);
+        }
+        return false;
+    }
+
+    private void createModelFile(String appName, String type, String fileName) throws CoreException {
+        var appFolder = modelsProject.getFolder(appName);
+        if (!appFolder.exists()) {
+            appFolder.create(true, true, null);
+        }
+
+        if (type == null) { //only for Permissions.java
+            var file = appFolder.getFile(fileName);
+            file.create(null, true, null);
+        } else {
+            var typeFolder = appFolder.getFolder(type);
+            if (!typeFolder.exists()) {
+                typeFolder.create(true, true, null);
+            }
+            var file = typeFolder.getFile(fileName);
+            file.create(null, true, null);
+        }
+    }
+
+    //endregion
+
+    //region ====Model Files====
 
     /** 用于加载设计树后创建模型相应的虚拟文件 */
     public void createModelDocument(ModelNode node) {
@@ -151,20 +187,6 @@ public final class TypeSystem {
         }
     }
 
-    private IFile createModelFile(String appName, String type, String fileName) throws CoreException {
-        var appFolder = modelsProject.getFolder(appName);
-        if (!appFolder.exists()) {
-            appFolder.create(true, true, null);
-        }
-        var typeFolder = appFolder.getFolder(type);
-        if (!typeFolder.exists()) {
-            typeFolder.create(true, true, null);
-        }
-        var file = typeFolder.getFile(fileName);
-        file.create(null, true, null);
-        return file;
-    }
-
     /** 注意：服务模型也会更新，如不需要由调用者忽略 */
     public void updateModelDocument(ModelNode node) {
         var appName  = node.appNode.model.name();
@@ -176,13 +198,9 @@ public final class TypeSystem {
                 var appFolder  = modelsProject.getFolder(appName);
                 var typeFolder = appFolder.getFolder("entities");
                 var file       = typeFolder.getFile(fileName);
-                var cu         = (CompilationUnit) JDTUtils.resolveCompilationUnit(file);
-                if (cu.getBuffer() != null) {
-                    cu.getBuffer().setContents(CodeGenService.genEntityDummyCode(
-                            (EntityModel) model, appName, node.designTree()));
-                    cu.makeConsistent(null);
-                    //Log.debug(cu.getBuffer().getContents());
-                }
+                var newContent = CodeGenService.genEntityDummyCode((EntityModel) model
+                        , appName, hub.designTree);
+                updateFileContent(file, newContent);
             } else {
                 Log.warn("updateModelDocument暂未实现: " + model.modelType().name());
             }
@@ -214,8 +232,53 @@ public final class TypeSystem {
 
     /** 仅用于添加或删除存储模型后更新DataStore.java虚拟代码 */
     public void updateStoresDocument() {
-        //TODO:
+        //TODO:*****
     }
+
+    /** 用于加载设计树后创建所有权限的虚拟文件，一个应用对应一个权限文件 */
+    public void createPermissionsDocuments() {
+        var appRootNode = hub.designTree.appRootNode();
+        for (int i = 0; i < appRootNode.nodes.size(); i++) {
+            var appNode        = (ApplicationNode) appRootNode.nodes.get(i);
+            var permissionRoot = appNode.findModelRootNode(ModelType.Permission);
+            if (!permissionRoot.hasAnyModel())
+                continue;
+
+            try {
+                createModelFile(appNode.model.name(), null, "Permissions.java");
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    /** 仅用于添加或删除权限模型后更新指定应用的Permissions.java */
+    public void updatePermissionsDocument(String appName) {
+        var file = modelsProject.getFolder(appName).getFile("Permissions.java");
+        try {
+            if (file.exists()) {
+                var newContent = CodeGenService.genPermissionsDummyCode(hub.designTree, appName);
+                updateFileContent(file, newContent);
+            } else {
+                file.create(null, true, null);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static void updateFileContent(IFile file, String newContent) throws JavaModelException {
+        var cu = (CompilationUnit) JDTUtils.resolveCompilationUnit(file);
+        if (cu.getBuffer() != null) {
+            cu.getBuffer().setContents(newContent);
+            cu.makeConsistent(null);
+            //Log.debug(cu.getBuffer().getContents());
+        } else {
+            Log.warn("Can't get buffer from file: " + file.getName());
+        }
+    }
+
+    //endregion
 
     //region ====Find Methods====
     public ModelNode findModelNodeByModelFile(ModelFile file) {

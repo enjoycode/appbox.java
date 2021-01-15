@@ -47,6 +47,10 @@ public final class ModelRootNode extends DesignNode {
         return _rootFolder;
     }
 
+    public boolean hasAnyModel() {
+        return _models.size() > 0;
+    }
+
     //region ====Add & Remove Child Methods====
 
     /** 仅用于设计树加载时从顶级开始递归添加文件夹节点 */

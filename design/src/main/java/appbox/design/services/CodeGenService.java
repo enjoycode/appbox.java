@@ -6,7 +6,6 @@ import appbox.design.services.code.TypeHelper;
 import appbox.design.tree.DataStoreNode;
 import appbox.design.tree.DesignTree;
 import appbox.design.tree.ModelNode;
-import appbox.logging.Log;
 import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
@@ -29,7 +28,7 @@ public class CodeGenService {
         sb.append("import sys.*;");
         sb.append("public final class DataStore {\n");
 
-        for (int i = 0; i < designTree.storeRootNode().nodes.count(); i++) {
+        for (int i = 0; i < designTree.storeRootNode().nodes.size(); i++) {
             var node = (DataStoreNode) designTree.storeRootNode().nodes.get(i);
             sb.append("public static final ");
             if (node.model().kind() == DataStoreModel.DataStoreKind.Sql) {
@@ -45,12 +44,24 @@ public class CodeGenService {
         return sb.toString();
     }
 
-    /** 生成指定应用下的所有权限虚拟代码 */
+    /** 生成指定应用下的所有权限的虚拟代码 */
     public static String genPermissionsDummyCode(DesignTree designTree, String appName) {
        var sb = new StringBuilder(100);
-       var permissions = designTree.findNodesByType(ModelType.Permission);
+       var appNode = designTree.findApplicationNodeByName(appName);
+       var permissions = appNode.findModelRootNode(ModelType.Permission).getAllModelNodes();
 
+       sb.append("package ");
+       sb.append(appName);
+       sb.append(";\npublic final class Permissions {\nprivate Permissions(){}\n");
 
+       for (var p : permissions) {
+           //TODO:MemberAccessInterceptor & comments
+           sb.append("public static final boolean ");
+           sb.append(p.model().name());
+           sb.append("=false;\n");
+       }
+
+       sb.append('}');
        return sb.toString();
     }
 

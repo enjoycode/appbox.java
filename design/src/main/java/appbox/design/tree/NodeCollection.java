@@ -78,7 +78,7 @@ public final class NodeCollection implements IJsonSerializable {
         return false;
     }
 
-    public int count() {
+    public int size() {
         return list.size();
     }
 

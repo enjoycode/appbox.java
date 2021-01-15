@@ -117,10 +117,15 @@ public final class ModelFile extends ModelResource implements IFile {
         }
 
         var hub = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
-        //DataStore特殊生成
+        //DataStore及Permissions特殊生成
         if (TypeSystem.isDataStoreFile(this)) {
             var storesDummyCode = CodeGenService.genStoresDummyCode(hub.designTree);
             return new ByteArrayInputStream(storesDummyCode.getBytes(StandardCharsets.UTF_8));
+        }
+        if (TypeSystem.isPermissionsFile(this)) {
+            var permissionsDummyCode =
+                    CodeGenService.genPermissionsDummyCode(hub.designTree, this.getParent().getName());
+            return new ByteArrayInputStream(permissionsDummyCode.getBytes(StandardCharsets.UTF_8));
         }
 
         //注意:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码

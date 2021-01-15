@@ -59,7 +59,7 @@ public final class DesignTree {
         }
 
         //先判断是否已经加载过，是则清空准备重新加载
-        if (nodes.count() > 0) {
+        if (nodes.size() > 0) {
             nodes.clear();
         }
 
@@ -103,25 +103,25 @@ public final class DesignTree {
 
             //加入Models
             staged.removeDeletedModels(mergedModels);  //先移除已删除的
-            var allModelNodes = new ArrayList<ModelNode>(); //需要延迟创建虚拟代码的模型
+            var allModelNodes = new ArrayList<ModelNode>(); //需要延迟创建虚拟代码的模型(排除Permission)
             for (ModelBase m : mergedModels) {
                 if (m.modelType() == ModelType.DataStore) {
                     storeRootNode.addModel((DataStoreModel) m, designHub);
-                } else {
+                } else if (m.modelType() != ModelType.Permission) {
                     allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
                 }
             }
 
             //在所有节点加载完后创建模型对应的虚拟文件
-            try {
-                for (ModelNode n : allModelNodes) {
-                    designHub.typeSystem.createModelDocument(n);
-                }
-            } finally {
-                _loadingFlag.compareAndExchange(1, 0);
+            designHub.typeSystem.createPermissionsDocuments(); //权限模型单独处理
+            for (ModelNode n : allModelNodes) {
+                designHub.typeSystem.createModelDocument(n);
             }
 
             return CompletableFuture.completedFuture(true);
+        }).handle((r, ex) -> {
+            _loadingFlag.compareAndExchange(1, 0);
+            return ex == null ? r : false;
         });
     }
 
@@ -207,16 +207,12 @@ public final class DesignTree {
         return null;
     }
 
-    /**
-     * 根据模型标识获取相应的节点
-     */
+    /** 根据模型标识获取相应的节点 */
     public final ModelNode findModelNode(long modelId) {
         return findModelNode(IdUtil.getModelTypeFromModelId(modelId), modelId);
     }
 
-    /**
-     * 根据模型类型及标识号获取相应的节点
-     */
+    /** 根据模型类型及标识号获取相应的节点 */
     public final ModelNode findModelNode(ModelType modelType, long modelId) {
         var appId         = IdUtil.getAppIdFromModelId(modelId);
         var modelRootNode = findModelRootNode(appId, modelType);
@@ -251,7 +247,7 @@ public final class DesignTree {
     /** 查找指定类型的所有节点 */
     public List<ModelNode> findNodesByType(ModelType modelType) {
         var list = new ArrayList<ModelNode>();
-        for (int i = 0; i < appRootNode.nodes.count(); i++) {
+        for (int i = 0; i < appRootNode.nodes.size(); i++) {
             var appNode       = (ApplicationNode) appRootNode.nodes.get(i);
             var modelRootNode = appNode.findModelRootNode(modelType);
             list.addAll(modelRootNode.getAllModelNodes());
@@ -360,7 +356,7 @@ public final class DesignTree {
     /** 部署完后更新所有模型节点的状态，并移除待删除的节点 */
     public void checkinAllNodes() {
         //循环更新模型节点
-        for (int i = 0; i < appRootNode.nodes.count(); i++) {
+        for (int i = 0; i < appRootNode.nodes.size(); i++) {
             ((ApplicationNode) appRootNode.nodes.get(i)).checkinAllNodes();
         }
 

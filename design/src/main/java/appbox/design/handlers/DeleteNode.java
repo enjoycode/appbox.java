@@ -22,7 +22,7 @@ public final class DeleteNode implements IDesignHandler {
         if (deleteNode == null)
             throw new RuntimeException("Delete target not exists");
         if (!(deleteNode instanceof ModelNode || deleteNode instanceof ApplicationNode
-                || deleteNode.nodeType() == DesignNodeType.FolderNode && deleteNode.nodes.count() == 0))
+                || deleteNode.nodeType() == DesignNodeType.FolderNode && deleteNode.nodes.size() == 0))
             throw new RuntimeException("Can't delete it");
 
         CompletableFuture<DesignNode> deleteTask;
