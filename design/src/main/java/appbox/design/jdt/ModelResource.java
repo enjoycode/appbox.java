@@ -544,4 +544,15 @@ public abstract class ModelResource implements IResource {
         // The resource is a matching member if it matches none of the exclude flags.
         return flags != ICoreConstants.NULL_FLAG && (flags & excludeMask) == 0;
     }
+
+    @Override
+    public boolean equals(Object target) {
+        if (this == target)
+            return true;
+        if (!(target instanceof ModelResource))
+            return false;
+        var resource = (ModelResource) target;
+        return getType() == resource.getType()
+                && path.equals(resource.path) /*&& workspace.equals(resource.workspace)*/;
+    }
 }

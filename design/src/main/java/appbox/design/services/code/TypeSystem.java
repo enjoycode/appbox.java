@@ -1,6 +1,7 @@
 package appbox.design.services.code;
 
 import appbox.design.DesignHub;
+import appbox.design.jdt.ModelContainer;
 import appbox.design.jdt.ModelFile;
 import appbox.design.services.CodeGenService;
 import appbox.design.tree.ModelNode;
@@ -10,6 +11,7 @@ import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.runtime.IService;
 import appbox.store.SqlStore;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -22,11 +24,39 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
 public final class TypeSystem {
 
+    //region ====Consts====
     public static final String PROJECT_MODELS     = "models";
     public static final IPath  libAppBoxCorePath  =
             new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
     public static final IPath  libAppBoxStorePath =
             new Path(SqlStore.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+
+    /** /models/sys/下的虚拟文件列表 */
+    private static final String[] SYS_DUMMY_FILES = new String[]{
+            "EntityBase.java",
+            "SqlEntityBase.java",
+            "SysEntityBase.java",
+            "DbTransaction.java",
+            "SqlStore.java",
+            "RuntimeType.java",
+            "CtorInterceptor.java",
+            "MethodInterceptor.java",
+            "ISqlQueryJoin.java",
+            "ISqlIncluder.java",
+            "ISqlIncludable.java"
+    };
+
+    /** /models/下的虚拟文件列表 */
+    private static final String[] ROOT_DUMMY_FILES = new String[]{
+            "DataStore.java",
+            "SqlQuery.java",
+            "SqlQueryJoin.java",
+            "SqlSubQuery.java",
+            "SqlUpdateCommand.java",
+            "SqlDeleteCommand.java",
+            "DbFunc.java"
+    };
+    //endregion
 
     public final  LanguageServer languageServer;
     protected     IProject       modelsProject; //实体、枚举等通用模型项目
@@ -35,12 +65,10 @@ public final class TypeSystem {
     public TypeSystem(DesignHub designHub) {
         hub            = designHub;
         languageServer = new LanguageServer(hub.session.sessionId());
-        //Do not use languageServer here.
+        //Do not use languageServer here! has not initialized.
     }
 
-    /**
-     * 用于初始化通用项目等
-     */
+    /** 用于初始化通用项目等 */
     public void init() {
         try {
             var libAppBoxCorePath = new Path(IService.class.getProtectionDomain()
@@ -52,31 +80,45 @@ public final class TypeSystem {
             //添加基础虚拟文件,从resources中加载
             var sysFolder = modelsProject.getFolder("sys");
             sysFolder.create(true, true, null);
-
-            sysFolder.getFile("EntityBase.java").create(null, true, null);
-            sysFolder.getFile("SqlEntityBase.java").create(null, true, null);
-            sysFolder.getFile("SysEntityBase.java").create(null, true, null);
-            sysFolder.getFile("DbTransaction.java").create(null, true, null);
-            sysFolder.getFile("SqlStore.java").create(null, true, null);
-            sysFolder.getFile("RuntimeType.java").create(null, true, null);
-            sysFolder.getFile("CtorInterceptor.java").create(null, true, null);
-            sysFolder.getFile("MethodInterceptor.java").create(null, true, null);
-            sysFolder.getFile("ISqlQueryJoin.java").create(null, true, null);
-            sysFolder.getFile("ISqlIncluder.java").create(null, true, null);
-            sysFolder.getFile("ISqlIncludable.java").create(null, true, null);
-
-            modelsProject.getFile("DataStore.java").create(null, true, null);
-            modelsProject.getFile("SqlQuery.java").create(null, true, null);
-            modelsProject.getFile("SqlQueryJoin.java").create(null, true, null);
-            modelsProject.getFile("SqlSubQuery.java").create(null, true, null);
-            modelsProject.getFile("SqlUpdateCommand.java").create(null, true, null);
-            modelsProject.getFile("SqlDeleteCommand.java").create(null, true, null);
-            modelsProject.getFile("DbFunc.java").create(null, true, null);
+            createDummyFiles(sysFolder, SYS_DUMMY_FILES);
+            createDummyFiles(modelsProject, ROOT_DUMMY_FILES);
 
             //TODO:创建服务代理项目
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /** 在指定目录下创建虚拟文件 */
+    private static void createDummyFiles(IContainer container, String[] files) throws CoreException {
+        var modelContainer = (ModelContainer) container;
+        for (var file : files) {
+            modelContainer.getFile(file).create(null, true, null);
+        }
+    }
+
+    /** 是否从资源中加载的虚拟文件，否则表示代码生成器生成的 */
+    public static boolean isDummyFileInResources(IFile file) {
+        var parent = file.getParent();
+        if (parent instanceof IProject && parent.getName().equals(PROJECT_MODELS)) {
+            return !file.getName().equals("DataStore.java"); //DataStore.java排除
+        }
+
+        if (parent.getName().equals("sys")
+                && parent.getParent() instanceof IProject
+                && parent.getParent().getName().equals(PROJECT_MODELS)) {
+            return !file.getName().equals("Permissions.java"); //Permissions.java排除
+        }
+
+        return false;
+    }
+
+    public static boolean isDataStoreFile(IFile file) {
+        var parent = file.getParent();
+        if (parent instanceof IProject && parent.getName().equals(PROJECT_MODELS)) {
+            return file.getName().equals("DataStore.java");
+        }
+        return false;
     }
 
     /** 用于加载设计树后创建模型相应的虚拟文件 */
@@ -175,7 +217,7 @@ public final class TypeSystem {
         //TODO:
     }
 
-    //region ====find XXX====
+    //region ====Find Methods====
     public ModelNode findModelNodeByModelFile(ModelFile file) {
         //TODO:暂简单处理路径
         var fileName = file.getName();

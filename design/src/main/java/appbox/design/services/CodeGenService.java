@@ -20,14 +20,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * 用于生成各模型的虚拟代码
- */
+/** 用于生成各模型的虚拟代码 */
 public class CodeGenService {
 
     /** 生成所有存储的虚拟代码 */
-    public static String getStoresDummyCode(DesignTree designTree) {
-        var sb = new StringBuilder();
+    public static String genStoresDummyCode(DesignTree designTree) {
+        var sb = new StringBuilder(100);
         sb.append("import sys.*;");
         sb.append("public final class DataStore {\n");
 
@@ -45,6 +43,15 @@ public class CodeGenService {
 
         sb.append("}");
         return sb.toString();
+    }
+
+    /** 生成指定应用下的所有权限虚拟代码 */
+    public static String genPermissionsDummyCode(DesignTree designTree, String appName) {
+       var sb = new StringBuilder(100);
+       var permissions = designTree.findNodesByType(ModelType.Permission);
+
+
+       return sb.toString();
     }
 
     /** 根据实体模型生成虚拟代码 */
@@ -273,6 +280,7 @@ public class CodeGenService {
         return sb.toString();
     }
 
+    /** 生成服务模型的前端TypeScript声明代码 */
     public static String genServiceDeclareCode(DesignHub hub, ModelNode serviceNode) {
         var serviceName = serviceNode.model().name();
 

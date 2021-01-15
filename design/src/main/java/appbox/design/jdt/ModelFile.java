@@ -111,19 +111,18 @@ public final class ModelFile extends ModelResource implements IFile {
         }
 
         //虚拟基础代码从资源文件加载
-        var parentName = getParent().getName();
-        if (parentName.equals("sys")
-                || (!getName().equals("DataStore.java") && parentName.equals(TypeSystem.PROJECT_MODELS))) {
+        if (TypeSystem.isDummyFileInResources(this)) {
             Log.debug("Load dummy code: " + getName());
             return ModelFile.class.getResourceAsStream("/dummy/" + getName());
         }
 
-        //DataStore特殊生成
         var hub = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
-        if (getName().equals("DataStore.java") && parentName.equals(TypeSystem.PROJECT_MODELS)) {
-            var storesDummyCode = CodeGenService.getStoresDummyCode(hub.designTree);
+        //DataStore特殊生成
+        if (TypeSystem.isDataStoreFile(this)) {
+            var storesDummyCode = CodeGenService.genStoresDummyCode(hub.designTree);
             return new ByteArrayInputStream(storesDummyCode.getBytes(StandardCharsets.UTF_8));
         }
+
         //注意:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码
         try {
             //根据类型查找模型节点
