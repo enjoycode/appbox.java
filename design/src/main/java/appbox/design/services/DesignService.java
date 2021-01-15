@@ -50,6 +50,8 @@ public final class DesignService implements IService {
         //----view----
         put("NewViewModel", new NewViewModel());
         put("OpenViewModel", new OpenViewModel());
+        //----Permission----
+        put("NewPermissionModel", new NewPermissionModel());
     }};
 
     @Override

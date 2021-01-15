@@ -3,6 +3,8 @@ package appbox.design.tree;
 import appbox.model.ApplicationModel;
 import appbox.model.ModelType;
 
+import java.util.UUID;
+
 public final class ApplicationNode extends DesignNode {
 
     public final ApplicationModel model;
@@ -54,6 +56,17 @@ public final class ApplicationNode extends DesignNode {
         for (DesignNode node : nodes.list) {
             if (node instanceof ModelRootNode && ((ModelRootNode) node).targetType == modelType) {
                 return (ModelRootNode) node;
+            }
+        }
+        return null;
+    }
+
+    protected FolderNode findFolderNode(UUID folderId) {
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes.get(i) instanceof ModelRootNode) {
+                var res = ((ModelRootNode) nodes.get(i)).findFolderNode(folderId);
+                if (res != null)
+                    return res;
             }
         }
         return null;

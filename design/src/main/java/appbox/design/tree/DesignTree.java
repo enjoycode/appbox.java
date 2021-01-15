@@ -163,6 +163,8 @@ public final class DesignTree {
                 return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
             case ViewModelNode:
                 return findModelNode(ModelType.View, Long.parseUnsignedLong(id));
+            case FolderNode:
+                return findFolderNode(id);
             case DataStoreNode:
                 return storeRootNode.nodes.find(n -> n.id().equals(id));
             case ModelRootNode:
@@ -202,6 +204,18 @@ public final class DesignTree {
             var appNode = (ApplicationNode) node;
             if (appNode.model.id() == appId) {
                 return appNode.findModelRootNode(modelType);
+            }
+        }
+        return null;
+    }
+
+    private FolderNode findFolderNode(String id) {
+        var folderId = UUID.fromString(id);
+        for (int i = 0; i < appRootNode.nodes.size(); i++) {
+            if (appRootNode.nodes.get(i) instanceof ApplicationNode) {
+                var folderNode = ((ApplicationNode) appRootNode.nodes.get(i)).findFolderNode(folderId);
+                if (folderNode != null)
+                    return folderNode;
             }
         }
         return null;

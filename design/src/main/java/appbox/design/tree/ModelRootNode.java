@@ -131,6 +131,10 @@ public final class ModelRootNode extends DesignNode {
         return _models.get(modelId);
     }
 
+    public FolderNode findFolderNode(UUID folderId) {
+        return _folders.get(folderId);
+    }
+
     public Collection<ModelNode> getAllModelNodes() {
         return _models.values();
     }
