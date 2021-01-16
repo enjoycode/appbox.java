@@ -12,6 +12,7 @@ import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import appbox.runtime.IService;
 import appbox.store.SqlStore;
+import com.ea.async.Async;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -28,6 +29,8 @@ public final class TypeSystem {
 
     //region ====Consts====
     public static final String PROJECT_MODELS     = "models";
+    public static final IPath  libEA_AsyncPath    =
+            new Path(Async.class.getProtectionDomain().getCodeSource().getLocation().getPath());
     public static final IPath  libAppBoxCorePath  =
             new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
     public static final IPath  libAppBoxStorePath =
@@ -35,6 +38,7 @@ public final class TypeSystem {
 
     /** /models/sys/下的虚拟文件列表 */
     private static final String[] SYS_DUMMY_FILES = new String[]{
+            "Async.java",
             "EntityBase.java",
             "SqlEntityBase.java",
             "SysEntityBase.java",

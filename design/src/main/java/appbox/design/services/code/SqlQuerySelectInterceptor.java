@@ -5,7 +5,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-public final class SqlQuerySelectInterceptor implements IMethodInterceptor {
+final class SqlQuerySelectInterceptor implements IMethodInterceptor {
 
     //q.toSubQuery(e -> e.Age) -> q.toSubQuery(e -> e.m("Age"))
 

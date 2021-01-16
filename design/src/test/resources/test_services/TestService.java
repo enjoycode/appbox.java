@@ -2,6 +2,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class TestService {
 
+    public CompletableFuture<?> testAwait() {
+        var res = sys.Async.await(query());
+        return CompletableFuture.completedFuture(res.toString());
+    }
+
     //public CompletableFuture<String> hello(String name, int age) {
     //    return CompletableFuture.completedFuture("Hello Future!");
     //}

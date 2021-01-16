@@ -1,8 +1,16 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.*;
 
 public class TestORM {
+    public static class Async {
+        public static <T, F extends CompletionStage<T>> T await(F future) {
+            throw new RuntimeException();
+        }
+    }
+
     public abstract class EntityBase {}
 
     public abstract class IndexBase<T extends EntityBase> {}
@@ -91,6 +99,8 @@ public class TestORM {
 
         public List<T> toList() {return null;}
 
+        public CompletableFuture<List<T>> toListAsync() {return null;}
+
         public <R> List<R> toList(Function<? super T, ? extends R> mapper) {return null;}
 
         public <R, J extends EntityBase> List<R> toList(SqlQuery<J> j, BiFunction<? super T, ? super J, ? extends R> mapper) {
@@ -175,6 +185,11 @@ public class TestORM {
                     .thenInclude(product -> product.catelog);
 
 
+    }
+
+    public void testAwait() {
+        var q = new SqlQuery<Order>();
+        var list = Async.await(q.toListAsync());
     }
 
 }

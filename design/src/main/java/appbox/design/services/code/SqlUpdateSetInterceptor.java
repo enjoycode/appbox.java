@@ -5,7 +5,7 @@ import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-public final class SqlUpdateSetInterceptor implements IMethodInterceptor {
+final class SqlUpdateSetInterceptor implements IMethodInterceptor {
 
     //cmd.update(e -> e.Name = "Rick")   -> cmd.update(e -> e.m("Name").set("Rick"));
 

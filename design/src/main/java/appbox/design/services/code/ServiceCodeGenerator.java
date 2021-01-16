@@ -27,6 +27,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }};
 
     protected static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
+        put("AsyncAwait", new AsyncAwaitInterceptor());
         put("SqlQueryWhere", new SqlQueryWhereInterceptor());
         put("SqlQueryMapper", new SqlQueryMapperInterceptor());
         put("SqlQuerySelect", new SqlQuerySelectInterceptor());
@@ -46,6 +47,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     protected final ServiceModel serviceModel;
     protected final ASTRewrite   astRewrite;
     protected final AST          ast;
+    public          boolean      hasAwaitInvocation;
 
     public ServiceCodeGenerator(DesignHub hub, String appName,
                                 ServiceModel serviceModel, ASTRewrite astRewrite) {
@@ -164,9 +166,10 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     public boolean visit(MethodInvocation node) {
         var methodInterceptor = TypeHelper.getMethodInterceptor(node.resolveMethodBinding());
         if (methodInterceptor != null) {
-            var res =  methodInterceptors.get(methodInterceptor).visit(node, this);
+            var res = methodInterceptors.get(methodInterceptor).visit(node, this);
             //注意类似q.groupBy().having()的调用
-            node.getExpression().accept(this);
+            if (!res)
+                node.getExpression().accept(this);
             return res;
         }
 

@@ -92,7 +92,7 @@ public class TestServiceCodeGenerator {
         var declareCode = CodeGenService.genServiceDeclareCode(hub, serviceNode);
 
         //测试转译服务代码
-        var codeData = PublishService.compileService(hub, testServiceModel, null);
+        var codeData = PublishService.compileService(hub, testServiceModel, false);
         assertNotNull(codeData);
         //写入测试文件
         var outPath = Path.of("/", "tmp", "appbox", "TestService.data");

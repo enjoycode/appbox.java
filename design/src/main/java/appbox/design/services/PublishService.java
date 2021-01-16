@@ -13,7 +13,9 @@ import appbox.model.*;
 import appbox.runtime.RuntimeContext;
 import appbox.serialization.BytesOutputStream;
 import appbox.store.*;
+import com.ea.async.instrumentation.Transformer;
 import org.eclipse.core.internal.resources.BuildConfiguration;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -24,6 +26,10 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jface.text.Document;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -43,7 +49,7 @@ public final class PublishService {
         for (var item : hub.pendingChanges) {
             if (item instanceof ServiceModel && ((ServiceModel) item).persistentState() != PersistentState.Deleted) {
                 var serviceModel = (ServiceModel) item;
-                var asmData      = compileService(hub, serviceModel, null);
+                var asmData      = compileService(hub, serviceModel, false);
                 var appName      = hub.designTree.findApplicationNode(serviceModel.appId()).model.name();
                 var fullName     = String.format("%s.%s", appName, serviceModel.name());
                 //重命名的已不再需要加入待删除列表，保存模型时已处理
@@ -56,7 +62,7 @@ public final class PublishService {
      * 发布或调试时编译服务模型
      * @return 返回的是已经压缩过的
      */
-    public static byte[] compileService(DesignHub hub, ServiceModel model, String debugFolder) throws Exception {
+    public static byte[] compileService(DesignHub hub, ServiceModel model, boolean forDebug) throws Exception {
         //获取对应的虚拟文件
         var designNode = hub.designTree.findModelNode(ModelType.Service, model.id());
         var appName    = designNode.appNode.model.name();
@@ -72,12 +78,16 @@ public final class PublishService {
         //检测虚拟代码错误
         var problems = ((CompilationUnit) astNode).getProblems();
         if (problems != null && problems.length > 0) {
-            //TODO:友好提示及忽略警告
+            //TODO:友好提示
             boolean hasError = false;
             for (var pb : problems) {
-                if (pb.isError())
-                    throw new RuntimeException("Has problems.");
+                if (pb.isError()) {
+                    hasError = true;
+                    Log.error(pb.getMessage());
+                }
             }
+            if (hasError)
+                throw new RuntimeException("Has problems.");
         }
 
         //开始转换编译服务模型的运行时代码
@@ -95,8 +105,9 @@ public final class PublishService {
         var runtimeCode       = newdoc.get();
         var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
 
-        //生成运行时临时Project并进行编译
+        //生成运行时临时Project并进行编译 //TODO:引用的其他第三方包
         var libs = new IClasspathEntry[]{
+                JavaCore.newLibraryEntry(TypeSystem.libEA_AsyncPath, null, null),
                 JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null),
                 JavaCore.newLibraryEntry(TypeSystem.libAppBoxStorePath, null, null)
         };
@@ -110,6 +121,13 @@ public final class PublishService {
         var builder = new JavaBuilderWrapper(config);
         builder.build();
 
+        //准备异步转换器
+        Transformer asyncTransformer = null;
+        if (!forDebug && serviceCodeGenerator.hasAwaitInvocation) {
+            asyncTransformer = new Transformer();
+            asyncTransformer.setErrorListener(err -> {throw new RuntimeException(err);});
+        }
+
         //获取并压缩编译好的.class
         var    classFolder = runtimeProject.getFolder(LanguageServer.BUILD_OUTPUT);
         var    classFiles  = classFolder.members();
@@ -120,7 +138,14 @@ public final class PublishService {
         for (var classFile : classFiles) {
             var className = classFile.getName().replace(".class", "");
             outStream.writeString(className);
-            outStream.writeByteArray(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
+            //如果是服务类且用到了await，需要转换
+            if (asyncTransformer != null
+                    && classFile.getName().equals(vfile.getName().replace(".java", ".class"))) {
+                outStream.writeByteArray(transformAsync(asyncTransformer, (IFile) classFile));
+            } else {
+                outStream.writeByteArray(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
+            }
+
             classFile.delete(true, null);
         }
 
@@ -131,6 +156,22 @@ public final class PublishService {
         runtimeProject.delete(true, null);
 
         return classData;
+    }
+
+    /** 转换服务类内的await */
+    private static byte[] transformAsync(Transformer transformer, IFile serviceClassFile) {
+        try {
+            final var file        = serviceClassFile.getLocation().toFile();
+            final var url         = file.toURI().toURL();
+            final var classLoader = new URLClassLoader(new URL[]{url});
+            try (FileInputStream fis = new FileInputStream(file)) {
+                return transformer.instrument(classLoader, fis);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
