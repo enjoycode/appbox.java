@@ -1,11 +1,13 @@
 package appbox.model;
 
 import appbox.data.EntityId;
+import appbox.runtime.ISessionInfo;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /** 权限模型用于关联受控的资源与授权的组织单元 */
 public final class PermissionModel extends ModelBase {
@@ -38,6 +40,21 @@ public final class PermissionModel extends ModelBase {
     public String remark() { return _remark; }
 
     public void setRemark(String remark) { _remark = remark; }
+
+    public boolean owns(ISessionInfo session) {
+        if (_orgUnits == null || _orgUnits.size() == 0)
+            return false;
+
+        for (var orgUnit : _orgUnits) {
+            var startIndex = session.isExternal() ? 1 : 0; //注意:外部会话忽略第0级的External信息
+            for (int j = startIndex; j < session.levels(); j++) {
+                if (session.getAt(j).id.equals(orgUnit.toUUID()))
+                    return true;
+            }
+        }
+
+        return false;
+    }
 
     //region ====Serialization====
     @Override
