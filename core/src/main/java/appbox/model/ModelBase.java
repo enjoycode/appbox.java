@@ -143,12 +143,14 @@ public abstract class ModelBase implements IBinSerializable {
         if (_designMode) {
             bs.writeIntField(_version, 4);
             bs.writeByteField(_persistentState.value, 5);
-            //TODO: folder
+            if (_folderId != null)
+                bs.writeUUIDField(_folderId, 6);
             if (_originalName != null) {
                 bs.writeStringField(_originalName, 7);
             }
         } else if (modelType() == ModelType.Permission) {
-            //TODO: folder
+            if (_folderId != null)
+                bs.writeUUIDField(_folderId, 6);
         }
 
         bs.finishWriteFields();
@@ -161,23 +163,19 @@ public abstract class ModelBase implements IBinSerializable {
             propIndex = bs.readVariant();
             switch (propIndex) {
                 case 1:
-                    _id = bs.readLong();
-                    break;
+                    _id = bs.readLong(); break;
                 case 2:
-                    _name = bs.readString();
-                    break;
+                    _name = bs.readString(); break;
                 case 3:
-                    _designMode = bs.readBool();
-                    break;
+                    _designMode = bs.readBool(); break;
                 case 4:
-                    _version = bs.readInt();
-                    break;
+                    _version = bs.readInt(); break;
+                case 6:
+                    _folderId = bs.readUUID(); break;
                 case 5:
-                    _persistentState = PersistentState.fromValue(bs.readByte());
-                    break;
+                    _persistentState = PersistentState.fromValue(bs.readByte()); break;
                 case 7:
-                    _originalName = bs.readString();
-                    break;
+                    _originalName = bs.readString(); break;
                 case 0:
                     break;
                 default:
