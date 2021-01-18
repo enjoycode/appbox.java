@@ -107,8 +107,10 @@ public final class DesignTree {
             for (ModelBase m : mergedModels) {
                 if (m.modelType() == ModelType.DataStore) {
                     storeRootNode.addModel((DataStoreModel) m, designHub);
-                } else if (m.modelType() != ModelType.Permission) {
-                    allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
+                } else {
+                    var modelNode = findModelRootNode(m.appId(), m.modelType()).addModel(m);
+                    if (m.modelType() != ModelType.Permission)
+                        allModelNodes.add(modelNode);
                 }
             }
 
