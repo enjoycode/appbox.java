@@ -189,6 +189,9 @@ public final class DataFieldModel extends EntityMemberModel {
                     if (fk == memberId())
                         return rm;
                 }
+                //需要处理聚合引用的类型外键
+                if (rm.isAggregationRef() && rm.typeMemberId() == memberId())
+                    return rm;
             }
         }
         throw new RuntimeException("Can't find EntityRef: " + owner.name() + "." + name());

@@ -109,6 +109,22 @@ public class OrgUnit extends SysEntity {
     }
 
     @Override
+    public Object getNaviPropForFetch(String propName) {
+        switch (propName) {
+            case "Parent":
+                if (_parent == null)
+                    _parent = new OrgUnit();
+                return _parent;
+            case "Childs":
+                if (_childs == null)
+                    _childs = new ArrayList<>();
+                return _childs;
+            default:
+                throw new RuntimeException("Unknown member: " + propName);
+        }
+    }
+
+    @Override
     public void writeMember(short id, IEntityMemberWriter bs, byte flags) {
         switch (id) {
             case NAME_ID:
@@ -119,6 +135,10 @@ public class OrgUnit extends SysEntity {
                 bs.writeMember(id, _baseType, flags); break;
             case PARENTID_ID:
                 bs.writeMember(id, _parentId, flags); break;
+            case PARENT_ID:
+                bs.writeMember(id, _parent, flags); break;
+            case CHILDS_ID:
+                bs.writeMember(id, _childs, flags); break;
             default:
                 throw new UnknownEntityMember(OrgUnit.class, id);
         }
@@ -135,6 +155,10 @@ public class OrgUnit extends SysEntity {
                 _baseType = bs.readLongMember(flags); break;
             case PARENTID_ID:
                 _parentId = bs.readEntityIdMember(flags); break;
+            case PARENT_ID:
+                _parent = bs.readRefMember(flags, OrgUnit::new); break;
+            case CHILDS_ID:
+                _childs = bs.readSetMember(flags, OrgUnit::new); break;
             default:
                 throw new UnknownEntityMember(OrgUnit.class, id);
         }

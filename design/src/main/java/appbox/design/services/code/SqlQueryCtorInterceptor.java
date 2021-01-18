@@ -1,6 +1,7 @@
 package appbox.design.services.code;
 
 import appbox.store.query.SqlQuery;
+import appbox.store.query.TableScan;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
 final class SqlQueryCtorInterceptor implements ICtorInterceptor {
@@ -10,11 +11,12 @@ final class SqlQueryCtorInterceptor implements ICtorInterceptor {
 
     @Override
     public boolean visit(ClassInstanceCreation node, ServiceCodeGenerator generator) {
-        final var ast             = generator.ast;
-        var       runtimeType     = TypeHelper.getRuntimeType(node.resolveTypeBinding());
-        var       isSqlQuery      = runtimeType.equals(SqlQuery.class.getName());
-        var       entityType      = node.resolveTypeBinding().getTypeArguments()[0];
-        var       entityModelNode = generator.getUsedEntity(entityType);
+        final var ast         = generator.ast;
+        var       runtimeType = TypeHelper.getRuntimeType(node.resolveTypeBinding());
+        var isSqlQuery = runtimeType.equals(SqlQuery.class.getName())
+                || runtimeType.equals(TableScan.class.getName());
+        var entityType      = node.resolveTypeBinding().getTypeArguments()[0];
+        var entityModelNode = generator.getUsedEntity(entityType);
 
         var newNode   = ast.newClassInstanceCreation();
         var queryType = ast.newSimpleType(ast.newName(runtimeType));

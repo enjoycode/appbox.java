@@ -60,7 +60,9 @@ public final class TypeSystem {
             "SqlSubQuery.java",
             "SqlUpdateCommand.java",
             "SqlDeleteCommand.java",
-            "DbFunc.java"
+            "DbFunc.java",
+            "Authorize.java",
+            "TableScan.java"
     };
     //endregion
 

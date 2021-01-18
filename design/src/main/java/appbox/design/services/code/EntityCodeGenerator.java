@@ -450,7 +450,8 @@ public final class EntityCodeGenerator {
                 var entityRef = (EntityRefModel) memeber;
                 if (entityRef.isAggregationRef()) {
                     //TODO:专用readAggRefMember()
-                    throw new RuntimeException("未实现");
+                    Log.warn("生成聚合引用成员的读取代码暂未实现");
+                    continue;
                 }
                 var refModelNode = generator.hub.designTree.findModelNode(ModelType.Entity,
                         entityRef.getRefModelIds().get(0));
@@ -513,8 +514,10 @@ public final class EntityCodeGenerator {
             var creation = ast.newClassInstanceCreation();
             if (memeber.type() == EntityMemberModel.EntityMemberType.EntityRef) {
                 var entityRefMember = (EntityRefModel) memeber;
-                if (entityRefMember.isAggregationRef())
-                    throw new RuntimeException("未实现");
+                if (entityRefMember.isAggregationRef()) {
+                    Log.warn("生成聚合引用成员的getNaviPropery未实现"); //TODO:
+                    continue;
+                }
                 var entityRefTargetModel = generator.getUsedEntity(entityRefMember.getRefModelIds().get(0));
                 var entityTypeName       = makeEntityClassName(entityRefTargetModel);
                 var creationType         = ast.newSimpleType(ast.newName(entityTypeName));
