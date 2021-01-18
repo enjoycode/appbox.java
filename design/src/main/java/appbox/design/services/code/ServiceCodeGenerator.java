@@ -139,7 +139,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var ownerType = owner.resolveTypeBinding();
         if (TypeHelper.isEntityType(ownerType)) {
             //TODO:判断是否实体属性
-            var newNode = makeEntityGetMember(node);
+            var newNode = makeEntityGetMember(node.getQualifier(), node.getName().getIdentifier());
             astRewrite.replace(node, newNode, null);
 
             owner.accept(this);
@@ -160,6 +160,21 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             } else {
                 //TODO:
             }
+        }
+
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(FieldAccess node) {
+        var ownerType = node.getExpression().resolveTypeBinding();
+        if (TypeHelper.isEntityType(ownerType)) {
+            //TODO:判断是否实体属性
+            var newNode = makeEntityGetMember(node.getExpression(), node.getName().getIdentifier());
+            astRewrite.replace(node, newNode, null);
+
+            node.getExpression().accept(this);
+            return false;
         }
 
         return super.visit(node);
@@ -419,13 +434,12 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     /** t.Name 转换为 t.getName() */
-    protected MethodInvocation makeEntityGetMember(QualifiedName node) {
-        var newOwner = astRewrite.createCopyTarget(node.getQualifier());
+    protected MethodInvocation makeEntityGetMember(Expression owner, String memberName) {
+        var newOwner = astRewrite.createCopyTarget(owner);
 
         var newNode = ast.newMethodInvocation();
-        newNode.setName(ast.newSimpleName("get" + node.getName().getIdentifier()));
+        newNode.setName(ast.newSimpleName("get" + memberName));
         newNode.setExpression((Expression) newOwner);
-        astRewrite.replace(node, newNode, null);
 
         return newNode;
     }
