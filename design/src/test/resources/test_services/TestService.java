@@ -1,10 +1,12 @@
 import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import static sys.Async.await;
 
 public class TestService {
 
     public CompletableFuture<?> testAwait() {
-        var res = sys.Async.await(query());
-        return CompletableFuture.completedFuture(res.toString());
+        var res = await(query());
+        return CompletableFuture.completedFuture(res.get(0).Name);
     }
 
     //public CompletableFuture<String> hello(String name, int age) {
@@ -30,7 +32,7 @@ public class TestService {
     //    return sys.services.TestService.hello(obj.Name, 100);
     //}
 
-    public CompletableFuture<Object> query() {
+    public CompletableFuture<List<sys.entities.Employee>> query() {
         var obj   = new sys.entities.Employee();
         int value = 100;
 
@@ -40,7 +42,7 @@ public class TestService {
         q.where(e -> e.Manager.Name + "a" == obj.Name + "b");
         q.where(e -> DbFunc.sum(e.Age) + 1 > value + 2);
         q.where(e -> e.Name + obj.Name + "c" == "Rick");
-        return q.toListAsync().thenApply(r -> (Object) r);
+        return q.toListAsync();
     }
 
     public CompletableFuture<?> query2() {

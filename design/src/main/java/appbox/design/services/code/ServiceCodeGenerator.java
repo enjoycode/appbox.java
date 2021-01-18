@@ -60,6 +60,20 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     //region ====visit methods====
     @Override
+    public boolean visit(ImportDeclaration node) {
+        if (node.getName().isQualifiedName()) {
+            var identifier = getIdentifier(node.getName());
+            if (hub.designTree.findApplicationNodeByName(identifier) != null) {
+                var newNode = ast.newLineComment();
+                astRewrite.replace(node, newNode, null);
+                return false;
+            }
+        }
+
+        return super.visit(node);
+    }
+
+    @Override
     public boolean visit(TypeDeclaration node) {
         if (TypeHelper.isServiceClass(node, appName, serviceModel.name())) {
             _serviceTypeDeclaration = node;

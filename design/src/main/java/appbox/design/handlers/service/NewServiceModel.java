@@ -18,7 +18,7 @@ public final class NewServiceModel implements IDesignHandler {
         var selectedNodeType = DesignNodeType.fromValue((byte) args.getInt());
         var selectedNodeId   = args.getString();
         var name             = args.getString();
-        var initServiceCode  = String.format("public class %s\n{\n}", name);
+        var initServiceCode  = String.format("import java.util.concurrent.CompletableFuture;\nimport static sys.Async.await;\n\npublic class %s\n{\n}", name);
         var initCodes        = new Object[]{initServiceCode};
 
         return ModelCreator.create(hub, ModelType.Service, (id) -> new ServiceModel(id, name),
