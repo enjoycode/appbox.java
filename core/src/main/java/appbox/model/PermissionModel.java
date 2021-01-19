@@ -41,6 +41,10 @@ public final class PermissionModel extends ModelBase {
 
     public void setRemark(String remark) { _remark = remark; }
 
+    public boolean hasOrgUnits() {
+        return _orgUnits != null && _orgUnits.size() > 0;
+    }
+
     public boolean owns(ISessionInfo session) {
         if (_orgUnits == null || _orgUnits.size() == 0)
             return false;

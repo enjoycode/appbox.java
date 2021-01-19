@@ -1,15 +1,14 @@
 package appbox.data;
 
 import appbox.runtime.RuntimeContext;
-import appbox.serialization.IBinSerializable;
-import appbox.serialization.IInputStream;
-import appbox.serialization.IOutputStream;
+import appbox.serialization.*;
 
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class EntityId implements IBinSerializable {
+public final class EntityId implements IBinSerializable, IJsonSerializable {
     private static final AtomicInteger peerSeq = new AtomicInteger(0); //Peer流水号计数器
 
     //private long _data1;
@@ -40,9 +39,7 @@ public final class EntityId implements IBinSerializable {
         System.arraycopy(data, offset, _data, 0, 16);
     }
 
-    /**
-     * Epoch毫秒数
-     */
+    /** Epoch毫秒数 */
     public long timestamp() {
         return Byte.toUnsignedLong(_data[11]) | Byte.toUnsignedLong(_data[10]) << 8
                 | Byte.toUnsignedLong(_data[9]) << 16 | Byte.toUnsignedLong(_data[8]) << 24
@@ -134,16 +131,19 @@ public final class EntityId implements IBinSerializable {
         bs.readBytes(_data, 0, 16);
     }
 
-    /** 仅用于系统存储写索引
-     * @param bs*/
+    /** 仅用于系统存储写索引 */
     public void writePart1(IOutputStream bs) {
         bs.write(_data, 0, 6);
     }
 
-    /** 仅用于系统存储写索引
-     * @param bs*/
+    /** 仅用于系统存储写索引 */
     public void writePart2(IOutputStream bs) {
         bs.write(_data, 6, 10);
     }
 
+    @Override
+    public void writeToJson(IJsonWriter writer) {
+       final var base64 = Base64.getEncoder().withoutPadding().encode(_data);
+       writer.writeValue(base64);
+    }
 }
