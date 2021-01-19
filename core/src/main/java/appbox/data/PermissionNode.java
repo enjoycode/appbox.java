@@ -41,6 +41,8 @@ public final class PermissionNode implements IJsonSerializable {
 
     @Override
     public void writeToJson(IJsonWriter writer) {
+        writer.startObject();
+
         writer.writeKeyValue("Id", model == null ?
                 UUID.randomUUID().toString() : Long.toUnsignedString(model.id()));
         writer.writeKeyValue("Name", name);
@@ -58,5 +60,7 @@ public final class PermissionNode implements IJsonSerializable {
             else
                 writer.writeEmptyArray();
         }
+
+        writer.endObject();
     }
 }
