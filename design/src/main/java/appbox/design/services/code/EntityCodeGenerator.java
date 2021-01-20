@@ -15,6 +15,7 @@ import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
+import appbox.store.EntityStore;
 import org.eclipse.jdt.core.dom.*;
 
 import java.math.BigDecimal;
@@ -43,6 +44,7 @@ public final class EntityCodeGenerator {
         //extends
         if (model.sysStoreOptions() != null) {
             entityClass.setSuperclassType(ast.newSimpleType(ast.newName(SysEntity.class.getName())));
+            makeSysEntityFetchMethod(ast, entityClass, entityClassName);
         } else if (model.sqlStoreOptions() != null) {
             entityClass.setSuperclassType(ast.newSimpleType(ast.newName(SqlEntity.class.getName())));
         }
@@ -80,6 +82,44 @@ public final class EntityCodeGenerator {
     /** 生成运行时实体名称 eg: SYS_Employee */
     static String makeEntityClassName(ModelNode modelNode) {
         return String.format("%s_%s", modelNode.appNode.model.name().toUpperCase(), modelNode.model().name());
+    }
+
+    private static void makeSysEntityFetchMethod(AST ast, TypeDeclaration entityClass, String entityClassName) {
+        //返回类型
+        var typeCompletableFuture =
+                ast.newSimpleType(ast.newName("java.util.concurrent.CompletableFuture"));
+        var returnType = ast.newParameterizedType(typeCompletableFuture);
+        returnType.typeArguments().add(ast.newSimpleType(ast.newName(entityClassName)));
+
+        var method = ast.newMethodDeclaration();
+        method.setName(ast.newSimpleName("fetchAsync"));
+        method.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+        method.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        method.setReturnType2(returnType);
+
+        var para = ast.newSingleVariableDeclaration();
+        para.setName(ast.newSimpleName("id"));
+        para.setType(ast.newSimpleType(ast.newName(EntityId.class.getName())));
+        method.parameters().add(para);
+
+        var body = ast.newBlock();
+
+        //appbox.store.EntityStore.loadAsync(Employee.class, id)
+        var callLoad = ast.newMethodInvocation();
+        callLoad.setName(ast.newSimpleName("loadAsync"));
+        callLoad.setExpression(ast.newName(EntityStore.class.getName()));
+        var callPara1 = ast.newTypeLiteral();
+        callPara1.setType(ast.newSimpleType(ast.newSimpleName(entityClassName)));
+        var callPara2 = ast.newSimpleName("id");
+        callLoad.arguments().add(callPara1);
+        callLoad.arguments().add(callPara2);
+
+        var returnst = ast.newReturnStatement();
+        returnst.setExpression(callLoad);
+
+        body.statements().add(returnst);
+        method.setBody(body);
+        entityClass.bodyDeclarations().add(method);
     }
 
     private static void makeEntityCtorMethod(AST ast, TypeDeclaration entityClass, EntityModel model) {

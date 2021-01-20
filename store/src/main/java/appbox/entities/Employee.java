@@ -1,5 +1,6 @@
 package appbox.entities;
 
+import appbox.data.EntityId;
 import appbox.data.SysEntity;
 import appbox.data.SysUniqueIndex;
 import appbox.exceptions.UnknownEntityMember;
@@ -7,10 +8,12 @@ import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.DataFieldModel;
 import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
+import appbox.store.EntityStore;
 import appbox.utils.IdUtil;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 public class Employee extends SysEntity {
 
@@ -123,6 +126,10 @@ public class Employee extends SysEntity {
             default:
                 throw new UnknownEntityMember(Employee.class, id);
         }
+    }
+
+    public static CompletableFuture<Employee> fetchAsync(EntityId id) {
+        return EntityStore.loadAsync(Employee.class, id);
     }
 
     //====二级索引====

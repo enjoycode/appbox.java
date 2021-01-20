@@ -79,11 +79,17 @@ public class CodeGenService {
         sb.append(className);
         //根据存储选项继承不同基类
         if (model.sysStoreOptions() != null) {
-            sb.append(" extends SysEntityBase");
+            sb.append(" extends SysEntityBase {\n");
+            //静态fetchAsync()
+            sb.append("\t@MethodInterceptor(name = \"EntityStatic\")");
+            sb.append("\tpublic static java.util.concurrent.CompletableFuture<");
+            sb.append(className);
+            sb.append("> fetchAsync(appbox.data.EntityId id) {return null;}\n");
         } else if (model.sqlStoreOptions() != null) {
-            sb.append(" extends SqlEntityBase");
+            sb.append(" extends SqlEntityBase {\n");
+        } else {
+            sb.append(" {\n");
         }
-        sb.append(" {\n");
 
         //ctor (仅具备主键的sql存储的实体)
         if (model.sqlStoreOptions() != null && model.sqlStoreOptions().hasPrimaryKeys()) {

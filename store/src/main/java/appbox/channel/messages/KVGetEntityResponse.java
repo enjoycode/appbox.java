@@ -35,6 +35,7 @@ public final class KVGetEntityResponse<T extends SysEntity> extends KVGetRespons
             entity.id().copyFrom(id);
             //读取实体字段
             KVRowReader.readFields(bs, entity);
+            entity.fetchDone();
         }
     }
 }

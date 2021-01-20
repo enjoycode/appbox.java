@@ -37,6 +37,7 @@ public final class KVScanEntityResponse<T extends SysEntity> extends KVScanRespo
             obj.id().readFrom(bs);
             //开始读取当前行的各个字段
             KVRowReader.readFields(bs, obj);
+            obj.fetchDone();
         }
     }
 

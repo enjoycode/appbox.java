@@ -20,6 +20,7 @@ import org.eclipse.jdt.internal.corext.dom.GenericVisitor;
 import java.util.*;
 
 /** 用于生成运行时的服务代码 */
+@SuppressWarnings("unchecked")
 public final class ServiceCodeGenerator extends GenericVisitor {
 
     //region ====拦截器====
@@ -35,6 +36,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         put("SqlUpdateSet", new SqlUpdateSetInterceptor());
         put("InvokeService", new InvokeServiceInterceptor());
         put("SaveEntity", new SaveEntityInterceptor());
+        put("EntityStatic", new EntityStaticInterceptor());
     }};
     //endregion
 
@@ -364,41 +366,44 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var getMethod = ast.newMethodInvocation();
         getMethod.setExpression(ast.newSimpleName("args"));
 
+        String getMethodName = null;
         //TODO:***完善以下
         var paraType = para.getType();
         if (paraType.isPrimitiveType()) {
             var primitiveType = (PrimitiveType) paraType;
             var typeCode      = primitiveType.getPrimitiveTypeCode();
             if (typeCode == PrimitiveType.BOOLEAN) {
-                getMethod.setName(ast.newSimpleName("getBool"));
+                getMethodName = "getBool";
             } else if (typeCode == PrimitiveType.INT) {
-                getMethod.setName(ast.newSimpleName("getInt"));
+                getMethodName = "getInt";
             } else if (typeCode == PrimitiveType.LONG) {
-                getMethod.setName(ast.newSimpleName("getLong"));
+                getMethodName = "getLong";
             } else {
                 throw new RuntimeException("makeInvokeArgsGet: 未实现");
             }
         } else if (paraType.isSimpleType()) {
-            var          simpleType = (SimpleType) paraType;
-            var          typeName   = simpleType.getName().getFullyQualifiedName();
+            var simpleType = (SimpleType) paraType;
+            var typeName   = simpleType.getName().getFullyQualifiedName(); //TODO:resolve
+
             ITypeBinding entityType;
             if (typeName.equals("String")) {
-                getMethod.setName(ast.newSimpleName("getString"));
-            } else if (typeName.equals(EntityId.class.getName())) {
-                getMethod.setName(ast.newSimpleName("getEntityId"));
+                getMethodName = "getString";
+            } else if (typeName.equals("EntityId") || typeName.equals(EntityId.class.getName())) {
+                getMethodName = "getEntityId";
             } else if ((entityType = TypeHelper.getEntityType(simpleType)) != null) {
                 var entityRuntimeType = makeEntityRuntimeType(entityType);
                 var creation          = ast.newCreationReference();
                 creation.setType(entityRuntimeType);
-                getMethod.setName(ast.newSimpleName("getEntity"));
+                getMethodName = "getEntity";
                 getMethod.arguments().add(creation);
             } else {
-                throw new RuntimeException("makeInvokeArgsGet: 未实现");
+                throw new RuntimeException("makeInvokeArgsGet: 未实现type=" + typeName);
             }
         } else {
-            throw new RuntimeException("makeInvokeArgsGet: 未实现");
+            throw new RuntimeException("makeInvokeArgsGet: 未实现type=" + paraType.toString());
         }
 
+        getMethod.setName(ast.newSimpleName(getMethodName));
         return getMethod;
     }
 
