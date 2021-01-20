@@ -2,10 +2,12 @@ package appbox.runtime;
 
 import appbox.cache.BytesSegment;
 import appbox.data.Entity;
+import appbox.data.EntityId;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.serialization.PayloadType;
 
+import java.util.Base64;
 import java.util.function.Supplier;
 
 public final class InvokeArgs implements IInputStream {
@@ -123,6 +125,27 @@ public final class InvokeArgs implements IInputStream {
             return null;
         if (payloadType == PayloadType.String) {
             return readString();
+        }
+        throw new RuntimeException("PayloadType Error: " + payloadType);
+    }
+
+    public EntityId getEntityId() {
+        var payloadType = readByte();
+        if (payloadType == PayloadType.Null)
+            return null;
+        if (payloadType == PayloadType.EntityId) {
+            var res = new EntityId(); //TODO:empty
+            res.readFrom(this);
+            return res;
+        }
+        if (payloadType == PayloadType.String) {
+            //Base64 fixed 22 bytes
+            var srcBytes = new byte[22]; //TODO:待EntityId修改后重写
+            readBytes(srcBytes, 0, 22);
+            var data = Base64.getDecoder().decode(srcBytes);
+            if (data.length != 16)
+                throw new RuntimeException("EntityId from base64 error");
+            return new EntityId(data, 0);
         }
         throw new RuntimeException("PayloadType Error: " + payloadType);
     }

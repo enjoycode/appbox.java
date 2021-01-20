@@ -99,6 +99,10 @@ public class TestService {
         });
     }
 
+    public CompletableFuture<?> testEntityId(appbox.data.EntityId orderId) {
+        return CompletableFuture.completedFuture(orderId);
+    }
+
     //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
     //    return CompletableFuture.completedFuture(emp);
     //}

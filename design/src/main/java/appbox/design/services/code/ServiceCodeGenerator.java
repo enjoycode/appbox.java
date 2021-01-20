@@ -1,5 +1,6 @@
 package appbox.design.services.code;
 
+import appbox.data.EntityId;
 import appbox.design.DesignHub;
 import appbox.design.tree.ModelNode;
 import appbox.model.DataStoreModel;
@@ -363,16 +364,19 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var getMethod = ast.newMethodInvocation();
         getMethod.setExpression(ast.newSimpleName("args"));
 
+        //TODO:***完善以下
         var paraType = para.getType();
         if (paraType.isPrimitiveType()) {
             var primitiveType = (PrimitiveType) paraType;
             var typeCode      = primitiveType.getPrimitiveTypeCode();
-            if (typeCode == PrimitiveType.INT) {
+            if (typeCode == PrimitiveType.BOOLEAN) {
+                getMethod.setName(ast.newSimpleName("getBool"));
+            } else if (typeCode == PrimitiveType.INT) {
                 getMethod.setName(ast.newSimpleName("getInt"));
             } else if (typeCode == PrimitiveType.LONG) {
                 getMethod.setName(ast.newSimpleName("getLong"));
             } else {
-                throw new RuntimeException("未实现");
+                throw new RuntimeException("makeInvokeArgsGet: 未实现");
             }
         } else if (paraType.isSimpleType()) {
             var          simpleType = (SimpleType) paraType;
@@ -380,6 +384,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             ITypeBinding entityType;
             if (typeName.equals("String")) {
                 getMethod.setName(ast.newSimpleName("getString"));
+            } else if (typeName.equals(EntityId.class.getName())) {
+                getMethod.setName(ast.newSimpleName("getEntityId"));
             } else if ((entityType = TypeHelper.getEntityType(simpleType)) != null) {
                 var entityRuntimeType = makeEntityRuntimeType(entityType);
                 var creation          = ast.newCreationReference();
@@ -387,10 +393,10 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 getMethod.setName(ast.newSimpleName("getEntity"));
                 getMethod.arguments().add(creation);
             } else {
-                throw new RuntimeException("未实现");
+                throw new RuntimeException("makeInvokeArgsGet: 未实现");
             }
         } else {
-            throw new RuntimeException("未实现");
+            throw new RuntimeException("makeInvokeArgsGet: 未实现");
         }
 
         return getMethod;
