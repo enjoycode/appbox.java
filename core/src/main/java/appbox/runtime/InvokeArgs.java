@@ -138,7 +138,10 @@ public final class InvokeArgs implements IInputStream {
             res.readFrom(this);
             return res;
         }
-        if (payloadType == PayloadType.String) {
+        if (payloadType == PayloadType.String) { //特殊处理前端base64编码的字符串
+            int len = readVariant(); //跳过长度
+            if (len != 22)
+                throw new RuntimeException("EntityId from base64 error");
             //Base64 fixed 22 bytes
             var srcBytes = new byte[22]; //TODO:待EntityId修改后重写
             readBytes(srcBytes, 0, 22);
