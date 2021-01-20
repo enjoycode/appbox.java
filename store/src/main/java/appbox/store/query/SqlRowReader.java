@@ -3,9 +3,10 @@ package appbox.store.query;
 import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.serialization.IEntityMemberReader;
+import appbox.utils.DateTimeUtil;
 import com.github.jasync.sql.db.RowData;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -89,8 +90,8 @@ public final class SqlRowReader implements IEntityMemberReader {
     }
 
     @Override
-    public Date readDateMember(int flags) {
-        return new Date(rowData.getLong(flags));
+    public LocalDateTime readDateMember(int flags) {
+        return DateTimeUtil.fromEpochMilli(rowData.getLong(flags));
     }
 
     @Override

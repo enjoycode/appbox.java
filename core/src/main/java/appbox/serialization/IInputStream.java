@@ -2,11 +2,12 @@ package appbox.serialization;
 
 import appbox.data.Entity;
 import appbox.data.EntityId;
+import appbox.utils.DateTimeUtil;
 import appbox.utils.IdUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.IntFunction;
@@ -344,8 +345,8 @@ public interface IInputStream extends IEntityMemberReader {
     }
 
     @Override
-    default Date readDateMember(int flags) {
-        return new Date(readLong());
+    default LocalDateTime readDateMember(int flags) {
+        return DateTimeUtil.fromEpochMilli(readLong());
     }
 
     @Override

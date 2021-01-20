@@ -3,7 +3,7 @@ package appbox.serialization;
 import appbox.data.Entity;
 import appbox.data.EntityId;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,7 +31,7 @@ public interface IEntityMemberWriter {
 
     void writeMember(short id, boolean value, byte flags);
 
-    void writeMember(short id, Date value, byte flags);
+    void writeMember(short id, LocalDateTime value, byte flags);
 
     /** EntityRef成员值 */
     void writeMember(short id, Entity value, byte flags);

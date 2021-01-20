@@ -2,9 +2,11 @@ package appbox.serialization;
 
 import appbox.data.Entity;
 import appbox.data.EntityId;
+import appbox.utils.DateTimeUtil;
 import appbox.utils.IdUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public interface IOutputStream extends IEntityMemberWriter {
@@ -463,17 +465,17 @@ public interface IOutputStream extends IEntityMemberWriter {
     }
 
     @Override
-    default void writeMember(short id, Date value, byte flags) {
+    default void writeMember(short id, LocalDateTime value, byte flags) {
         if (flags != IEntityMemberWriter.SF_NONE) {
             if (value != null) {
                 writeShort((short) (id | 8));
-                writeLong(value.getTime());
+                writeLong(DateTimeUtil.toEpochMilli(value));
             } else if ((flags & SF_WRITE_NULL) == SF_WRITE_NULL) {
                 writeShort((short) (id | IdUtil.STORE_FIELD_NULL_FLAG));
             }
         } else if (value != null) {
             writeShort(id);
-            writeLong(value.getTime());
+            writeLong(DateTimeUtil.toEpochMilli(value));
         }
     }
 

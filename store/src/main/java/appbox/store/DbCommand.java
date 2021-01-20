@@ -4,9 +4,11 @@ import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.logging.Log;
 import appbox.serialization.IEntityMemberWriter;
+import appbox.utils.DateTimeUtil;
 import com.github.jasync.sql.db.Connection;
 import com.github.jasync.sql.db.QueryResult;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -119,9 +121,9 @@ final class DbCommand implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, Date value, byte flags) {
+    public void writeMember(short id, LocalDateTime value, byte flags) {
         if (value != null)
-            addParameter(String.valueOf(value.getTime())); //暂转换为字符串，待检查
+            addParameter(DateTimeUtil.toDate(value)); //暂转换为Date，待检查
         else
             addParameter(null);
     }

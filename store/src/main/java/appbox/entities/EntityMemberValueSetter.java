@@ -4,7 +4,7 @@ import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.serialization.IEntityMemberReader;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -49,7 +49,7 @@ public final class EntityMemberValueSetter implements IEntityMemberReader {
     }
 
     @Override
-    public Date readDateMember(int flags) {
+    public LocalDateTime readDateMember(int flags) {
         throw new RuntimeException();
     }
 

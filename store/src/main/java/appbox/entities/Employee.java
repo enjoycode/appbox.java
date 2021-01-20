@@ -11,8 +11,8 @@ import appbox.serialization.IEntityMemberWriter;
 import appbox.store.EntityStore;
 import appbox.utils.IdUtil;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 public class Employee extends SysEntity {
@@ -28,11 +28,11 @@ public class Employee extends SysEntity {
     public static final KVFieldExpression ACCOUNT  = new KVFieldExpression(ACCOUNT_ID, DataFieldModel.DataFieldType.String);
     public static final KVFieldExpression PASSWORD = new KVFieldExpression(PASSWORD_ID, DataFieldModel.DataFieldType.Binary);
 
-    private String  _name;
-    private boolean _male;
-    private Date    _birthday;
-    private String  _account;
-    private byte[]  _password;
+    private String        _name;
+    private boolean       _male;
+    private LocalDateTime _birthday;
+    private String        _account;
+    private byte[]        _password;
 
     public String getName() {
         return _name;
@@ -57,11 +57,11 @@ public class Employee extends SysEntity {
 
     }
 
-    public Date getBirthday() {
+    public LocalDateTime getBirthday() {
         return _birthday;
     }
 
-    public void setBirthday(Date birthday) {
+    public void setBirthday(LocalDateTime birthday) {
         if (!birthday.equals(_birthday)) {
             this._birthday = birthday;
             onPropertyChanged(BIRTHDAY_ID);

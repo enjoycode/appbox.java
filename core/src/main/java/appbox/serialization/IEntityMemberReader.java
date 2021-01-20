@@ -5,7 +5,7 @@ package appbox.serialization;
 import appbox.data.Entity;
 import appbox.data.EntityId;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -27,7 +27,7 @@ public interface IEntityMemberReader {
 
     byte[] readBinaryMember(int flags);
 
-    Date readDateMember(int flags);
+    LocalDateTime readDateMember(int flags);
 
     EntityId readEntityIdMember(int flags);
 

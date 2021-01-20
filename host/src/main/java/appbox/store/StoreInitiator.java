@@ -15,8 +15,8 @@ import appbox.utils.IdUtil;
 import static appbox.model.entity.DataFieldModel.DataFieldType;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -166,7 +166,7 @@ public final class StoreInitiator {
         nameFiled.setLength(50);
         model.addSysMember(nameFiled, Workgroup.NAME_ID);
 
-       return model;
+        return model;
     }
 
     private static CompletableFuture<ApplicationModel> createAppAsync() {
@@ -257,14 +257,14 @@ public final class StoreInitiator {
         admin.setAccount("Admin");
         admin.setPassword(new byte[0]);//todo 加密工具类
         admin.setMale(true);
-        admin.setBirthday(new Date());
+        admin.setBirthday(LocalDateTime.of(1977, 1, 27, 8, 8));
 
         var test = new Employee();
         test.setName("Test");
         test.setAccount("Test");
         test.setPassword(new byte[0]);//todo 加密工具类
         test.setMale(false);
-        test.setBirthday(new Date());
+        test.setBirthday(LocalDateTime.of(1979, 12, 4, 8, 8));
         //新建默认组织单元
         var itdept = new Workgroup();
         itdept.setName("IT Dept");
@@ -293,13 +293,13 @@ public final class StoreInitiator {
         testou.setParent(itdeptou);
 
         return EntityStore.insertEntityAsync(defaultEnterprise, txn)
-                .thenCompose(r->EntityStore.insertEntityAsync(admin, txn))
-                .thenCompose(r->EntityStore.insertEntityAsync(test, txn))
-                .thenCompose(r->EntityStore.insertEntityAsync(itdept, txn))
-                .thenCompose(r->EntityStore.insertEntityAsync(entou, txn))
-                .thenCompose(r->EntityStore.insertEntityAsync(itdeptou, txn))
-                .thenCompose(r->EntityStore.insertEntityAsync(adminou, txn))
-                .thenCompose(r->EntityStore.insertEntityAsync(testou, txn));
+                .thenCompose(r -> EntityStore.insertEntityAsync(admin, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(test, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(itdept, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(entou, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(itdeptou, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(adminou, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(testou, txn));
     }
 
 }

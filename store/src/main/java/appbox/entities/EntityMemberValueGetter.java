@@ -4,7 +4,7 @@ import appbox.data.Entity;
 import appbox.data.EntityId;
 import appbox.serialization.IEntityMemberWriter;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,7 +58,7 @@ public final class EntityMemberValueGetter implements IEntityMemberWriter {
     }
 
     @Override
-    public void writeMember(short id, Date value, byte flags) {
+    public void writeMember(short id, LocalDateTime value, byte flags) {
         this.value = value;
     }
 

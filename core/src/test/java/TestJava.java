@@ -1,10 +1,34 @@
+import appbox.utils.DateTimeUtil;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestJava {
+
+    @Test
+    public void testDateTime() {
+        var time1 = LocalDateTime.now();
+        long secs = time1.toEpochSecond(ZoneOffset.UTC);
+        var ms = time1.toInstant(ZoneOffset.UTC).toEpochMilli();
+        var instant = Instant.ofEpochMilli(ms);
+        var local = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+        var time2 = LocalDateTime.ofEpochSecond(secs, time1.getNano(), ZoneOffset.UTC);
+        assertEquals(time1, time2);
+    }
+
+    @Test
+    public void testDateTimeUtil() {
+        var time1 = LocalDateTime.now();
+        long mm = DateTimeUtil.toEpochMilli(time1);
+        var time2 = DateTimeUtil.fromEpochMilli(mm);
+    }
 
     @Test
     public void testReflection() {
