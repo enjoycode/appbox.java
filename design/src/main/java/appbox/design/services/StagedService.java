@@ -105,21 +105,19 @@ public final class StagedService {
         }
     }
 
-    //public static CompletableFuture<String> loadViewRuntimeCode(long viewModelId) {
-    //    var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
-    //    var q = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID,StagedModel.class);
-    //    q.where(StagedModel.TYPE.eq(StagedType.ViewRuntimeCode.value)
-    //            .and(StagedModel.MODEL.eq(Long.toUnsignedString(viewModelId)))
-    //            .and(StagedModel.DEVELOPER.eq(developerID)));
-    //    return q.toListAsync().thenCompose(r -> {
-    //        if (ObjectUtils.isEmpty(r)) {
-    //            return CompletableFuture.completedFuture(null);
-    //        } else {
-    //            String str=ModelCodeUtil.decodeViewRuntimeCode(r.get(0).getData());
-    //            return CompletableFuture.completedFuture(str);
-    //        }
-    //    });
-    //}
+    public static CompletableFuture<String> loadViewRuntimeCode(long viewModelId) {
+        var developerID = RuntimeContext.current().currentSession().leafOrgUnitId();
+        var q           = new TableScan<>(IdUtil.SYS_STAGED_MODEL_ID, StagedModel.class);
+        q.where(StagedModel.TYPE.eq(StagedType.ViewRuntimeCode.value)
+                .and(StagedModel.MODEL.eq(Long.toUnsignedString(viewModelId)))
+                .and(StagedModel.DEVELOPER.eq(developerID)));
+        return q.toListAsync().thenApply(r -> {
+            if (r == null || r.size() == 0)
+                return null;
+
+            return ModelCodeUtil.decodeViewRuntimeCode(r.get(0).getData());
+        });
+    }
 
     private static CompletableFuture<Void> saveAsync(StagedType type, String modelIdString, byte[] data) {
         var developerId = RuntimeContext.current().currentSession().leafOrgUnitId();

@@ -77,7 +77,7 @@ public final class ModelCodeUtil {
         out.writeVariant(styleCodeBytes != null ? styleCodeBytes.length : 0);
         //再写入压缩的utf8
         try {
-            try(var compress = BrotliUtil.makeCompressStream(out)) {
+            try (var compress = BrotliUtil.makeCompressStream(out)) {
                 compress.write(templateCodeBytes);
                 compress.write(scriptCodeBytes);
                 if (styleCodeBytes != null)
@@ -88,6 +88,34 @@ public final class ModelCodeUtil {
         }
 
         return out.toByteArray();
+    }
+
+    public static ViewCode decodeViewCode(byte[] data) {
+        var viewCode = new ViewCode();
+
+        var input = new BytesInputStream(data);
+        //读压缩类型
+        input.readByte();
+        //读取utf8编码后的长度
+        var templateCodeLen = input.readVariant();
+        var scriptCodeLen   = input.readVariant();
+        var styleCodeLen    = input.readVariant();
+        try {
+            try (var decompress = BrotliUtil.makeDecompressStream(input)) {
+                byte[] utf8data = decompress.readNBytes(templateCodeLen);
+                viewCode.Template = new String(utf8data, StandardCharsets.UTF_8);
+                utf8data          = decompress.readNBytes(scriptCodeLen);
+                viewCode.Script   = new String(utf8data, StandardCharsets.UTF_8);
+                if (styleCodeLen > 0) {
+                    utf8data       = decompress.readNBytes(styleCodeLen);
+                    viewCode.Style = new String(utf8data, StandardCharsets.UTF_8);
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        return viewCode;
     }
 
     public static byte[] encodeViewRuntimeCode(String runtimeCode) {
@@ -104,32 +132,17 @@ public final class ModelCodeUtil {
         return out.toByteArray();
     }
 
-    public static ViewCode decodeViewCode(byte[] data) {
-        var viewCode = new ViewCode();
+    public static String decodeViewRuntimeCode(byte[] data) {
+        var input = new ByteArrayInputStream(data);
+        //读压缩类型, TODO:检查类型或根据类型解压缩
+        var compressType = input.read();
 
-        var input = new BytesInputStream(data);
-        //读压缩类型
-        input.readByte();
-        //读取utf8编码后的长度
-        var templateCodeLen = input.readVariant();
-        var scriptCodeLen = input.readVariant();
-        var styleCodeLen = input.readVariant();
         try {
-            try (var decompress = BrotliUtil.makeDecompressStream(input)) {
-                byte[] utf8data = decompress.readNBytes(templateCodeLen);
-                viewCode.Template = new String(utf8data, StandardCharsets.UTF_8);
-                utf8data = decompress.readNBytes(scriptCodeLen);
-                viewCode.Script = new String(utf8data, StandardCharsets.UTF_8);
-                if (styleCodeLen > 0){
-                    utf8data = decompress.readNBytes(styleCodeLen);
-                    viewCode.Style = new String(utf8data, StandardCharsets.UTF_8);
-                }
-            }
+            var utf8data = BrotliUtil.decompressFrom(input);
+            return new String(utf8data, StandardCharsets.UTF_8);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-
-        return viewCode;
     }
 
 }

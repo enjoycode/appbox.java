@@ -3,6 +3,7 @@ package appbox.store;
 import appbox.channel.messages.*;
 import appbox.logging.Log;
 import appbox.model.*;
+import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
 
 import java.util.concurrent.CompletableFuture;
@@ -173,6 +174,13 @@ public final class ModelStore {
         var req = new KVGetModelCodeRequest(modelId);
         return SysStoreApi.execKVGetAsync(req, new KVGetModelCodeResponse())
                 .thenApply(r -> (ViewCode) r.sourceCode);
+    }
+
+    /** 加载视图模型的运行时代码，已解码为字符串 */
+    public static CompletableFuture<String> loadViewAssemblyAsync(String asmName) {
+        var req = new KVGetAssemblyRequest(false, asmName);
+        return SysStoreApi.execKVGetAsync(req, new KVGetAssemblyResponse())
+                .thenApply(response -> ModelCodeUtil.decodeViewRuntimeCode(response.getAssemblyData()));
     }
 
     //endregion

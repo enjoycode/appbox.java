@@ -6,6 +6,7 @@ import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.*;
 import appbox.design.handlers.store.NewDataStore;
 import appbox.design.handlers.store.SaveDataStore;
+import appbox.design.handlers.view.LoadView;
 import appbox.design.handlers.view.NewViewModel;
 import appbox.design.handlers.view.OpenViewModel;
 import appbox.runtime.IService;
@@ -50,6 +51,7 @@ public final class DesignService implements IService {
         //----view----
         put("NewViewModel", new NewViewModel());
         put("OpenViewModel", new OpenViewModel());
+        put("LoadView", new LoadView());
         //----Permission----
         put("NewPermissionModel", new NewPermissionModel());
     }};
