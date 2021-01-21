@@ -102,6 +102,12 @@ public interface IInputStream extends IEntityMemberReader {
         return new UUID(readLong(), readLong());
     }
 
+    default EntityId readEntityId() {
+        var res = new EntityId(); //TODO:new empty EntityId
+        res.readFrom(this);
+        return res;
+    }
+
     default int readVariant() {
         int data = readNativeVariant();
         return -(data & 1) ^ ((data >>> 1) & 0x7fffffff);

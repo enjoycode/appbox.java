@@ -133,11 +133,8 @@ public final class InvokeArgs implements IInputStream {
         var payloadType = readByte();
         if (payloadType == PayloadType.Null)
             return null;
-        if (payloadType == PayloadType.EntityId) {
-            var res = new EntityId(); //TODO:empty
-            res.readFrom(this);
-            return res;
-        }
+        if (payloadType == PayloadType.EntityId)
+            return readEntityId();
         if (payloadType == PayloadType.String) { //特殊处理前端base64编码的字符串
             int len = readVariant(); //跳过长度
             if (len != 22)
@@ -163,6 +160,22 @@ public final class InvokeArgs implements IInputStream {
             return obj;
         }
         throw new RuntimeException("PayloadType Error");
+    }
+
+    public EntityId[] getArrayOfEntityId() {
+        //TODO:暂只实现前端传回的格式
+        var payloadType = readByte();
+        if (payloadType != PayloadType.Array)
+            throw new RuntimeException("PayloadType Error: " + payloadType);
+        var elementType = readByte();
+        if (elementType != PayloadType.Object)
+            throw new RuntimeException("Array element type Error: " + elementType);
+        var size = readVariant();
+        var array = new EntityId[size];
+        for (int i = 0; i < size; i++) {
+            array[i] = getEntityId();
+        }
+        return array;
     }
     //endregion
 
