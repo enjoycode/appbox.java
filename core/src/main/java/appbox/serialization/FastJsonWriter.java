@@ -47,6 +47,7 @@ public final class FastJsonWriter implements IJsonWriter {
         this.writer.config(feature, state);
     }
 
+    @Override
     public void startObject() {
         if (context != null) {
             beginStructure();
@@ -55,17 +56,30 @@ public final class FastJsonWriter implements IJsonWriter {
         writer.write('{');
     }
 
+    @Override
     public void endObject() {
         writer.write('}');
         endStructure();
     }
 
+    @Override
     public void writeKey(String key) {
         writeObject(key);
     }
 
+    @Override
     public void writeValue(Object object) {
         writeObject(object);
+    }
+
+    @Override
+    public void writeBase64Data(byte[] data) {
+        //TODO:寻找更好的写入方法
+        writer.write('\"');
+        for (int i = 0; i < data.length; i++) {
+            writer.write(data[i]);
+        }
+        writer.write('\"');
     }
 
     public void writeObject(String object) {
@@ -82,6 +96,7 @@ public final class FastJsonWriter implements IJsonWriter {
         afterWrite();
     }
 
+    @Override
     public void startArray() {
         if (context != null) {
             beginStructure();
@@ -109,6 +124,7 @@ public final class FastJsonWriter implements IJsonWriter {
         }
     }
 
+    @Override
     public void endArray() {
         writer.write(']');
         endStructure();

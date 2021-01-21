@@ -18,6 +18,8 @@ public interface IJsonWriter extends Closeable, Flushable {
 
     void writeValue(Object object);
 
+    void writeBase64Data(byte[] data);
+
     default void writeKeyValue(String key, Object value) {
         writeKey(key);
         writeValue(value);

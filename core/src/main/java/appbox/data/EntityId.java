@@ -143,7 +143,7 @@ public final class EntityId implements IBinSerializable, IJsonSerializable {
 
     @Override
     public void writeToJson(IJsonWriter writer) {
-       final var base64 = Base64.getEncoder().withoutPadding().encode(_data);
-       writer.writeValue(base64);
+        final var base64 = Base64.getEncoder().withoutPadding().encode(_data);
+        writer.writeBase64Data(base64);
     }
 }
