@@ -23,6 +23,9 @@ public abstract class Entity implements IBinSerializable {
     //region ====Serialization====
     @Override
     public void writeTo(IOutputStream bs) {
+        //先加入已序列化列表
+        bs.addToSerialized(this);
+
         bs.writeLong(_modelId);
 
         //write members

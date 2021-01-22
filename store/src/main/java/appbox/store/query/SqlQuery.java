@@ -297,7 +297,7 @@ public class SqlQuery<T extends SqlEntity> extends SqlQueryBase implements ISqlS
 
     /**
      * 返回树状结构的实体集合
-     * @param childrenMember eg: q.t.m("Children")
+     * @param childrenMember eg: q ->q.m("Children")
      */
     public CompletableFuture<List<T>> toTreeAsync(Function<SqlQuery<T>, Expression> childrenMember) {
         var         children      = (EntitySetExpression) childrenMember.apply(this);

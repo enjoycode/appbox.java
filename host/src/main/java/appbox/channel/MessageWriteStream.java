@@ -1,12 +1,14 @@
 package appbox.channel;
 
 import appbox.cache.ObjectPool;
-import appbox.logging.Log;
+import appbox.data.Entity;
 import appbox.serialization.IOutputStream;
 import com.sun.jna.Pointer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 消息发送流, 注意目前实现边写边发
@@ -27,15 +29,18 @@ final class MessageWriteStream extends OutputStream implements IOutputStream /*�
     public static void backToPool(MessageWriteStream obj) {
         obj._sender = Pointer.NULL;
         obj._first  = Pointer.NULL;
+        if (obj._serializedList != null)
+            obj._serializedList.clear();
         pool.back(obj);
     }
     //endregion
 
 
-    private final byte[]  _buf = new byte[NativeSmq.CHUNK_SIZE];
-    private       int     _index;
-    private       Pointer _sender;
-    private       Pointer _first;
+    private final byte[]       _buf = new byte[NativeSmq.CHUNK_SIZE];
+    private       int          _index;
+    private       Pointer      _sender;
+    private       Pointer      _first;
+    private       List<Entity> _serializedList;
 
     private void initChunk(byte msgType, int msgId, long sourceId, byte msgFlag) {
         _index = NativeSmq.CHUNK_HEAD_SIZE;
@@ -134,5 +139,23 @@ final class MessageWriteStream extends OutputStream implements IOutputStream /*�
             sendChunk(false, false);
             write(src, offset, count);
         }
+    }
+
+    @Override
+    public int getSerializedIndex(Entity obj) {
+        if (_serializedList == null || _serializedList.size() == 0)
+            return -1;
+        for (int i = _serializedList.size() - 1; i >= 0; i--) {
+            if (_serializedList.get(i) == obj)
+                return i;
+        }
+        return -1;
+    }
+
+    @Override
+    public void addToSerialized(Entity obj) {
+        if (_serializedList == null)
+            _serializedList = new ArrayList<>();
+        _serializedList.add(obj);
     }
 }

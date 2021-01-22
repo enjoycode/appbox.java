@@ -215,7 +215,8 @@ public final class DataFieldModel extends EntityMemberModel {
         }
 
         if (_defaultValue != null) {
-            bs.serialize(_defaultValue, 4);
+            bs.writeVariant(4);
+            bs.serialize(_defaultValue);
         }
 
         bs.writeBoolField(_isDataTypeChanged, 7);
@@ -232,26 +233,19 @@ public final class DataFieldModel extends EntityMemberModel {
             propIndex = bs.readVariant();
             switch (propIndex) {
                 case 1:
-                    _dataType = DataFieldType.fromValue(bs.readByte());
-                    break;
+                    _dataType = DataFieldType.fromValue(bs.readByte()); break;
                 case 2:
-                    _isForeignKey = bs.readBool();
-                    break;
+                    _isForeignKey = bs.readBool(); break;
                 case 3:
-                    _enumModelId = bs.readLong();
-                    break;
+                    _enumModelId = bs.readLong(); break;
                 case 4:
-                    _defaultValue = bs.deserialize();
-                    break;
+                    _defaultValue = bs.deserialize(); break;
                 case 5:
-                    _length = bs.readVariant();
-                    break;
+                    _length = bs.readVariant(); break;
                 case 6:
-                    _decimals = bs.readVariant();
-                    break;
+                    _decimals = bs.readVariant(); break;
                 case 7:
-                    _isDataTypeChanged = bs.readBool();
-                    break;
+                    _isDataTypeChanged = bs.readBool(); break;
                 case 0:
                     break;
                 default:

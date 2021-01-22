@@ -16,14 +16,15 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     /** 写入原始数据 */
     void write(byte[] src, int offset, int count);
+
+    /** 获取已经序列化的实体索引号,不存在返回-1 */
+    int getSerializedIndex(Entity obj);
+
+    /** 将实体加入已序列化列表 */
+    void addToSerialized(Entity obj);
     //endregion
 
     //region ====Serialize(写入类型信息头) Methods====
-    default void serialize(Object obj, int fieldId) {
-        writeVariant(fieldId);
-        serialize(obj);
-    }
-
     default void serialize(Object obj) {
         if (obj == null) {
             writeByte(PayloadType.Null);
@@ -35,8 +36,7 @@ public interface IOutputStream extends IEntityMemberWriter {
             writeByte(PayloadType.BooleanFalse);
             return;
         } else if (obj instanceof Entity) {
-            writeByte(PayloadType.Entity);
-            ((Entity) obj).writeTo(this);
+            serialize((Entity) obj);
             return;
         }
 
@@ -81,6 +81,23 @@ public interface IOutputStream extends IEntityMemberWriter {
         }
         writeByte(PayloadType.String);
         writeString(obj);
+    }
+
+    default void serialize(Entity obj) {
+        if (obj == null) {
+            writeByte(PayloadType.Null);
+            return;
+        }
+
+        //判断是否已经序列化过(解决实体循环引用)
+        var index = getSerializedIndex(obj);
+        if (index < 0) {
+            writeByte(PayloadType.Entity);
+            obj.writeTo(this);
+        } else {
+            writeByte(PayloadType.ObjectRef);
+            writeVariant(index);
+        }
     }
     //endregion
 
@@ -481,14 +498,13 @@ public interface IOutputStream extends IEntityMemberWriter {
 
     @Override
     default void writeMember(short id, Entity value, byte flags) {
-        if (flags != IEntityMemberWriter.SF_NONE) { //不往存储流写入
+        if (flags != IEntityMemberWriter.SF_NONE) //不往存储流写入
             return;
-        }
         if (value == null)
             return;
 
         writeShort(id);
-        value.writeTo(this);
+        serialize(value); //注意写入类型且判断是否已序列化
     }
 
     @Override

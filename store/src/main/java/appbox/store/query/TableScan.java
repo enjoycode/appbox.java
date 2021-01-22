@@ -104,6 +104,7 @@ public final class TableScan<T extends SysEntity> extends KVScan {
         }
     }
 
+    //TODO: 参数Function<T,EntityId> getFK, BiComsumer<T,T> setParent
     public CompletableFuture<List<T>> toTreeAsync(Function<TableScan<T>, Expression> childrenMember) {
         filter = null; //TODO:暂忽略条件
 

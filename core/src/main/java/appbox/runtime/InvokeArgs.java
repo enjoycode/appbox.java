@@ -7,7 +7,9 @@ import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.serialization.PayloadType;
 
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.function.Supplier;
 
 public final class InvokeArgs implements IInputStream {
@@ -17,6 +19,7 @@ public final class InvokeArgs implements IInputStream {
 
         private BytesSegment _current;
         private int          _pos;
+        private List<Entity> _serializedList;
 
         private Maker() {
             _current = BytesSegment.rent();
@@ -68,6 +71,24 @@ public final class InvokeArgs implements IInputStream {
                 createSegment();
                 write(src, offset, count);
             }
+        }
+
+        @Override
+        public int getSerializedIndex(Entity obj) {
+            if (_serializedList == null || _serializedList.size() == 0)
+                return -1;
+            for (int i = _serializedList.size() - 1; i >= 0; i--) {
+                if (_serializedList.get(i) == obj)
+                    return i;
+            }
+            return -1;
+        }
+
+        @Override
+        public void addToSerialized(Entity obj) {
+            if (_serializedList == null)
+                _serializedList = new ArrayList<>();
+            _serializedList.add(obj);
         }
         //endregion
     }
