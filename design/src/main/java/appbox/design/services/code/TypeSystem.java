@@ -62,7 +62,8 @@ public final class TypeSystem {
             "SqlDeleteCommand.java",
             "DbFunc.java",
             "Authorize.java",
-            "TableScan.java"
+            "TableScan.java",
+            "KVTransaction.java"
     };
     //endregion
 
