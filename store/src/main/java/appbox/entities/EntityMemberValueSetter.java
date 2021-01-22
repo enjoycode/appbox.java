@@ -15,52 +15,52 @@ public final class EntityMemberValueSetter implements IEntityMemberReader {
 
     @Override
     public String readStringMember(int flags) {
-        throw new RuntimeException();
+        return (String) value;
     }
 
     @Override
     public boolean readBoolMember(int flags) {
-        throw new RuntimeException();
+        return (boolean) value;
     }
 
     @Override
     public int readIntMember(int flags) {
-        throw new RuntimeException();
+        return (int) value;
     }
 
     @Override
     public byte readByteMember(int flags) {
-        throw new RuntimeException();
+        return (byte) value;
     }
 
     @Override
     public long readLongMember(int flags) {
-        throw new RuntimeException();
+        return (long) value;
     }
 
     @Override
     public UUID readUUIDMember(int flags) {
-        throw new RuntimeException();
+        return (UUID) value;
     }
 
     @Override
     public byte[] readBinaryMember(int flags) {
-        throw new RuntimeException();
+        return (byte[]) value;
     }
 
     @Override
     public LocalDateTime readDateMember(int flags) {
-        throw new RuntimeException();
+        return (LocalDateTime) value;
     }
 
     @Override
     public EntityId readEntityIdMember(int flags) {
-        throw new RuntimeException();
+        return (EntityId) value;
     }
 
     @Override
     public <T extends Entity> T readRefMember(int flags, Supplier<T> creator) {
-        throw new RuntimeException();
+        return (T) value;
     }
 
     @Override

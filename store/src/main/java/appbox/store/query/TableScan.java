@@ -2,11 +2,10 @@ package appbox.store.query;
 
 import appbox.channel.messages.KVScanEntityRequest;
 import appbox.channel.messages.KVScanEntityResponse;
-import appbox.data.EntityId;
-import appbox.data.SqlEntity;
 import appbox.data.SysEntity;
 import appbox.data.SysEntityKVO;
 import appbox.entities.EntityMemberValueGetter;
+import appbox.entities.EntityMemberValueSetter;
 import appbox.expressions.EntityExpression;
 import appbox.expressions.EntityPathExpression;
 import appbox.expressions.EntitySetExpression;
@@ -15,6 +14,7 @@ import appbox.model.EntityModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
 import appbox.runtime.RuntimeContext;
+import appbox.serialization.IEntityMemberReader;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.store.EntityStore;
 import appbox.store.ReadonlyTransaction;
@@ -115,6 +115,7 @@ public final class TableScan<T extends SysEntity> extends KVScan {
 
             var tree   = new ArrayList<T>(list.size());
             var getter = new EntityMemberValueGetter();
+            var setter = new EntityMemberValueSetter();
             //TODO:暂简单实现，待优化为排序后处理
             for (var obj : list) {
                 obj.writeMember(treeParentMember.getFKMemberIds()[0], getter, IEntityMemberWriter.SF_NONE);
@@ -124,7 +125,10 @@ public final class TableScan<T extends SysEntity> extends KVScan {
                 } else {
                     var parent = list.stream().filter(t -> t.id().equals(fk)).findFirst();
                     if (parent.isPresent()) {
-                        //TODO:*** set child.Parent = parent
+                        //Set child.Parent = parent
+                        setter.value = parent.get();
+                        obj.readMember(treeParentMember.memberId(), setter, IEntityMemberReader.SF_NONE);
+                        //Add child to Parent's children list
                         @SuppressWarnings("unchecked")
                         var childrenList = (List<T>) parent.get().getNaviPropForFetch(childrenModel.name());
                         childrenList.add(obj);
