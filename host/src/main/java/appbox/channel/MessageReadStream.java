@@ -2,9 +2,13 @@ package appbox.channel;
 
 import appbox.cache.BytesSegment;
 import appbox.cache.ObjectPool;
+import appbox.data.Entity;
 import appbox.runtime.InvokeArgs;
 import appbox.serialization.IInputStream;
 import com.sun.jna.Pointer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 消息读取流，用于从消息链中读取完整消息
@@ -21,14 +25,17 @@ public final class MessageReadStream implements IInputStream {
     }
 
     public static void backToPool(MessageReadStream obj) {
+        if (obj._deserialized != null)
+            obj._deserialized.clear();
         pool.back(obj);
     }
     //endregion
 
-    private Pointer _curChunk;
-    private Pointer _dataPtr;
-    private int     _dataLen;
-    private int     _index;
+    private Pointer      _curChunk;
+    private Pointer      _dataPtr;
+    private int          _dataLen;
+    private int          _index;
+    private List<Entity> _deserialized;
 
     protected void reset(Pointer first) {
         _curChunk = first;
@@ -123,4 +130,17 @@ public final class MessageReadStream implements IInputStream {
         }
         return IInputStream.super.readShort();
     }
+
+    @Override
+    public void addToDeserialized(Entity obj) {
+        if (_deserialized == null)
+            _deserialized = new ArrayList<>();
+        _deserialized.add(obj);
+    }
+
+    @Override
+    public Entity getDeserialized(int index) {
+        return _deserialized.get(index);
+    }
+
 }

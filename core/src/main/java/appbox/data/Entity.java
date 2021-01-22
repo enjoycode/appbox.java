@@ -38,6 +38,9 @@ public abstract class Entity implements IBinSerializable {
 
     @Override
     public void readFrom(IInputStream bs) {
+        //先加入已反序列化列表
+        bs.addToDeserialized(this);
+
         _modelId = bs.readLong();
 
         //read members

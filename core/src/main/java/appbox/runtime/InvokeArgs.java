@@ -100,6 +100,7 @@ public final class InvokeArgs implements IInputStream {
 
     private BytesSegment _current;
     private int          _pos;
+    private List<Entity> _deserialized;
 
     public InvokeArgs(BytesSegment first) {
         if (first == null || first.first() != first)
@@ -191,7 +192,7 @@ public final class InvokeArgs implements IInputStream {
         var elementType = readByte();
         if (elementType != PayloadType.Object)
             throw new RuntimeException("Array element type Error: " + elementType);
-        var size = readVariant();
+        var size  = readVariant();
         var array = new EntityId[size];
         for (int i = 0; i < size; i++) {
             array[i] = getEntityId();
@@ -246,6 +247,18 @@ public final class InvokeArgs implements IInputStream {
             temp = temp.next();
         }
         return remaining;
+    }
+
+    @Override
+    public void addToDeserialized(Entity obj) {
+        if (_deserialized == null)
+            _deserialized = new ArrayList<>();
+        _deserialized.add(obj);
+    }
+
+    @Override
+    public Entity getDeserialized(int index) {
+        return _deserialized.get(index);
     }
     //endregion
 

@@ -24,6 +24,12 @@ public interface IInputStream extends IEntityMemberReader {
      * 流内剩余字节数
      */
     int remaining();
+
+    /** 添加已反序列化列表，用于解决实体循环引用 */
+    void addToDeserialized(Entity obj);
+
+    /** 根据序号获取已序列化的实体 */
+    Entity getDeserialized(int index);
     //endregion
 
     //region ====Deserialize====
@@ -32,7 +38,7 @@ public interface IInputStream extends IEntityMemberReader {
         if (payloadType == PayloadType.Null) return null;
         else if (payloadType == PayloadType.BooleanTrue) return Boolean.TRUE;
         else if (payloadType == PayloadType.BooleanFalse) return Boolean.FALSE;
-        else if (payloadType == PayloadType.ObjectRef) throw new RuntimeException("TODO");
+        else if (payloadType == PayloadType.ObjectRef) return getDeserialized(readVariant());
 
         TypeSerializer serializer = null;
         if (payloadType == PayloadType.ExtKnownType) throw new RuntimeException("TODO");
