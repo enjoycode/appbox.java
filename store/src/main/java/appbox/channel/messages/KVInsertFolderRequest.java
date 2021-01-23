@@ -3,7 +3,7 @@ package appbox.channel.messages;
 import appbox.model.ModelFolder;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVInsertFolderRequest extends KVInsertRequire {
 
@@ -14,7 +14,7 @@ public final class KVInsertFolderRequest extends KVInsertRequire {
 
         this.folder = folder;
 
-        raftGroupId    = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId    = KVUtil.META_RAFTGROUP_ID;
         schemaVersion  = 0;
         dataCF         = -1;
         overrideExists = true;
@@ -25,7 +25,7 @@ public final class KVInsertFolderRequest extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeFolderKey(bs, folder.appId(), folder.targetModelType(), true);
+        KVUtil.writeFolderKey(bs, folder.appId(), folder.targetModelType(), true);
         //refs
         bs.writeVariant(0);
         //data

@@ -4,7 +4,7 @@ import appbox.expressions.KVFieldExpression;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IOutputStream;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVGetIndexRequest extends KVGetRequest {
 
@@ -25,11 +25,11 @@ public final class KVGetIndexRequest extends KVGetRequest {
     public void writeTo(IOutputStream bs) {
         bs.writeInt(0);                     //ReqId占位
         bs.writeLong(_raftGroupId);               //raftGroupId
-        bs.writeByte(KeyUtil.INDEXCF_INDEX);      //dataCF
+        bs.writeByte(KVUtil.INDEXCF_INDEX);      //dataCF
         bs.writeLong(0);                    //timestamp
 
         //最后写入不带长度信息的Key
-        KeyUtil.writeRaftGroupId(bs, _raftGroupId); //key's EntityId's part1
+        KVUtil.writeRaftGroupId(bs, _raftGroupId); //key's EntityId's part1
         bs.writeByte(_indexModel.indexId());        //key's index id
         //写入各字段值,注意MemberId写入排序标记
         for (int i = 0; i < _indexModel.fields().length; i++) {

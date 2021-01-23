@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVDeleteModelCodeRequest extends KVDeleteRequest {
 
@@ -13,7 +13,7 @@ public final class KVDeleteModelCodeRequest extends KVDeleteRequest {
 
         _modelId = modelId;
 
-        raftGroupId   = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId   = KVUtil.META_RAFTGROUP_ID;
         schemaVersion = 0;
         returnExists  = false;
         dataCF        = -1;
@@ -27,6 +27,6 @@ public final class KVDeleteModelCodeRequest extends KVDeleteRequest {
         bs.writeVariant(0);
 
         //key(不带长度)
-        KeyUtil.writeModelCodeKey(bs, _modelId, false);
+        KVUtil.writeModelCodeKey(bs, _modelId, false);
     }
 }

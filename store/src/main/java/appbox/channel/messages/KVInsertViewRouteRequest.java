@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVInsertViewRouteRequest extends KVInsertRequire {
 
@@ -15,7 +15,7 @@ public final class KVInsertViewRouteRequest extends KVInsertRequire {
         this.viewName = viewName;
         this.path     = path;
 
-        raftGroupId    = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId    = KVUtil.META_RAFTGROUP_ID;
         schemaVersion  = 0;
         dataCF         = -1;
         overrideExists = true;
@@ -26,7 +26,7 @@ public final class KVInsertViewRouteRequest extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        bs.writeByte(KeyUtil.METACF_VIEW_ROUTE_PREFIX);
+        bs.writeByte(KVUtil.METACF_VIEW_ROUTE_PREFIX);
         bs.writeUtf8(viewName);
         //refs
         bs.writeVariant(0);

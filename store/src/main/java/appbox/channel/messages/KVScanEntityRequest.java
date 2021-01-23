@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.expressions.Expression;
 import appbox.serialization.IOutputStream;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 /** 扫描表分区请求 */
 public final class KVScanEntityRequest extends KVScanRequest {
@@ -25,9 +25,9 @@ public final class KVScanEntityRequest extends KVScanRequest {
         bs.writeLong(raftGroupId); //raftGroupId
 
         //暂没有CreateTime谓词使用前缀匹配方式
-        bs.writeNativeVariant(KeyUtil.ENTITY_KEY_SIZE - 10); //BeginKeySize
+        bs.writeNativeVariant(KVUtil.ENTITY_KEY_SIZE - 10); //BeginKeySize
         //写入分区前缀，与EntityId.initRaftGroupId一致
-        KeyUtil.writeRaftGroupId(bs, raftGroupId);
+        KVUtil.writeRaftGroupId(bs, raftGroupId);
 
         bs.writeNativeVariant(0); //EndKeySize
 

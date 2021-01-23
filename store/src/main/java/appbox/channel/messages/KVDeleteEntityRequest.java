@@ -5,7 +5,7 @@ import appbox.model.EntityModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 import java.util.List;
 
@@ -44,6 +44,6 @@ public final class KVDeleteEntityRequest extends KVDeleteRequest {
         }
 
         //key 不带长度信息
-        KeyUtil.writeEntityKey(bs, _id, false);
+        KVUtil.writeEntityKey(bs, _id, false);
     }
 }

@@ -91,7 +91,7 @@ public final class KVTransaction implements IKVTransaction, /*IEntityMemberWrite
             _tempTargetId = KVRowReader.readEntityId(rowData, entityRef.getFKMemberIds()[0]);
             if (_tempTargetId == null)
                 return;
-            int fromTableId = KeyUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
+            int fromTableId = KVUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
 
             addEntityRefInternal(_tempTargetId, fromEntityId.raftGroupId(), fromTableId, -1);
         }
@@ -108,7 +108,7 @@ public final class KVTransaction implements IKVTransaction, /*IEntityMemberWrite
             _tempTargetId = (EntityId) _memberValueGetter.value;
             if (_tempTargetId == null)
                 return;
-            int fromTableId = KeyUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
+            int fromTableId = KVUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
 
             addEntityRefInternal(_tempTargetId, fromEntity.id().raftGroupId(), fromTableId, 1);
         }

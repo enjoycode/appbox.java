@@ -1,7 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVGetModelCodeRequest extends KVGetRequest {
     private final long modelId;
@@ -13,9 +13,9 @@ public final class KVGetModelCodeRequest extends KVGetRequest {
     @Override
     public void writeTo(IOutputStream bs) {
         bs.writeInt(0); //ReqId占位
-        bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
+        bs.writeLong(KVUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeByte((byte) -1);    //dataCF
         bs.writeLong(0);      //timestamp
-        KeyUtil.writeModelCodeKey(bs, modelId, false); //key
+        KVUtil.writeModelCodeKey(bs, modelId, false); //key
     }
 }

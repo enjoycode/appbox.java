@@ -135,6 +135,10 @@ public final class EntityStore { //TODO: rename to SysStore
     }
     //endregion insert
 
+    //region ----Update----
+
+    //endregion
+
     //region ----Delete----
     public static CompletableFuture<Void> deleteEntityAsync(SysEntity entity) {
         if (entity == null)

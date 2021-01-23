@@ -7,7 +7,7 @@ import appbox.model.entity.EntityRefModel;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeEntityKey(bs, _entity.id(), true);
+        KVUtil.writeEntityKey(bs, _entity.id(), true);
 
         //refs 暂存储层是字符串，实际是short数组
         int refsSize = 0;

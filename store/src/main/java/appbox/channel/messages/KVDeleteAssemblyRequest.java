@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVDeleteAssemblyRequest extends KVDeleteRequest {
 
@@ -15,7 +15,7 @@ public final class KVDeleteAssemblyRequest extends KVDeleteRequest {
         _asmName   = asmName;
         _isService = isService;
 
-        raftGroupId   = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId   = KVUtil.META_RAFTGROUP_ID;
         schemaVersion = 0;
         returnExists  = false;
         dataCF        = -1;
@@ -29,6 +29,6 @@ public final class KVDeleteAssemblyRequest extends KVDeleteRequest {
         bs.writeVariant(0);
 
         //key(不带长度)
-        KeyUtil.writeAssemblyKey(bs, _isService, _asmName, false);
+        KVUtil.writeAssemblyKey(bs, _isService, _asmName, false);
     }
 }

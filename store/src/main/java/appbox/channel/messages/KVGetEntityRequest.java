@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.data.EntityId;
 import appbox.serialization.IOutputStream;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVGetEntityRequest extends KVGetRequest {
     private final EntityId entityId;
@@ -17,6 +17,6 @@ public final class KVGetEntityRequest extends KVGetRequest {
         bs.writeLong(entityId.raftGroupId()); //raftGroupId
         bs.writeByte((byte) -1);    //dataCF
         bs.writeLong(0);      //timestamp
-        KeyUtil.writeEntityKey(bs, entityId, false); //key
+        KVUtil.writeEntityKey(bs, entityId, false); //key
     }
 }

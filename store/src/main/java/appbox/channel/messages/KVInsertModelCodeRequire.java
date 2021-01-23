@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 import appbox.utils.IdUtil;
 
 public final class KVInsertModelCodeRequire extends KVInsertRequire {
@@ -15,7 +15,7 @@ public final class KVInsertModelCodeRequire extends KVInsertRequire {
         this.modelId  = modelId;
         this.codeData = codeData;
 
-        raftGroupId    = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId    = KVUtil.META_RAFTGROUP_ID;
         schemaVersion  = 0;
         dataCF         = -1;
         overrideExists = true;
@@ -26,7 +26,7 @@ public final class KVInsertModelCodeRequire extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeModelCodeKey(bs, modelId, true);
+        KVUtil.writeModelCodeKey(bs, modelId, true);
         //refs
         bs.writeVariant(0);
         //data

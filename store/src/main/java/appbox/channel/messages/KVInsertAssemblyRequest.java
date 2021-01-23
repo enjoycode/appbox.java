@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVInsertAssemblyRequest extends KVInsertRequire {
 
@@ -17,7 +17,7 @@ public final class KVInsertAssemblyRequest extends KVInsertRequire {
         this.asmData   = asmData;
         this.isService = isService;
 
-        raftGroupId    = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId    = KVUtil.META_RAFTGROUP_ID;
         schemaVersion  = 0;
         dataCF         = -1;
         overrideExists = true;
@@ -28,7 +28,7 @@ public final class KVInsertAssemblyRequest extends KVInsertRequire {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeAssemblyKey(bs, isService, asmName, true);
+        KVUtil.writeAssemblyKey(bs, isService, asmName, true);
         //refs
         bs.writeVariant(0);
         //data

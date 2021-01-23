@@ -1,15 +1,20 @@
 package appbox.store;
 
+import appbox.channel.MemberSizeCounter;
 import appbox.data.EntityId;
+import appbox.data.SysEntity;
 import appbox.model.ModelType;
+import appbox.model.entity.SysIndexModel;
+import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IOutputStream;
+import appbox.utils.IdUtil;
 
 import java.nio.charset.StandardCharsets;
 
 /**
- * 系统存储Key编码
+ * 系统存储编码
  */
-public final class KeyUtil {
+public final class KVUtil {
 
     public static final long META_RAFTGROUP_ID = 0;
 
@@ -35,7 +40,7 @@ public final class KeyUtil {
         if (withSize) {
             bs.writeNativeVariant(5); //注意按无符号写入key长度
         }
-        bs.writeByte(KeyUtil.METACF_APP_PREFIX);
+        bs.writeByte(KVUtil.METACF_APP_PREFIX);
         bs.writeIntBE(appId);
     }
 
@@ -43,7 +48,7 @@ public final class KeyUtil {
         if (withSize) {
             bs.writeNativeVariant(9); //注意按无符号写入key长度
         }
-        bs.writeByte(KeyUtil.METACF_MODEL_PREFIX);
+        bs.writeByte(KVUtil.METACF_MODEL_PREFIX);
         bs.writeLongBE(modelId); //暂大字节序写入
     }
 
@@ -51,7 +56,7 @@ public final class KeyUtil {
         if (withSize) {
             bs.writeNativeVariant(9); //注意按无符号写入key长度
         }
-        bs.writeByte(KeyUtil.METACF_MODEL_CODE_PREFIX);
+        bs.writeByte(KVUtil.METACF_MODEL_CODE_PREFIX);
         bs.writeLongBE(modelId);
     }
 
@@ -59,7 +64,7 @@ public final class KeyUtil {
         if (withSize) {
             bs.writeNativeVariant(6);
         }
-        bs.writeByte(KeyUtil.METACF_FOLDER_PREFIX);
+        bs.writeByte(KVUtil.METACF_FOLDER_PREFIX);
         bs.writeIntBE(appId);
         bs.writeByte(modelType.value);
     }
@@ -83,6 +88,48 @@ public final class KeyUtil {
         if (withSize)
             bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
+    }
+
+    public static void writeIndexKey(IOutputStream bs, SysIndexModel indexModel, SysEntity entity, boolean withSize) {
+        if (withSize) {
+            //先计算并写入Key长度
+            var sizeCounter = new MemberSizeCounter();
+            for (var field : indexModel.fields()) {
+                entity.writeMember(field.memberId, sizeCounter, IEntityMemberWriter.SF_NONE); //flags无意义
+            }
+            bs.writeNativeVariant(6 + 1 + sizeCounter.getSize());
+        }
+
+        //写入EntityId's RaftGroupId
+        entity.id().writePart1(bs);
+        //写入IndexId
+        bs.writeByte(indexModel.indexId());
+        //写入各字段, 注意MemberId写入排序标记
+        for (var field : indexModel.fields()) {
+            //惟一索引但字段不具备值的处理, 暂 id | null flag
+            byte flags = IEntityMemberWriter.SF_STORE | IEntityMemberWriter.SF_WRITE_NULL;
+            if (field.orderByDesc)
+                flags |= IEntityMemberWriter.SF_ORDER_BY_DESC;
+            entity.writeMember(field.memberId, bs, flags);
+        }
+        //写入非惟一索引的EntityId的第二部分
+        if (!indexModel.unique()) {
+            entity.id().writePart2(bs);
+        }
+    }
+
+    public static void writeIndexValue(IOutputStream bs, SysIndexModel indexModel, SysEntity entity) {
+        //先写入惟一索引指向的EntityId
+        if (indexModel.unique()) {
+            bs.writeShort(IdUtil.STORE_FIELD_ID_OF_ENTITY_ID);
+            entity.id().writeTo(bs);
+        }
+        //再写入StoringFields
+        if (indexModel.hasStoringFields()) {
+            for (var sf : indexModel.storingFields()) {
+                entity.writeMember(sf, bs, IEntityMemberWriter.SF_STORE); //暂不写入null成员
+            }
+        }
     }
 
     public static void writeRaftGroupId(IOutputStream bs, long raftGroupId) {

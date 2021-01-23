@@ -3,7 +3,7 @@ package appbox.channel.messages;
 import appbox.model.ModelBase;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVUpdateModelRequest extends KVUpdateRequest {
 
@@ -14,7 +14,7 @@ public final class KVUpdateModelRequest extends KVUpdateRequest {
 
         this.model = model;
 
-        raftGroupId   = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId   = KVUtil.META_RAFTGROUP_ID;
         schemaVersion = 0;
         dataCF        = -1;
     }
@@ -24,7 +24,7 @@ public final class KVUpdateModelRequest extends KVUpdateRequest {
         super.writeTo(bs);
 
         //key
-        KeyUtil.writeModelKey(bs, model.id(), true);
+        KVUtil.writeModelKey(bs, model.id(), true);
         //refs
         bs.writeVariant(0);
         //data

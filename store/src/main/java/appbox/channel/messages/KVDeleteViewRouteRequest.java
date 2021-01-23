@@ -2,7 +2,7 @@ package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class KVDeleteViewRouteRequest extends KVDeleteRequest {
 
@@ -13,7 +13,7 @@ public final class KVDeleteViewRouteRequest extends KVDeleteRequest {
 
         this.viewName = viewName;
 
-        raftGroupId   = KeyUtil.META_RAFTGROUP_ID;
+        raftGroupId   = KVUtil.META_RAFTGROUP_ID;
         schemaVersion = 0;
         returnExists  = false;
         dataCF        = -1;
@@ -26,7 +26,7 @@ public final class KVDeleteViewRouteRequest extends KVDeleteRequest {
         //refs always 0
         bs.writeVariant(0);
         //key(不带长度)
-        bs.writeByte(KeyUtil.METACF_VIEW_ROUTE_PREFIX);
+        bs.writeByte(KVUtil.METACF_VIEW_ROUTE_PREFIX);
         bs.writeUtf8(viewName);
     }
 }

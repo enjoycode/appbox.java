@@ -5,7 +5,7 @@ import appbox.model.ApplicationModel;
 import appbox.channel.MessageType;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 public final class MetaNewAppRequire implements IMessage {
 
@@ -24,7 +24,7 @@ public final class MetaNewAppRequire implements IMessage {
     @Override
     public void writeTo(IOutputStream bs) {
         //写入５字节Key
-        KeyUtil.writeAppKey(bs, application.id(), false);
+        KVUtil.writeAppKey(bs, application.id(), false);
         //写入模型数据,注意不需要写入头部9字节，由读取端处理
         application.writeTo(bs);
     }

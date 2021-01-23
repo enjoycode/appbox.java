@@ -5,7 +5,7 @@ import appbox.data.EntityId;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVTxnId;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 import appbox.utils.IdUtil;
 
 public final class KVDeleteIndexRequest extends KVDeleteRequest {
@@ -24,7 +24,7 @@ public final class KVDeleteIndexRequest extends KVDeleteRequest {
         raftGroupId   = entityId.raftGroupId();
         schemaVersion = indexModel.owner.sysStoreOptions().schemaVersion();
         returnExists  = false;
-        dataCF        = KeyUtil.INDEXCF_INDEX;
+        dataCF        = KVUtil.INDEXCF_INDEX;
     }
 
     @Override

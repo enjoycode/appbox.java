@@ -16,7 +16,7 @@ public final class PartitionInfo {
         key[1] = (byte) ((tableStoreId >>> 16) & 0xFF);
         key[2] = (byte) ((tableStoreId >>> 8) & 0xFF);
         key[3] = (byte) (tableStoreId & 0xFF);
-        key[4] = KeyUtil.PARTCF_GLOBAL_TABLE_FLAG;
+        key[4] = KVUtil.PARTCF_GLOBAL_TABLE_FLAG;
     }
 
 }

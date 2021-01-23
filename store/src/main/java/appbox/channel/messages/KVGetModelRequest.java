@@ -1,7 +1,7 @@
 package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 /**
  * 从存储加载单个模型
@@ -16,9 +16,9 @@ public final class KVGetModelRequest extends KVGetRequest {
     @Override
     public void writeTo(IOutputStream bs) {
         bs.writeInt(0); //ReqId占位
-        bs.writeLong(KeyUtil.META_RAFTGROUP_ID); //raftGroupId
+        bs.writeLong(KVUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeByte((byte) -1);    //dataCF
         bs.writeLong(0);      //timestamp
-        KeyUtil.writeModelKey(bs, modelId, false); //key
+        KVUtil.writeModelKey(bs, modelId, false); //key
     }
 }

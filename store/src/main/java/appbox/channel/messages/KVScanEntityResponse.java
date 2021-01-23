@@ -3,7 +3,7 @@ package appbox.channel.messages;
 import appbox.channel.KVRowReader;
 import appbox.data.SysEntity;
 import appbox.serialization.IInputStream;
-import appbox.store.KeyUtil;
+import appbox.store.KVUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ public final class KVScanEntityResponse<T extends SysEntity> extends KVScanRespo
         result = new ArrayList<>(length);
         for (int i = 0; i < length; i++) {
             var keySize = bs.readNativeVariant(); //Row's key size
-            assert keySize == KeyUtil.ENTITY_KEY_SIZE;
+            assert keySize == KVUtil.ENTITY_KEY_SIZE;
             //创建对象实例并从RowKey读取Id
             T obj = creator.get();
             result.add(obj);
