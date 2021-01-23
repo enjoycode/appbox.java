@@ -320,7 +320,7 @@ public final class EntityStore { //TODO: rename to SysStore
     //endregion index
 
     //region ----Save----
-    public final CompletableFuture<Void> saveAsync(SysEntity entity) {
+    public static final CompletableFuture<Void> saveAsync(SysEntity entity) {
         switch (entity.persistentState()) {
             case Detached:
                 return insertEntityAsync(entity);
@@ -333,7 +333,7 @@ public final class EntityStore { //TODO: rename to SysStore
         }
     }
 
-    public final CompletableFuture<Void> saveAsync(SysEntity entity, KVTransaction txn) {
+    public static final CompletableFuture<Void> saveAsync(SysEntity entity, KVTransaction txn) {
         switch (entity.persistentState()) {
             case Detached:
                 return insertEntityAsync(entity, txn);
