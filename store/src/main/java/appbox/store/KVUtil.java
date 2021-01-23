@@ -4,12 +4,14 @@ import appbox.channel.MemberSizeCounter;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
 import appbox.model.ModelType;
+import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * 系统存储编码
@@ -88,6 +90,20 @@ public final class KVUtil {
         if (withSize)
             bs.writeNativeVariant(16); //注意按无符号写入key长度
         id.writeTo(bs);
+    }
+
+    public static void writeEntityRefs(IOutputStream bs, List<EntityRefModel> refsWithFK) {
+        //暂存储层是字符串，实际是short数组
+        int refsSize = 0;
+        if (refsWithFK != null && refsWithFK.size() > 0) {
+            refsSize = refsWithFK.size() * 2;
+        }
+        bs.writeNativeVariant(refsSize);
+        if (refsSize > 0) {
+            for (var r : refsWithFK) {
+                bs.writeShort(r.getFKMemberIds()[0]);
+            }
+        }
     }
 
     public static void writeIndexKey(IOutputStream bs, SysIndexModel indexModel, SysEntity entity, boolean withSize) {

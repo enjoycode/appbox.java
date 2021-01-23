@@ -31,18 +31,8 @@ public final class KVDeleteEntityRequest extends KVDeleteRequest {
     public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        //refs 暂存储层是字符串，实际是short数组
-        int refsSize = 0;
-        if (_refsWithFK != null && _refsWithFK.size() > 0) {
-            refsSize = _refsWithFK.size() * 2;
-        }
-        bs.writeNativeVariant(refsSize);
-        if (refsSize > 0) {
-            for (var r : _refsWithFK) {
-                bs.writeShort(r.getFKMemberIds()[0]);
-            }
-        }
-
+        //refs
+        KVUtil.writeEntityRefs(bs, _refsWithFK);
         //key 不带长度信息
         KVUtil.writeEntityKey(bs, _id, false);
     }

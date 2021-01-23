@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.channel.KVRowReader;
 import appbox.channel.messages.*;
 import appbox.data.EntityId;
 import appbox.data.SysEntity;
@@ -7,6 +8,7 @@ import appbox.data.TreeNodePath;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.runtime.RuntimeContext;
+import appbox.serialization.BytesOutputStream;
 import appbox.store.caching.MetaCaches;
 
 import java.util.ArrayList;
@@ -136,7 +138,42 @@ public final class EntityStore { //TODO: rename to SysStore
     //endregion insert
 
     //region ----Update----
+    public static CompletableFuture<Void> updateEntityAsync(SysEntity entity) {
+        if (entity == null)
+            throw new IllegalArgumentException();
+        return KVTransaction.beginAsync()
+                .thenCompose(txn -> updateEntityAsync(entity, txn)
+                        .thenCompose(r -> txn.commitAsync()));
+    }
 
+    public static CompletableFuture<Void> updateEntityAsync(SysEntity entity, KVTransaction txn) {
+        if (txn == null)
+            throw new RuntimeException("Must enlist transaction");
+        return updateEntityInternal(entity, txn)
+                .whenComplete((r, ex) -> txn.rollbackOnException(ex));
+    }
+
+    private static CompletableFuture<Void> updateEntityInternal(SysEntity entity, KVTransaction txn) {
+        if (entity == null || txn == null)
+            throw new IllegalArgumentException();
+        var model = entity.model(); //肯定存在，不需要RuntimeContext.Current.GetEntityModel
+        //先获取强制外键引用
+        var refsWithFK = model.getEntityRefsWithFKConstraint();
+
+        //更新数据 //TODO:暂使用全部更新的方式实现，待改为只更新变更过的成员
+        var req = new KVUpdateEntityRequest(entity, model, refsWithFK, txn.id());
+        return SysStoreApi.execKVUpdateAsync(req).thenCompose(res -> {
+            res.checkStoreError();
+
+            //根据返回值处理变更的索引
+            return updateIndexesAsync(entity, res.getResults(), model, txn);
+        }).thenAccept(r -> {
+            //处理外键引用
+            if (refsWithFK != null) {
+                throw new RuntimeException("暂未实现更新外键引用");
+            }
+        });
+    }
     //endregion
 
     //region ----Delete----
@@ -170,15 +207,14 @@ public final class EntityStore { //TODO: rename to SysStore
                 res.checkStoreError();
 
                 //删除索引
-                return deleteIndexesAsync(id, res.getResults(), model, txn)
-                        .thenAccept(rr -> {
-                            //扣减引用计数
-                            if (refsWithFK != null) {
-                                for (var rm : refsWithFK) {
-                                    txn.decEntityRef(rm, app, id, res.getResults());
-                                }
-                            }
-                        });
+                return deleteIndexesAsync(id, res.getResults(), model, txn).thenAccept(rr -> {
+                    //扣减引用计数
+                    if (refsWithFK != null) {
+                        for (var rm : refsWithFK) {
+                            txn.decEntityRef(rm, app, id, res.getResults());
+                        }
+                    }
+                });
             });
         });
     }
@@ -187,17 +223,15 @@ public final class EntityStore { //TODO: rename to SysStore
     //region ----Index----
 
     private static CompletableFuture<Void> insertIndexesAsync(SysEntity entity, EntityModel model, KVTransaction txn) {
-        if (!model.sysStoreOptions().hasIndexes()) {
+        if (!model.sysStoreOptions().hasIndexes())
             return CompletableFuture.completedFuture(null);
-        }
 
         //TODO:并发插入索引，暂顺序处理，可考虑先处理惟一索引
         //TODO:暂只处理分区本地索引
         CompletableFuture<Void> fut = null;
         for (var idx : model.sysStoreOptions().getIndexes()) {
-            if (idx.isGlobal()) {
-                throw new RuntimeException("未实现");
-            }
+            if (idx.isGlobal())
+                throw new RuntimeException("未实现全局索引");
 
             var req = new KVInsertIndexRequest(txn.id(), entity, idx);
             if (fut == null)
@@ -210,17 +244,67 @@ public final class EntityStore { //TODO: rename to SysStore
         return fut;
     }
 
-    private static CompletableFuture<Void> deleteIndexesAsync(EntityId id, byte[] stored,
-                                                              EntityModel model, KVTransaction txn) {
-        if (!model.sysStoreOptions().hasIndexes()) {
+    private static CompletableFuture<Void> updateIndexesAsync(SysEntity entity, byte[] stored
+            , EntityModel model, KVTransaction txn) {
+        //TODO:判断stored为空
+
+        if (!model.sysStoreOptions().hasIndexes())
             return CompletableFuture.completedFuture(null);
+
+        //开始处理变更的索引
+        CompletableFuture<Void> fut        = CompletableFuture.completedFuture(null);
+        var                     tempStream = new BytesOutputStream(100);
+        for (var idx : model.sysStoreOptions().getIndexes()) {
+            if (idx.isGlobal())
+                throw new RuntimeException("未实现全局索引");
+
+            boolean indexKeyChanged = false;
+            for (var field : idx.fields()) {
+                tempStream.reset();
+                if (!KVRowReader.isFieldSameTo(stored, entity, field.memberId, tempStream)) {
+                    indexKeyChanged = true;
+                    break;
+                }
+            }
+
+            if (indexKeyChanged) {
+                //删除旧的索引再添加新的索引
+                var delReq = new KVDeleteIndexRequest(txn.id(), entity.id(), stored, idx);
+                var addReq = new KVInsertIndexRequest(txn.id(), entity, idx);
+                fut = fut.thenCompose(r -> SysStoreApi.execKVDeleteAsync(delReq))
+                        .thenAccept(StoreResponse::checkStoreError);
+                fut = fut.thenCompose(r -> SysStoreApi.execKVInsertAsync(addReq))
+                        .thenAccept(StoreResponse::checkStoreError);
+            } else if (idx.hasStoringFields()) { //继续判断StoringFields是否改变
+                boolean indexValueChanged = false;
+                for (var fieldId : idx.storingFields()) {
+                    tempStream.reset();
+                    if (!KVRowReader.isFieldSameTo(stored, entity, fieldId, tempStream)) {
+                        indexValueChanged = true;
+                        break;
+                    }
+                }
+                if (indexValueChanged) {
+                    var updateReq = new KVUpdateIndexRequest(txn.id(), entity, idx);
+                    fut = fut.thenCompose(r -> SysStoreApi.execKVUpdateAsync(updateReq))
+                            .thenAccept(StoreResponse::checkStoreError);
+                }
+            }
         }
+        return fut;
+    }
+
+    private static CompletableFuture<Void> deleteIndexesAsync(EntityId id, byte[] stored
+            , EntityModel model, KVTransaction txn) {
+        //TODO:判断stored为空
+
+        if (!model.sysStoreOptions().hasIndexes())
+            return CompletableFuture.completedFuture(null);
 
         CompletableFuture<Void> fut = null;
         for (var idx : model.sysStoreOptions().getIndexes()) {
-            if (idx.isGlobal()) {
-                throw new RuntimeException("未实现");
-            }
+            if (idx.isGlobal())
+                throw new RuntimeException("未实现全局索引");
 
             var req = new KVDeleteIndexRequest(txn.id(), id, stored, idx);
             if (fut == null)
@@ -264,10 +348,8 @@ public final class EntityStore { //TODO: rename to SysStore
         });
     }
 
-    private static <T extends SysEntity> CompletableFuture<Void> loopLoadTreeNode(T node,
-                                                                                  List<TreeNodePath.TreeNodeInfo> list,
-                                                                                  Function<T, EntityId> parentGetter,
-                                                                                  Function<T, String> textGetter) {
+    private static <T extends SysEntity> CompletableFuture<Void> loopLoadTreeNode(T node
+            , List<TreeNodePath.TreeNodeInfo> list, Function<T, EntityId> parentGetter, Function<T, String> textGetter) {
         var newNode = new TreeNodePath.TreeNodeInfo(node.id().toUUID(), textGetter.apply(node));
         list.add(newNode);
 

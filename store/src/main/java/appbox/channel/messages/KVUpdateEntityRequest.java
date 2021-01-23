@@ -11,19 +11,21 @@ import appbox.store.KVUtil;
 
 import java.util.List;
 
-public final class KVInsertEntityRequest extends KVInsertRequire {
+public final class KVUpdateEntityRequest extends KVUpdateRequest {
 
     private final SysEntity            _entity;
     private final EntityModel          _model;
     private final List<EntityRefModel> _refsWithFK;
 
-    public KVInsertEntityRequest(SysEntity entity, EntityModel model,
+    public KVUpdateEntityRequest(SysEntity entity, EntityModel model,
                                  List<EntityRefModel> refsWithFK, KVTxnId txnId) {
         super(txnId);
 
         dataCF        = -1;
         raftGroupId   = entity.id().raftGroupId();
         schemaVersion = model.sysStoreOptions().schemaVersion();
+        merge         = false;
+        returnExists  = model.sysStoreOptions().hasIndexes() || refsWithFK != null;
 
         _entity     = entity;
         _model      = model;
@@ -38,12 +40,12 @@ public final class KVInsertEntityRequest extends KVInsertRequire {
         KVUtil.writeEntityKey(bs, _entity.id(), true);
         //refs
         KVUtil.writeEntityRefs(bs, _refsWithFK);
-        //data
+        //data //TODO:根据是否merge写入仅变更的成员
         for (var m : _model.getMembers()) {
             if (m.type() == EntityMemberModel.EntityMemberType.DataField) {
-                _entity.writeMember(m.memberId(), bs, IEntityMemberWriter.SF_STORE);
+                _entity.writeMember(m.memberId(), bs, /*注意更新需要处理NULL成员*/
+                        (byte) (IEntityMemberWriter.SF_STORE | IEntityMemberWriter.SF_WRITE_NULL));
             }
         }
     }
-
 }

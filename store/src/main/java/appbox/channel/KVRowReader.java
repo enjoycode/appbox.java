@@ -2,20 +2,33 @@ package appbox.channel;
 
 import appbox.data.EntityId;
 import appbox.data.IKVRow;
+import appbox.data.SysEntity;
 import appbox.data.SysIndex;
+import appbox.serialization.BytesOutputStream;
+import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.utils.IdUtil;
 
-import java.util.function.BiConsumer;
+import java.util.Arrays;
 
 /** 用于读写存储层返回的原始数据 */
 public final class KVRowReader {
 
+    private static class MemberPosition {
+        public final int index;
+        public final int size;
+
+        public MemberPosition(int index, int size) {
+            this.index = index;
+            this.size  = size;
+        }
+    }
+
     private KVRowReader() {}
 
     /** 从存储原始数据中找出指定成员的位置及大小(包括可变长度的3字节长度) */
-    private static void findMember(byte[] rowData, short id, BiConsumer<Integer, Integer> action) {
+    private static MemberPosition findMember(byte[] rowData, short id) {
         int   cur       = 0;
         short fieldId   = 0;
         int   fieldSize = 0; //包含可变长度信息
@@ -43,27 +56,25 @@ public final class KVRowReader {
             }
 
             if ((fieldId & IdUtil.MEMBERID_MASK) == id) {
-                action.accept(cur, fieldSize);
-                return;
+                return new MemberPosition(cur, fieldSize);
             }
 
             cur += fieldSize + 2;
         }
 
         //here not found
-        action.accept(-1, 0);
+        return null;
     }
 
     /** 从原始数据中读取指定成员的EntityId，不存在返回null */
     public static EntityId readEntityId(byte[] rowData, short id) {
-        final EntityId[] res = {null};
-        findMember(rowData, id, (cur, fieldSize) -> {
-            assert fieldSize == 16 || fieldSize == 0;
-            if (fieldSize == 16) {
-                res[0] = new EntityId(rowData, cur + 2);
-            }
-        });
-        return res[0];
+        var pos = findMember(rowData, id);
+        if (pos == null)
+            return null;
+        if (pos.size != 16 && pos.size != 0)
+            throw new RuntimeException("Invalidate EntityId size");
+
+        return new EntityId(rowData, pos.index + 2);
     }
 
     /**
@@ -72,15 +83,14 @@ public final class KVRowReader {
      * @param flags (1 << IdUtil.MEMBERID_ORDER_OFFSET) 或者 0
      */
     public static void writeMember(byte[] rowData, short id, IOutputStream bs, byte flags) {
-        findMember(rowData, id, (cur, fieldSize) -> {
-            if (cur < 0) { //未找到
-                bs.writeShort((short) (id | flags | IdUtil.STORE_FIELD_NULL_FLAG));   //重新写入带排序标记的memberId
-            } else {
-                var fieldId = (short) (rowData[cur] | (rowData[cur + 1] << 8));
-                bs.writeShort((short) (fieldId | flags));   //重新写入带排序标记的memberId
-                bs.write(rowData, cur + 2, fieldSize);
-            }
-        });
+        var pos = findMember(rowData, id);
+        if (pos == null) {
+            bs.writeShort((short) (id | flags | IdUtil.STORE_FIELD_NULL_FLAG));   //重新写入带排序标记的memberId
+        } else {
+            var fieldId = (short) (rowData[pos.index] | (rowData[pos.index + 1] << 8));
+            bs.writeShort((short) (fieldId | flags));   //重新写入带排序标记的memberId
+            bs.write(rowData, pos.index + 2, pos.size);
+        }
     }
 
     /** 专用于读取从存储返回的行数据 */
@@ -128,6 +138,14 @@ public final class KVRowReader {
                     break;
             }
         }
+    }
+
+    /** 判断单个原始字段的值是否等于实体的属性 */
+    public static boolean isFieldSameTo(byte[] rowData, SysEntity entity, short id, BytesOutputStream tempStream) {
+        entity.writeMember(id, tempStream, IEntityMemberWriter.SF_STORE);
+        var pos = findMember(rowData, id);
+        return Arrays.equals(tempStream.getBuffer(), 0, tempStream.size()
+                , rowData, pos.index, pos.size + 2);
     }
 
 }
