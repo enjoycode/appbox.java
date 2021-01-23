@@ -49,7 +49,8 @@ public final class TypeSystem {
             "MethodInterceptor.java",
             "ISqlQueryJoin.java",
             "ISqlIncluder.java",
-            "ISqlIncludable.java"
+            "ISqlIncludable.java",
+            "KVTransaction.java"
     };
 
     /** /models/下的虚拟文件列表 */
@@ -62,8 +63,7 @@ public final class TypeSystem {
             "SqlDeleteCommand.java",
             "DbFunc.java",
             "Authorize.java",
-            "TableScan.java",
-            "KVTransaction.java"
+            "TableScan.java"
     };
     //endregion
 

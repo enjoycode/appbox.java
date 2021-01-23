@@ -319,6 +319,34 @@ public final class EntityStore { //TODO: rename to SysStore
 
     //endregion index
 
+    //region ----Save----
+    public final CompletableFuture<Void> saveAsync(SysEntity entity) {
+        switch (entity.persistentState()) {
+            case Detached:
+                return insertEntityAsync(entity);
+            case Modified:
+                return updateEntityAsync(entity);
+            case Deleted:
+                return deleteEntityAsync(entity);
+            default:
+                return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    public final CompletableFuture<Void> saveAsync(SysEntity entity, KVTransaction txn) {
+        switch (entity.persistentState()) {
+            case Detached:
+                return insertEntityAsync(entity, txn);
+            case Modified:
+                return updateEntityAsync(entity, txn);
+            case Deleted:
+                return deleteEntityAsync(entity.model(), entity.id(), txn);
+            default:
+                return CompletableFuture.completedFuture(null);
+        }
+    }
+    //endregion
+
     //endregion
 
     //region ====Load Methods====

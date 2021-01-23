@@ -1,4 +1,5 @@
-import sys.*;
+package sys;
+
 import java.util.concurrent.CompletableFuture;
 
 @RuntimeType(type = "appbox.store.KVTransaction")

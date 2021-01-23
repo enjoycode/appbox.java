@@ -1,20 +1,21 @@
 package appbox.design.services.code;
 
 import appbox.model.EntityModel;
+import appbox.store.EntityStore;
 import appbox.store.SqlStore;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
 public final class SaveEntityInterceptor implements IMethodInterceptor {
 
     @Override
     public boolean visit(MethodInvocation node, ServiceCodeGenerator generator) {
-        //TODO:暂只支持SqlStore
-        var entityType      = node.getExpression().resolveTypeBinding();
-        var entityModelNode = generator.getUsedEntity(entityType);
-        var entityModel     = (EntityModel) entityModelNode.model();
-        var storeId         = entityModel.sqlStoreOptions().storeModelId();
-        var storeTypeName   = SqlStore.class.getName();
+        //TODO:暂只支持SqlStore及SysStore
+        var     entityType      = node.getExpression().resolveTypeBinding();
+        var     entityModelNode = generator.getUsedEntity(entityType);
+        var     entityModel     = (EntityModel) entityModelNode.model();
+        boolean isSqlStore      = entityModel.sqlStoreOptions() != null;
 
         //原表达式作为参数1
         node.getExpression().accept(generator);
@@ -32,21 +33,32 @@ public final class SaveEntityInterceptor implements IMethodInterceptor {
             arg2 = (ASTNode) listRewrite.getRewrittenList().get(0);
             if (arg2.getParent() != null)
                 arg2 = ASTNode.copySubtree(generator.ast, arg2);
-        } else {
+        } else if (isSqlStore) {
             arg2 = generator.ast.newNullLiteral();
         }
 
         //替换为DataStore的方法
-        var getStoreMethod = generator.ast.newMethodInvocation();
-        getStoreMethod.setName(generator.ast.newSimpleName("get"));
-        getStoreMethod.setExpression(generator.ast.newName(storeTypeName));
-        getStoreMethod.arguments().add(generator.ast.newNumberLiteral(storeId + "L"));
+        Expression expression = null;
+        if (isSqlStore) {
+            var storeId       = entityModel.sqlStoreOptions().storeModelId();
+            var storeTypeName = SqlStore.class.getName();
+
+            var getStoreMethod = generator.ast.newMethodInvocation();
+            getStoreMethod.setName(generator.ast.newSimpleName("get"));
+            getStoreMethod.setExpression(generator.ast.newName(storeTypeName));
+            getStoreMethod.arguments().add(generator.ast.newNumberLiteral(storeId + "L"));
+
+            expression = getStoreMethod;
+        } else {
+            expression = generator.ast.newName(EntityStore.class.getName());
+        }
 
         var saveMethod = generator.ast.newMethodInvocation();
         saveMethod.setName(generator.ast.newSimpleName("saveAsync"));
-        saveMethod.setExpression(getStoreMethod);
+        saveMethod.setExpression(expression);
         saveMethod.arguments().add(arg1);
-        saveMethod.arguments().add(arg2);
+        if (arg2 != null)
+            saveMethod.arguments().add(arg2);
 
         generator.astRewrite.replace(node, saveMethod, null);
 
