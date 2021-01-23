@@ -11,7 +11,6 @@ import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
 import appbox.runtime.InvokeArgs;
-import appbox.store.DbFunc;
 import appbox.store.SqlStore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -36,7 +35,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         put("SqlUpdateSet", new SqlUpdateSetInterceptor());
         put("InvokeService", new InvokeServiceInterceptor());
         put("SaveEntity", new SaveEntityInterceptor());
-        put("EntityStatic", new EntityStaticInterceptor());
+        put("InvokeStatic", new InvokeStaticInterceptor());
     }};
     //endregion
 
