@@ -2,8 +2,8 @@ package appbox.design.services.code;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-/** 调用实体静态方法的拦截器 eg: sys.entities.Employee.fetchAsync() */
-public final class EntityStaticInterceptor implements IMethodInterceptor {
+/** 调用虚拟静态方法的拦截器 eg: sys.entities.Employee.fetchAsync() */
+public final class InvokeStaticInterceptor implements IMethodInterceptor {
 
     @Override
     public boolean visit(MethodInvocation node, ServiceCodeGenerator generator) {
