@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 public final class KVTransaction {
     private KVTransaction() {}
 
+    @MethodInterceptor(name = "InvokeStatic")
     public static CompletableFuture<KVTransaction> beginAsync(/*TODO: isoLevel*/) {return null;}
 
     public CompletableFuture<Void> commitAsync() {return null;}
