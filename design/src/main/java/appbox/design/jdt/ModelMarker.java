@@ -216,7 +216,7 @@ public class ModelMarker implements IMarker {
 
     @Override
     public void setAttributes(String[] attributeNames, Object[] values) throws CoreException {
-        Log.warn("编译问题:" + values[0]);
+        Log.warn("编译问题: [" + values[1] + " " + values[5] + "] " + values[0]);
         //Assert.isNotNull(attributeNames);
         //Assert.isNotNull(values);
         //Workspace workspace = getWorkspace();

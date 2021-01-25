@@ -1,36 +1,50 @@
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
+
 import static sys.Async.await;
 
 public class TestService {
+
+    private void test(sys.entities.Employee a, sys.entities.Employee b) {
+        if (!a.Name.equals(b.Name))
+            a.Age = b.Age;
+        a.Manager.Age = b.Manager.Age + 1;
+        get().Age         = b.Age;
+        get().Manager.Age = b.Age + 1;
+        a.Age             = get().Manager.Age;
+    }
+
+    private sys.entities.Employee get() {
+        return null;
+    }
 
     public CompletableFuture<?> testAwait() {
         var res = await(query());
         return CompletableFuture.completedFuture(res.get(0).Name);
     }
 
-    //public CompletableFuture<String> hello(String name, int age) {
-    //    return CompletableFuture.completedFuture("Hello Future!");
-    //}
+    public CompletableFuture<String> hello(String name, int age) {
+        return CompletableFuture.completedFuture("Hello Future!");
+    }
 
-    //public CompletableFuture<String> insert() {
-    //    var obj = new sys.entities.Employee("Rick");
-    //    obj.Male = true;
-    //    return obj.saveAsync().thenApply(r -> "Save Done.");
-    //    //return DataStore.DemoDB.insertAsync(obj, null)
-    //    //        .thenApply(r -> "Hello Future!");
-    //}
+    public CompletableFuture<String> insert() {
+        var obj = new sys.entities.Employee("Rick");
+        obj.Male = true;
+        return obj.saveAsync().thenApply(r -> "Save Done.");
+        //return DataStore.DemoDB.insertAsync(obj, null)
+        //        .thenApply(r -> "Hello Future!");
+    }
 
-    //public CompletableFuture<Void> test1() {
-    //    return CompletableFuture.completedFuture((Void) null);
-    //}
+    public CompletableFuture<Void> test1() {
+        return CompletableFuture.completedFuture((Void) null);
+    }
 
-    //public CompletableFuture<String> invoke() {
-    //    var obj = new sys.entities.Employee("Rick");
-    //
-    //    //sys.services.TestService.test1();
-    //    return sys.services.TestService.hello(obj.Name, 100);
-    //}
+    public CompletableFuture<String> invoke() {
+        var obj = new sys.entities.Employee("Rick");
+
+        //sys.services.TestService.test1();
+        return sys.services.TestService.hello(obj.Name, 100);
+    }
 
     public CompletableFuture<List<sys.entities.Employee>> query() {
         var obj   = new sys.entities.Employee();
@@ -54,12 +68,12 @@ public class TestService {
         });
     }
 
-    //public CompletableFuture<?> query3() {
-    //    var q = new SqlQuery<sys.entities.Employee>();
-    //    return q.toListAsync(r -> new sys.entities.Employee() {
-    //                final String ParentName = r.Manager.Name;
-    //            });
-    //}
+    public CompletableFuture<?> query3() {
+        var q = new SqlQuery<sys.entities.Employee>();
+        return q.toListAsync(r -> new sys.entities.Employee() {
+                    final String ParentName = r.Manager.Name;
+                });
+    }
 
     public CompletableFuture<?> update() {
         var cmd = new SqlUpdateCommand<sys.entities.Employee>();
@@ -103,8 +117,8 @@ public class TestService {
         return CompletableFuture.completedFuture(orderId);
     }
 
-    //public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
-    //    return CompletableFuture.completedFuture(emp);
-    //}
+    public CompletableFuture<Object> testEntityArg(sys.entities.Employee emp) {
+        return CompletableFuture.completedFuture(emp);
+    }
 
 }

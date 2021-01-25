@@ -124,12 +124,50 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             if (TypeHelper.isEntityType(ownerType)) {
                 var newNode = ast.newMethodInvocation();
                 newNode.setName(ast.newSimpleName("set" + qfn.getName().getIdentifier()));
-                var newOwner = (Expression) ASTNode.copySubtree(ast, owner);
-                newNode.setExpression(newOwner);
-                var newArg = (Expression) ASTNode.copySubtree(ast, node.getRightHandSide());
-                newNode.arguments().add(newArg);
+
                 astRewrite.replace(node, newNode, null);
-                return super.visit(newNode);
+                owner.accept(this);
+                node.getRightHandSide().accept(this);
+
+                var newOwner = (ASTNode) astRewrite.get(qfn, QualifiedName.QUALIFIER_PROPERTY);
+                if (newOwner.getParent() == null)
+                    newNode.setExpression((Expression) newOwner);
+                else
+                    newNode.setExpression((Expression) astRewrite.createCopyTarget(newOwner));
+
+                var newArg = (ASTNode) astRewrite.get(node, Assignment.RIGHT_HAND_SIDE_PROPERTY);
+                if (newArg.getParent() == null)
+                    newNode.arguments().add(newArg);
+                else
+                    newNode.arguments().add(astRewrite.createCopyTarget(newArg));
+
+                return false;
+            }
+        } else if (node.getLeftHandSide() instanceof FieldAccess) {
+            var fa        = (FieldAccess) node.getLeftHandSide();
+            var owner     = fa.getExpression();
+            var ownerType = owner.resolveTypeBinding();
+            if (TypeHelper.isEntityType(ownerType)) {
+                var newNode = ast.newMethodInvocation();
+                newNode.setName(ast.newSimpleName("set" + fa.getName().getIdentifier()));
+
+                astRewrite.replace(node, newNode, null);
+                owner.accept(this);
+                node.getRightHandSide().accept(this);
+
+                var newOwner = (ASTNode) astRewrite.get(fa, FieldAccess.EXPRESSION_PROPERTY);
+                if (newOwner.getParent() == null)
+                    newNode.setExpression((Expression) newOwner);
+                else
+                    newNode.setExpression((Expression) astRewrite.createCopyTarget(newOwner));
+
+                var newArg = (ASTNode) astRewrite.get(node, Assignment.RIGHT_HAND_SIDE_PROPERTY);
+                if (newArg.getParent() == null)
+                    newNode.arguments().add(newArg);
+                else
+                    newNode.arguments().add(astRewrite.createCopyTarget(newArg));
+
+                return false;
             }
         }
         return super.visit(node);
@@ -141,10 +179,15 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var ownerType = owner.resolveTypeBinding();
         if (TypeHelper.isEntityType(ownerType)) {
             //TODO:判断是否实体属性
-            var newNode = makeEntityGetMember(node.getQualifier(), node.getName().getIdentifier());
+            var newNode = makeEntityGetMember(owner, node.getName().getIdentifier());
             astRewrite.replace(node, newNode, null);
 
             owner.accept(this);
+
+            var newExp = (ASTNode) astRewrite.get(node, QualifiedName.QUALIFIER_PROPERTY);
+            if (newExp.getParent() == null)
+                newNode.setExpression((Expression) newExp);
+
             return false;
         } else if (TypeHelper.isDataStoreType(ownerType) && owner.isSimpleName()) {
             String storeName     = node.getName().getIdentifier();
@@ -176,6 +219,11 @@ public final class ServiceCodeGenerator extends GenericVisitor {
             astRewrite.replace(node, newNode, null);
 
             node.getExpression().accept(this);
+
+            var newExp = (ASTNode) astRewrite.get(node, FieldAccess.EXPRESSION_PROPERTY);
+            if (newExp.getParent() == null)
+                newNode.setExpression((Expression) newExp);
+
             return false;
         }
 
@@ -445,7 +493,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     /** t.Name 转换为 t.getName() */
     protected MethodInvocation makeEntityGetMember(Expression owner, String memberName) {
-        var newOwner = astRewrite.createCopyTarget(owner);
+        ASTNode newOwner = ASTNode.copySubtree(ast, owner);
 
         var newNode = ast.newMethodInvocation();
         newNode.setName(ast.newSimpleName("get" + memberName));
