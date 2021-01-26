@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -62,6 +63,16 @@ public class TestSysStore {
 
         var res = fut.get();
         assertEquals(0, res.errorCode);
+    }
+
+    @Test
+    public void testUpdateEntity() {
+        var q = new TableScan<>(Employee.MODELID, Employee.class);
+        q.where(Employee.NAME.eq("Admin"));
+        var list = q.toListAsync().join();
+        var emp = list.get(0);
+        emp.setBirthday(LocalDateTime.of(1977, 1, 27, 8, 8));
+        EntityStore.saveAsync(emp).join();
     }
 
     @Test

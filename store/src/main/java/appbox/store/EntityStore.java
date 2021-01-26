@@ -170,7 +170,7 @@ public final class EntityStore { //TODO: rename to SysStore
         }).thenAccept(r -> {
             //处理外键引用
             if (refsWithFK != null) {
-                throw new RuntimeException("暂未实现更新外键引用");
+                throw new RuntimeException("暂未实现更新外键引用: " + model.name());
             }
         });
     }
@@ -324,6 +324,7 @@ public final class EntityStore { //TODO: rename to SysStore
         switch (entity.persistentState()) {
             case Detached:
                 return insertEntityAsync(entity);
+            case Unchnaged: //TODO:临时
             case Modified:
                 return updateEntityAsync(entity);
             case Deleted:
@@ -337,6 +338,7 @@ public final class EntityStore { //TODO: rename to SysStore
         switch (entity.persistentState()) {
             case Detached:
                 return insertEntityAsync(entity, txn);
+            case Unchnaged: //TODO:临时
             case Modified:
                 return updateEntityAsync(entity, txn);
             case Deleted:

@@ -144,8 +144,12 @@ public final class KVRowReader {
     public static boolean isFieldSameTo(byte[] rowData, SysEntity entity, short id, BytesOutputStream tempStream) {
         entity.writeMember(id, tempStream, IEntityMemberWriter.SF_STORE);
         var pos = findMember(rowData, id);
+        if (pos == null)
+            return tempStream.size() == 0;
+        if (tempStream.size() != pos.size + 2)
+            return false;
         return Arrays.equals(tempStream.getBuffer(), 0, tempStream.size()
-                , rowData, pos.index, pos.size + 2);
+                , rowData, pos.index, pos.index + pos.size + 2);
     }
 
 }
