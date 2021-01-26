@@ -19,10 +19,11 @@ public interface IRuntimeContext {
     /** 设置当前会话信息 */
     void setCurrentSession(ISessionInfo session);
 
+    IPasswordHasher passwordHasher();
+
     /**
      * 异步调用服务
      * @param method eg: "sys.OrderService.Save"
-     * @param args
      */
     CompletableFuture<Object> invokeAsync(String method, InvokeArgs args);
 

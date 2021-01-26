@@ -1,6 +1,7 @@
 package appbox.server.security;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.Mac;
@@ -9,11 +10,11 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * RFC 2898 password derivation compatible with .NET Rfc2898DeriveBytes class.
  */
-public class Rfc2898DeriveBytes {
+public final class Rfc2898DeriveBytes {
 
-    private Mac    _hmacSha1;
-    private byte[] _salt;
-    private int    _iterationCount;
+    private final Mac    _hmacSha1;
+    private final byte[] _salt;
+    private final int    _iterationCount;
 
     private byte[] _buffer           = new byte[20];
     private int    _bufferStartIndex = 0;
@@ -23,7 +24,6 @@ public class Rfc2898DeriveBytes {
 
     /**
      * Creates new instance.
-     *
      * @param password   The password used to derive the key.
      * @param salt       The key salt used to derive the key.
      * @param iterations The number of iterations for the operation.
@@ -45,7 +45,6 @@ public class Rfc2898DeriveBytes {
 
     /**
      * Creates new instance.
-     *
      * @param password   The password used to derive the key.
      * @param salt       The key salt used to derive the key.
      * @param iterations The number of iterations for the operation.
@@ -54,12 +53,11 @@ public class Rfc2898DeriveBytes {
      * @throws UnsupportedEncodingException UTF-8 encoding is not supported.
      */
     public Rfc2898DeriveBytes(String password, byte[] salt, int iterations) throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
-        this(password.getBytes("UTF8"), salt, iterations);
+        this(password.getBytes(StandardCharsets.UTF_8), salt, iterations);
     }
 
     /**
      * Creates new instance.
-     *
      * @param password The password used to derive the key.
      * @param salt     The key salt used to derive the key.
      * @throws NoSuchAlgorithmException     HmacSHA1 algorithm cannot be found.
@@ -72,7 +70,6 @@ public class Rfc2898DeriveBytes {
 
     /**
      * Returns a pseudo-random key from a password, salt and iteration count.
-     *
      * @param count Number of bytes to return.
      * @return Byte array.
      */

@@ -3,9 +3,11 @@ package appbox.server.runtime;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
+import appbox.runtime.IPasswordHasher;
 import appbox.runtime.IRuntimeContext;
 import appbox.runtime.ISessionInfo;
 import appbox.runtime.InvokeArgs;
+import appbox.server.security.PasswordHasher;
 import appbox.store.ModelStore;
 import appbox.utils.ReflectUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
@@ -21,6 +23,8 @@ public final class HostRuntimeContext implements IRuntimeContext {
 
     private final        ServiceContainer                       _services   = new ServiceContainer();
     private static final TransmittableThreadLocal<ISessionInfo> _sessionTTL = new TransmittableThreadLocal<>();
+
+    private final IPasswordHasher _passwordHasher = new PasswordHasher();
 
     private final ArrayList<ApplicationModel> apps   = new ArrayList<>(); //TODO:use RWLock
     private final HashMap<Long, ModelBase>    models = new HashMap<>(100); //TODO:usr LRUCache
@@ -59,6 +63,11 @@ public final class HostRuntimeContext implements IRuntimeContext {
     @Override
     public ISessionInfo currentSession() {
         return _sessionTTL.get();
+    }
+
+    @Override
+    public IPasswordHasher passwordHasher() {
+        return _passwordHasher;
     }
 
     @Override

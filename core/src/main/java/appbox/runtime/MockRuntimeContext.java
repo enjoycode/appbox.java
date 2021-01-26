@@ -39,6 +39,11 @@ public final class MockRuntimeContext implements IRuntimeContext, IDesignContext
     }
 
     @Override
+    public IPasswordHasher passwordHasher() {
+        throw new RuntimeException("不支持");
+    }
+
+    @Override
     public CompletableFuture<Object> invokeAsync(String method, InvokeArgs args) {
         return null;
     }
