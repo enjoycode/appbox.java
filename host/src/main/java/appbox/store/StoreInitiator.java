@@ -255,14 +255,14 @@ public final class StoreInitiator {
         var admin = new Employee();
         admin.setName("Admin");
         admin.setAccount("Admin");
-        admin.setPassword(new byte[0]);//todo 加密工具类
+        admin.setPassword(RuntimeContext.current().passwordHasher().hashPassword("760wb"));
         admin.setMale(true);
         admin.setBirthday(LocalDateTime.of(1977, 1, 27, 8, 8));
 
         var test = new Employee();
         test.setName("Test");
         test.setAccount("Test");
-        test.setPassword(new byte[0]);//todo 加密工具类
+        test.setPassword(RuntimeContext.current().passwordHasher().hashPassword("la581"));
         test.setMale(false);
         test.setBirthday(LocalDateTime.of(1979, 12, 4, 8, 8));
         //新建默认组织单元

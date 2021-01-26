@@ -48,11 +48,16 @@ public final class SystemService implements IService {
         return q.toIndexRowAsync().thenCompose(row -> {
             if (row == null) {
                 res.succeed = false;
-                res.error   = "User account not exists";
+                res.error   = "User not exists";
                 return CompletableFuture.completedFuture(new JsonResult(res));
             }
 
-            //TODO:验证密码
+            //验证密码
+            if (!RuntimeContext.current().passwordHasher().verifyHashedPassword(row.getPassword(), req.p)) {
+                res.succeed = false;
+                res.error   = "Password not valid";
+                return CompletableFuture.completedFuture(new JsonResult(res));
+            }
 
             //TODO:****暂全表扫描获取Emploee对应的OrgUnits，待用Include EntitySet实现
             var q1 = new TableScan<>(IdUtil.SYS_ORGUNIT_MODEL_ID, OrgUnit.class);
