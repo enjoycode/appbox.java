@@ -166,12 +166,15 @@ public final class EntityStore { //TODO: rename to SysStore
             res.checkStoreError();
 
             //根据返回值处理变更的索引
-            return updateIndexesAsync(entity, res.getResults(), model, txn);
-        }).thenAccept(r -> {
-            //处理外键引用
-            if (refsWithFK != null) {
-                throw new RuntimeException("暂未实现更新外键引用: " + model.name());
-            }
+            return updateIndexesAsync(entity, res.getResults(), model, txn).thenAccept(rr -> {
+                //处理外键引用
+                if (refsWithFK != null) {
+                    var app = RuntimeContext.current().getApplicationModel(model.appId());
+                    for (var rm : refsWithFK) {
+                        txn.updEntityRef(rm, app, entity, res.getResults());
+                    }
+                }
+            });
         });
     }
     //endregion
@@ -196,7 +199,6 @@ public final class EntityStore { //TODO: rename to SysStore
         if (id == null || model == null)
             throw new IllegalArgumentException();
 
-        var app        = RuntimeContext.current().getApplicationModel(model.appId());
         var refsWithFK = model.getEntityRefsWithFKConstraint();
 
         //注意删除前先处理本事务挂起的外键引用，以防止同一事务删除引用后再删除引用目标失败(eg:同一事务删除订单明细，删除引用的订单)
@@ -210,6 +212,7 @@ public final class EntityStore { //TODO: rename to SysStore
                 return deleteIndexesAsync(id, res.getResults(), model, txn).thenAccept(rr -> {
                     //扣减引用计数
                     if (refsWithFK != null) {
+                        var app = RuntimeContext.current().getApplicationModel(model.appId());
                         for (var rm : refsWithFK) {
                             txn.decEntityRef(rm, app, id, res.getResults());
                         }

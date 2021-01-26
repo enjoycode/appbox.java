@@ -23,8 +23,6 @@ public final class KVTransaction implements IKVTransaction, /*IEntityMemberWrite
     private       ArrayList<KVAddRefRequest> _refs;
 
     private EntityMemberValueGetter _memberValueGetter;
-    private EntityId                _tempTargetId; //外键引用的目标实体标识
-    //private       long                       _tempTypeModelId;
 
     private KVTransaction() {}
 
@@ -82,22 +80,48 @@ public final class KVTransaction implements IKVTransaction, /*IEntityMemberWrite
 
     //region ====外键引用相关====
 
-    /** 减少外键引用计数值 (Update or Delete) */
+    /** 减少外键引用计数值 (Delete) */
     void decEntityRef(EntityRefModel entityRef, ApplicationModel fromApp,
                       EntityId fromEntityId, byte[] rowData) {
         assert fromEntityId.raftGroupId() != 0;
 
-        synchronized (this) {
-            _tempTargetId = KVRowReader.readEntityId(rowData, entityRef.getFKMemberIds()[0]);
-            if (_tempTargetId == null)
-                return;
-            int fromTableId = KVUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
+        var targetId = KVRowReader.readEntityId(rowData, entityRef.getFKMemberIds()[0]);
+        if (targetId == null)
+            return;
+        int fromTableId = KVUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
 
-            addEntityRefInternal(_tempTargetId, fromEntityId.raftGroupId(), fromTableId, -1);
+        synchronized (this) {
+            addEntityRefInternal(targetId, fromEntityId.raftGroupId(), fromTableId, -1);
         }
     }
 
-    /** 增加外键引用计数值 (Insert时) */
+    /** 更新外键引用计数值 (Update) */
+    void updEntityRef(EntityRefModel entityRefModel, ApplicationModel fromApp,
+                      SysEntity newEntity, byte[] oldRowData) {
+        synchronized (this) {
+            if (_memberValueGetter == null)
+                _memberValueGetter = new EntityMemberValueGetter();
+            newEntity.writeMember(entityRefModel.getFKMemberIds()[0], _memberValueGetter, IEntityMemberWriter.SF_NONE);
+            var newTargetId     = (EntityId) _memberValueGetter.value;
+            var oldTargetId     = KVRowReader.readEntityId(oldRowData, entityRefModel.getFKMemberIds()[0]);
+            int fromTableId     = KVUtil.encodeTableId(fromApp.getAppStoreId(), entityRefModel.owner.tableId());
+            var fromRaftGroupId = newEntity.id().raftGroupId();
+            if (oldTargetId != null) {
+                if (newTargetId != null) {
+                    if (!newTargetId.equals(oldTargetId)) {
+                        addEntityRefInternal(oldTargetId, fromRaftGroupId, fromTableId, -1);
+                        addEntityRefInternal(newTargetId, fromRaftGroupId, fromTableId, 1);
+                    }
+                } else {
+                    addEntityRefInternal(oldTargetId, fromRaftGroupId, fromTableId, -1);
+                }
+            } else if (newTargetId != null) {
+                addEntityRefInternal(newTargetId, fromRaftGroupId, fromTableId, 1);
+            }
+        }
+    }
+
+    /** 增加外键引用计数值 (Insert) */
     void incEntityRef(EntityRefModel entityRef, ApplicationModel fromApp, SysEntity fromEntity) {
         assert fromEntity.id().raftGroupId() != 0;
 
@@ -105,12 +129,12 @@ public final class KVTransaction implements IKVTransaction, /*IEntityMemberWrite
             if (_memberValueGetter == null)
                 _memberValueGetter = new EntityMemberValueGetter();
             fromEntity.writeMember(entityRef.getFKMemberIds()[0], _memberValueGetter, IEntityMemberWriter.SF_NONE);
-            _tempTargetId = (EntityId) _memberValueGetter.value;
-            if (_tempTargetId == null)
+            var targetId = (EntityId) _memberValueGetter.value;
+            if (targetId == null)
                 return;
             int fromTableId = KVUtil.encodeTableId(fromApp.getAppStoreId(), entityRef.owner.tableId());
 
-            addEntityRefInternal(_tempTargetId, fromEntity.id().raftGroupId(), fromTableId, 1);
+            addEntityRefInternal(targetId, fromEntity.id().raftGroupId(), fromTableId, 1);
         }
     }
 
