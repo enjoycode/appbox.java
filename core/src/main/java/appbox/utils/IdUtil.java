@@ -4,8 +4,7 @@ import appbox.model.ModelLayer;
 import appbox.model.ModelType;
 
 public final class IdUtil {
-    private IdUtil() {
-    }
+    private IdUtil() {}
 
     public static final int RAFTGROUPID_APPID_OFFSET      = 36;
     public static final int RAFTGROUPID_FLAGS_OFFFSET     = 32;
@@ -37,15 +36,21 @@ public final class IdUtil {
     public static final byte  STORE_FIELD_NULL_FLAG       = 9;
     public static final short STORE_FIELD_ID_OF_ENTITY_ID = 7; //用于存储索引指向的实体的Id, 相当于MemberId(0) | 16LenFlag
 
-    public static final int  SYS_APP_ID              = 0x9E9AA8F7;
-    public static final long SYS_ENTITY_MODEL_ID     = Integer.toUnsignedLong(SYS_APP_ID) << MODELID_APPID_OFFSET
+    public static final  int  SYS_APP_ID              = 0x9E9AA8F7;
+    private static final long SYS_ENTITY_MODEL_ID     = Integer.toUnsignedLong(SYS_APP_ID) << MODELID_APPID_OFFSET
             | Byte.toUnsignedLong(ModelType.Entity.value) << MODELID_TYPE_OFFSET;
-    public static final long SYS_EMPLOYEE_MODEL_ID    = SYS_ENTITY_MODEL_ID | (1 << MODELID_SEQ_OFFSET);
+    private static final long SYS_PERMISSION_MODEL_ID = Integer.toUnsignedLong(SYS_APP_ID) << MODELID_APPID_OFFSET
+            | Byte.toUnsignedLong(ModelType.Permission.value) << MODELID_TYPE_OFFSET;
+
+    public static final long SYS_EMPLOYEE_MODEL_ID   = SYS_ENTITY_MODEL_ID | (1 << MODELID_SEQ_OFFSET);
     public static final long SYS_ENTERPRISE_MODEL_ID = SYS_ENTITY_MODEL_ID | (2 << MODELID_SEQ_OFFSET);
     public static final long SYS_WORKGROUP_MODEL_ID  = SYS_ENTITY_MODEL_ID | (3 << MODELID_SEQ_OFFSET);
     public static final long SYS_ORGUNIT_MODEL_ID    = SYS_ENTITY_MODEL_ID | (4 << MODELID_SEQ_OFFSET);
     public static final long SYS_STAGED_MODEL_ID     = SYS_ENTITY_MODEL_ID | (5 << MODELID_SEQ_OFFSET);
     public static final long SYS_CHECKOUT_MODEL_ID   = SYS_ENTITY_MODEL_ID | (6 << MODELID_SEQ_OFFSET);
+
+    public static final long SYS_PERMISSION_ADMIN_ID     = SYS_PERMISSION_MODEL_ID | (1 << MODELID_SEQ_OFFSET);
+    public static final long SYS_PERMISSION_DEVELOPER_ID = SYS_PERMISSION_MODEL_ID | (2 << MODELID_SEQ_OFFSET);
 
     public static int getAppIdFromModelId(long modelId) {
         return (int) (modelId >>> MODELID_APPID_OFFSET);

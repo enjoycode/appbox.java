@@ -2,10 +2,7 @@ package appbox.store;
 
 import appbox.entities.*;
 import appbox.logging.Log;
-import appbox.model.ApplicationModel;
-import appbox.model.EntityModel;
-import appbox.model.ModelType;
-import appbox.model.ServiceModel;
+import appbox.model.*;
 import appbox.model.entity.*;
 import appbox.runtime.RuntimeContext;
 import appbox.server.runtime.HostRuntimeContext;
@@ -15,6 +12,8 @@ import appbox.utils.IdUtil;
 import static appbox.model.entity.DataFieldModel.DataFieldType;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,20 +31,31 @@ public final class StoreInitiator {
 
         return createAppAsync().thenCompose(app -> {
             try {
-                //新建EntityModels
+                //新建模型文件夹
+                var entityRootFolder     = new ModelFolder(app.id(), ModelType.Entity);
+                var entityOrgUnitsFolder = new ModelFolder(entityRootFolder, "OrgUnits");
+                var entityDesignFolder   = new ModelFolder(entityRootFolder, "Design");
+
+                var viewRootFolder     = new ModelFolder(app.id(), ModelType.View);
+                var viewOrgUnitsFolder = new ModelFolder(viewRootFolder, "OrgUnits");
+                var viewOpsFolder      = new ModelFolder(viewRootFolder, "OPS");
+                var viewMetricsFolder  = new ModelFolder(viewRootFolder, "Metrics");
+                var viewClusterFolder  = new ModelFolder(viewRootFolder, "Cluster");
+
+                //新建实体模型
                 var enterpriseModel = createEnterpriseModel();
-                var employeeModel   = createEmployeeModel();
-
+                enterpriseModel.setFolderId(entityOrgUnitsFolder.id());
+                var employeeModel = createEmployeeModel();
+                employeeModel.setFolderId(entityOrgUnitsFolder.id());
                 var workgroupModel = createWorkgroupModel();
-                var orgunitModel   = createOrgUnitModel();
-                var stagedModel    = createStagedModel();
-                var checkoutModel  = createCheckoutModel();
+                workgroupModel.setFolderId(entityOrgUnitsFolder.id());
+                var orgunitModel = createOrgUnitModel();
+                orgunitModel.setFolderId(entityOrgUnitsFolder.id());
 
-                //新建默认组织
-
-                //新建默认系统管理员及测试账号
-
-                //新建默认组织单元
+                var stagedModel = createStagedModel();
+                stagedModel.setFolderId(entityDesignFolder.id());
+                var checkoutModel = createCheckoutModel();
+                checkoutModel.setFolderId(entityDesignFolder.id());
 
                 //将新建的模型加入运行时上下文
                 var ctx = (HostRuntimeContext) RuntimeContext.current();
@@ -57,10 +67,11 @@ public final class StoreInitiator {
                 ctx.injectModel(stagedModel);
                 ctx.injectModel(checkoutModel);
 
-
                 //开始事务保存
                 return KVTransaction.beginAsync()
-                        .thenCompose(txn -> ModelStore.insertModelAsync(employeeModel, txn)
+                        .thenCompose(txn -> ModelStore.upsertFolderAsync(entityRootFolder, txn)
+                                .thenCompose(r -> ModelStore.upsertFolderAsync(viewRootFolder, txn))
+                                .thenCompose(r -> ModelStore.insertModelAsync(employeeModel, txn))
                                 .thenCompose(r -> ModelStore.insertModelAsync(enterpriseModel, txn))
                                 .thenCompose(r -> ModelStore.insertModelAsync(workgroupModel, txn))
                                 .thenCompose(r -> ModelStore.insertModelAsync(orgunitModel, txn))
@@ -68,6 +79,7 @@ public final class StoreInitiator {
                                 .thenCompose(r -> ModelStore.insertModelAsync(checkoutModel, txn))
                                 .thenCompose(r -> createServiceModel("TestService", 1, null, txn))
                                 .thenCompose(r -> insertEntities(txn))
+                                .thenCompose(list -> createPermissionModels(txn, list))
                                 .thenCompose(r -> txn.commitAsync())
                                 .thenApply(r -> true));
             } catch (Exception e) {
@@ -179,7 +191,7 @@ public final class StoreInitiator {
     }
 
     private static EntityModel createEmployeeModel() {
-        var model = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Emploee");
+        var model = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Employee");
         model.bindToSysStore(true, false);
 
         //Members
@@ -220,7 +232,7 @@ public final class StoreInitiator {
         return model;
     }
 
-    private static CompletableFuture<Boolean> createServiceModel(
+    private static CompletableFuture<Void> createServiceModel(
             String name, long idIndex, UUID folderId, KVTransaction txn) {
         var modelId = ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
                 | ((long) ModelType.Service.value << IdUtil.MODELID_TYPE_OFFSET)
@@ -231,7 +243,7 @@ public final class StoreInitiator {
         //TODO:添加依赖项
         return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
             try {
-                var codeStream = StoreInitiator.class.getResourceAsStream(String.format("/services/%s.java", name));
+                var codeStream = getResourceStream("services", name, "java");
                 var utf8Data   = codeStream.readAllBytes();
                 codeStream.close();
                 var codeData = ModelCodeUtil.encodeServiceCodeData(utf8Data, false);
@@ -241,12 +253,63 @@ public final class StoreInitiator {
             }
         }).thenCompose(r -> {
             //TODO:继续处理编译好的类库
-            return CompletableFuture.completedFuture(true);
+            return CompletableFuture.completedFuture(null);
         });
     }
 
+    private static CompletableFuture<Void> createViewModel(
+            String name, long idIndex, UUID folderId, KVTransaction txn, String routePath) {
+        var modelId = ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
+                | ((long) ModelType.View.value << IdUtil.MODELID_TYPE_OFFSET)
+                | (idIndex << IdUtil.MODELID_SEQ_OFFSET);
+        var model = new ViewModel(modelId, name);
+        model.setFolderId(folderId);
+
+        return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
+            if (!(routePath == null || routePath.isEmpty())) {
+                model.setFlag(ViewModel.ViewModelFlag.ListInRouter);
+                model.setRoutePath(routePath);
+                var viewName = "sys." + model.name();
+                return ModelStore.upsertViewRouteAsync(viewName, model.getRoutePath(), txn);
+            }
+            return CompletableFuture.completedFuture(null);
+        }).thenCompose(r -> {
+            try {
+                var    templateStream = getResourceStream("views", name, "html");
+                var    templateCode   = new String(templateStream.readAllBytes(), StandardCharsets.UTF_8);
+                var    scriptStream   = getResourceStream("views", name, "js");
+                var    scriptCode     = new String(scriptStream.readAllBytes(), StandardCharsets.UTF_8);
+                var    styleStream    = getResourceStream("views", name, "css");
+                String styleCode      = null;
+                if (styleStream != null)
+                    styleCode = new String(styleStream.readAllBytes(), StandardCharsets.UTF_8);
+                var codeData = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
+
+                return ModelStore.upsertModelCodeAsync(modelId, codeData, txn);
+            } catch (Exception ex) {
+                return CompletableFuture.failedFuture(ex);
+            }
+        }).thenCompose(r -> {
+            try {
+                var runtimeStream   = getResourceStream("views", name, "json");
+                var runtimeCode     = new String(runtimeStream.readAllBytes(), StandardCharsets.UTF_8);
+                var runtimeCodeData = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
+
+                return ModelStore.upsertAssemblyAsync(false, "sys." + name, runtimeCodeData, txn);
+            } catch (Exception ex) {
+                return CompletableFuture.failedFuture(ex);
+            }
+        });
+    }
+
+    private static InputStream getResourceStream(String folder, String name, String ext) {
+        var path = String.format("/%s/%s.%s", folder, name, ext);
+        return StoreInitiator.class.getResourceAsStream(path);
+    }
+
     /** insert default entities */
-    private static CompletableFuture<Void> insertEntities(KVTransaction txn) {
+    private static CompletableFuture<List<OrgUnit>> insertEntities(KVTransaction txn) {
+        var list = new ArrayList<OrgUnit>(); //用于返回设置权限模型
 
         //新建默认组织
         var defaultEnterprise = new Enterprise();
@@ -279,12 +342,14 @@ public final class StoreInitiator {
         itdeptou.setBaseType(IdUtil.SYS_WORKGROUP_MODEL_ID);
         itdeptou.setBaseId(itdept.id());
         itdeptou.setParent(entou);
+        list.add(itdeptou);
 
         var adminou = new OrgUnit();
         adminou.setName(admin.getName());
         adminou.setBaseId(admin.id());
         adminou.setBaseType(IdUtil.SYS_EMPLOYEE_MODEL_ID);
         adminou.setParent(itdeptou);
+        list.add(adminou);
 
         var testou = new OrgUnit();
         testou.setName(test.getName());
@@ -299,7 +364,22 @@ public final class StoreInitiator {
                 .thenCompose(r -> EntityStore.insertEntityAsync(entou, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(itdeptou, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(adminou, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(testou, txn));
+                .thenCompose(r -> EntityStore.insertEntityAsync(testou, txn))
+                .thenApply(r -> list);
+    }
+
+    /** 创建默认权限模型 */
+    private static CompletableFuture<Void> createPermissionModels(KVTransaction txn, List<OrgUnit> ous) {
+        var admin = new PermissionModel(IdUtil.SYS_PERMISSION_ADMIN_ID, "Admin");
+        admin.setRemark("System administrator");
+        admin.orgUnits().add(ous.get(1).id());
+
+        var developer = new PermissionModel(IdUtil.SYS_PERMISSION_DEVELOPER_ID, "Developer");
+        developer.setRemark("System developer");
+        developer.orgUnits().add(ous.get(0).id());
+
+        return ModelStore.insertModelAsync(admin, txn)
+                .thenCompose(r -> ModelStore.insertModelAsync(developer, txn));
     }
 
 }
