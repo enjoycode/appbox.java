@@ -77,7 +77,13 @@ public final class StoreInitiator {
                                 .thenCompose(r -> ModelStore.insertModelAsync(orgunitModel, txn))
                                 .thenCompose(r -> ModelStore.insertModelAsync(stagedModel, txn))
                                 .thenCompose(r -> ModelStore.insertModelAsync(checkoutModel, txn))
-                                .thenCompose(r -> createServiceModel("TestService", 1, null, txn))
+                                .thenCompose(r -> createServiceModel("OrgUnitService", 1, null, txn))
+                                .thenCompose(r -> createViewModel("Home", 1, null, txn, null))
+                                .thenCompose(r -> createViewModel("PermissionTree", 2, viewOrgUnitsFolder.id(), txn, null))
+                                .thenCompose(r -> createViewModel("EnterpriseView", 3, viewOrgUnitsFolder.id(), txn, null))
+                                .thenCompose(r -> createViewModel("WorkgroupView", 4, viewOrgUnitsFolder.id(), txn, null))
+                                .thenCompose(r -> createViewModel("EmployeeView", 5, viewOrgUnitsFolder.id(), txn, null))
+                                .thenCompose(r -> createViewModel("OrgUnits", 6, viewOrgUnitsFolder.id(), txn, null))
                                 .thenCompose(r -> insertEntities(txn))
                                 .thenCompose(list -> createPermissionModels(txn, list))
                                 .thenCompose(r -> txn.commitAsync())
@@ -252,8 +258,14 @@ public final class StoreInitiator {
                 return CompletableFuture.failedFuture(e);
             }
         }).thenCompose(r -> {
-            //TODO:继续处理编译好的类库
-            return CompletableFuture.completedFuture(null);
+            try {
+                var asmStream = getResourceStream("services", name, "bin");
+                var asmData   = asmStream.readAllBytes();
+
+                return ModelStore.upsertAssemblyAsync(true, "sys." + name, asmData, txn);
+            } catch (Exception ex) {
+                return CompletableFuture.failedFuture(ex);
+            }
         });
     }
 
@@ -291,10 +303,10 @@ public final class StoreInitiator {
             }
         }).thenCompose(r -> {
             try {
-                var runtimeStream   = getResourceStream("views", name, "json");
-                var runtimeCodeData = runtimeStream.readAllBytes();
+                var asmStream = getResourceStream("views", name, "bin");
+                var asmData   = asmStream.readAllBytes();
 
-                return ModelStore.upsertAssemblyAsync(false, "sys." + name, runtimeCodeData, txn);
+                return ModelStore.upsertAssemblyAsync(false, "sys." + name, asmData, txn);
             } catch (Exception ex) {
                 return CompletableFuture.failedFuture(ex);
             }
