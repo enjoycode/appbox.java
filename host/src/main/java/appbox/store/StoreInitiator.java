@@ -292,8 +292,7 @@ public final class StoreInitiator {
         }).thenCompose(r -> {
             try {
                 var runtimeStream   = getResourceStream("views", name, "json");
-                var runtimeCode     = new String(runtimeStream.readAllBytes(), StandardCharsets.UTF_8);
-                var runtimeCodeData = ModelCodeUtil.encodeViewRuntimeCode(runtimeCode);
+                var runtimeCodeData = runtimeStream.readAllBytes();
 
                 return ModelStore.upsertAssemblyAsync(false, "sys." + name, runtimeCodeData, txn);
             } catch (Exception ex) {

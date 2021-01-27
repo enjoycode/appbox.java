@@ -5,7 +5,9 @@ import org.eclipse.core.runtime.Path;
 
 public final class PathUtil {
 
-    private static final IPath tmpdir = Path.forPosix(System.getProperty("java.io.tmpdir"));
+    public static final String tmpPath = System.getProperty("java.io.tmpdir");
+
+    private static final IPath tmpdir = Path.forPosix(tmpPath);
 
     public static final IPath INDEX_DATA = tmpdir.append("appbox").append("index");
 

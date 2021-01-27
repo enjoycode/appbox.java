@@ -30,6 +30,7 @@ public final class DesignService implements IService {
         put("GetPendingChanges", new GetPendingChanges());
         put("Publish", new Publish());
         put("NewFolder", new NewFolder());
+        put("GetAssembly", new GetAssembly());
         //----DataStore----
         put("NewDataStore", new NewDataStore());
         put("SaveDataStore", new SaveDataStore());

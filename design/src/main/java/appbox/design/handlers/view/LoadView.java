@@ -6,6 +6,7 @@ import appbox.design.services.StagedService;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
 import appbox.store.ModelStore;
+import appbox.store.utils.ModelCodeUtil;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -26,8 +27,8 @@ public final class LoadView implements IDesignHandler {
         return task.thenCompose(code -> {
             if (code != null)
                 return CompletableFuture.completedFuture(code);
-            else
-                return ModelStore.loadViewAssemblyAsync(modelId);
+            return ModelStore.loadViewAssemblyAsync(modelId)
+                    .thenApply(ModelCodeUtil::decodeViewRuntimeCode);
         }).thenApply(r -> r);
     }
 
