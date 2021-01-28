@@ -148,6 +148,7 @@ public final class DesignTree {
         }
 
         //在所有节点加载完后创建模型对应的虚拟文件
+        designHub.typeSystem.createPermissionsDocuments(); //权限模型单独处理
         for (ModelNode n : allModelNodes) {
             designHub.typeSystem.createModelDocument(n);
         }

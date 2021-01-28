@@ -71,6 +71,11 @@ public class TestServiceCodeGenerator {
         //生成测试服务模型
         var testServiceModel = new ServiceModel(makeServiceModelId(10), "TestService");
         models.add(testServiceModel);
+        //生成测试权限模型
+        var adminPermissionModel = new PermissionModel(IdUtil.SYS_PERMISSION_ADMIN_ID, "Admin");
+        adminPermissionModel.setRemark("系统管理员");
+        models.add(adminPermissionModel);
+
         //注入测试模型
         ctx.injectApplicationModel(appModel);
         ctx.injectModels(models);

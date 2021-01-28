@@ -19,6 +19,9 @@ public class TestService {
     }
 
     public CompletableFuture<?> testAwait() {
+        if (!sys.Permissions.Admin)
+            throw new RuntimeException("无Admin权限");
+
         var res = await(query());
         return CompletableFuture.completedFuture(res.get(0).Name);
     }

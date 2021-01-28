@@ -1,5 +1,7 @@
 package appbox.design.services.code;
 
+import appbox.design.tree.ApplicationNode;
+import appbox.design.tree.DesignTree;
 import org.eclipse.jdt.core.dom.*;
 
 public final class TypeHelper {
@@ -18,6 +20,25 @@ public final class TypeHelper {
         if (pkg == null)
             return false;
         return pkg.getPath().lastSegment().equals("entities");
+    }
+
+    /**
+     * 是否应用权限
+     * @return 如果是返回对应的应用节点,否则返回null
+     */
+    public static ApplicationNode isPermissionType(ITypeBinding type, DesignTree tree) {
+        if (type == null || !type.isFromSource())
+            return null;
+        if (!type.getName().equals("Permissions"))
+            return null;
+        var pkg = type.getPackage().getJavaElement();
+        if (pkg == null)
+            return null;
+        var appNode = tree.findApplicationNodeByName(pkg.getPath().lastSegment());
+        if (appNode == null)
+            return null;
+
+        return appNode;
     }
 
     public static boolean isDataStoreType(ITypeBinding type) {

@@ -3,6 +3,7 @@ package appbox.design.services.code;
 import appbox.data.EntityId;
 import appbox.design.DesignHub;
 import appbox.design.tree.ModelNode;
+import appbox.logging.Log;
 import appbox.model.DataStoreModel;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
@@ -11,6 +12,7 @@ import appbox.model.entity.EntityMemberModel;
 import appbox.model.entity.EntityRefModel;
 import appbox.model.entity.EntitySetModel;
 import appbox.runtime.InvokeArgs;
+import appbox.runtime.RuntimeContext;
 import appbox.store.SqlStore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -204,6 +206,21 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 return false;
             } else {
                 //TODO:
+                Log.warn("转换其他存储的方法暂未实现");
+            }
+        } else {
+            var appNode = TypeHelper.isPermissionType(ownerType, hub.designTree);
+            if (appNode != null) {
+                var permissionName = node.getName().getIdentifier();
+                var permissionNode = hub.designTree.findModelNodeByName(
+                        appNode.model.id(), ModelType.Permission, permissionName);
+                
+                var newNode = ast.newMethodInvocation();
+                newNode.setName(ast.newSimpleName("hasPermission"));
+                newNode.setExpression(ast.newName(RuntimeContext.class.getName()));
+                newNode.arguments().add(ast.newNumberLiteral(permissionNode.model().id() + "L"));
+                astRewrite.replace(node, newNode, null);
+                return false;
             }
         }
 
