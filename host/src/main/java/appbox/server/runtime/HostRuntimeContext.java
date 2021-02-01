@@ -81,15 +81,20 @@ public final class HostRuntimeContext implements IRuntimeContext {
             return service.invokeAsync(methodName, args);
         }
         //不存在则加载
-        return _services.tryLoadAsync(servicePath)
-                .thenCompose(instance -> {
-                    if (instance == null)
-                        return CompletableFuture.failedFuture(new ClassNotFoundException("Can't find service"));
-                    return instance.invokeAsync(methodName, args);
-                });
+        return _services.tryLoadAsync(servicePath).thenCompose(instance -> {
+            if (instance == null) {
+                var error = new ClassNotFoundException("Can't find service: " + servicePath);
+                return CompletableFuture.failedFuture(error);
+            }
+            return instance.invokeAsync(methodName, args);
+        });
     }
 
     //region ====ModelContainer====
+
+    public void injectDebugService(String debugSessionId) {
+        _services.injectDebugService(debugSessionId);
+    }
 
     /** 仅用于StoreInitiator */
     public void injectApplication(ApplicationModel appModel) {

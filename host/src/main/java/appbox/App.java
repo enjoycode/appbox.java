@@ -11,14 +11,29 @@ public class App {
         //System.setProperty("jna.debug_load", "true");
         //System.setProperty("jna.library.path",dllResourcePath);
         //System.setProperty("jna.platform.library.path",dllResourcePath);
+
+        //先判断是否调试服务
+        String debugSessionId = null;
+        String channelName    = "AppChannel";
+        if (args.length > 0) {
+            debugSessionId = args[0];
+            channelName    = args[0];
+        }
+
         System.out.println("Java AppHost running...");
 
-        // 初始化运行时
-        RuntimeContext.init(new HostRuntimeContext(), (short) 0x1041/*TODO: fix peerId*/);
+        //初始化运行时
+        var ctx = new HostRuntimeContext();
+        RuntimeContext.init(ctx, (short) 0x1041/*TODO: fix peerId*/);
 
-        // 新建Channel并开始阻塞接收
-        var channel = new SharedMemoryChannel("AppChannel");
-        // 初始化系统存储Api
+        //如果调试服务中,预先注入服务实例
+        if (debugSessionId != null) {
+            ctx.injectDebugService(debugSessionId);
+        }
+
+        //连接Channel并开始阻塞接收
+        var channel = new SharedMemoryChannel(channelName);
+        //初始化系统存储Api
         SysStoreApi.init(channel);
         channel.startReceive();
 

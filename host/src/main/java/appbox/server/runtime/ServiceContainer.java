@@ -1,6 +1,7 @@
 package appbox.server.runtime;
 
 import appbox.design.services.DesignService;
+import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.runtime.IService;
 import appbox.server.services.AdminService;
@@ -8,6 +9,8 @@ import appbox.server.services.SystemService;
 import appbox.server.services.TestService;
 import appbox.store.ModelStore;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -42,9 +45,31 @@ public final class ServiceContainer {
         lock.unlock();
     }
 
-    /**
-     * 尝试根据名称获取已加载的服务实例
-     */
+    /** 预先注入调试目标服务,防止从存储加载 */
+    protected void injectDebugService(String debugSessionId) {
+        var dbgPath = PathUtil.getDebugPath(debugSessionId);
+        if (!Files.exists(dbgPath))
+            throw new RuntimeException("Debug path not exists");
+
+        byte[] pkgData = null;
+        try {
+            var files           = Files.list(dbgPath).toArray(Path[]::new);
+            var filePath        = files[0];
+            var fileName        = filePath.toFile().getName();
+            var serviceFullName = fileName.substring(0, fileName.length() - 4);
+            var serviceName     = getServiceName(serviceFullName);
+            pkgData = Files.readAllBytes(filePath);
+            var serviceClassLoader = new ServiceClassLoader();
+            var clazz              = serviceClassLoader.loadServiceClass(serviceName, pkgData);
+            var obj                = (IService) clazz.getDeclaredConstructor().newInstance();
+            registerService(serviceFullName, obj);
+            Log.debug("Inject debug service: " + serviceFullName);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** 尝试根据名称获取已加载的服务实例 */
     public IService tryGet(CharSequence service) {
         _mapLock.readLock().lock();
         var instance = _services.get(service);
@@ -55,8 +80,7 @@ public final class ServiceContainer {
     /** 尝试从ModelStore加载服务实例 */
     public CompletableFuture<IService> tryLoadAsync(CharSequence service) {
         var serviceFullName = service.toString();
-        var firstDotIndex   = serviceFullName.indexOf('.');
-        var serviceName     = serviceFullName.substring(firstDotIndex + 1);
+        var serviceName     = getServiceName(serviceFullName);
 
         //TODO:暂并发时会多余加载，待修改
         return ModelStore.loadServiceAssemblyAsync(serviceFullName).handle((r, ex) -> {
@@ -75,9 +99,7 @@ public final class ServiceContainer {
 
             //创建服务实例
             try {
-                var serviceClassLoader = new ServiceClassLoader();
-                var clazz              = serviceClassLoader.loadServiceClass(serviceName, r);
-                var obj                = (IService) clazz.getDeclaredConstructor().newInstance();
+                var obj = loadServiceInstance(serviceName, r);
                 _services.put(service, obj);
                 return obj;
             } catch (Exception e) {
@@ -87,6 +109,22 @@ public final class ServiceContainer {
                 _mapLock.writeLock().unlock();
             }
         });
+    }
+
+    /**
+     * 从服务全路径中获取名称
+     * @param serviceFullName eg: sys.OrderService
+     * @return eg: OrderService
+     */
+    private static String getServiceName(String serviceFullName) {
+        var firstDotIndex = serviceFullName.indexOf('.');
+        return serviceFullName.substring(firstDotIndex + 1);
+    }
+
+    private static IService loadServiceInstance(String serviceName, byte[] data) throws Exception {
+        var serviceClassLoader = new ServiceClassLoader();
+        var clazz              = serviceClassLoader.loadServiceClass(serviceName, data);
+        return (IService) clazz.getDeclaredConstructor().newInstance();
     }
 
     public void tryRemove(CharSequence service) {

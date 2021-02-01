@@ -4,10 +4,8 @@ import appbox.data.TreeNodePath;
 
 import java.util.UUID;
 
-/**
- * 用户会话信息
- */
-public interface ISessionInfo {
+/** 用户会话信息 */
+public interface ISessionInfo { //TODO: rename to IUserSession
 
     String name();
 

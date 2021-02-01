@@ -15,4 +15,8 @@ public final class PathUtil {
         return tmpdir.append("appbox").append("workspace").append(Long.toUnsignedString(sessionId));
     }
 
+    public static java.nio.file.Path getDebugPath(String debugSessionId) {
+        return java.nio.file.Path.of(tmpPath, "appbox", "debug", debugSessionId);
+    }
+
 }

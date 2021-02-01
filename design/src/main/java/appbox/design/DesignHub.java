@@ -1,5 +1,6 @@
 package appbox.design;
 
+import appbox.design.services.debug.DebugService;
 import appbox.design.services.code.TypeSystem;
 import appbox.design.tree.DesignTree;
 import appbox.model.ApplicationModel;
@@ -16,6 +17,7 @@ public final class DesignHub implements IDesignContext { //TODO: rename to Desig
     public final DesignTree   designTree;
     public final TypeSystem   typeSystem;
     public final ISessionInfo session;
+    private      DebugService _debugService;
 
     /** 用于发布时暂存挂起的修改 */
     public Object[] pendingChanges;
@@ -29,6 +31,12 @@ public final class DesignHub implements IDesignContext { //TODO: rename to Desig
         this.session = session;
         typeSystem   = new TypeSystem(this);
         designTree   = new DesignTree(this);
+    }
+
+    public synchronized DebugService debugService() {
+        if (_debugService == null)
+            _debugService = new DebugService(this);
+        return _debugService;
     }
 
     //region ====IDesignContext====
