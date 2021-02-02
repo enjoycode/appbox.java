@@ -4,6 +4,7 @@ import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.design.services.PublishService;
 import appbox.design.utils.PathUtil;
+import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.model.ServiceModel;
 import appbox.runtime.InvokeArgs;
@@ -22,6 +23,7 @@ public final class StartDebugging implements IDesignHandler {
         var methodName  = args.getString();
         var methodArgs  = args.getString(); //TODO:
         var breakPoints = args.getString();
+        Log.debug(breakPoints);
 
         //先编译服务模型,将编译结果保存至当前会话的调试目录内
         var serviceNode = hub.designTree.findModelNode(ModelType.Service, Long.parseUnsignedLong(modelId));
@@ -43,10 +45,9 @@ public final class StartDebugging implements IDesignHandler {
         }
 
         //启动调试器与目标子进程
-        hub.debugService().startDebugger(serviceNode.appNode.model.name(), serviceNode.model().name(), methodName,
-                null, null); //TODO:
-
-        return null;
+        return hub.debugService().startDebugger(serviceNode.appNode.model.name()
+                , serviceNode.model().name(), methodName, null, null) //TODO: args & bps
+                .thenApply(r -> null);
     }
 
     private static void cleanDebugPath(Path dbgPath) throws IOException {

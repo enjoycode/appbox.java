@@ -6,8 +6,8 @@ import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 public final class StartDebugResponse implements IMessage {
-    public long    sessionId;
-    public boolean ok;
+    public long sessionId;
+    public int  errorCode;
 
     @Override
     public byte MessageType() {
@@ -22,6 +22,6 @@ public final class StartDebugResponse implements IMessage {
     @Override
     public void readFrom(IInputStream bs) {
         sessionId = bs.readLong();
-        ok        = bs.readBool();
+        errorCode = bs.readInt();
     }
 }

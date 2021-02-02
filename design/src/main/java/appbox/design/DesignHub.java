@@ -6,7 +6,6 @@ import appbox.design.tree.DesignTree;
 import appbox.model.ApplicationModel;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
-import appbox.runtime.ISessionInfo;
 
 import java.util.concurrent.*;
 
@@ -14,10 +13,10 @@ import java.util.concurrent.*;
  * 每个在线开发者对应一个DesignHub实例
  */
 public final class DesignHub implements IDesignContext { //TODO: rename to DesignContext
-    public final DesignTree   designTree;
-    public final TypeSystem   typeSystem;
-    public final ISessionInfo session;
-    private      DebugService _debugService;
+    public final DesignTree        designTree;
+    public final TypeSystem        typeSystem;
+    public final IDeveloperSession session;
+    private      DebugService      _debugService;
 
     /** 用于发布时暂存挂起的修改 */
     public Object[] pendingChanges;
@@ -27,7 +26,7 @@ public final class DesignHub implements IDesignContext { //TODO: rename to Desig
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<Runnable>());
 
-    public DesignHub(ISessionInfo session) {
+    public DesignHub(IDeveloperSession session) {
         this.session = session;
         typeSystem   = new TypeSystem(this);
         designTree   = new DesignTree(this);

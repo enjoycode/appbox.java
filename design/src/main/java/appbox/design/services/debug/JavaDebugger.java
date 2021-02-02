@@ -75,9 +75,14 @@ public final class JavaDebugger {
         return new JavaDebugger(vm, process, session);
     }
 
+    public void stop() {
+        //TODO:尝试等待目标进程退出至超时，再强制退出
+        Log.debug("Stop JavaDebugger");
+    }
+
     /** 启用挂起的调试断点 */
     private void enablePendingBreakpoints() {
-
+        Log.warn("启用调试断点暂未实现");
     }
 
     //region ====VmEventsReader====

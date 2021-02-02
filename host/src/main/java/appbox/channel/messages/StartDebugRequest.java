@@ -28,7 +28,7 @@ public final class StartDebugRequest implements IMessage {
         bs.writeLong(sessionId);
         bs.writeNativeString(service);
         if (invokeArgs == null) {
-            bs.writeNativeVariant(-1);
+            bs.writeNativeVariant(0);
         } else {
             bs.writeNativeVariant(invokeArgs.length);
             bs.write(invokeArgs, 0, invokeArgs.length);

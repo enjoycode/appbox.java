@@ -14,6 +14,7 @@ public final class DebugSessionManager {
 
     private static IHostMessageChannel                hostMessageChannel;
     private static Map<Long, CompletableFuture<Void>> startings;
+    private static Map<Long, IDeveloperSession>       running;
 
     private DebugSessionManager() {}
 
@@ -25,9 +26,12 @@ public final class DebugSessionManager {
             , String service, byte[] invokeArgs) {
         var future = new CompletableFuture<Void>();
 
-        if (startings == null)
+        if (startings == null) {
             startings = new HashMap<>();
+            running   = new HashMap<>();
+        }
         startings.put(session.sessionId(), future);
+        running.put(session.sessionId(), session);
 
         var req = new StartDebugRequest(session.sessionId(), service, invokeArgs);
         hostMessageChannel.sendMessage(hostMessageChannel.newMessageId(), req);
@@ -42,10 +46,21 @@ public final class DebugSessionManager {
             return;
         }
 
-        if (response.ok)
-            future.completeAsync(() -> null);
+        if (response.errorCode == 0)
+            future.complete(null);
         else
-            CompletableFuture.runAsync(() -> future.completeExceptionally(new RuntimeException("Can't start debugging")));
+            future.completeExceptionally(new RuntimeException("Can't start debugging"));
+    }
+
+    /** 收到主进程正常停止调试的请求 */
+    public static synchronized void onStopRequest(long sessionId) {
+        var session = running.remove(sessionId);
+        if (session == null) {
+            Log.warn("Can't find running debug session");
+            return;
+        }
+
+        session.getDesignHub().debugService().stopDebugger();
     }
 
 }

@@ -39,6 +39,9 @@ public final class MessageDispatcher {
             case MessageType.StartDebuggerResponse:
                 processStartDebugResponse(channel, first);
                 break;
+            case MessageType.StopDebuggerRequest:
+                processStopDebugRequest(channel, first);
+                break;
             default:
                 channel.returnAllChunks(first);
                 Log.warn("Receive unknown type message: " + msgType);
@@ -138,13 +141,26 @@ public final class MessageDispatcher {
         try {
             IHostMessageChannel.deserialize(response, first);
         } catch (Exception ex) {
-            response.ok = false;
-            Log.warn("反序列化StartDebugResponse错误: ");
+            response.errorCode = 2;
+            Log.warn("Deserialize [StartDebugResponse] error: " + ex);
         } finally {
             channel.returnAllChunks(first);
         }
 
-        DebugSessionManager.onStartResponse(response);
+        CompletableFuture.runAsync(() -> DebugSessionManager.onStartResponse(response));
+    }
+
+    private static void processStopDebugRequest(IHostMessageChannel channel, Pointer first) {
+        var request = new StopDebugRequest();
+        try {
+            IHostMessageChannel.deserialize(request, first);
+        } catch (Exception ex) {
+            Log.warn("Deserialize [StopDebugRequest] error: " + ex);
+        } finally {
+            channel.returnAllChunks(first);
+        }
+
+        CompletableFuture.runAsync(() -> DebugSessionManager.onStopRequest(request.sessionId));
     }
 
 }

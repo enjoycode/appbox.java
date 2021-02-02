@@ -29,6 +29,7 @@ public final class MessageType {
 
     public static final byte StartDebuggerRequest  = 50;
     public static final byte StartDebuggerResponse = 51;
+    public static final byte StopDebuggerRequest   = 52;
 
     public static final byte ExitReadLoop = -128;
 }
