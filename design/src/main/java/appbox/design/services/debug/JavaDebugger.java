@@ -66,7 +66,7 @@ public final class JavaDebugger {
         }
 
         //先启动调试子进程
-        var cmd = List.of("debug",
+        var cmd = List.of("bin/debug",
                 Long.toUnsignedString(session.designHub.session.sessionId()));
         var process = new ProcessBuilder().command(cmd).directory(null).inheritIO().start();
 

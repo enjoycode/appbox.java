@@ -37,7 +37,7 @@ public final class DebugService {
                 Log.debug("Start debugging: " + servicePath);
             } catch (Exception ex) {
                 _debugging.set(false);
-                throw new RuntimeException("Can't start java debugger");
+                throw new RuntimeException("Can't start java debugger: " + ex);
             }
         });
     }

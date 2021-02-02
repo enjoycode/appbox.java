@@ -22,6 +22,7 @@ public final class DebugSessionManager {
         hostMessageChannel = channel;
     }
 
+    /** 通知主进程准备调试子进程通道并发送调用请求 */
     public static synchronized CompletableFuture<Void> startDebugChannel(IDeveloperSession session
             , String service, byte[] invokeArgs) {
         var future = new CompletableFuture<Void>();
@@ -32,6 +33,7 @@ public final class DebugSessionManager {
         }
         startings.put(session.sessionId(), future);
         running.put(session.sessionId(), session);
+        Log.debug("Starting debug channel: " + Long.toUnsignedString(session.sessionId()));
 
         var req = new StartDebugRequest(session.sessionId(), service, invokeArgs);
         hostMessageChannel.sendMessage(hostMessageChannel.newMessageId(), req);
@@ -39,10 +41,11 @@ public final class DebugSessionManager {
         return future;
     }
 
+    /** 收到主进程回复 */
     public static synchronized void onStartResponse(StartDebugResponse response) {
         var future = startings.remove(response.sessionId);
         if (future == null) {
-            Log.warn("Can't find pending request");
+            Log.warn("Can't find pending request: " + Long.toUnsignedString(response.sessionId));
             return;
         }
 
@@ -56,7 +59,7 @@ public final class DebugSessionManager {
     public static synchronized void onStopRequest(long sessionId) {
         var session = running.remove(sessionId);
         if (session == null) {
-            Log.warn("Can't find running debug session");
+            Log.warn("Can't find running debug session: " + Long.toUnsignedString(sessionId));
             return;
         }
 

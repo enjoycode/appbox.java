@@ -21,7 +21,7 @@ public final class StartDebugResponse implements IMessage {
 
     @Override
     public void readFrom(IInputStream bs) {
-        sessionId = bs.readLong();
         errorCode = bs.readInt();
+        sessionId = bs.readLong();
     }
 }
