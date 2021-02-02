@@ -6,19 +6,21 @@ import appbox.design.DesignHub;
 import appbox.design.IDeveloperSession;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public final class WebSession implements IDeveloperSession {
     private final long         _id;
     private       DesignHub    _designHub;
-    public final EntityId employeeId;
+    public final  EntityId     employeeId;
     public final  TreeNodePath treePath;
 
     public WebSession(long id, TreeNodePath path, EntityId employeeId) {
-        _id      = id;
-        treePath = path;
+        _id             = id;
+        treePath        = path;
         this.employeeId = employeeId;
     }
 
+    //region ====IUserSession====
     @Override
     public String name() {
         return treePath.getAt(0).text;
@@ -63,7 +65,9 @@ public final class WebSession implements IDeveloperSession {
     public UUID externalId() {
         return null;
     }
+    //endregion
 
+    //region ====IDeveloperSession====
     @Override
     public synchronized DesignHub getDesignHub() {
         if (_designHub == null) {
@@ -75,7 +79,14 @@ public final class WebSession implements IDeveloperSession {
     }
 
     @Override
+    public CompletableFuture<Void> startDebugChannel(String service, byte[] invokeArgs) {
+        return DebugSessionManager.startDebugChannel(this, service, invokeArgs);
+    }
+
+    @Override
     public void sendEvent(int source, String body) {
 
     }
+    //endregion
+
 }

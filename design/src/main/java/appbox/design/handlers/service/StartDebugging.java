@@ -42,6 +42,10 @@ public final class StartDebugging implements IDesignHandler {
             throw new RuntimeException(ex);
         }
 
+        //启动调试器与目标子进程
+        hub.debugService().startDebugger(serviceNode.appNode.model.name(), serviceNode.model().name(), methodName,
+                null, null); //TODO:
+
         return null;
     }
 

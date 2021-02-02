@@ -3,6 +3,7 @@ package appbox.design;
 import appbox.data.TreeNodePath;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**仅用于测试*/
 public final class MockDeveloperSession implements IDeveloperSession {
@@ -73,6 +74,11 @@ public final class MockDeveloperSession implements IDeveloperSession {
     @Override
     public UUID externalId() {
         return null;
+    }
+
+    @Override
+    public CompletableFuture<Void> startDebugChannel(String service, byte[] invokeArgs) {
+        throw new UnsupportedOperationException();
     }
 }
 

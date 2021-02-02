@@ -212,9 +212,7 @@ public interface IOutputStream extends IEntityMemberWriter {
         } while (true);
     }
 
-    /**
-     * 写入带长度信息的字节数组
-     */
+    /** 写入带长度信息的字节数组 */
     default void writeByteArray(byte[] value) {
         if (value == null) {
             writeVariant(-1);
@@ -226,9 +224,7 @@ public interface IOutputStream extends IEntityMemberWriter {
         }
     }
 
-    /**
-     * 写入带长度信息(字符数)且Utf8编码的字符串
-     */
+    /** 写入带长度信息(字符数)且Utf8编码的字符串 */
     default void writeString(String value) {
         if (value == null) {
             writeVariant(-1);
@@ -238,6 +234,13 @@ public interface IOutputStream extends IEntityMemberWriter {
             writeVariant(value.length()); //注意写入字符数量，非编码后的字节数量
             writeUtf8(value);
         }
+    }
+
+    /** 写入与C++一致的字符串 */
+    default void writeNativeString(String value) {
+        byte[] utf8Data = value.getBytes(StandardCharsets.UTF_8);
+        writeNativeVariant(utf8Data.length);
+        write(utf8Data, 0, utf8Data.length);
     }
 
     default void writeStringField(String value, int fieldId) {

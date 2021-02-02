@@ -1,5 +1,6 @@
 package appbox;
 
+import appbox.channel.DebugSessionManager;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
@@ -33,8 +34,8 @@ public class App {
 
         //连接Channel并开始阻塞接收
         var channel = new SharedMemoryChannel(channelName);
-        //初始化系统存储Api
-        SysStoreApi.init(channel);
+        DebugSessionManager.init(channel);
+        SysStoreApi.init(channel); //初始化系统存储Api
         channel.startReceive();
 
         System.out.println("Java AppHost stopped.");

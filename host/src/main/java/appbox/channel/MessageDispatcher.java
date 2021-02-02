@@ -10,9 +10,7 @@ import com.sun.jna.Pointer;
 
 import java.util.concurrent.CompletableFuture;
 
-/**
- * 消息分发处理器，处理来自主进程的消息
- */
+/** 消息分发处理器，处理来自主进程的消息 */
 public final class MessageDispatcher {
 
     /** 专用于Loop线程内解析消息,重复使用 */
@@ -37,6 +35,9 @@ public final class MessageDispatcher {
             case MessageType.KVGetResponse:
             case MessageType.KVScanResponse:
                 processStoreResponse(channel, first);
+                break;
+            case MessageType.StartDebuggerResponse:
+                processStartDebugResponse(channel, first);
                 break;
             default:
                 channel.returnAllChunks(first);
@@ -129,6 +130,21 @@ public final class MessageDispatcher {
 
         //正常响应，注意必须异步，还在Loop线程内
         pendingItem.completeAsync(null);
+    }
+
+    private static void processStartDebugResponse(IHostMessageChannel channel, Pointer first) {
+        //反序列化响应
+        var response = new StartDebugResponse();
+        try {
+            IHostMessageChannel.deserialize(response, first);
+        } catch (Exception ex) {
+            response.ok = false;
+            Log.warn("反序列化StartDebugResponse错误: ");
+        } finally {
+            channel.returnAllChunks(first);
+        }
+
+        DebugSessionManager.onStartResponse(response);
     }
 
 }
