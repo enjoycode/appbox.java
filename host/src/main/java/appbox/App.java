@@ -34,7 +34,9 @@ public class App {
 
         //连接Channel并开始阻塞接收
         var channel = new SharedMemoryChannel(channelName);
-        DebugSessionManager.init(channel);
+        if (debugSessionId == null) {
+            DebugSessionManager.init(channel);
+        }
         SysStoreApi.init(channel); //初始化系统存储Api
         channel.startReceive();
 

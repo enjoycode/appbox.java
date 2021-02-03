@@ -76,8 +76,10 @@ public final class JavaDebugger {
     }
 
     public void stop() {
-        //TODO:尝试等待目标进程退出至超时，再强制退出
+        //TODO:尝试等待目标进程退出至超时，暂强制退出
+        _vm.exit(1);
         Log.debug("Stop JavaDebugger");
+        //TODO:没有调试会话关闭监听
     }
 
     /** 启用挂起的调试断点 */

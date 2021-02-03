@@ -6,9 +6,7 @@ import com.sun.jna.Pointer;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * 与主进程通信的共享内存通道，每个实例包含两个单向消息队列
- */
+/** 与主进程通信的共享内存通道，每个实例包含两个单向消息队列 */
 public final class SharedMemoryChannel implements IHostMessageChannel, AutoCloseable {
     private final Pointer                   _sendQueue;    //发送队列
     private final Pointer                   _receiveQueue; //接收队列
@@ -30,12 +28,17 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
 
     @Override
     public void close() {
-
+        try {
+            var chunk = NativeSmq.SMQ_GetChunkForWriting(_receiveQueue, -1);
+            chunk.setByte(0, MessageType.ExitReadLoop);
+            //chunk.setByte(1, (byte)(MessageFlag.FirstChunk | MessageFlag.LastChunk));
+            NativeSmq.SMQ_PostChunk(_receiveQueue, chunk);
+        } catch (Exception ex) {
+            Log.warn("Can't send ExitReadLoop message to receive queue");
+        }
     }
 
-    /**
-     * 开始在当前线程接收消息
-     */
+    /** 开始在当前线程接收消息 */
     public void startReceive() {
         //int msgNo  = 0;
         //int resLen = 13;
@@ -75,11 +78,10 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
             //    NativeSmq.SMQ_PostChunk(_sendQueue, wchunk);
             //});
         }
+        Log.info("Channel stopped receive");
     }
 
-    /**
-     * 收到消息开始组合为完整的消息
-     */
+    /** 收到消息开始组合为完整的消息 */
     private void onMessageChunk(Pointer chunk) { //TODO:特殊类型消息(KVScanResponse)流式处理
         var msgId   = NativeSmq.getMsgId(chunk);
         var msgFlag = NativeSmq.getMsgFlag(chunk);
@@ -125,9 +127,7 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
         return _msgNo.incrementAndGet();
     }
 
-    /**
-     * 序列化并发送消息，如果序列化异常标记消息为错误状态仍旧发送,接收端根据消息类型是请求还是响应作不同处理
-     */
+    /** 序列化并发送消息，如果序列化异常标记消息为错误状态仍旧发送,接收端根据消息类型是请求还是响应作不同处理 */
     @Override
     public <T extends IMessage> void sendMessage(int id, T msg) {
         byte flag     = MessageFlag.None;
