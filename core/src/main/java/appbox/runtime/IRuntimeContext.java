@@ -3,7 +3,6 @@ package appbox.runtime;
 import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -14,10 +13,10 @@ public interface IRuntimeContext {
     /**
      * 获取当前会话信息
      */
-    ISessionInfo currentSession();
+    IUserSession currentSession();
 
     /** 设置当前会话信息 */
-    void setCurrentSession(ISessionInfo session);
+    void setCurrentSession(IUserSession session);
 
     IPasswordHasher passwordHasher();
 

@@ -1,10 +1,10 @@
 package appbox.design;
 
-import appbox.runtime.ISessionInfo;
+import appbox.runtime.IUserSession;
 
 import java.util.concurrent.CompletableFuture;
 
-public interface IDeveloperSession extends ISessionInfo {
+public interface IDeveloperSession extends IUserSession {
 
     /** 获取当前用户会话的开发者的DesighHub实例 */
     DesignHub getDesignHub();

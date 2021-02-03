@@ -1,7 +1,6 @@
 package appbox.channel;
 
-import appbox.runtime.IService;
-import appbox.runtime.ISessionInfo;
+import appbox.runtime.IUserSession;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,13 +12,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public final class SessionManager {
 
-    private static final Map<Long, ISessionInfo> _sessions = new HashMap<>();
+    private static final Map<Long, IUserSession> _sessions = new HashMap<>();
     private static final ReadWriteLock           _mapLock  = new ReentrantReadWriteLock();
 
     private SessionManager() {
     }
 
-    public static ISessionInfo tryGet(long id) {
+    public static IUserSession tryGet(long id) {
         var lock = _mapLock.readLock();
         lock.lock();
         var res = _sessions.get(id);
@@ -27,7 +26,7 @@ public final class SessionManager {
         return res;
     }
 
-    public static void register(ISessionInfo session) {
+    public static void register(IUserSession session) {
         var lock = _mapLock.writeLock();
         lock.lock();
         _sessions.put(session.sessionId(), session);

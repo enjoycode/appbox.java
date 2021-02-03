@@ -1,13 +1,12 @@
 package appbox.model;
 
 import appbox.data.EntityId;
-import appbox.runtime.ISessionInfo;
+import appbox.runtime.IUserSession;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /** 权限模型用于关联受控的资源与授权的组织单元 */
 public final class PermissionModel extends ModelBase {
@@ -45,7 +44,7 @@ public final class PermissionModel extends ModelBase {
         return _orgUnits != null && _orgUnits.size() > 0;
     }
 
-    public boolean owns(ISessionInfo session) {
+    public boolean owns(IUserSession session) {
         if (_orgUnits == null || _orgUnits.size() == 0)
             return false;
 

@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 public final class MockRuntimeContext implements IRuntimeContext, IDesignContext {
     private       ApplicationModel         applicationModel;
     private final HashMap<Long, ModelBase> models = new HashMap<>();
-    private       ISessionInfo             session;
+    private       IUserSession             session;
 
     public void injectApplicationModel(ApplicationModel app) {
         applicationModel = app;
@@ -29,12 +29,12 @@ public final class MockRuntimeContext implements IRuntimeContext, IDesignContext
     }
 
     @Override
-    public ISessionInfo currentSession() {
+    public IUserSession currentSession() {
         return session;
     }
 
     @Override
-    public void setCurrentSession(ISessionInfo session) {
+    public void setCurrentSession(IUserSession session) {
         this.session = session;
     }
 

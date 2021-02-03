@@ -5,7 +5,7 @@ import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
 import appbox.runtime.IPasswordHasher;
 import appbox.runtime.IRuntimeContext;
-import appbox.runtime.ISessionInfo;
+import appbox.runtime.IUserSession;
 import appbox.runtime.InvokeArgs;
 import appbox.server.security.PasswordHasher;
 import appbox.store.ModelStore;
@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutorService;
 public final class HostRuntimeContext implements IRuntimeContext {
 
     private final        ServiceContainer                       _services   = new ServiceContainer();
-    private static final TransmittableThreadLocal<ISessionInfo> _sessionTTL = new TransmittableThreadLocal<>();
+    private static final TransmittableThreadLocal<IUserSession> _sessionTTL = new TransmittableThreadLocal<>();
 
     private final IPasswordHasher _passwordHasher = new PasswordHasher();
 
@@ -52,7 +52,7 @@ public final class HostRuntimeContext implements IRuntimeContext {
      * 仅用于消息分发器调用服务前设置以及系统存储收到请求响应时设置
      */
     @Override
-    public void setCurrentSession(@Nullable ISessionInfo session) {
+    public void setCurrentSession(@Nullable IUserSession session) {
         if (session == null) {
             _sessionTTL.remove();
         } else {
@@ -61,7 +61,7 @@ public final class HostRuntimeContext implements IRuntimeContext {
     }
 
     @Override
-    public ISessionInfo currentSession() {
+    public IUserSession currentSession() {
         return _sessionTTL.get();
     }
 

@@ -1,6 +1,6 @@
 package appbox.channel;
 
-import appbox.runtime.ISessionInfo;
+import appbox.runtime.IUserSession;
 import appbox.runtime.InvokeArgs;
 import appbox.runtime.RuntimeContext;
 import appbox.channel.messages.*;
@@ -62,7 +62,7 @@ public final class MessageDispatcher {
             //异步交给运行时服务容器处理
             CompletableFuture.runAsync(() -> {
                 //先设置当前会话信息
-                final ISessionInfo sessionInfo = sessionId == 0 ? null : SessionManager.tryGet(sessionId);
+                final IUserSession sessionInfo = sessionId == 0 ? null : SessionManager.tryGet(sessionId);
                 RuntimeContext.current().setCurrentSession(sessionInfo);
                 //再调用服务
                 RuntimeContext.invokeAsync(service, args).handle((r, ex) -> {
