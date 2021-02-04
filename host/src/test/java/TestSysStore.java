@@ -1,9 +1,9 @@
+import appbox.channel.IHostMessageChannel;
 import appbox.channel.messages.*;
 import appbox.entities.Employee;
 import appbox.entities.Enterprise;
 import appbox.entities.OrgUnit;
 import appbox.runtime.RuntimeContext;
-import appbox.channel.SharedMemoryChannel;
 import appbox.server.runtime.HostRuntimeContext;
 import appbox.store.EntityStore;
 import appbox.store.KVTransaction;
@@ -26,12 +26,12 @@ import java.util.concurrent.ExecutionException;
 
 public class TestSysStore {
 
-    private static SharedMemoryChannel channel;
+    private static IHostMessageChannel channel;
 
     @BeforeAll
     public static void init() {
-        RuntimeContext.init(new HostRuntimeContext(), (short) 1/*TODO: fix peerId*/);
-        channel = new SharedMemoryChannel("AppChannel");
+        RuntimeContext.init(new HostRuntimeContext("AppChannel"), (short) 1/*TODO: fix peerId*/);
+        channel = ((HostRuntimeContext) RuntimeContext.current()).channel;
         SysStoreApi.init(channel);
         CompletableFuture.runAsync(() -> {
             channel.startReceive();
@@ -70,7 +70,7 @@ public class TestSysStore {
         var q = new TableScan<>(Employee.MODELID, Employee.class);
         q.where(Employee.NAME.eq("Admin"));
         var list = q.toListAsync().join();
-        var emp = list.get(0);
+        var emp  = list.get(0);
         emp.setBirthday(LocalDateTime.of(1977, 1, 27, 8, 8));
         EntityStore.saveAsync(emp).join();
     }

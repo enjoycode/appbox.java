@@ -39,6 +39,7 @@ public final class SharedMemoryChannel implements IHostMessageChannel, AutoClose
     }
 
     /** 开始在当前线程接收消息 */
+    @Override
     public void startReceive() {
         //int msgNo  = 0;
         //int resLen = 13;

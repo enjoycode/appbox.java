@@ -4,6 +4,8 @@ import appbox.channel.messages.StartDebugRequest;
 import appbox.channel.messages.StartDebugResponse;
 import appbox.design.IDeveloperSession;
 import appbox.logging.Log;
+import appbox.runtime.RuntimeContext;
+import appbox.server.runtime.HostRuntimeContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,15 +14,15 @@ import java.util.concurrent.CompletableFuture;
 /** 管理调试会话及通道 */
 public final class DebugSessionManager {
 
-    private static IHostMessageChannel                hostMessageChannel;
-    private static Map<Long, CompletableFuture<Void>> startings;
-    private static Map<Long, IDeveloperSession>       running;
+    private static final IHostMessageChannel                hostMessageChannel;
+    private static       Map<Long, CompletableFuture<Void>> startings;
+    private static       Map<Long, IDeveloperSession>       running;
+
+    static {
+        hostMessageChannel = ((HostRuntimeContext) RuntimeContext.current()).channel;
+    }
 
     private DebugSessionManager() {}
-
-    public static void init(IHostMessageChannel channel) {
-        hostMessageChannel = channel;
-    }
 
     /** 通知主进程准备调试子进程通道并发送调用请求 */
     public static synchronized CompletableFuture<Void> startDebugChannel(IDeveloperSession session

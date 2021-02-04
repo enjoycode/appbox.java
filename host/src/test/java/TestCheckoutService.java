@@ -1,4 +1,4 @@
-import appbox.channel.SharedMemoryChannel;
+import appbox.channel.IHostMessageChannel;
 import appbox.design.common.CheckoutInfo;
 import appbox.design.services.CheckoutService;
 import appbox.design.tree.DesignNodeType;
@@ -20,12 +20,12 @@ import java.util.concurrent.CompletableFuture;
 
 public class TestCheckoutService {
 
-    private static SharedMemoryChannel channel;
+    private static IHostMessageChannel channel;
 
     @BeforeAll
     public static void init() {
-        RuntimeContext.init(new HostRuntimeContext(), (short) 1/*TODO: fix peerId*/);
-        channel = new SharedMemoryChannel("AppChannel");
+        RuntimeContext.init(new HostRuntimeContext("AppChannel"), (short) 1/*TODO: fix peerId*/);
+        channel = ((HostRuntimeContext) RuntimeContext.current()).channel;
         SysStoreApi.init(channel);
 
         CompletableFuture.runAsync(() -> {

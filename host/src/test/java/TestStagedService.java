@@ -1,4 +1,4 @@
-import appbox.channel.SharedMemoryChannel;
+import appbox.channel.IHostMessageChannel;
 import appbox.design.MockDeveloperSession;
 import appbox.design.services.StagedService;
 import appbox.entities.StagedModel;
@@ -19,12 +19,12 @@ import java.util.concurrent.ExecutionException;
 
 public class TestStagedService {
 
-    private static SharedMemoryChannel channel;
+    private static IHostMessageChannel channel;
 
     @BeforeAll
     public static void init() {
-        RuntimeContext.init(new HostRuntimeContext(), (short) 10410);
-        channel = new SharedMemoryChannel("AppChannel");
+        RuntimeContext.init(new HostRuntimeContext("AppChannel"), (short) 10410);
+        channel = ((HostRuntimeContext) RuntimeContext.current()).channel;
         SysStoreApi.init(channel);
 
         //注入模拟会话

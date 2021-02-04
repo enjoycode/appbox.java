@@ -8,6 +8,9 @@ public interface IHostMessageChannel extends IMessageChannel {
     /** 归还或释放完整的消息缓存 */
     void returnAllChunks(Pointer first);
 
+    /** 在当前线程阻塞接收消息 */
+    void startReceive();
+
     void close();
 
     /** 反序列化至指定类型的消息，注意消息缓存块由调用者释放 */

@@ -1,5 +1,7 @@
 package appbox.server.runtime;
 
+import appbox.channel.IHostMessageChannel;
+import appbox.channel.SharedMemoryChannel;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
@@ -9,48 +11,29 @@ import appbox.runtime.IUserSession;
 import appbox.runtime.InvokeArgs;
 import appbox.server.security.PasswordHasher;
 import appbox.store.ModelStore;
-import appbox.utils.ReflectUtil;
 import com.alibaba.ttl.TransmittableThreadLocal;
-import com.alibaba.ttl.threadpool.TtlExecutors;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 public final class HostRuntimeContext implements IRuntimeContext {
 
-    private final        ServiceContainer                       _services   = new ServiceContainer();
     private static final TransmittableThreadLocal<IUserSession> _sessionTTL = new TransmittableThreadLocal<>();
 
-    private final IPasswordHasher _passwordHasher = new PasswordHasher();
+    private final ServiceContainer    _services       = new ServiceContainer();
+    private final IPasswordHasher     _passwordHasher = new PasswordHasher();
+    public final  IHostMessageChannel channel; //与主进程连接的通道
 
     private final ArrayList<ApplicationModel> apps   = new ArrayList<>(); //TODO:use RWLock
     private final HashMap<Long, ModelBase>    models = new HashMap<>(100); //TODO:usr LRUCache
 
-    static {
-        //暂在这里Hack CompletableFuture's ASYNC_POOL
-        var async_pool = CompletableFuture.completedFuture(true).defaultExecutor();
-        //TODO:待尝试ForkJoinPool的AsyncMode
-        //Log.debug("ForkJoinPool: Parallelism=" + ForkJoinPool.commonPool().getParallelism()
-        //        + " AsyncMode=" + ForkJoinPool.commonPool().getAsyncMode());
-        if (async_pool instanceof ExecutorService) {
-            async_pool = TtlExecutors.getTtlExecutorService((ExecutorService) async_pool);
-        } else {
-            async_pool = TtlExecutors.getTtlExecutor(async_pool);
-        }
-
-        try {
-            ReflectUtil.setFinalStatic(CompletableFuture.class.getDeclaredField("ASYNC_POOL"), async_pool);
-        } catch (Exception e) {
-            Log.error("Can't find CompletableFuture's ASYNC_POOL field.");
-        }
+    public HostRuntimeContext(String channelName) {
+        channel = new SharedMemoryChannel(channelName);
     }
 
-    /**
-     * 仅用于消息分发器调用服务前设置以及系统存储收到请求响应时设置
-     */
+    /** 仅用于消息分发器调用服务前设置以及系统存储收到请求响应时设置 */
     @Override
     public void setCurrentSession(@Nullable IUserSession session) {
         if (session == null) {
