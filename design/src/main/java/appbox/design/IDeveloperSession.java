@@ -5,6 +5,8 @@ import appbox.runtime.IUserSession;
 import java.util.concurrent.CompletableFuture;
 
 public interface IDeveloperSession extends IUserSession {
+    /** 调试事件标识 */
+    int DEBUG_EVENT = 12;
 
     /** 获取当前用户会话的开发者的DesighHub实例 */
     DesignHub getDesignHub();

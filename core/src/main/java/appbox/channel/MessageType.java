@@ -4,6 +4,9 @@ public final class MessageType {
     public static final byte RawData            = 0;
     public static final byte InvalidModelsCache = 1; //TODO: remove it
 
+    public static final byte Event          = 3;
+    public static final byte ForwardMessage = 4;
+
     public static final byte InvokeRequire  = 10;
     public static final byte InvokeResponse = 11;
 

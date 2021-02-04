@@ -1,9 +1,13 @@
 package appbox.channel;
 
+import appbox.channel.messages.ForwardMessage;
 import appbox.data.EntityId;
 import appbox.data.TreeNodePath;
 import appbox.design.DesignHub;
 import appbox.design.IDeveloperSession;
+import appbox.logging.Log;
+import appbox.runtime.RuntimeContext;
+import appbox.server.runtime.HostRuntimeContext;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -85,7 +89,13 @@ public final class WebSession implements IDeveloperSession {
 
     @Override
     public void sendEvent(int source, String body) {
-
+        var msg     = new ForwardMessage(_designHub.session.sessionId(), MessageType.Event, source, body);
+        var channel = ((HostRuntimeContext) RuntimeContext.current()).channel;
+        try {
+            channel.sendMessage(channel.newMessageId(), msg);
+        } catch (Exception ex) {
+            Log.warn("Can't forward event message");
+        }
     }
     //endregion
 
