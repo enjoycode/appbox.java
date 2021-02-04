@@ -1,5 +1,6 @@
 package appbox.channel.messages;
 
+import appbox.channel.IClientMessage;
 import appbox.channel.IMessage;
 import appbox.channel.MessageType;
 import appbox.serialization.IInputStream;
@@ -8,16 +9,14 @@ import appbox.serialization.IOutputStream;
 /** 请求主进程转发给前端的消息 */
 public final class ForwardMessage implements IMessage {
 
-    private final long   sessionId;
-    private final byte   msgType;
-    private final int    msgId;
-    private final String body;
+    private final long           sessionId;
+    private final byte           msgType;
+    private final IClientMessage target; //转发给前端的消息
 
-    public ForwardMessage(long sessionId, byte msgType, int msgId, String body) {
+    public ForwardMessage(long sessionId, byte msgType, IClientMessage target) {
         this.sessionId = sessionId;
         this.msgType   = msgType;
-        this.msgId     = msgId;
-        this.body      = body;
+        this.target    = target;
     }
 
     @Override
@@ -27,11 +26,10 @@ public final class ForwardMessage implements IMessage {
 
     @Override
     public void writeTo(IOutputStream bs) {
-        //TODO:暂按Event格式写入
         bs.writeLong(sessionId);
         bs.writeByte(msgType);
-        bs.writeInt(msgId);
-        bs.writeUtf8(body);
+        //不要调整以上顺序，跟前端格式一致
+        target.writeTo(bs);
     }
 
     @Override

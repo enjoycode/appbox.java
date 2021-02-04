@@ -110,6 +110,7 @@ public final class JavaDebugger {
         private void process(Event event, EventSet eventSet) {
             Log.debug("Received " + event.toString() + " from VM");
             if (event instanceof VMStartEvent) {
+                _session.designHub.session.sendEvent(DebugStartEvent.Default);
                 Log.debug("VM started");
                 eventSet.resume();
             } else if (event instanceof ClassPrepareEvent) {
@@ -119,14 +120,14 @@ public final class JavaDebugger {
                 enablePendingBreakpoints();
                 eventSet.resume();
             } else if (event instanceof BreakpointEvent) {
-                //var b = (com.sun.jdi.event.BreakpointEvent) event;
+                var bpe = (BreakpointEvent) event;
                 //var evt = new StoppedEventBody();
                 //evt.reason = "breakpoint";
                 //evt.threadId = b.thread().uniqueID();
                 //evt.allThreadsStopped = b.request().suspendPolicy() == EventRequest.SUSPEND_ALL;
                 //client.stopped(evt);
             } else if (event instanceof StepEvent) {
-                //var b = (StepEvent) event;
+                var ste = (StepEvent) event;
                 //var evt = new StoppedEventBody();
                 //evt.reason = "step";
                 //evt.threadId = b.thread().uniqueID();
@@ -137,7 +138,7 @@ public final class JavaDebugger {
             } else if (event instanceof VMDeathEvent) {
                 //client.exited(new ExitedEventBody());
             } else if (event instanceof VMDisconnectEvent) {
-                //client.terminated(new TerminatedEventBody());
+                _session.designHub.session.sendEvent(DebugStopEvent.Default);
             }
         }
     }

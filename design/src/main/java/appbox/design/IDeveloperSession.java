@@ -1,5 +1,6 @@
 package appbox.design;
 
+import appbox.channel.IClientMessage;
 import appbox.runtime.IUserSession;
 
 import java.util.concurrent.CompletableFuture;
@@ -12,7 +13,7 @@ public interface IDeveloperSession extends IUserSession {
     DesignHub getDesignHub();
 
     /** 发送设计时事件 */
-    void sendEvent(int source, String body);
+    void sendEvent(IClientMessage event);
 
     /**
      * 开启主进程与调试子进程的通道，并发送调用调试目标的请求

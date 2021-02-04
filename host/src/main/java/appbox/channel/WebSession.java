@@ -88,8 +88,8 @@ public final class WebSession implements IDeveloperSession {
     }
 
     @Override
-    public void sendEvent(int source, String body) {
-        var msg     = new ForwardMessage(_designHub.session.sessionId(), MessageType.Event, source, body);
+    public void sendEvent(IClientMessage event) {
+        var msg     = new ForwardMessage(_designHub.session.sessionId(), MessageType.Event, event);
         var channel = ((HostRuntimeContext) RuntimeContext.current()).channel;
         try {
             channel.sendMessage(channel.newMessageId(), msg);

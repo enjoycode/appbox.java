@@ -1,5 +1,6 @@
 package appbox.design;
 
+import appbox.channel.IClientMessage;
 import appbox.data.TreeNodePath;
 
 import java.util.UUID;
@@ -27,7 +28,7 @@ public final class MockDeveloperSession implements IDeveloperSession {
     }
 
     @Override
-    public void sendEvent(int source, String body) {
+    public void sendEvent(IClientMessage event) {
         throw new UnsupportedOperationException();
     }
 
