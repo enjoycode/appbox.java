@@ -31,6 +31,7 @@ public final class DesignService implements IService {
         put("Publish", new Publish());
         put("NewFolder", new NewFolder());
         put("GetAssembly", new GetAssembly());
+        put("DragDropNode", new DragDropNode());
         //----DataStore----
         put("NewDataStore", new NewDataStore());
         put("SaveDataStore", new SaveDataStore());
