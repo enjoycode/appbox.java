@@ -2,17 +2,20 @@ package appbox.design.services.debug;
 
 import appbox.design.DesignHub;
 import appbox.logging.Log;
+import com.alibaba.fastjson.JSONArray;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** 一个DesignHub对应一个实例 */
 public final class DebugService {
 
-    private final AtomicBoolean _debugging = new AtomicBoolean(false);
-    public final  DesignHub     designHub;
-    protected     String        serviceClassName;
-    private       JavaDebugger  _debugger;
+    private final AtomicBoolean           _debugging = new AtomicBoolean(false);
+    public final  DesignHub               designHub;
+    protected     String                  serviceClassName;
+    protected     List<PendingBreakPoint> pendingBreakPoints; //挂起的断点请求
+    private       JavaDebugger            _debugger;
 
     public DebugService(DesignHub hub) {
         designHub = hub;
@@ -29,6 +32,7 @@ public final class DebugService {
 
         serviceClassName = serviceName;
         final var servicePath = String.format("%s.%s.%s", appName, serviceName, methodName);
+        pendingBreakPoints = JSONArray.parseArray(breakPoints, PendingBreakPoint.class);
 
         return designHub.session.startDebugChannel(servicePath, invokeArgs).thenAccept(r -> {
             _debugging.set(true);
@@ -57,4 +61,12 @@ public final class DebugService {
         _debugging.set(false);
     }
 
+    public void resume(long threadId) {
+        _debugger.continue_(threadId);
+    }
+
+    static final class PendingBreakPoint {
+        public String id;
+        public int    line;
+    }
 }

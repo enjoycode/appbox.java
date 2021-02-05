@@ -2,12 +2,14 @@ package appbox.design.services.debug;
 
 import appbox.logging.Log;
 import com.sun.jdi.Bootstrap;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import com.sun.jdi.connect.ListeningConnector;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.event.*;
+import com.sun.jdi.request.EventRequest;
 
 import java.io.IOException;
 import java.util.List;
@@ -82,9 +84,32 @@ public final class JavaDebugger {
         //TODO:没有调试会话关闭监听
     }
 
+    public void continue_(long threadId) {
+        _vm.resume();
+    }
+
     /** 启用挂起的调试断点 */
-    private void enablePendingBreakpoints() {
-        Log.warn("启用调试断点暂未实现");
+    private void enablePendingBreakpoints(ReferenceType serviceType) {
+        if (_session.pendingBreakPoints == null || _session.pendingBreakPoints.size() == 0)
+            return;
+
+        //TODO:以下不管是否成功，通知前端更新有效断点
+        for (var bp : _session.pendingBreakPoints) {
+            try {
+                var locations = serviceType.locationsOfLine(bp.line);
+                if (locations.isEmpty()) {
+                    Log.warn("找不到断点位置: " + bp.line);
+                } else {
+                    for (var line : locations) {
+                        var req = _vm.eventRequestManager().createBreakpointRequest(line);
+                        req.setSuspendPolicy(EventRequest.SUSPEND_ALL);
+                        req.enable();
+                    }
+                }
+            } catch (Exception ex) {
+                Log.warn("设置断点错误: " + ex);
+            }
+        }
     }
 
     //region ====VmEventsReader====
@@ -117,15 +142,12 @@ public final class JavaDebugger {
                 var prepare = (ClassPrepareEvent) event;
                 var type    = prepare.referenceType();
                 Log.info("ClassPrepareRequest for class " + type.name());
-                enablePendingBreakpoints();
+                enablePendingBreakpoints(type);
                 eventSet.resume();
             } else if (event instanceof BreakpointEvent) {
-                var bpe = (BreakpointEvent) event;
-                //var evt = new StoppedEventBody();
-                //evt.reason = "breakpoint";
-                //evt.threadId = b.thread().uniqueID();
-                //evt.allThreadsStopped = b.request().suspendPolicy() == EventRequest.SUSPEND_ALL;
-                //client.stopped(evt);
+                var breakpointEvent = (BreakpointEvent) event;
+                _session.designHub.session.sendEvent(new DebugPauseEvent(
+                        breakpointEvent.thread().uniqueID(), breakpointEvent.location().lineNumber()));
             } else if (event instanceof StepEvent) {
                 var ste = (StepEvent) event;
                 //var evt = new StoppedEventBody();

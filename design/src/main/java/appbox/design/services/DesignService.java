@@ -50,6 +50,7 @@ public final class DesignService implements IService {
         put("NewServiceModel", new NewServiceModel());
         put("GetHover", new GetHover());
         put("StartDebugging", new StartDebugging());
+        put("ContinueBrakpoint", new ContinueDebug()); //TODO:改名，暂兼容旧名称
         //----view----
         put("NewViewModel", new NewViewModel());
         put("OpenViewModel", new OpenViewModel());
