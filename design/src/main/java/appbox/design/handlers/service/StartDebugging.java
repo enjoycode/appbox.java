@@ -46,7 +46,7 @@ public final class StartDebugging implements IDesignHandler {
 
         //启动调试器与目标子进程
         return hub.debugService().startDebugger(serviceNode.appNode.model.name()
-                , serviceNode.model().name(), methodName, null, null) //TODO: args & bps
+                , serviceNode.model().name(), methodName, null, breakPoints) //TODO: args
                 .thenApply(r -> null);
     }
 

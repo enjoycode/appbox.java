@@ -110,6 +110,8 @@ public final class JavaDebugger {
                 Log.warn("设置断点错误: " + ex);
             }
         }
+
+        _session.pendingBreakPoints.clear();
     }
 
     //region ====VmEventsReader====
@@ -141,11 +143,12 @@ public final class JavaDebugger {
             } else if (event instanceof ClassPrepareEvent) {
                 var prepare = (ClassPrepareEvent) event;
                 var type    = prepare.referenceType();
-                Log.info("ClassPrepareRequest for class " + type.name());
+                Log.debug("ClassPrepared for class " + type.name());
                 enablePendingBreakpoints(type);
                 eventSet.resume();
             } else if (event instanceof BreakpointEvent) {
                 var breakpointEvent = (BreakpointEvent) event;
+                Log.debug("Stopped at break point: " + breakpointEvent.location().lineNumber());
                 _session.designHub.session.sendEvent(new DebugPauseEvent(
                         breakpointEvent.thread().uniqueID(), breakpointEvent.location().lineNumber()));
             } else if (event instanceof StepEvent) {
