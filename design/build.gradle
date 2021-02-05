@@ -10,6 +10,7 @@ dependencies {
     implementation 'com.alibaba:fastjson:1.2.73'
     implementation 'net.java.dev.jna:jna:5.6.0'
     implementation 'com.ea.async:ea-async:1.2.3'
+    implementation 'org.apache.commons:commons-lang3:3.6'
     implementation fileTree(dir: 'lib', include: ['*.jar'])
     testImplementation 'org.javassist:javassist:3.27.0-GA'
 }
