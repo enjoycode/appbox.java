@@ -1,6 +1,6 @@
 package appbox.design.services.debug;
 
-import appbox.design.services.debug.variables.VariableFormatter;
+import appbox.design.services.debug.variables.Variable;
 import appbox.design.services.debug.variables.VariableUtils;
 import appbox.logging.Log;
 import com.sun.jdi.Bootstrap;
@@ -153,21 +153,17 @@ public final class JavaDebugger {
                 Log.debug("Stopped at break point: " + breakpointEvent.location().lineNumber());
 
                 //测试读取变量
+                List<Variable> variables = null;
                 try {
-                    var formatter = VariableFormatter.DEFAULT;
-                    var options = formatter.getDefaultOptions();
-                    var localVars = VariableUtils.listLocalVariables(breakpointEvent.thread().frame(0));
-                    for (var v : localVars) {
-                        Log.info(String.format("name:%s value:%s type:%s", v.name
-                                , formatter.valueToString(v.value, options)
-                                , formatter.typeToString(v.value == null ? null : v.value.type(), options)));
-                    }
+                    variables = VariableUtils.listLocalVariables(breakpointEvent.thread().frame(0));
                 } catch (Exception ex) {
                     Log.warn("读取变量错误: " + ex);
                 }
 
                 _session.designHub.session.sendEvent(new DebugPauseEvent(
-                        breakpointEvent.thread().uniqueID(), breakpointEvent.location().lineNumber()));
+                        breakpointEvent.thread().uniqueID(),
+                        breakpointEvent.location().lineNumber(),
+                        variables));
             } else if (event instanceof StepEvent) {
                 var ste = (StepEvent) event;
                 //var evt = new StoppedEventBody();
