@@ -47,12 +47,12 @@ public final class WebSession implements IDeveloperSession {
 
     @Override
     public int levels() {
-        return 0;
+        return treePath.level();
     }
 
     @Override
     public TreeNodePath.TreeNodeInfo getAt(int level) {
-        return null;
+        return treePath.getAt(level);
     }
 
     @Override
