@@ -88,12 +88,12 @@ public final class PgSqlStore extends SqlStore implements AutoCloseable {
 
         boolean needSep = false;
         for (var m : model.getMembers()) {
-            if (needSep)
-                sb.append(',');
-            else
-                needSep = true;
-
             if (m.type() == EntityMemberModel.EntityMemberType.DataField) {
+                if (needSep)
+                    sb.append(',');
+                else
+                    needSep = true;
+
                 buildFieldDefine((DataFieldModel) m, sb, false);
             } else if (m.type() == EntityMemberModel.EntityMemberType.EntityRef) {
                 var rm = (EntityRefModel) m;
