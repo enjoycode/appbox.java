@@ -7,6 +7,8 @@ import appbox.design.DesignHub;
 import appbox.design.IDeveloperSession;
 import appbox.logging.Log;
 import appbox.runtime.RuntimeContext;
+import appbox.serialization.BytesInputStream;
+import appbox.serialization.BytesOutputStream;
 import appbox.server.runtime.HostRuntimeContext;
 
 import java.util.UUID;
@@ -96,6 +98,40 @@ public final class WebSession implements IDeveloperSession {
         } catch (Exception ex) {
             Log.warn("Can't forward event message");
         }
+    }
+
+    @Override
+    public byte[] getSerializedData() {
+        var output = new BytesOutputStream(256);
+        output.writeLong(_id);
+        employeeId.writeTo(output);
+        output.writeVariant(treePath.level());
+        for (int i = 0; i < treePath.level(); i++) {
+            var node = treePath.getAt(i);
+            output.writeLong(node.id.getLeastSignificantBits());
+            output.writeLong(node.id.getMostSignificantBits());
+            output.writeString(node.text);
+        }
+        return output.toByteArray();
+    }
+
+    /** 仅用于调试时反序列化会话 */
+    public static WebSession fromSerializedData(byte[] data) {
+        var input      = new BytesInputStream(data);
+        var id         = input.readLong();
+        var employeeId = new EntityId();
+        employeeId.readFrom(input);
+        var levels = input.readVariant();
+        var nodes  = new TreeNodePath.TreeNodeInfo[levels];
+        for (int i = 0; i < levels; i++) {
+            var lowbits  = input.readLong();
+            var highbits = input.readLong();
+            var uuid     = new UUID(highbits, lowbits);
+            var text     = input.readString();
+            nodes[i] = new TreeNodePath.TreeNodeInfo(uuid, text);
+        }
+        var treePath = new TreeNodePath(nodes);
+        return new WebSession(id, treePath, employeeId);
     }
     //endregion
 

@@ -43,7 +43,7 @@ public final class DebugSessionManager {
         return future;
     }
 
-    /** 收到主进程回复 */
+    /** 收到主进程已准备好调试通道的回复 */
     public static synchronized void onStartResponse(StartDebugResponse response) {
         var future = startings.remove(response.sessionId);
         if (future == null) {

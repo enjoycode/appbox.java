@@ -1,7 +1,6 @@
 package appbox.server.runtime;
 
 import appbox.design.services.DesignService;
-import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.runtime.IService;
 import appbox.server.services.AdminService;
@@ -34,7 +33,7 @@ public final class ServiceContainer {
     }
 
     /**
-     * 注册服务
+     * 注册服务实例
      * @param service eg: "sys.System"
      */
     private void registerService(CharSequence service, IService instance) {
@@ -46,27 +45,18 @@ public final class ServiceContainer {
     }
 
     /** 预先注入调试目标服务,防止从存储加载 */
-    protected void injectDebugService(String debugSessionId) {
-        var dbgPath = PathUtil.getDebugPath(debugSessionId);
-        if (!Files.exists(dbgPath))
-            throw new RuntimeException("Debug path not exists");
-
+    protected void injectDebugService(Path serviceFile) throws Exception {
         byte[] pkgData = null;
-        try {
-            var files           = Files.list(dbgPath).toArray(Path[]::new);
-            var filePath        = files[0];
-            var fileName        = filePath.toFile().getName();
-            var serviceFullName = fileName.substring(0, fileName.length() - 4);
-            var serviceName     = getServiceName(serviceFullName);
-            pkgData = Files.readAllBytes(filePath);
-            var serviceClassLoader = new ServiceClassLoader();
-            var clazz              = serviceClassLoader.loadServiceClass(serviceName, pkgData);
-            var obj                = (IService) clazz.getDeclaredConstructor().newInstance();
-            registerService(serviceFullName, obj);
-            Log.debug("Inject debug service: " + serviceFullName);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+
+        var fileName        = serviceFile.toFile().getName();
+        var serviceFullName = fileName.substring(0, fileName.length() - 4);
+        var serviceName     = getServiceName(serviceFullName);
+        pkgData = Files.readAllBytes(serviceFile);
+        var serviceClassLoader = new ServiceClassLoader();
+        var clazz              = serviceClassLoader.loadServiceClass(serviceName, pkgData);
+        var obj                = (IService) clazz.getDeclaredConstructor().newInstance();
+        registerService(serviceFullName, obj);
+        Log.debug("Inject debug service: " + serviceFullName);
     }
 
     /** 尝试根据名称获取已加载的服务实例 */

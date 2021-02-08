@@ -81,5 +81,10 @@ public final class MockDeveloperSession implements IDeveloperSession {
     public CompletableFuture<Void> startDebugChannel(String service, byte[] invokeArgs) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public byte[] getSerializedData() {
+        throw new UnsupportedOperationException();
+    }
 }
 

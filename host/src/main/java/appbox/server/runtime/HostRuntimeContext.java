@@ -1,7 +1,10 @@
 package appbox.server.runtime;
 
 import appbox.channel.IHostMessageChannel;
+import appbox.channel.SessionManager;
 import appbox.channel.SharedMemoryChannel;
+import appbox.channel.WebSession;
+import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.model.ApplicationModel;
 import appbox.model.ModelBase;
@@ -14,6 +17,8 @@ import appbox.store.ModelStore;
 import com.alibaba.ttl.TransmittableThreadLocal;
 
 import javax.annotation.Nullable;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -75,8 +80,29 @@ public final class HostRuntimeContext implements IRuntimeContext {
 
     //region ====ModelContainer====
 
-    public void injectDebugService(String debugSessionId) {
-        _services.injectDebugService(debugSessionId);
+    /** 仅用于调试子进程注入调试服务实例及调试会话 */
+    public void injectDebugServiceAndSession(String debugSessionId) {
+        var dbgPath = PathUtil.getDebugPath(debugSessionId);
+        if (!Files.exists(dbgPath))
+            throw new RuntimeException("Debug path not exists");
+
+        try {
+            var files = Files.list(dbgPath).toArray(Path[]::new);
+            for (var path : files) {
+                var file = path.toFile();
+                if (file.getName().equals("session.bin")) {
+                    var sessionData = Files.readAllBytes(path);
+                    var session     = WebSession.fromSerializedData(sessionData);
+                    SessionManager.register(session);
+                    Log.debug("Inject debug session: " + session.name());
+                } else {
+                    _services.injectDebugService(path);
+                }
+            }
+        } catch (Exception ex) {
+            Log.error("Inject debug serivce and session error: " + ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     /** 仅用于StoreInitiator */

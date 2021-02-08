@@ -33,9 +33,9 @@ public class App {
         var ctx = new HostRuntimeContext(channelName);
         RuntimeContext.init(ctx, (short) 0x1041/*TODO: fix peerId*/);
 
-        //如果调试服务中,预先注入服务实例
+        //如果调试服务中,预先注入服务实例及当前会话
         if (debugSessionId != null) {
-            ctx.injectDebugService(debugSessionId);
+            ctx.injectDebugServiceAndSession(debugSessionId);
         }
         //Channel并开始阻塞接收
         SysStoreApi.init(ctx.channel);

@@ -15,8 +15,7 @@ public final class SessionManager {
     private static final Map<Long, IUserSession> _sessions = new HashMap<>();
     private static final ReadWriteLock           _mapLock  = new ReentrantReadWriteLock();
 
-    private SessionManager() {
-    }
+    private SessionManager() {}
 
     public static IUserSession tryGet(long id) {
         var lock = _mapLock.readLock();

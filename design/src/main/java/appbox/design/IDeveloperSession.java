@@ -22,4 +22,7 @@ public interface IDeveloperSession extends IUserSession {
      */
     CompletableFuture<Void> startDebugChannel(String service, byte[] invokeArgs);
 
+    /** 获取序列化的数据，用于调试时写入会话信息至调试目录内 */
+    byte[] getSerializedData();
+
 }
