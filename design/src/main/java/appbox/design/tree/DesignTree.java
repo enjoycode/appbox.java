@@ -75,24 +75,22 @@ public final class DesignTree {
             return StagedService.loadStagedAsync(true);
         }).thenCompose(stagedItems -> {
             staged = stagedItems;
-            return ModelStore.loadAllApplicationAsync();
-        }).thenCompose(apps -> { //加载所有Apps
-            for (ApplicationModel app : apps) {
+            return ModelStore.loadDesignTreeAsync();
+        }).thenApply(all -> {
+            //1.加载Apps
+            for (ApplicationModel app : all.apps) {
                 appRootNode.nodes.add(new ApplicationNode(this, app));
             }
-            return ModelStore.loadAllFolderAsync(); //加载所有文件夹
-        }).thenCompose(folders -> {
-            var mergedFolders = new ArrayList<>(Arrays.asList(folders));
-            //从staged中添加新建的并更新修改的文件夹
+            //2.加载Folders
+            var mergedFolders = all.folders;
+            //2.1从staged中添加新建的并更新修改的文件夹
             staged.updateFolders(mergedFolders);
-            //加入Folders
+            //2.2加入Folders
             for (var folder : mergedFolders) {
                 findModelRootNode(folder.appId(), folder.targetModelType()).addFolder(folder, null);
             }
 
-            return ModelStore.loadAllModelAsync(); //加载所有模型
-        }).thenCompose(models -> {
-            var mergedModels = new ArrayList<>(Arrays.asList(models));
+            var mergedModels = all.models;
             //添加系统默认存储模型
             var defaultStoreModel = new DataStoreModel(DataStoreModel.DataStoreKind.Future, "", "Default");
             defaultStoreModel.acceptChanges();
@@ -120,7 +118,7 @@ public final class DesignTree {
                 designHub.typeSystem.createModelDocument(n);
             }
 
-            return CompletableFuture.completedFuture(true);
+            return true;
         }).handle((r, ex) -> {
             _loadingFlag.compareAndExchange(1, 0);
             return ex == null ? r : false;

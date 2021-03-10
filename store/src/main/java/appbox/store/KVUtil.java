@@ -13,20 +13,19 @@ import appbox.utils.IdUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-/**
- * 系统存储编码
- */
+/** 系统存储编码 */
 public final class KVUtil {
 
     public static final long META_RAFTGROUP_ID = 0;
 
-    public static final byte METACF_APP_PREFIX              = 0x0C;
-    public static final byte METACF_MODEL_PREFIX            = 0x0D;
-    public static final byte METACF_MODEL_CODE_PREFIX       = 0x0E;
-    public static final byte METACF_FOLDER_PREFIX           = 0x0F;
-    public static final byte METACF_SERVICE_ASSEMBLY_PREFIX = (byte) 0xA0;
-    public static final byte METACF_VIEW_ASSEMBLY_PREFIX    = (byte) 0xA1;
-    public static final byte METACF_VIEW_ROUTE_PREFIX       = (byte) 0xA2;
+    public static final byte METACF_APP_PREFIX              = (byte) 0xA0;
+    public static final byte METACF_FOLDER_PREFIX           = (byte) 0xA1;
+    public static final byte METACF_BLOB_PREFIX             = (byte) 0xA2;
+    public static final byte METACF_MODEL_PREFIX            = (byte) 0xA4;
+    public static final byte METACF_MODEL_CODE_PREFIX       = (byte) 0xC0;
+    public static final byte METACF_SERVICE_ASSEMBLY_PREFIX = (byte) 0xB0;
+    public static final byte METACF_VIEW_ASSEMBLY_PREFIX    = (byte) 0xB1;
+    public static final byte METACF_VIEW_ROUTE_PREFIX       = (byte) 0xB2;
 
     public static final byte PARTCF_INDEX             = 4;
     public static final byte PARTCF_GLOBAL_TABLE_FLAG = 0x01;

@@ -110,14 +110,6 @@ public class TestSysStore {
     }
 
     @Test
-    public void testKVScanModels() throws Exception {
-        var req = new KVScanAppsRequest();
-        var fut = SysStoreApi.execKVScanAsync(req, new KVScanAppsResponse());
-        var res = fut.get();
-        assertEquals(0, res.errorCode);
-    }
-
-    @Test
     public void testTableScan() throws Exception {
         var q = new TableScan<>(IdUtil.SYS_ENTERPRISE_MODEL_ID, Enterprise.class);
         q.where(Enterprise.NAME.eq("AppBoxFuture"));

@@ -1,5 +1,6 @@
 package appbox.server.services;
 
+import appbox.channel.messages.KVScanModelResponse;
 import appbox.data.EntityId;
 import appbox.data.JsonResult;
 import appbox.data.PermissionNode;
@@ -19,17 +20,17 @@ public final class AdminService implements IService {
     /** 用于前端组织结构权限管理界面加载整个权限树 */
     private CompletableFuture<List<PermissionNode>> loadPermissionTree() {
         //TODO:***暂简单实现加载全部，待优化为加载特定类型
-        return ModelStore.loadAllApplicationAsync().thenCompose(apps -> ModelStore.loadAllFolderAsync()
-                .thenCombine(ModelStore.loadAllModelAsync(), (allFolders, allModels) -> {
-                    var folders = Arrays.stream(allFolders)
+        return ModelStore.loadAppAndFoldersAsync()
+                .thenCombine(ModelStore.loadAllModelAsync(), (appAndFolders, allModels) -> {
+                    var apps = appAndFolders.apps;
+                    var folders = appAndFolders.folders.stream()
                             .filter(f -> f.targetModelType() == ModelType.Permission)
                             .toArray(ModelFolder[]::new);
-                    var permissions = Arrays.stream(allModels)
+                    var permissions = allModels.stream()
                             .filter(m -> m.modelType() == ModelType.Permission)
                             .toArray(ModelBase[]::new);
 
                     var list = new ArrayList<PermissionNode>();
-
                     for (var app : apps) {
                         var appNode = new PermissionNode(app.name());
                         list.add(appNode);
@@ -56,7 +57,7 @@ public final class AdminService implements IService {
                     }
 
                     return list;
-                }));
+                });
     }
 
     /** 用于前端实时保存单个PermissionModel的权限变更 */

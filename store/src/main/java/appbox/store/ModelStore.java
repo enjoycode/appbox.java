@@ -6,6 +6,7 @@ import appbox.model.*;
 import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -210,11 +211,16 @@ public final class ModelStore {
 
     //region ====Read Methods====
 
-    /** 用于设计时加载所有ApplicationModel */
-    public static CompletableFuture<ApplicationModel[]> loadAllApplicationAsync() {
-        var req = new KVScanAppsRequest();
-        return SysStoreApi.execKVScanAsync(req, new KVScanAppsResponse())
-                .thenApply(r -> r.apps);
+    /** 用于设计时加载设计树 */
+    public static CompletableFuture<KVScanModelResponse> loadDesignTreeAsync() {
+        var req = new KVScanModelRequest(KVUtil.METACF_APP_PREFIX, (byte) (KVUtil.METACF_MODEL_PREFIX + 1));
+        return SysStoreApi.execKVScanAsync(req, new KVScanModelResponse());
+    }
+
+    /** 用于运行时加载所有应用及相应的文件夹 */
+    public static CompletableFuture<KVScanModelResponse> loadAppAndFoldersAsync() {
+        var req = new KVScanModelRequest(KVUtil.METACF_APP_PREFIX, (byte) (KVUtil.METACF_FOLDER_PREFIX + 1));
+        return SysStoreApi.execKVScanAsync(req, new KVScanModelResponse());
     }
 
     /** 用于运行时加载单个应用模型 */
@@ -224,17 +230,10 @@ public final class ModelStore {
                 .thenApply(KVGetApplicationResponse::getApplicationModel);
     }
 
-    /** 用于设计时加载所有ModelFolder */
-    public static CompletableFuture<ModelFolder[]> loadAllFolderAsync() {
-        var req = new KVScanFoldersRequest();
-        return SysStoreApi.execKVScanAsync(req, new KVScanFoldersResponse())
-                .thenApply(r -> r.folders);
-    }
-
-    /** 用于设计时加载所有Model */
-    public static CompletableFuture<ModelBase[]> loadAllModelAsync() {
-        var req = new KVScanModelsRequest();
-        return SysStoreApi.execKVScanAsync(req, new KVScanModelsResponse())
+    /** 用于运行时加载所有Model */
+    public static CompletableFuture<List<ModelBase>> loadAllModelAsync() { //TODO: remove it
+        var req = new KVScanModelRequest(KVUtil.METACF_MODEL_PREFIX, (byte)(KVUtil.METACF_MODEL_PREFIX + 1));
+        return SysStoreApi.execKVScanAsync(req, new KVScanModelResponse())
                 .thenApply(r -> r.models);
     }
 

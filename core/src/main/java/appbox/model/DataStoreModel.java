@@ -71,7 +71,7 @@ public final class DataStoreModel extends ModelBase {
 
     //endregion
 
-    public static enum DataStoreKind {
+    public enum DataStoreKind {
         Sql(0), Cql(1), Blob(2), Future(3);
 
         public final byte value;

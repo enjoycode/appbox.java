@@ -3,14 +3,25 @@ package appbox.channel.messages;
 import appbox.serialization.IOutputStream;
 import appbox.store.KVUtil;
 
-public final class KVScanAppsRequest extends KVScanRequest {
+/** 用于设计时扫描加载相关模型 */
+public final class KVScanModelRequest extends KVScanRequest {
+
+    private final byte _beginKeyPrefix;
+    private final byte _endKeyPrefix;
+
+    public KVScanModelRequest(byte beginKeyPrefix, byte endKeyPrefix) {
+        _beginKeyPrefix = beginKeyPrefix;
+        _endKeyPrefix   = endKeyPrefix;
+    }
+
     @Override
     public void writeTo(IOutputStream bs) {
         bs.writeInt(0); //ReqId占位
         bs.writeLong(KVUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeNativeVariant(1); //BeginKeySize
-        bs.writeByte(KVUtil.METACF_APP_PREFIX); //BeginKey
-        bs.writeNativeVariant(0); //EndKeySize
+        bs.writeByte(_beginKeyPrefix); //BeginKey
+        bs.writeNativeVariant(1); //EndKeySize
+        bs.writeByte(_endKeyPrefix);   //EndKey
         bs.writeInt(0); //Skip
         bs.writeInt(Integer.MAX_VALUE); //Take
         bs.writeLong(0); //Timestamp
@@ -18,4 +29,5 @@ public final class KVScanAppsRequest extends KVScanRequest {
         bs.writeBool(false); //IsMVCC TODO: remove it
         bs.writeBool(false); //ToIndexTarget
     }
+
 }
