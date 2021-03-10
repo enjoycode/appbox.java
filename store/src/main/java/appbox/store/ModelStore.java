@@ -3,7 +3,6 @@ package appbox.store;
 import appbox.channel.messages.*;
 import appbox.logging.Log;
 import appbox.model.*;
-import appbox.store.utils.ModelCodeUtil;
 import appbox.utils.IdUtil;
 
 import java.util.List;
@@ -34,13 +33,41 @@ public final class ModelStore {
     //        });
 
 
-    /**
-     * 创建新的应用，成功返回应用对应的存储Id
-     */
+    /** 创建新的应用，成功返回应用对应的存储Id */
     public static CompletableFuture<Byte> createApplicationAsync(ApplicationModel app) {
         return SysStoreApi.metaNewAppAsync(app).thenApply(r -> {
             r.checkStoreError();
             return r.appId;
+        });
+    }
+
+    /** 创建第三方存储 */
+    public static CompletableFuture<Void> createDataStoreAsync(DataStoreModel dataStore) {
+        //TODO:检查是否已存在
+        return KVTransaction.beginAsync().thenCompose(txn -> {
+            var req = new KVInsertDataStoreRequest(txn.id(), dataStore);
+            return SysStoreApi.execKVInsertAsync(req).thenCompose(res -> {
+                if (res.errorCode != 0) {
+                    txn.rollback();
+                    throw new SysStoreException(res.errorCode);
+                } else {
+                    return txn.commitAsync();
+                }
+            });
+        });
+    }
+
+    public static CompletableFuture<Void> updateDataStoreAsync(DataStoreModel dataStore) {
+        return KVTransaction.beginAsync().thenCompose(txn -> {
+            var req = new KVUpdateDataStoreRequest(txn.id(), dataStore);
+            return SysStoreApi.execKVUpdateAsync(req).thenCompose(res -> {
+                if (res.errorCode != 0) {
+                    txn.rollback();
+                    throw new SysStoreException(res.errorCode);
+                } else {
+                    return txn.commitAsync();
+                }
+            });
         });
     }
 
@@ -230,9 +257,16 @@ public final class ModelStore {
                 .thenApply(KVGetApplicationResponse::getApplicationModel);
     }
 
+    /** 用于运行时加载单个存储模型 */
+    public static CompletableFuture<DataStoreModel> loadDataStoreAsync(long storeId) {
+        var req = new KVGetDataStoreRequest(storeId);
+        return SysStoreApi.execKVGetAsync(req, new KVGetDataStoreResponse())
+                .thenApply(res -> res.dataStore);
+    }
+
     /** 用于运行时加载所有Model */
     public static CompletableFuture<List<ModelBase>> loadAllModelAsync() { //TODO: remove it
-        var req = new KVScanModelRequest(KVUtil.METACF_MODEL_PREFIX, (byte)(KVUtil.METACF_MODEL_PREFIX + 1));
+        var req = new KVScanModelRequest(KVUtil.METACF_MODEL_PREFIX, (byte) (KVUtil.METACF_MODEL_PREFIX + 1));
         return SysStoreApi.execKVScanAsync(req, new KVScanModelResponse())
                 .thenApply(r -> r.models);
     }

@@ -127,8 +127,6 @@ public abstract class ModelBase implements IBinSerializable {
                 return new ViewModel();
             case Permission:
                 return new PermissionModel();
-            case DataStore:
-                return new DataStoreModel();
             default:
                 throw new RuntimeException("Unknown model type: " + type);
         }

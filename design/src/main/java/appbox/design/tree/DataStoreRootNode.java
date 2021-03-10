@@ -1,6 +1,5 @@
 package appbox.design.tree;
 
-import appbox.data.PersistentState;
 import appbox.design.DesignHub;
 import appbox.model.DataStoreModel;
 
@@ -23,11 +22,11 @@ public final class DataStoreRootNode extends DesignNode implements ITopNode {
         return DesignNodeType.DataStoreRootNode;
     }
 
-    public DataStoreNode addModel(DataStoreModel model, DesignHub hub)
+    public DataStoreNode addModel(DataStoreModel model, DesignHub hub, boolean isNew)
     {
         //注意model可能被签出的本地替换掉，所以相关操作必须指向node.Model
         var node = new DataStoreNode(model, hub);
-        designTree.bindCheckoutInfo(node, model.persistentState() == PersistentState.Detached);
+        designTree.bindCheckoutInfo(node, isNew);
         nodes.add(node);
         return node;
     }

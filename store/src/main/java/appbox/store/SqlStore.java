@@ -41,12 +41,11 @@ public abstract class SqlStore {
                     return store;
 
                 try {
-                    var model = ModelStore.loadModelAsync(storeId).get();
+                    var model = ModelStore.loadDataStoreAsync(storeId).get();
                     if (model == null)
                         throw new RuntimeException("DataStoreModel not exists");
-                    var dataStoreModel = (DataStoreModel) model;
-                    //TODO:**** 根据Provider创建相应的实例
-                    store = new PgSqlStore(dataStoreModel.settings());
+                    //TODO:**** 检查类型并根据Provider创建相应的实例
+                    store = new PgSqlStore(model.settings());
                     sqlStores.put(storeId, store);
                 } catch (Exception ex) {
                     Log.error("Load DataStoreModel error: " + ex.getMessage());

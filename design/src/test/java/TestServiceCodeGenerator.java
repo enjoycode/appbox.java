@@ -41,7 +41,6 @@ public class TestServiceCodeGenerator {
         var models   = new ArrayList<ModelBase>();
         //生成测试DataStore
         var dataStoreModel = new DataStoreModel(DataStoreModel.DataStoreKind.Sql, "PostgreSql", "DemoDB");
-        models.add(dataStoreModel);
 
         //生成测试实体模型
         var entityModel = new EntityModel(IdUtil.SYS_EMPLOYEE_MODEL_ID, "Employee");
@@ -85,7 +84,7 @@ public class TestServiceCodeGenerator {
         var hub = session.getDesignHub();
         hub.typeSystem.init(); //必须初始化
         hub.typeSystem.languageServer.loadFileDelegate = TestServiceCodeGenerator::loadTestServiceCode;
-        hub.designTree.loadNodesForTest(appModel, models);
+        hub.designTree.loadNodesForTest(appModel, dataStoreModel, models);
 
         //测试实体虚拟代码生成
         var entityCode = CodeGenService.genEntityDummyCode(entityModel, "sys", hub.designTree);

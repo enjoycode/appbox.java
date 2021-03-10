@@ -1,7 +1,6 @@
 package appbox.model;
 
 public enum ModelType {
-    Applicaton((byte) 0),
     Enum((byte) 1),
     Entity((byte) 2),
     Event((byte) 3),
@@ -10,8 +9,7 @@ public enum ModelType {
     Workflow((byte) 6),
     Report((byte) 7),
     Folder((byte) 8),
-    Permission((byte) 9),
-    DataStore((byte) 10);
+    Permission((byte) 9);
 
     public final byte value;
 

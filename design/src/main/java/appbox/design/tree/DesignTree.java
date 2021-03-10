@@ -81,6 +81,7 @@ public final class DesignTree {
             for (ApplicationModel app : all.apps) {
                 appRootNode.nodes.add(new ApplicationNode(this, app));
             }
+
             //2.加载Folders
             var mergedFolders = all.folders;
             //2.1从staged中添加新建的并更新修改的文件夹
@@ -90,29 +91,32 @@ public final class DesignTree {
                 findModelRootNode(folder.appId(), folder.targetModelType()).addFolder(folder, null);
             }
 
-            var mergedModels = all.models;
-            //添加系统默认存储模型
+            //3.加载存储
+            var storeModels = new ArrayList<DataStoreModel>();
+            //3.1 添加系统默认存储模型
             var defaultStoreModel = new DataStoreModel(DataStoreModel.DataStoreKind.Future, "", "Default");
-            defaultStoreModel.acceptChanges();
-            mergedModels.add(defaultStoreModel);
+            storeModels.add(defaultStoreModel);
+            //3.2 添加第三方存储
+            if (all.stores != null)
+                storeModels.addAll(all.stores);
+            for (var s : storeModels) {
+                storeRootNode.addModel(s, designHub, false);
+            }
 
-            //加载staged中新建的模型，可能包含DataStoreModel
+            //4.加载模型
+            var mergedModels = all.models;
+            //4.1加载staged中新建的模型，可能包含DataStoreModel
             mergedModels.addAll(Arrays.asList(staged.findNewModels()));
-
-            //加入Models
+            //4.2加入Models
             staged.removeDeletedModels(mergedModels);  //先移除已删除的
             var allModelNodes = new ArrayList<ModelNode>(); //需要延迟创建虚拟代码的模型(排除Permission)
             for (ModelBase m : mergedModels) {
-                if (m.modelType() == ModelType.DataStore) {
-                    storeRootNode.addModel((DataStoreModel) m, designHub);
-                } else {
-                    var modelNode = findModelRootNode(m.appId(), m.modelType()).addModel(m);
-                    if (m.modelType() != ModelType.Permission)
-                        allModelNodes.add(modelNode);
-                }
+                var modelNode = findModelRootNode(m.appId(), m.modelType()).addModel(m);
+                if (m.modelType() != ModelType.Permission)
+                    allModelNodes.add(modelNode);
             }
 
-            //在所有节点加载完后创建模型对应的虚拟文件
+            //5.在所有节点加载完后创建模型对应的虚拟文件
             designHub.typeSystem.createPermissionsDocuments(); //权限模型单独处理
             for (ModelNode n : allModelNodes) {
                 designHub.typeSystem.createModelDocument(n);
@@ -126,7 +130,7 @@ public final class DesignTree {
     }
 
     /** 仅用于测试 */
-    public void loadNodesForTest(ApplicationModel appModel, List<ModelBase> models) {
+    public void loadNodesForTest(ApplicationModel appModel, DataStoreModel dataStore, List<ModelBase> models) {
         nodes.clear();
         _checkouts = new HashMap<>();
 
@@ -136,13 +140,11 @@ public final class DesignTree {
         nodes.add(appRootNode);
 
         appRootNode.nodes.add(new ApplicationNode(this, appModel));
+        storeRootNode.addModel(dataStore, designHub, false);
+
         var allModelNodes = new ArrayList<ModelNode>();
         for (ModelBase m : models) {
-            if (m.modelType() == ModelType.DataStore) {
-                storeRootNode.addModel((DataStoreModel) m, designHub);
-            } else {
-                allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
-            }
+            allModelNodes.add(findModelRootNode(m.appId(), m.modelType()).addModel(m));
         }
 
         //在所有节点加载完后创建模型对应的虚拟文件

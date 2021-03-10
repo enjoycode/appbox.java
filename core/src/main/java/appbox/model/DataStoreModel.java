@@ -1,11 +1,13 @@
 package appbox.model;
 
+import appbox.serialization.IBinSerializable;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 import appbox.utils.StringUtil;
 
-public final class DataStoreModel extends ModelBase {
-
+public final class DataStoreModel implements IBinSerializable {
+    private long          _id;
+    private String        _name;
     private DataStoreKind _kind;
     private String        _provider;
     private String        _settings;
@@ -14,9 +16,18 @@ public final class DataStoreModel extends ModelBase {
     public DataStoreModel() {}
 
     public DataStoreModel(DataStoreKind kind, String provider, String storeName) {
-        super(StringUtil.getHashCode(storeName), storeName);
+        _id       = StringUtil.getHashCode(storeName);
+        _name     = storeName;
         _kind     = kind;
         _provider = provider;
+    }
+
+    public long id() {
+        return _id;
+    }
+
+    public String name() {
+        return _name;
     }
 
     public DataStoreKind kind() { return _kind; }
@@ -29,18 +40,13 @@ public final class DataStoreModel extends ModelBase {
         _settings = value;
     }
 
-    @Override
-    public ModelType modelType() {
-        return ModelType.DataStore;
-    }
-
     //region ====Serialization====
     //注意:provider及settings的编号与C#不同
     @Override
     public void writeTo(IOutputStream bs) {
-        super.writeTo(bs);
-
-        bs.writeByteField(_kind.value, 1);
+        bs.writeLongField(_id, 1);
+        bs.writeStringField(_name, 2);
+        bs.writeByteField(_kind.value, 3);
         bs.writeStringField(_provider, 5);
         bs.writeStringField(_settings, 6);
 
@@ -49,13 +55,15 @@ public final class DataStoreModel extends ModelBase {
 
     @Override
     public void readFrom(IInputStream bs) {
-        super.readFrom(bs);
-
         int fieldId;
         do {
             fieldId = bs.readVariant();
             switch (fieldId) {
                 case 1:
+                    _id = bs.readLong(); break;
+                case 2:
+                    _name = bs.readString(); break;
+                case 3:
                     _kind = DataStoreKind.fromValue(bs.readByte()); break;
                 case 5:
                     _provider = bs.readString(); break;

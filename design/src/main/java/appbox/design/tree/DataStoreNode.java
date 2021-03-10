@@ -1,9 +1,9 @@
 package appbox.design.tree;
 
 import appbox.design.DesignHub;
-import appbox.design.services.StagedService;
 import appbox.model.DataStoreModel;
 import appbox.serialization.IJsonWriter;
+import appbox.store.ModelStore;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -34,20 +34,19 @@ public final class DataStoreNode extends DesignNode {
     }
 
     @Override
-    public int version() {
-        return _model.version();
-    }
-
-    @Override
     public String checkoutInfoTargetID() {
         return id();
     }
     //endregion
 
-    public CompletableFuture<Void> saveAsync() {
+    public CompletableFuture<Void> saveAsync(boolean isNew) {
         if (!isCheckoutByMe())
             return CompletableFuture.failedFuture(new RuntimeException("DataStore hasn't checkout"));
-        return StagedService.saveModelAsync(_model);
+
+        if (isNew)
+            return ModelStore.createDataStoreAsync(_model);
+        else
+            return ModelStore.updateDataStoreAsync(_model);
     }
 
     @Override

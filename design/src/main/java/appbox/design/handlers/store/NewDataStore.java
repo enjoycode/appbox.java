@@ -20,9 +20,9 @@ public final class NewDataStore implements IDesignHandler {
         //新建存储节点
         var model = new DataStoreModel(kind, provider, settings);
         //添加节点至模型树并绑定签出信息
-        var node = hub.designTree.storeRootNode().addModel(model, hub);
+        var node = hub.designTree.storeRootNode().addModel(model, hub, true);
 
-        return node.saveAsync().thenApply(r -> {
+        return node.saveAsync(true).thenApply(r -> {
             hub.typeSystem.updateStoresDocument();
             return new JsonResult(node);
         });

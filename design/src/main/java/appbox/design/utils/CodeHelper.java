@@ -30,8 +30,6 @@ public final class CodeHelper {
                 return "Reports";
             case Permission:
                 return "Permissions";
-            case Applicaton:
-                return "Applications";
             default:
                 return "Unknown";
         }

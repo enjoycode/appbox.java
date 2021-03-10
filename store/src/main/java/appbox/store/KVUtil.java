@@ -21,6 +21,7 @@ public final class KVUtil {
     public static final byte METACF_APP_PREFIX              = (byte) 0xA0;
     public static final byte METACF_FOLDER_PREFIX           = (byte) 0xA1;
     public static final byte METACF_BLOB_PREFIX             = (byte) 0xA2;
+    public static final byte METACF_DATASTORE_PREFIX        = (byte) 0xA3;
     public static final byte METACF_MODEL_PREFIX            = (byte) 0xA4;
     public static final byte METACF_MODEL_CODE_PREFIX       = (byte) 0xC0;
     public static final byte METACF_SERVICE_ASSEMBLY_PREFIX = (byte) 0xB0;
@@ -43,6 +44,14 @@ public final class KVUtil {
         }
         bs.writeByte(KVUtil.METACF_APP_PREFIX);
         bs.writeIntBE(appId);
+    }
+
+    public static void writeDataStoreKey(IOutputStream bs, long storeId, boolean withSize) {
+        if (withSize) {
+            bs.writeNativeVariant(9); //注意按无符号写入key长度
+        }
+        bs.writeByte(KVUtil.METACF_DATASTORE_PREFIX);
+        bs.writeLongBE(storeId); //暂大字节序写入
     }
 
     public static void writeModelKey(IOutputStream bs, long modelId, boolean withSize) {

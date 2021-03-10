@@ -13,9 +13,9 @@ import java.util.List;
 
 public final class KVScanModelResponse extends KVScanResponse {
     public List<ApplicationModel> apps;
-    public List<DataStoreModel> stores;
-    public List<ModelFolder> folders;
-    public List<ModelBase> models;
+    public List<DataStoreModel>   stores;
+    public List<ModelFolder>      folders;
+    public List<ModelBase>        models;
 
     @Override
     public void readFrom(IInputStream bs) {
@@ -27,8 +27,8 @@ public final class KVScanModelResponse extends KVScanResponse {
 
         skipped = bs.readInt();
         length  = bs.readInt();
-        int keySize, valueSize = 0;
-        byte[] key = new byte[128]; //TODO:最长的
+        int    keySize, valueSize = 0;
+        byte[] key                = new byte[128]; //TODO:最长的
 
         for (int i = 0; i < length; i++) {
             keySize = bs.readNativeVariant(); //Row's KeySize
@@ -41,6 +41,9 @@ public final class KVScanModelResponse extends KVScanResponse {
                 case KVUtil.METACF_FOLDER_PREFIX:
                     readFolder(bs);
                     break;
+                case KVUtil.METACF_DATASTORE_PREFIX:
+                    readDataStore(bs);
+                    break;
                 case KVUtil.METACF_MODEL_PREFIX:
                     readModel(bs);
                     break;
@@ -51,7 +54,7 @@ public final class KVScanModelResponse extends KVScanResponse {
     }
 
     private void readApp(IInputStream bs) {
-        var app = new ApplicationModel();
+        var app        = new ApplicationModel();
         var appStoreId = bs.readByte();
         var devIdSeq   = bs.readInt();
         var usrIdSeq   = bs.readInt();
@@ -71,6 +74,15 @@ public final class KVScanModelResponse extends KVScanResponse {
         if (folders == null)
             folders = new ArrayList<>();
         folders.add(folder);
+    }
+
+    private void readDataStore(IInputStream bs) {
+        var store = new DataStoreModel();
+        store.readFrom(bs);
+
+        if (stores == null)
+            stores = new ArrayList<>();
+        stores.add(store);
     }
 
     private void readModel(IInputStream bs) {

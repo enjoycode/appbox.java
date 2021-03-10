@@ -23,7 +23,8 @@ public final class SaveDataStore implements IDesignHandler {
 
         var dataStoreNode = (DataStoreNode) node;
         dataStoreNode.model().updateSettings(settings);
-        return dataStoreNode.saveAsync().thenApply(r -> null);
+        return dataStoreNode.saveAsync(false)
+                .thenApply(r -> null);
     }
 
 }
