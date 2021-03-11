@@ -36,6 +36,11 @@ public final class DataStoreModel implements IBinSerializable {
 
     public String settings() { return _settings; }
 
+    /** 是否系统内置的BlobStore */
+    public boolean isSystemBlobStore() {
+        return _kind == DataStoreKind.Blob && (_provider == null || _provider.isEmpty());
+    }
+
     public void updateSettings(String value) {
         _settings = value;
     }

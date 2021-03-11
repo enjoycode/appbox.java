@@ -24,7 +24,7 @@ public final class NewDataStore implements IDesignHandler {
         var node = hub.designTree.storeRootNode().addModel(model, hub, true);
 
         //系统内置的BlobStore特殊处理
-        if (kind == DataStoreModel.DataStoreKind.Blob && (provider == null || provider.isEmpty())) {
+        if (model.isSystemBlobStore()) {
             return ModelStore.createBlobStoreAsync(storeName).thenApply(r -> new JsonResult(node));
         }
 

@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 
 public final class DataStoreNode extends DesignNode {
 
-    private DataStoreModel _model;
+    private final DataStoreModel _model;
 
     DataStoreNode(DataStoreModel model, DesignHub hub) {
         _model = model;
@@ -40,6 +40,10 @@ public final class DataStoreNode extends DesignNode {
     //endregion
 
     public CompletableFuture<Void> saveAsync(boolean isNew) {
+        //暂忽略系统BlobStore的保存
+        if (_model.isSystemBlobStore())
+            return CompletableFuture.completedFuture(null);
+
         if (!isCheckoutByMe())
             return CompletableFuture.failedFuture(new RuntimeException("DataStore hasn't checkout"));
 
