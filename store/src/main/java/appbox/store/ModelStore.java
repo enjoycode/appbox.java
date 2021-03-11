@@ -41,6 +41,11 @@ public final class ModelStore {
         });
     }
 
+    /** 创建系统内置BlobStore */
+    public static CompletableFuture<Void> createBlobStoreAsync(String storeName) {
+        return SysStoreApi.metaNewBlobAsync(storeName).thenAccept(StoreResponse::checkStoreError);
+    }
+
     /** 创建第三方存储 */
     public static CompletableFuture<Void> createDataStoreAsync(DataStoreModel dataStore) {
         //TODO:检查是否已存在

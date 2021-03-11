@@ -102,6 +102,10 @@ public final class SysStoreApi {
         return makeTaskAndSendRequest(new MetaNewAppRequire(app), new MetaNewAppResponse());
     }
 
+    protected static CompletableFuture<KVCommandResponse> metaNewBlobAsync(String storeName) {
+        return makeTaskAndSendRequest(new MetaNewBlobRequest(storeName), new KVCommandResponse());
+    }
+
     protected static CompletableFuture<MetaGenModelIdResponse> metaGenModelIdAsync(int appId, boolean devLayer) {
         var req = new MetaGenModelIdRequire(appId, devLayer);
         return makeTaskAndSendRequest(req, new MetaGenModelIdResponse());

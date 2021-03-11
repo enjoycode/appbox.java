@@ -8,6 +8,7 @@ import appbox.model.ModelFolder;
 import appbox.serialization.IInputStream;
 import appbox.store.KVUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public final class KVScanModelResponse extends KVScanResponse {
         skipped = bs.readInt();
         length  = bs.readInt();
         int    keySize, valueSize = 0;
-        byte[] key                = new byte[128]; //TODO:最长的
+        byte[] key                = new byte[256]; //TODO:最长的
 
         for (int i = 0; i < length; i++) {
             keySize = bs.readNativeVariant(); //Row's KeySize
@@ -40,6 +41,10 @@ public final class KVScanModelResponse extends KVScanResponse {
                     break;
                 case KVUtil.METACF_FOLDER_PREFIX:
                     readFolder(bs);
+                    break;
+                case KVUtil.METACF_BLOB_PREFIX:
+                    readBlobStore(key, keySize);
+                    bs.skip(valueSize); //Skip BlobStore's Value
                     break;
                 case KVUtil.METACF_DATASTORE_PREFIX:
                     readDataStore(bs);
@@ -74,6 +79,15 @@ public final class KVScanModelResponse extends KVScanResponse {
         if (folders == null)
             folders = new ArrayList<>();
         folders.add(folder);
+    }
+
+    private void readBlobStore(byte[] key, int keySize) {
+        var storeName = new String(key, 0, keySize, StandardCharsets.UTF_8);
+        var store = new DataStoreModel(DataStoreModel.DataStoreKind.Blob, null, storeName);
+
+        if (stores == null)
+            stores = new ArrayList<>();
+        stores.add(store);
     }
 
     private void readDataStore(IInputStream bs) {
