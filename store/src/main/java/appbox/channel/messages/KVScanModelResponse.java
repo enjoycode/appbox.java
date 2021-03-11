@@ -82,8 +82,8 @@ public final class KVScanModelResponse extends KVScanResponse {
     }
 
     private void readBlobStore(byte[] key, int keySize) {
-        var storeName = new String(key, 0, keySize, StandardCharsets.UTF_8);
-        var store = new DataStoreModel(DataStoreModel.DataStoreKind.Blob, null, storeName);
+        var storeName = new String(key, 1, keySize - 1, StandardCharsets.UTF_8);
+        var store     = new DataStoreModel(DataStoreModel.DataStoreKind.Blob, null, storeName);
 
         if (stores == null)
             stores = new ArrayList<>();
