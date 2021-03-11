@@ -61,13 +61,15 @@ public final class IdUtil {
         return ModelType.fromValue(value);
     }
 
-    /**
-     * 根据模型层级及成员流水号生成实体成员标识
-     */
+    /** 根据模型层级及成员流水号生成实体成员标识 */
     public static short makeMemberId(ModelLayer layer, int seq) {
         return (short) (seq << IdUtil.MEMBERID_SEQ_OFFSET
                 | Byte.toUnsignedInt(layer.value) << IdUtil.MEMBERID_LAYER_OFFSET);
     }
 
+    /** 根据系统BlobStoreId生成对应的BlobMetaRaftGroupId */
+    public static long makeBlobMetaRaftGroupId(byte blobStoreId) {
+        return ((long) blobStoreId << RAFTGROUPID_APPID_OFFSET) | ((long) RAFT_TYPE_BLOB_META << 34);
+    }
 
 }

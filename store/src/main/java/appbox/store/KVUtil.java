@@ -46,6 +46,11 @@ public final class KVUtil {
         bs.writeIntBE(appId);
     }
 
+    public static void writeBlobStoreKey(IOutputStream bs, String storeName) {
+        bs.writeByte(KVUtil.METACF_BLOB_PREFIX);
+        bs.writeUtf8(storeName);
+    }
+
     public static void writeDataStoreKey(IOutputStream bs, long storeId, boolean withSize) {
         if (withSize) {
             bs.writeNativeVariant(9); //注意按无符号写入key长度

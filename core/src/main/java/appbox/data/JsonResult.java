@@ -27,6 +27,7 @@ public final class JsonResult implements IBinSerializable {
         registerType(SysEntityKVO.class, customeSerializer);
         registerType(SqlEntityKVO.class, customeSerializer);
         registerType(PermissionNode.class, customeSerializer);
+        registerType(BlobObject.class, customeSerializer);
     }
 
     public static void registerType(Class<?> clazz, ObjectSerializer serializer) {

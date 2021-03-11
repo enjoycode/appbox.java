@@ -4,6 +4,7 @@ import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.*;
+import appbox.design.handlers.store.GetBlobObjects;
 import appbox.design.handlers.store.NewDataStore;
 import appbox.design.handlers.store.SaveDataStore;
 import appbox.design.handlers.view.LoadView;
@@ -36,6 +37,7 @@ public final class DesignService implements IService {
         //----DataStore----
         put("NewDataStore", new NewDataStore());
         put("SaveDataStore", new SaveDataStore());
+        put("GetBlobObjects", new GetBlobObjects());
         //----Entity----
         put("NewEntityModel", new NewEntityModel());
         put("NewEntityMember", new NewEntityMember());

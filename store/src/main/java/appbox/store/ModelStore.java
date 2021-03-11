@@ -262,6 +262,12 @@ public final class ModelStore {
                 .thenApply(KVGetApplicationResponse::getApplicationModel);
     }
 
+    /** 用于运行时加载单个系统BlobStore */
+    public static CompletableFuture<KVGetBlobStoreResponse> loadBlobStoreAsync(String storeName) {
+        var req = new KVGetBlobStoreRequest(storeName);
+        return SysStoreApi.execKVGetAsync(req, new KVGetBlobStoreResponse());
+    }
+
     /** 用于运行时加载单个存储模型 */
     public static CompletableFuture<DataStoreModel> loadDataStoreAsync(long storeId) {
         var req = new KVGetDataStoreRequest(storeId);
