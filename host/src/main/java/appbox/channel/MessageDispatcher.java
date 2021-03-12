@@ -31,7 +31,7 @@ public final class MessageDispatcher {
             case MessageType.MetaGenModelIdResponse:
             case MessageType.MetaGenPartitionResponse:
             case MessageType.KVBeginTxnResponse:
-            case MessageType.KVCommandResponse:
+            case MessageType.CommonResponse:
             case MessageType.KVGetResponse:
             case MessageType.KVScanResponse:
                 processStoreResponse(channel, first);

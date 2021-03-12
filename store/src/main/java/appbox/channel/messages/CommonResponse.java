@@ -4,10 +4,8 @@ import appbox.channel.MessageType;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
-/**
- * 通用的存储命令响应
- */
-public final class KVCommandResponse extends StoreResponse {
+/** 通用的存储命令响应 */
+public final class CommonResponse extends StoreResponse {
 
     private byte[] results;
 
@@ -15,7 +13,7 @@ public final class KVCommandResponse extends StoreResponse {
 
     @Override
     public byte MessageType() {
-        return MessageType.KVCommandResponse;
+        return MessageType.CommonResponse;
     }
 
     @Override

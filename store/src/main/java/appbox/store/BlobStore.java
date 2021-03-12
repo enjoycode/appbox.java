@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class BlobStore {
 
+    //region ====static====
     private static final HashMap<String, SysBlobStore> sysBlobs = new HashMap<>();
 
     public static SysBlobStore get(String storeName) {
@@ -31,7 +32,10 @@ public abstract class BlobStore {
         }
         return store;
     }
+    //endregion
 
     public abstract CompletableFuture<BlobObject[]> listAsync(String path);
+
+    public abstract CompletableFuture<Void> deleteFileAsync(String path);
 
 }

@@ -16,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class SysStoreApi {
 
+    //region ====static====
+
     /** 等待存储响应的请求 */
     public static final class PendingItem<T extends StoreResponse> {
         public CompletableFuture<T> future;
@@ -76,24 +78,25 @@ public final class SysStoreApi {
             return m;
         });
     }
+    //endregion
 
     //region ====Transaction====
     public static CompletableFuture<KVBeginTxnResponse> beginTxnAsync(/*TODO:isoLevel*/) {
         return makeTaskAndSendRequest(new KVBeginTxnRequire(), new KVBeginTxnResponse());
     }
 
-    public static CompletableFuture<KVCommandResponse> commitTxnAsync(KVTxnId txnId) {
+    public static CompletableFuture<CommonResponse> commitTxnAsync(KVTxnId txnId) {
         var req = new KVEndTxnRequire();
         req.txnId.copyFrom(txnId);
         req.action = 0;
-        return makeTaskAndSendRequest(req, new KVCommandResponse());
+        return makeTaskAndSendRequest(req, new CommonResponse());
     }
 
-    public static CompletableFuture<KVCommandResponse> rollbackTxnAsync(KVTxnId txnId) {
+    public static CompletableFuture<CommonResponse> rollbackTxnAsync(KVTxnId txnId) {
         var req = new KVEndTxnRequire();
         req.txnId.copyFrom(txnId);
         req.action = 1;
-        return makeTaskAndSendRequest(req, new KVCommandResponse());
+        return makeTaskAndSendRequest(req, new CommonResponse());
     }
     //endregion
 
@@ -102,8 +105,8 @@ public final class SysStoreApi {
         return makeTaskAndSendRequest(new MetaNewAppRequire(app), new MetaNewAppResponse());
     }
 
-    protected static CompletableFuture<KVCommandResponse> metaNewBlobAsync(String storeName) {
-        return makeTaskAndSendRequest(new MetaNewBlobRequest(storeName), new KVCommandResponse());
+    protected static CompletableFuture<CommonResponse> metaNewBlobAsync(String storeName) {
+        return makeTaskAndSendRequest(new MetaNewBlobRequest(storeName), new CommonResponse());
     }
 
     protected static CompletableFuture<MetaGenModelIdResponse> metaGenModelIdAsync(int appId, boolean devLayer) {
@@ -118,20 +121,20 @@ public final class SysStoreApi {
     //endregion
 
     //region ====KVCommands====
-    public static CompletableFuture<KVCommandResponse> execKVInsertAsync(KVInsertRequire cmd) {
-        return makeTaskAndSendRequest(cmd, new KVCommandResponse());
+    public static CompletableFuture<CommonResponse> execKVInsertAsync(KVInsertRequire cmd) {
+        return makeTaskAndSendRequest(cmd, new CommonResponse());
     }
 
-    public static CompletableFuture<KVCommandResponse> execKVUpdateAsync(KVUpdateRequest cmd) {
-        return makeTaskAndSendRequest(cmd, new KVCommandResponse());
+    public static CompletableFuture<CommonResponse> execKVUpdateAsync(KVUpdateRequest cmd) {
+        return makeTaskAndSendRequest(cmd, new CommonResponse());
     }
 
-    public static CompletableFuture<KVCommandResponse> execKVDeleteAsync(KVDeleteRequest cmd) {
-        return makeTaskAndSendRequest(cmd, new KVCommandResponse());
+    public static CompletableFuture<CommonResponse> execKVDeleteAsync(KVDeleteRequest cmd) {
+        return makeTaskAndSendRequest(cmd, new CommonResponse());
     }
 
-    public static CompletableFuture<KVCommandResponse> execKVAddRefAsync(KVAddRefRequest cmd) {
-        return makeTaskAndSendRequest(cmd, new KVCommandResponse());
+    public static CompletableFuture<CommonResponse> execKVAddRefAsync(KVAddRefRequest cmd) {
+        return makeTaskAndSendRequest(cmd, new CommonResponse());
     }
     //endregion
 
@@ -144,4 +147,9 @@ public final class SysStoreApi {
         return makeTaskAndSendRequest(req, res);
     }
     //endregion
+
+    //region ====Blob====
+
+    //endregion
+
 }

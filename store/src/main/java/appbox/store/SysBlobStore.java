@@ -27,4 +27,8 @@ public final class SysBlobStore extends BlobStore {
                 .thenApply(res -> res.objects);
     }
 
+    @Override
+    public CompletableFuture<Void> deleteFileAsync(String path) {
+        return null;
+    }
 }

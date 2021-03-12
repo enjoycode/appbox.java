@@ -22,6 +22,6 @@ public final class MetaNewBlobRequest implements IMessage {
 
     @Override
     public void readFrom(IInputStream bs) {
-        throw new RuntimeException("Not supported");
+        throw new UnsupportedOperationException();
     }
 }
