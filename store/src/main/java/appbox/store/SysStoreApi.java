@@ -120,20 +120,9 @@ public final class SysStoreApi {
     }
     //endregion
 
-    //region ====KVCommands====
-    public static CompletableFuture<CommonResponse> execKVInsertAsync(KVInsertRequire cmd) {
-        return makeTaskAndSendRequest(cmd, new CommonResponse());
-    }
-
-    public static CompletableFuture<CommonResponse> execKVUpdateAsync(KVUpdateRequest cmd) {
-        return makeTaskAndSendRequest(cmd, new CommonResponse());
-    }
-
-    public static CompletableFuture<CommonResponse> execKVDeleteAsync(KVDeleteRequest cmd) {
-        return makeTaskAndSendRequest(cmd, new CommonResponse());
-    }
-
-    public static CompletableFuture<CommonResponse> execKVAddRefAsync(KVAddRefRequest cmd) {
+    //region ====Commands====
+    //KVInsert, KVUpdate, KVDelete, KVAddRef, BlobCommandRequest
+    public static CompletableFuture<CommonResponse> execCommandAsync(IMessage cmd) {
         return makeTaskAndSendRequest(cmd, new CommonResponse());
     }
     //endregion
@@ -146,10 +135,6 @@ public final class SysStoreApi {
     public static <T extends KVScanResponse> CompletableFuture<T> execKVScanAsync(KVScanRequest req, T res) {
         return makeTaskAndSendRequest(req, res);
     }
-    //endregion
-
-    //region ====Blob====
-
     //endregion
 
 }

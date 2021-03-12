@@ -169,9 +169,9 @@ public final class KVTransaction implements IKVTransaction, /*IEntityMemberWrite
                 continue;
 
             if (task == null) {
-                task = SysStoreApi.execKVAddRefAsync(r).thenAccept(StoreResponse::checkStoreError);
+                task = SysStoreApi.execCommandAsync(r).thenAccept(StoreResponse::checkStoreError);
             } else {
-                task = task.thenCompose(res -> SysStoreApi.execKVAddRefAsync(r))
+                task = task.thenCompose(res -> SysStoreApi.execCommandAsync(r))
                         .thenAccept(StoreResponse::checkStoreError);
             }
         }

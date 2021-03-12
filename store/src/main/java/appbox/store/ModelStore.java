@@ -51,7 +51,7 @@ public final class ModelStore {
         //TODO:检查是否已存在
         return KVTransaction.beginAsync().thenCompose(txn -> {
             var req = new KVInsertDataStoreRequest(txn.id(), dataStore);
-            return SysStoreApi.execKVInsertAsync(req).thenCompose(res -> {
+            return SysStoreApi.execCommandAsync(req).thenCompose(res -> {
                 if (res.errorCode != 0) {
                     txn.rollback();
                     throw new SysStoreException(res.errorCode);
@@ -65,7 +65,7 @@ public final class ModelStore {
     public static CompletableFuture<Void> updateDataStoreAsync(DataStoreModel dataStore) {
         return KVTransaction.beginAsync().thenCompose(txn -> {
             var req = new KVUpdateDataStoreRequest(txn.id(), dataStore);
-            return SysStoreApi.execKVUpdateAsync(req).thenCompose(res -> {
+            return SysStoreApi.execCommandAsync(req).thenCompose(res -> {
                 if (res.errorCode != 0) {
                     txn.rollback();
                     throw new SysStoreException(res.errorCode);
@@ -95,7 +95,7 @@ public final class ModelStore {
 
     public static CompletableFuture<Void> insertModelAsync(ModelBase model, KVTransaction txn) {
         var req = new KVInsertModelRequire(txn.id(), model);
-        return SysStoreApi.execKVInsertAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
@@ -105,7 +105,7 @@ public final class ModelStore {
         //TODO:考虑先处理变更项但不提议变更命令，再保存AcceptChanges后的模型数据，最后事务提议变更命令
         model.increaseVersion(); //先增加模型版本号
         var req = new KVUpdateModelRequest(txn.id(), model);
-        return SysStoreApi.execKVUpdateAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex))
                 .thenCompose(r -> updateEntityModelAsync(model, txn));
@@ -135,14 +135,14 @@ public final class ModelStore {
 
         //非系统存储的实体模型直接删除原数据
         var req = new KVDeleteModelRequest(txn.id(), model.id());
-        return SysStoreApi.execKVDeleteAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
     public static CompletableFuture<Void> upsertFolderAsync(ModelFolder folder, KVTransaction txn) {
         var req = new KVInsertFolderRequest(folder, txn.id());
-        return SysStoreApi.execKVInsertAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
@@ -155,14 +155,14 @@ public final class ModelStore {
      */
     public static CompletableFuture<Void> upsertModelCodeAsync(long modelId, byte[] codeData, KVTransaction txn) {
         var req = new KVInsertModelCodeRequire(txn.id(), modelId, codeData);
-        return SysStoreApi.execKVInsertAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
     public static CompletableFuture<Void> deleteModelCodeAsync(long modelId, KVTransaction txn) {
         var req = new KVDeleteModelCodeRequest(txn.id(), modelId);
-        return SysStoreApi.execKVDeleteAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
@@ -174,14 +174,14 @@ public final class ModelStore {
     public static CompletableFuture<Void> upsertAssemblyAsync(
             boolean isService, String asmName, byte[] asmData, KVTransaction txn) {
         var req = new KVInsertAssemblyRequest(txn.id(), asmName, asmData, isService);
-        return SysStoreApi.execKVInsertAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
     public static CompletableFuture<Void> deleteAssemblyAsync(boolean isService, String asmName, KVTransaction txn) {
         var req = new KVDeleteAssemblyRequest(txn.id(), asmName, isService);
-        return SysStoreApi.execKVDeleteAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
@@ -227,14 +227,14 @@ public final class ModelStore {
      */
     public static CompletableFuture<Void> upsertViewRouteAsync(String viewName, String path, KVTransaction txn) {
         var req = new KVInsertViewRouteRequest(viewName, path, txn.id());
-        return SysStoreApi.execKVInsertAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
     public static CompletableFuture<Void> deleteViewRouteAsync(String viewName, KVTransaction txn) {
         var req = new KVDeleteViewRouteRequest(txn.id(), viewName);
-        return SysStoreApi.execKVDeleteAsync(req)
+        return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }

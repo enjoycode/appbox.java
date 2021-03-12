@@ -132,7 +132,7 @@ public final class EntityStore { //TODO: rename to SysStore
             //插入数据
             var req = new KVInsertEntityRequest(entity, model, refsWithFK, txn.id());
             req.overrideExists = overrideExists;
-            return SysStoreApi.execKVInsertAsync(req);
+            return SysStoreApi.execCommandAsync(req);
         }).thenAccept(StoreResponse::checkStoreError);
     }
     //endregion insert
@@ -162,7 +162,7 @@ public final class EntityStore { //TODO: rename to SysStore
 
         //更新数据 //TODO:暂使用全部更新的方式实现，待改为只更新变更过的成员
         var req = new KVUpdateEntityRequest(entity, model, refsWithFK, txn.id());
-        return SysStoreApi.execKVUpdateAsync(req).thenCompose(res -> {
+        return SysStoreApi.execCommandAsync(req).thenCompose(res -> {
             res.checkStoreError();
 
             //根据返回值处理变更的索引
@@ -205,7 +205,7 @@ public final class EntityStore { //TODO: rename to SysStore
         return txn.execPendingRefs().thenCompose(r -> {
             //删除数据 TODO:参数控制返回索引字段的值，用于生成索引键，暂返回全部字段
             var req = new KVDeleteEntityRequest(txn.id(), id, model, refsWithFK);
-            return SysStoreApi.execKVDeleteAsync(req).thenCompose(res -> {
+            return SysStoreApi.execCommandAsync(req).thenCompose(res -> {
                 res.checkStoreError();
 
                 //删除索引
@@ -238,10 +238,10 @@ public final class EntityStore { //TODO: rename to SysStore
 
             var req = new KVInsertIndexRequest(txn.id(), entity, idx);
             if (fut == null)
-                fut = SysStoreApi.execKVInsertAsync(req)
+                fut = SysStoreApi.execCommandAsync(req)
                         .thenAccept(StoreResponse::checkStoreError);
             else
-                fut = fut.thenCompose(r -> SysStoreApi.execKVInsertAsync(req))
+                fut = fut.thenCompose(r -> SysStoreApi.execCommandAsync(req))
                         .thenAccept(StoreResponse::checkStoreError);
         }
         return fut;
@@ -274,9 +274,9 @@ public final class EntityStore { //TODO: rename to SysStore
                 //删除旧的索引再添加新的索引
                 var delReq = new KVDeleteIndexRequest(txn.id(), entity.id(), stored, idx);
                 var addReq = new KVInsertIndexRequest(txn.id(), entity, idx);
-                fut = fut.thenCompose(r -> SysStoreApi.execKVDeleteAsync(delReq))
+                fut = fut.thenCompose(r -> SysStoreApi.execCommandAsync(delReq))
                         .thenAccept(StoreResponse::checkStoreError);
-                fut = fut.thenCompose(r -> SysStoreApi.execKVInsertAsync(addReq))
+                fut = fut.thenCompose(r -> SysStoreApi.execCommandAsync(addReq))
                         .thenAccept(StoreResponse::checkStoreError);
             } else if (idx.hasStoringFields()) { //继续判断StoringFields是否改变
                 boolean indexValueChanged = false;
@@ -289,7 +289,7 @@ public final class EntityStore { //TODO: rename to SysStore
                 }
                 if (indexValueChanged) {
                     var updateReq = new KVUpdateIndexRequest(txn.id(), entity, idx);
-                    fut = fut.thenCompose(r -> SysStoreApi.execKVUpdateAsync(updateReq))
+                    fut = fut.thenCompose(r -> SysStoreApi.execCommandAsync(updateReq))
                             .thenAccept(StoreResponse::checkStoreError);
                 }
             }
@@ -311,10 +311,10 @@ public final class EntityStore { //TODO: rename to SysStore
 
             var req = new KVDeleteIndexRequest(txn.id(), id, stored, idx);
             if (fut == null)
-                fut = SysStoreApi.execKVDeleteAsync(req)
+                fut = SysStoreApi.execCommandAsync(req)
                         .thenAccept(StoreResponse::checkStoreError);
             else
-                fut = fut.thenCompose(r -> SysStoreApi.execKVDeleteAsync(req))
+                fut = fut.thenCompose(r -> SysStoreApi.execCommandAsync(req))
                         .thenAccept(StoreResponse::checkStoreError);
         }
         return fut;
@@ -323,7 +323,7 @@ public final class EntityStore { //TODO: rename to SysStore
     //endregion index
 
     //region ----Save----
-    public static final CompletableFuture<Void> saveAsync(SysEntity entity) {
+    public static CompletableFuture<Void> saveAsync(SysEntity entity) {
         switch (entity.persistentState()) {
             case Detached:
                 return insertEntityAsync(entity);
@@ -337,7 +337,7 @@ public final class EntityStore { //TODO: rename to SysStore
         }
     }
 
-    public static final CompletableFuture<Void> saveAsync(SysEntity entity, KVTransaction txn) {
+    public static CompletableFuture<Void> saveAsync(SysEntity entity, KVTransaction txn) {
         switch (entity.persistentState()) {
             case Detached:
                 return insertEntityAsync(entity, txn);

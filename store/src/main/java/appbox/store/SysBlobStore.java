@@ -1,7 +1,6 @@
 package appbox.store;
 
-import appbox.channel.messages.KVScanBlobRequest;
-import appbox.channel.messages.KVScanBlobResponse;
+import appbox.channel.messages.*;
 import appbox.data.BlobObject;
 import appbox.utils.IdUtil;
 
@@ -9,6 +8,8 @@ import java.util.concurrent.CompletableFuture;
 
 /** 系统内置的BlobStore */
 public final class SysBlobStore extends BlobStore {
+
+    public static final byte ACTION_DELETE_FILE = 5;
 
     public final  byte   id;
     public final  String name;
@@ -29,6 +30,9 @@ public final class SysBlobStore extends BlobStore {
 
     @Override
     public CompletableFuture<Void> deleteFileAsync(String path) {
-        return null;
+        var req = new BlobCommandRequest(metaRaftGroupId, ACTION_DELETE_FILE,
+                0, 0, 0, 0, path);
+        return SysStoreApi.execCommandAsync(req)
+                .thenAccept(StoreResponse::checkStoreError);
     }
 }

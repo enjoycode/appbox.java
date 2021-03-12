@@ -4,6 +4,7 @@ import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.*;
+import appbox.design.handlers.store.DeleteBlobObject;
 import appbox.design.handlers.store.GetBlobObjects;
 import appbox.design.handlers.store.NewDataStore;
 import appbox.design.handlers.store.SaveDataStore;
@@ -38,6 +39,7 @@ public final class DesignService implements IService {
         put("NewDataStore", new NewDataStore());
         put("SaveDataStore", new SaveDataStore());
         put("GetBlobObjects", new GetBlobObjects());
+        put("DeleteBlobObject", new DeleteBlobObject());
         //----Entity----
         put("NewEntityModel", new NewEntityModel());
         put("NewEntityMember", new NewEntityMember());
