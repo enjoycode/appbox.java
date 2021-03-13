@@ -312,8 +312,7 @@ public final class PublishService {
 
     /** 保存视图模型的路由,新建与更新的通用 */
     private static CompletableFuture<Void> upsertViewRouteAsync(DesignHub hub, ViewModel model, KVTransaction txn) {
-        var inRoute = (model.getFlag().value & ViewModel.ViewModelFlag.ListInRouter.value)
-                == ViewModel.ViewModelFlag.ListInRouter.value;
+        var inRoute = (model.getFlag() & ViewModel.FLAG_ROUTE) == ViewModel.FLAG_ROUTE;
         //新建且不列入路由的直接返回
         CompletableFuture<Void> task = null;
         if (model.persistentState() == PersistentState.Detached) {

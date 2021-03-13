@@ -279,7 +279,7 @@ public final class StoreInitiator {
 
         return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
             if (!(routePath == null || routePath.isEmpty())) {
-                model.setFlag(ViewModel.ViewModelFlag.ListInRouter);
+                model.setFlag(ViewModel.FLAG_ROUTE);
                 model.setRoutePath(routePath);
                 var viewName = "sys." + model.name();
                 return ModelStore.upsertViewRouteAsync(viewName, model.getRoutePath(), txn);

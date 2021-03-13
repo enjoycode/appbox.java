@@ -6,10 +6,16 @@ import appbox.serialization.IJsonWriter;
 import appbox.serialization.IOutputStream;
 
 public class ViewModel extends ModelBase implements IBinSerializable {
+    public static final byte FLAG_NONE   = 0;
+    public static final byte FLAG_ROUTE  = 1; //加入路由表
+    public static final byte FLAG_WIDGET = 2; //作为Widget
+
+    public static final byte TYPE_VUE        = 0;          //普通Vue视图
+    public static final byte TYPE_VISUAL_VUE = 1;   //可视化Vue视图
 
     //region ====Fields & Properties====
-    private ViewModelFlag flag = ViewModelFlag.None;
-    private ViewModelType type = ViewModelType.Vue;
+    private byte flag = FLAG_NONE;
+    private byte type = TYPE_VUE;
 
     /** 自定义路由的上级，指向视图名称eg: sys.Home */
     private String routeParent;
@@ -26,11 +32,11 @@ public class ViewModel extends ModelBase implements IBinSerializable {
         return ModelType.View;
     }
 
-    public ViewModelFlag getFlag() {
+    public byte getFlag() {
         return flag;
     }
 
-    public void setFlag(ViewModelFlag flag) {
+    public void setFlag(byte flag) {
         this.flag = flag;
     }
 
@@ -75,8 +81,8 @@ public class ViewModel extends ModelBase implements IBinSerializable {
     public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
 
-        bs.writeByteField(flag.value, 1);
-        bs.writeByteField(type.value, 2);
+        bs.writeByteField(flag, 1);
+        bs.writeByteField(type, 2);
         bs.writeLongField(permissionID, 3);
         if (routePath != null && !routePath.isEmpty())
             bs.writeStringField(routePath, 4);
@@ -95,9 +101,9 @@ public class ViewModel extends ModelBase implements IBinSerializable {
             propIndex = bs.readVariant();
             switch (propIndex) {
                 case 1:
-                    flag = ViewModelFlag.fromValue(bs.readByte()); break;
+                    flag = bs.readByte(); break;
                 case 2:
-                    type = ViewModelType.fromValue(bs.readByte()); break;
+                    type = bs.readByte(); break;
                 case 3:
                     permissionID = bs.readLong(); break;
                 case 4:
@@ -113,39 +119,10 @@ public class ViewModel extends ModelBase implements IBinSerializable {
     }
 
     public void writeToJson(IJsonWriter writer) {
-        writer.writeKeyValue("Route", (flag.value & ViewModelFlag.ListInRouter.value) == ViewModelFlag.ListInRouter.value);
+        writer.writeKeyValue("Route", (flag & FLAG_ROUTE) == FLAG_ROUTE);
         writer.writeKeyValue("RouteParent", routeParent);
         writer.writeKeyValue("RoutePath", routePath);
-    }
-    //endregion
-
-    //region ====Enums====
-    public enum ViewModelFlag {
-        None(0), ListInRouter(1);
-        public final byte value;
-
-        ViewModelFlag(int v) {
-            value = (byte) v;
-        }
-
-        public static ViewModelFlag fromValue(byte v) {
-            if (v == 0) return None;
-            else if (v == 1) return ListInRouter;
-            throw new RuntimeException("Unknown value: " + v);
-        }
-    }
-
-    public enum ViewModelType {
-        Vue(0), VisualVue(1);
-        public final byte value;
-
-        ViewModelType(int v) { value = (byte) v;}
-
-        public static ViewModelType fromValue(byte v) {
-            if (v == 0) return Vue;
-            else if (v == 1) return VisualVue;
-            throw new RuntimeException("Unknown value: " + v);
-        }
+        writer.writeKeyValue("Widget", (flag & FLAG_WIDGET) == FLAG_WIDGET);
     }
     //endregion
 
