@@ -17,12 +17,16 @@ public class NewViewModel implements IDesignHandler {
         var selectedNodeType = DesignNodeType.fromValue((byte) args.getInt());
         var selectedNodeId   = args.getString();
         var name             = args.getString();
+        var type             = (byte) args.getInt();
 
-        var templateCode = "<div>Hello Future!</div>";
-        var scriptCode   = String.format("@Component\nexport default class %s extends Vue {\n\n}\n", name);
-        var initCodes    = new Object[]{templateCode, scriptCode, "", ""};
+        Object[] initCodes = null;
+        if (type == ViewModel.TYPE_VUE) {
+            var templateCode = "<div>Hello Future!</div>";
+            var scriptCode   = String.format("@Component\nexport default class %s extends Vue {\n\n}\n", name);
+            initCodes = new Object[]{templateCode, scriptCode, "", ""};
+        }
 
-        return ModelCreator.create(hub, ModelType.View, id -> new ViewModel(id, name)
+        return ModelCreator.create(hub, ModelType.View, id -> new ViewModel(id, name, type)
                 , selectedNodeType, selectedNodeId, name, initCodes);
     }
 }

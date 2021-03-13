@@ -274,7 +274,7 @@ public final class StoreInitiator {
         var modelId = ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
                 | ((long) ModelType.View.value << IdUtil.MODELID_TYPE_OFFSET)
                 | (idIndex << IdUtil.MODELID_SEQ_OFFSET);
-        var model = new ViewModel(modelId, name);
+        var model = new ViewModel(modelId, name, ViewModel.TYPE_VUE);
         model.setFolderId(folderId);
 
         return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {

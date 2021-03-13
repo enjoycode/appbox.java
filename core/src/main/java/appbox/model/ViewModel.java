@@ -72,8 +72,9 @@ public class ViewModel extends ModelBase implements IBinSerializable {
 
     public ViewModel() {}
 
-    public ViewModel(long id, String name) {
+    public ViewModel(long id, String name, byte type) {
         super(id, name);
+        this.type = type;
     }
 
     //region ====Serialization====
