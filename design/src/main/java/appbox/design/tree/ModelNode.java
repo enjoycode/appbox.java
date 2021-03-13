@@ -3,10 +3,7 @@ package appbox.design.tree;
 import appbox.data.PersistentState;
 import appbox.design.DesignHub;
 import appbox.design.services.StagedService;
-import appbox.model.EntityModel;
-import appbox.model.ModelBase;
-import appbox.model.ModelType;
-import appbox.model.ServiceModel;
+import appbox.model.*;
 import appbox.serialization.IJsonWriter;
 
 import java.util.concurrent.CompletableFuture;
@@ -86,12 +83,15 @@ public final class ModelNode extends DesignNode {
             if (entityModel.sysStoreOptions() != null) {
                 writer.writeKeyValue("StoreId", 0);
             } else if (entityModel.sqlStoreOptions() != null) {
-                writer.writeKeyValue("StoreId", Long.toUnsignedString(entityModel.sqlStoreOptions().storeModelId()));
+                writer.writeKeyValue("StoreId",
+                        Long.toUnsignedString(entityModel.sqlStoreOptions().storeModelId()));
             } //TODO:Cql
         } else if (_model.modelType() == ModelType.Service) {
             //ServiceModel输出Language
-            writer.writeKey("Language");
-            writer.writeValue(((ServiceModel) _model).language().value);
+            writer.writeKeyValue("Language", ((ServiceModel) _model).language().value);
+        } else if (_model.modelType() == ModelType.View) {
+            //ViewModel输出类型
+            writer.writeKeyValue("ViewType", ((ViewModel)_model).getType());
         }
     }
 

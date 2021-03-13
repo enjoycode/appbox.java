@@ -40,6 +40,8 @@ public class ViewModel extends ModelBase implements IBinSerializable {
         this.flag = flag;
     }
 
+    public byte getType() { return type; }
+
     public String getRouteParent() {
         return routeParent;
     }
