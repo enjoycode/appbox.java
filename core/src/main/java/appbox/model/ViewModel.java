@@ -119,6 +119,7 @@ public class ViewModel extends ModelBase implements IBinSerializable {
     }
 
     public void writeToJson(IJsonWriter writer) {
+        writer.writeKeyValue("Type", type);
         writer.writeKeyValue("Route", (flag & FLAG_ROUTE) == FLAG_ROUTE);
         writer.writeKeyValue("RouteParent", routeParent);
         writer.writeKeyValue("RoutePath", routePath);
