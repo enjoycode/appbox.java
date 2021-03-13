@@ -22,11 +22,8 @@ public final class ServiceModel extends ModelBase {
 
     private Language _language;
 
-    /**
-     * Only for serialization
-     */
-    public ServiceModel() {
-    }
+    /** Only for serialization */
+    public ServiceModel() {}
 
     public ServiceModel(long id, String name) {
         super(id, name);
