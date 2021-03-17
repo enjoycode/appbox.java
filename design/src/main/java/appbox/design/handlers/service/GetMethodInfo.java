@@ -1,5 +1,6 @@
 package appbox.design.handlers.service;
 
+import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.model.ModelType;
@@ -29,8 +30,7 @@ public final class GetMethodInfo implements IDesignHandler {
         if (methodInfo == null)
             throw new RuntimeException("Can't find Service method");
 
-        //TODO:暂兼容旧前端代码转换为字符串
-        return CompletableFuture.completedFuture(JSON.toJSONString(methodInfo));
+        return CompletableFuture.completedFuture(new JsonResult(methodInfo));
     }
 
 }
