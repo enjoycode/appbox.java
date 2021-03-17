@@ -366,14 +366,7 @@ public final class LanguageServer {
             var position = getPosition(buffer, line, column);
             var element  = cu.getElementAt(position);
             if (element instanceof SourceMethod) {
-                var method     = (SourceMethod) element;
-                var methodInfo = new ServiceMethodInfo();
-                methodInfo.Name = method.getElementName();
-                for (var para : method.getParameters()) {
-                    methodInfo.addParameter(para.getElementName(),
-                            Signature.toString(para.getTypeSignature()));
-                }
-                return methodInfo;
+                return makeMethodInfo((SourceMethod) element);
             } else {
                 Log.debug("find elemet[" + element.getClass().getSimpleName() + "] is not SourceMethod");
             }
@@ -381,6 +374,36 @@ public final class LanguageServer {
             Log.warn("findServiceMethod: " + ex.getMessage());
         }
         return null;
+    }
+
+    /** 根据方法名称找到服务方法相关信息,找不到返回null */
+    public ServiceMethodInfo findServiceMethod(ModelNode serviceNode, String methodName) {
+        var projectName = makeServiceProjectName(serviceNode);
+        var project     = jdtWorkspace.getRoot().getProject(projectName);
+        var file        = project.getFile(String.format("%s.java", serviceNode.model().name()));
+        var cu          = JDTUtils.resolveCompilationUnit(file);
+        try {
+            cu.makeConsistent(null);
+            var methods = cu.getTypes()[0].getMethods();
+            for (var method : methods) {
+                if (!method.isConstructor() && method.getElementName().equals(methodName)) {
+                    return makeMethodInfo(method);
+                }
+            }
+        } catch (Exception ex) {
+            Log.warn("findServiceMethod: " + ex.getMessage());
+        }
+        return null;
+    }
+
+    private static ServiceMethodInfo makeMethodInfo(IMethod method) throws JavaModelException {
+        var methodInfo = new ServiceMethodInfo();
+        methodInfo.Name = method.getElementName();
+        for (var para : method.getParameters()) {
+            methodInfo.addParameter(para.getElementName(),
+                    Signature.toString(para.getTypeSignature()));
+        }
+        return methodInfo;
     }
 
     private static int getPosition(IBuffer buffer, int line, int column) {

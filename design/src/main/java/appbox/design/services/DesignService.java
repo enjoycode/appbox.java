@@ -53,6 +53,7 @@ public final class DesignService implements IService {
         put("OpenServiceModel", new OpenServiceModel());
         put("GenServiceDeclare", new GenServiceDeclare());
         put("GetServiceMethod", new GetServiceMethod());
+        put("GetMethodInfo", new GetMethodInfo());
         put("NewServiceModel", new NewServiceModel());
         put("GetHover", new GetHover());
         put("StartDebugging", new StartDebugging());
