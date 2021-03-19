@@ -401,16 +401,10 @@ public final class StoreInitiator {
         testou.setParent(itdeptou);
 
         //VueWidgets配置项
-        var widgetSettings = new Settings();
-        widgetSettings.setAppId(0);
-        widgetSettings.setUserId(EntityId.empty());
-        widgetSettings.setName("VuWidgets");
-        widgetSettings.setType("Json");
-        try (var valusStream = getResourceStream("settings", "VueWidgets", "json")) {
-            widgetSettings.setValue(valusStream.readAllBytes());
-        } catch (Exception ex) {
-            return CompletableFuture.failedFuture(ex);
-        }
+        var widgetSettings = createJsonSettings("VueWidgets");
+        var widgetSchema   = createJsonSettings("VueWidgets.schema");
+        if (widgetSettings == null || widgetSchema == null)
+            return CompletableFuture.failedFuture(new RuntimeException("Can't create default settings"));
 
         return EntityStore.insertEntityAsync(defaultEnterprise, txn)
                 .thenCompose(r -> EntityStore.insertEntityAsync(admin, txn))
@@ -421,7 +415,23 @@ public final class StoreInitiator {
                 .thenCompose(r -> EntityStore.insertEntityAsync(adminou, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(testou, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(widgetSettings, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(widgetSchema, txn))
                 .thenApply(r -> list);
+    }
+
+    private static Settings createJsonSettings(String name) {
+        var settings = new Settings();
+        settings.setAppId(0);
+        settings.setUserId(EntityId.empty());
+        settings.setName(name);
+        settings.setType("Json");
+
+        try (var value1Stream = getResourceStream("settings", name, "json")) {
+            settings.setValue(value1Stream.readAllBytes());
+        } catch (Exception ex) {
+            return null;
+        }
+        return settings;
     }
 
     /** 创建默认权限模型 */

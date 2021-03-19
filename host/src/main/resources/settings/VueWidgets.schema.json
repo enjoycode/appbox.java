@@ -1,0 +1,90 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "Name": {
+        "type": "string"
+      },
+      "Component": {
+        "type": "string"
+      },
+      "Text": {
+        "type": "string"
+      },
+      "Model": {
+        "type": "string"
+      },
+      "Icon": {
+        "type": "string"
+      },
+      "Width": {
+        "type": "integer"
+      },
+      "Height": {
+        "type": "integer"
+      },
+      "Style": {
+        "type": "object"
+      },
+      "Props": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "Name": {
+              "type": "string"
+            },
+            "Type": {
+              "type": "string"
+            },
+            "Default": {
+              "type": [
+                "boolean",
+                "string",
+                "number",
+                "object",
+                "array"
+              ]
+            },
+            "Editor": {
+              "type": "string"
+            },
+            "EditorOptions": {
+              "type": [
+                "boolean",
+                "string",
+                "number",
+                "object",
+                "array"
+              ]
+            }
+          }
+        },
+        "required": [
+          "Name",
+          "Type",
+          "Default"
+        ]
+      },
+      "Events": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "Name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "Name"
+          ]
+        }
+      }
+    },
+    "required": [
+      "Name",
+      "Component"
+    ]
+  }
+}
