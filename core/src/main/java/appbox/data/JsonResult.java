@@ -63,6 +63,7 @@ public final class JsonResult implements IBinSerializable {
             } else {
                 throw new RuntimeException("RawJson only support byte[] and String");
             }
+            return;
         }
 
         try {

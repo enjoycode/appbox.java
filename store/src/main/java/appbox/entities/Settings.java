@@ -11,6 +11,8 @@ import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
 public final class Settings extends SysEntity {
+    public static final long MODELID = IdUtil.SYS_SETTINGS_MODEL_ID;
+
     public static final short APPID_ID  = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short USERID_ID = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short CATLOG_ID = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -54,7 +56,7 @@ public final class Settings extends SysEntity {
     public void setValue(byte[] value) { _value = value; }
 
     public Settings() {
-        super(IdUtil.SYS_SETTINGS_MODEL_ID);
+        super(MODELID);
     }
 
     @Override

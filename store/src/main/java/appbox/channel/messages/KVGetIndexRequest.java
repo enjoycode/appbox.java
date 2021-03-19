@@ -1,6 +1,8 @@
 package appbox.channel.messages;
 
+import appbox.data.EntityId;
 import appbox.expressions.KVFieldExpression;
+import appbox.logging.Log;
 import appbox.model.entity.SysIndexModel;
 import appbox.serialization.IEntityMemberWriter;
 import appbox.serialization.IOutputStream;
@@ -41,7 +43,10 @@ public final class KVGetIndexRequest extends KVGetRequest {
                     bs.writeMember(_fields[i].fieldId, this.<String>getValue(i), flags); break;
                 case Int:
                     bs.writeMember(_fields[i].fieldId, this.<Integer>getValue(i), flags); break;
+                case EntityId:
+                    bs.writeMember(_fields[i].fieldId, this.<EntityId>getValue(i), flags); break;
                 default:
+                    Log.error("未实现");
                     throw new RuntimeException("未实现"); //TODO: others
             }
         }
