@@ -2,12 +2,22 @@ package appbox.design.services;
 
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
+import appbox.design.handlers.code.ChangeBuffer;
+import appbox.design.handlers.code.CheckCode;
+import appbox.design.handlers.code.GetCompletion;
 import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.*;
+import appbox.design.handlers.setting.GetAppSettings;
+import appbox.design.handlers.setting.SaveAppSettings;
 import appbox.design.handlers.store.DeleteBlobObject;
 import appbox.design.handlers.store.GetBlobObjects;
 import appbox.design.handlers.store.NewDataStore;
 import appbox.design.handlers.store.SaveDataStore;
+import appbox.design.handlers.tool.GetAssembly;
+import appbox.design.handlers.tree.Checkout;
+import appbox.design.handlers.tree.DeleteNode;
+import appbox.design.handlers.tree.DragDropNode;
+import appbox.design.handlers.tree.LoadDesignTree;
 import appbox.design.handlers.view.LoadView;
 import appbox.design.handlers.view.NewViewModel;
 import appbox.design.handlers.view.OpenViewModel;
@@ -64,6 +74,9 @@ public final class DesignService implements IService {
         put("LoadView", new LoadView());
         //----Permission----
         put("NewPermissionModel", new NewPermissionModel());
+        //----Settings----
+        put("GetAppSettings", new GetAppSettings());
+        put("SaveAppSettings", new SaveAppSettings());
     }};
 
     @Override

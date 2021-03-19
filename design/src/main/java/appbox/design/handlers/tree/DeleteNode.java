@@ -1,7 +1,8 @@
-package appbox.design.handlers;
+package appbox.design.handlers.tree;
 
 import appbox.data.PersistentState;
 import appbox.design.DesignHub;
+import appbox.design.handlers.IDesignHandler;
 import appbox.design.services.StagedService;
 import appbox.design.tree.ApplicationNode;
 import appbox.design.tree.DesignNode;

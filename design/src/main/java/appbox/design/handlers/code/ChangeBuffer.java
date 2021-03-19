@@ -1,6 +1,7 @@
-package appbox.design.handlers;
+package appbox.design.handlers.code;
 
 import appbox.design.DesignHub;
+import appbox.design.handlers.IDesignHandler;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
 

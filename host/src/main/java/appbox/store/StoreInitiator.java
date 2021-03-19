@@ -1,5 +1,6 @@
 package appbox.store;
 
+import appbox.data.EntityId;
 import appbox.entities.*;
 import appbox.logging.Log;
 import appbox.model.*;
@@ -39,8 +40,8 @@ public final class StoreInitiator {
                 var viewRootFolder     = new ModelFolder(app.id(), ModelType.View);
                 var viewOrgUnitsFolder = new ModelFolder(viewRootFolder, "OrgUnits");
                 var viewOpsFolder      = new ModelFolder(viewRootFolder, "OPS");
-                var viewMetricsFolder  = new ModelFolder(viewRootFolder, "Metrics");
-                var viewClusterFolder  = new ModelFolder(viewRootFolder, "Cluster");
+                var viewMetricsFolder  = new ModelFolder(viewOpsFolder, "Metrics");
+                var viewClusterFolder  = new ModelFolder(viewOpsFolder, "Cluster");
 
                 //新建实体模型
                 var enterpriseModel = createEnterpriseModel();
@@ -56,6 +57,7 @@ public final class StoreInitiator {
                 stagedModel.setFolderId(entityDesignFolder.id());
                 var checkoutModel = createCheckoutModel();
                 checkoutModel.setFolderId(entityDesignFolder.id());
+                var settingsModel = createSettingsModel();
 
                 //将新建的模型加入运行时上下文
                 var ctx = (HostRuntimeContext) RuntimeContext.current();
@@ -66,6 +68,7 @@ public final class StoreInitiator {
                 ctx.injectModel(orgunitModel);
                 ctx.injectModel(stagedModel);
                 ctx.injectModel(checkoutModel);
+                ctx.injectModel(settingsModel);
 
                 //开始事务保存
                 return KVTransaction.beginAsync()
@@ -77,6 +80,7 @@ public final class StoreInitiator {
                                 .thenCompose(r -> ModelStore.insertModelAsync(orgunitModel, txn))
                                 .thenCompose(r -> ModelStore.insertModelAsync(stagedModel, txn))
                                 .thenCompose(r -> ModelStore.insertModelAsync(checkoutModel, txn))
+                                .thenCompose(r -> ModelStore.insertModelAsync(settingsModel, txn))
                                 .thenCompose(r -> createServiceModel("OrgUnitService", 1, null, txn))
                                 .thenCompose(r -> createViewModel("Home", 1, null, txn, null))
                                 .thenCompose(r -> createViewModel("PermissionTree", 2, viewOrgUnitsFolder.id(), txn, null))
@@ -136,6 +140,41 @@ public final class StoreInitiator {
 
         var dataFiled = new DataFieldModel(model, "Data", DataFieldType.Binary, false, false);
         model.addSysMember(dataFiled, StagedModel.DATA_ID);
+        return model;
+    }
+
+    private static EntityModel createSettingsModel() {
+        var model = new EntityModel(IdUtil.SYS_SETTINGS_MODEL_ID, "Settings");
+        model.bindToSysStore(false, false); //非MVCC
+
+        var appIdField = new DataFieldModel(model, "AppId", DataFieldType.Int, false, false);
+        model.addSysMember(appIdField, Settings.APPID_ID);
+
+        var catlogField = new DataFieldModel(model, "Catlog", DataFieldType.String, true, false);
+        model.addSysMember(catlogField, Settings.CATLOG_ID);
+
+        var userIdField = new DataFieldModel(model, "UserId", DataFieldType.EntityId, false, false);
+        model.addSysMember(userIdField, Settings.USERID_ID);
+
+        var nameField = new DataFieldModel(model, "Name", DataFieldType.String, false, false);
+        model.addSysMember(nameField, Settings.NAME_ID);
+
+        var typeField = new DataFieldModel(model, "Type", DataFieldType.String, false, false);
+        model.addSysMember(typeField, Settings.TYPE_ID);
+
+        var valueField = new DataFieldModel(model, "Value", DataFieldType.Binary, false, false);
+        model.addSysMember(valueField, Settings.VALUE_ID);
+
+        //Indexes
+        var ui_settings = new SysIndexModel(model, "UI_Settings", true,
+                new FieldWithOrder[]{
+                        new FieldWithOrder(Settings.APPID_ID),
+                        new FieldWithOrder(Settings.USERID_ID, true),
+                        new FieldWithOrder(Settings.NAME_ID)
+                },
+                null);
+        model.sysStoreOptions().addSysIndex(model, ui_settings, Settings.UI_Settings.INDEXID);
+
         return model;
     }
 
@@ -248,20 +287,16 @@ public final class StoreInitiator {
 
         //TODO:添加依赖项
         return ModelStore.insertModelAsync(model, txn).thenCompose(r -> {
-            try {
-                var codeStream = getResourceStream("services", name, "java");
-                var utf8Data   = codeStream.readAllBytes();
-                codeStream.close();
+            try (var codeStream = getResourceStream("services", name, "java")) {
+                var utf8Data = codeStream.readAllBytes();
                 var codeData = ModelCodeUtil.encodeServiceCodeData(utf8Data, false);
                 return ModelStore.upsertModelCodeAsync(modelId, codeData, txn);
             } catch (IOException e) {
                 return CompletableFuture.failedFuture(e);
             }
         }).thenCompose(r -> {
-            try {
-                var asmStream = getResourceStream("services", name, "bin");
-                var asmData   = asmStream.readAllBytes();
-
+            try (var asmStream = getResourceStream("services", name, "bin")) {
+                var asmData = asmStream.readAllBytes();
                 return ModelStore.upsertAssemblyAsync(true, "sys." + name, asmData, txn);
             } catch (Exception ex) {
                 return CompletableFuture.failedFuture(ex);
@@ -286,13 +321,12 @@ public final class StoreInitiator {
             }
             return CompletableFuture.completedFuture(null);
         }).thenCompose(r -> {
-            try {
-                var    templateStream = getResourceStream("views", name, "html");
-                var    templateCode   = new String(templateStream.readAllBytes(), StandardCharsets.UTF_8);
-                var    scriptStream   = getResourceStream("views", name, "js");
-                var    scriptCode     = new String(scriptStream.readAllBytes(), StandardCharsets.UTF_8);
-                var    styleStream    = getResourceStream("views", name, "css");
-                String styleCode      = null;
+            try (var templateStream = getResourceStream("views", name, "html");
+                 var scriptStream = getResourceStream("views", name, "js");
+                 var styleStream = getResourceStream("views", name, "css")) {
+                var    templateCode = new String(templateStream.readAllBytes(), StandardCharsets.UTF_8);
+                var    scriptCode   = new String(scriptStream.readAllBytes(), StandardCharsets.UTF_8);
+                String styleCode    = null;
                 if (styleStream != null)
                     styleCode = new String(styleStream.readAllBytes(), StandardCharsets.UTF_8);
                 var codeData = ModelCodeUtil.encodeViewCode(templateCode, scriptCode, styleCode);
@@ -302,10 +336,8 @@ public final class StoreInitiator {
                 return CompletableFuture.failedFuture(ex);
             }
         }).thenCompose(r -> {
-            try {
-                var asmStream = getResourceStream("views", name, "bin");
-                var asmData   = asmStream.readAllBytes();
-
+            try (var asmStream = getResourceStream("views", name, "bin")) {
+                var asmData = asmStream.readAllBytes();
                 return ModelStore.upsertAssemblyAsync(false, "sys." + name, asmData, txn);
             } catch (Exception ex) {
                 return CompletableFuture.failedFuture(ex);
@@ -368,6 +400,18 @@ public final class StoreInitiator {
         testou.setBaseType(IdUtil.SYS_EMPLOYEE_MODEL_ID);
         testou.setParent(itdeptou);
 
+        //VueWidgets配置项
+        var widgetSettings = new Settings();
+        widgetSettings.setAppId(0);
+        widgetSettings.setUserId(EntityId.empty());
+        widgetSettings.setName("VuWidgets");
+        widgetSettings.setType("Json");
+        try (var valusStream = getResourceStream("settings", "VueWidgets", "json")) {
+            widgetSettings.setValue(valusStream.readAllBytes());
+        } catch (Exception ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
+
         return EntityStore.insertEntityAsync(defaultEnterprise, txn)
                 .thenCompose(r -> EntityStore.insertEntityAsync(admin, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(test, txn))
@@ -376,6 +420,7 @@ public final class StoreInitiator {
                 .thenCompose(r -> EntityStore.insertEntityAsync(itdeptou, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(adminou, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(testou, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(widgetSettings, txn))
                 .thenApply(r -> list);
     }
 

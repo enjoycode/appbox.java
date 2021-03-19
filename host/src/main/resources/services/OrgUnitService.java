@@ -22,10 +22,10 @@ public class OrgUnitService {
     }
 
     public CompletableFuture<?> loadEmployee(EntityId id) {
-        return Emploee.fetchAsync(id);
+        return Employee.fetchAsync(id);
     }
 
-    public CompletableFuture<Void> SaveEmployee(Emploee emp, EntityId ouid) {
+    public CompletableFuture<Void> SaveEmployee(Employee emp, EntityId ouid) {
         //TODO:同步关联至相同员工的组织单元的名称
         var ou = await(OrgUnit.fetchAsync(ouid));
         boolean nameChanged = !ou.Name.equals(emp.Name);
@@ -40,7 +40,7 @@ public class OrgUnitService {
         return txn.commitAsync();
     }
 
-    public CompletableFuture<Void> ResetPassword(Emploee emp, String password) {
+    public CompletableFuture<Void> ResetPassword(Employee emp, String password) {
         if (password == null || password.isEmpty())
             throw new RuntimeException("密码不能为空");
 

@@ -3,7 +3,7 @@ package appbox.design.handlers.entity;
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
-import appbox.design.handlers.TypeScriptDeclare;
+import appbox.design.handlers.code.TypeScriptDeclare;
 import appbox.design.tree.ModelNode;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;

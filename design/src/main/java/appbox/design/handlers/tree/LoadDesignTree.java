@@ -1,7 +1,8 @@
-package appbox.design.handlers;
+package appbox.design.handlers.tree;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
+import appbox.design.handlers.IDesignHandler;
 import appbox.runtime.InvokeArgs;
 
 import java.util.concurrent.CompletableFuture;

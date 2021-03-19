@@ -87,7 +87,8 @@ public final class IndexGet<E extends SysEntity, T extends SysUniqueIndex<E>> { 
     }
 
     public CompletableFuture<E> toEntityAsync() {
-        throw new RuntimeException("未实现");
+        //TODO:*****临时简单实现（两次读）
+        return toIndexRowAsync().thenCompose(row -> EntityStore.loadAsync(_entityClass, row.getTargetId()));
     }
 
 }

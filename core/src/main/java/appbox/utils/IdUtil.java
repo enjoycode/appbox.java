@@ -48,6 +48,7 @@ public final class IdUtil {
     public static final long SYS_ORGUNIT_MODEL_ID    = SYS_ENTITY_MODEL_ID | (4 << MODELID_SEQ_OFFSET);
     public static final long SYS_STAGED_MODEL_ID     = SYS_ENTITY_MODEL_ID | (5 << MODELID_SEQ_OFFSET);
     public static final long SYS_CHECKOUT_MODEL_ID   = SYS_ENTITY_MODEL_ID | (6 << MODELID_SEQ_OFFSET);
+    public static final long SYS_SETTINGS_MODEL_ID   = SYS_ENTITY_MODEL_ID | (7 << MODELID_SEQ_OFFSET);
 
     public static final long SYS_PERMISSION_ADMIN_ID     = SYS_PERMISSION_MODEL_ID | (1 << MODELID_SEQ_OFFSET);
     public static final long SYS_PERMISSION_DEVELOPER_ID = SYS_PERMISSION_MODEL_ID | (2 << MODELID_SEQ_OFFSET);

@@ -1,4 +1,4 @@
-package appbox.design.handlers;
+package appbox.design.handlers.code;
 
 public final class TypeScriptDeclare {
 

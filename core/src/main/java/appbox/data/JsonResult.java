@@ -34,20 +34,38 @@ public final class JsonResult implements IBinSerializable {
         config.put(clazz, serializer);
     }
 
-    private final Object result;
+    private final Object  result;
+    private final boolean isRawJson;
 
     public JsonResult(Object result) {
-        this.result = result;
+        this.result    = result;
+        this.isRawJson = false;
+    }
+
+    public JsonResult(Object result, boolean isRaw) {
+        this.isRawJson = isRaw;
+        this.result    = result;
     }
 
     @Override
     public void writeTo(IOutputStream bs) {
-        try {
-            if (result == null) {
-                bs.write(JSON_NULL, 0, JSON_NULL.length);
-                return;
-            }
+        if (result == null) {
+            bs.write(JSON_NULL, 0, JSON_NULL.length);
+            return;
+        }
 
+        if (isRawJson) {
+            if (result instanceof byte[]) {
+                var rawdata = (byte[]) result;
+                bs.write(rawdata, 0, rawdata.length);
+            } else if (result instanceof String) {
+                bs.writeUtf8((String) result);
+            } else {
+                throw new RuntimeException("RawJson only support byte[] and String");
+            }
+        }
+
+        try {
             //TODO:fast for primitive types
 
             //fast for IJSonSerializable

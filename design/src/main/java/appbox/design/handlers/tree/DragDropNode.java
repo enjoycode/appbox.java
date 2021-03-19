@@ -1,6 +1,7 @@
-package appbox.design.handlers;
+package appbox.design.handlers.tree;
 
 import appbox.design.DesignHub;
+import appbox.design.handlers.IDesignHandler;
 import appbox.design.services.StagedService;
 import appbox.design.tree.*;
 import appbox.runtime.InvokeArgs;

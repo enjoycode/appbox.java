@@ -15,6 +15,10 @@ public final class EntityId implements IBinSerializable, IJsonSerializable {
     //private long _data2;
     private final byte[] _data = new byte[16];
 
+    public static EntityId empty() {
+        return new EntityId(true);
+    }
+
     public EntityId() {
         var seq       = peerSeq.incrementAndGet() & 0xFFFF;
         var peerId    = RuntimeContext.peerId();
@@ -38,6 +42,8 @@ public final class EntityId implements IBinSerializable, IJsonSerializable {
     public EntityId(byte[] data, int offset) {
         System.arraycopy(data, offset, _data, 0, 16);
     }
+
+    private EntityId(boolean empty) { }
 
     /** Epoch毫秒数 */
     public long timestamp() {

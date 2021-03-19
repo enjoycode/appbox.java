@@ -122,7 +122,7 @@ public final class KVRowReader {
                 case IdUtil.STORE_FIELD_16_LEN_FLAG:
                     //注意读惟一索引指向的目标时，memberId == 0
                     if (memberId == 0) {
-                        var targetEntityId = new EntityId();
+                        var targetEntityId = EntityId.empty();
                         targetEntityId.readFrom(bs);
                         ((SysIndex<?>) target).setTargetId(targetEntityId);
                     } else {

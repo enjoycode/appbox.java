@@ -1,6 +1,7 @@
-package appbox.design.handlers;
+package appbox.design.handlers.tool;
 
 import appbox.design.DesignHub;
+import appbox.design.handlers.IDesignHandler;
 import appbox.design.tree.DesignNodeType;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.PathUtil;
