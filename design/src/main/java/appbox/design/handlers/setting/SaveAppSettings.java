@@ -42,8 +42,8 @@ public final class SaveAppSettings implements IDesignHandler {
             if (settings == null)
                 throw new RuntimeException("Can't find applition settings");
 
-            //TODO:根据类型设置值，暂只处理Json
-            if (type.equals("Json")) {
+            //TODO:根据类型设置值，暂只处理Json及脚本
+            if (type.equals("Json") || type.equals("Script")) {
                 var jsonData = valueJson.getBytes(StandardCharsets.UTF_8);
                 settings.setValue(jsonData);
             } else {
