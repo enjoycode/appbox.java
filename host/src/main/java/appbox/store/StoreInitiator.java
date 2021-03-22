@@ -39,6 +39,7 @@ public final class StoreInitiator {
 
                 var viewRootFolder     = new ModelFolder(app.id(), ModelType.View);
                 var viewOrgUnitsFolder = new ModelFolder(viewRootFolder, "OrgUnits");
+                var viewWidgetsFolder  = new ModelFolder(viewRootFolder, "Widgets");
                 var viewOpsFolder      = new ModelFolder(viewRootFolder, "OPS");
                 var viewMetricsFolder  = new ModelFolder(viewOpsFolder, "Metrics");
                 var viewClusterFolder  = new ModelFolder(viewOpsFolder, "Cluster");

@@ -35,11 +35,13 @@ public final class KVRowReader {
         byte  lenFlag   = 0;
 
         while (cur < rowData.length) {
-            fieldId = (short) (rowData[cur] | (rowData[cur + 1] << 8));
+            fieldId = (short) (Byte.toUnsignedInt(rowData[cur]) | (Byte.toUnsignedInt(rowData[cur + 1]) << 8));
             lenFlag = (byte) (fieldId & IdUtil.MEMBERID_LENFLAG_MASK);
             switch (lenFlag) {
                 case IdUtil.STORE_FIELD_VAR_FLAG:
-                    fieldSize = rowData[cur + 2] | (rowData[cur + 3] << 8) | (rowData[cur + 4] << 16);
+                    fieldSize = Byte.toUnsignedInt(rowData[cur + 2])
+                            | (Byte.toUnsignedInt(rowData[cur + 3]) << 8)
+                            | (Byte.toUnsignedInt(rowData[cur + 4]) << 16);
                     fieldSize += 3;
                     break;
                 case IdUtil.STORE_FIELD_BOOL_TRUE_FLAG:
