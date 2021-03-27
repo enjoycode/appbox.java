@@ -28,7 +28,7 @@ public final class StoreInitiator {
 
     public static CompletableFuture<Boolean> initAsync() {
         //TODO:考虑判断是否已初始化
-        Log.debug("Start init system store...");
+        Log.info("Start init system store...");
 
         return createAppAsync().thenCompose(app -> {
             try {
@@ -89,16 +89,23 @@ public final class StoreInitiator {
                                 .thenCompose(r -> createViewModel("WorkgroupView", 4, viewOrgUnitsFolder.id(), txn, null))
                                 .thenCompose(r -> createViewModel("EmployeeView", 5, viewOrgUnitsFolder.id(), txn, null))
                                 .thenCompose(r -> createViewModel("OrgUnits", 6, viewOrgUnitsFolder.id(), txn, null))
+                                .thenCompose(r -> createViewModel("ExChart", 7, viewWidgetsFolder.id(), txn, null))
+                                .thenCompose(r -> createViewModel("ExTable", 8, viewWidgetsFolder.id(), txn, null))
+                                .thenCompose(r -> createViewModel("ExTableColumnEditor", 9, viewWidgetsFolder.id(), txn, null))
                                 .thenCompose(r -> insertEntities(txn))
                                 .thenCompose(list -> createPermissionModels(txn, list))
                                 .thenCompose(r -> txn.commitAsync())
-                                .thenApply(r -> true));
+                                .thenApply(r -> {
+                                    Log.info("Init system store done.");
+                                    return true;
+                                }));
             } catch (Exception e) {
                 Log.error(e.getMessage());
                 return CompletableFuture.completedFuture(false);
             }
         }).exceptionally(ex -> {
             Log.error(ex.getMessage());
+            ex.printStackTrace();
             return false;
         });
     }
@@ -338,8 +345,12 @@ public final class StoreInitiator {
             }
         }).thenCompose(r -> {
             try (var asmStream = getResourceStream("views", name, "bin")) {
-                var asmData = asmStream.readAllBytes();
-                return ModelStore.upsertAssemblyAsync(false, "sys." + name, asmData, txn);
+                if (asmStream != null) {
+                    var asmData = asmStream.readAllBytes();
+                    return ModelStore.upsertAssemblyAsync(false, "sys." + name, asmData, txn);
+                } else {
+                    return CompletableFuture.completedFuture(null);
+                }
             } catch (Exception ex) {
                 return CompletableFuture.failedFuture(ex);
             }
@@ -402,9 +413,10 @@ public final class StoreInitiator {
         testou.setParent(itdeptou);
 
         //VueWidgets配置项
-        var widgetSettings = createJsonSettings("VueWidgets");
-        var widgetSchema   = createJsonSettings("VueWidgets.schema");
-        if (widgetSettings == null || widgetSchema == null)
+        var widgetSettings = createSettings("VueWidgets", "json");
+        var widgetSchema   = createSettings("VueWidgets.schema", "json");
+        var extraLib       = createSettings("TSExtraLib", "ts");
+        if (widgetSettings == null || widgetSchema == null || extraLib == null)
             return CompletableFuture.failedFuture(new RuntimeException("Can't create default settings"));
 
         return EntityStore.insertEntityAsync(defaultEnterprise, txn)
@@ -417,17 +429,18 @@ public final class StoreInitiator {
                 .thenCompose(r -> EntityStore.insertEntityAsync(testou, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(widgetSettings, txn))
                 .thenCompose(r -> EntityStore.insertEntityAsync(widgetSchema, txn))
+                .thenCompose(r -> EntityStore.insertEntityAsync(extraLib, txn))
                 .thenApply(r -> list);
     }
 
-    private static Settings createJsonSettings(String name) {
+    private static Settings createSettings(String name, String type) {
         var settings = new Settings();
         settings.setAppId(0);
         settings.setUserId(EntityId.empty());
         settings.setName(name);
-        settings.setType("Json");
+        settings.setType(type);
 
-        try (var value1Stream = getResourceStream("settings", name, "json")) {
+        try (var value1Stream = getResourceStream("settings", name, type)) {
             settings.setValue(value1Stream.readAllBytes());
         } catch (Exception ex) {
             return null;

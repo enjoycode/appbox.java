@@ -1,0 +1,36 @@
+<div>
+    <el-button @click="dlgVisible = true" style="width:100%">...</el-button>
+    <el-dialog title="Table Columns" :visible.sync="dlgVisible" width="450px">
+        <div style="height:300px">
+            <!--Toolbar-->
+            <el-button-group>
+                <el-button @click="onAdd" size="mini">Add</el-button>
+                <el-button size="mini">Add Children</el-button>
+                <el-button size="mini">Remove</el-button>
+            </el-button-group>
+
+            <ex-splitter pin-second style="border:solid gray 1px">
+                <!-- Columns -->
+                <el-tree slot="panel1" :data="value" :props="treeProps" @current-change="onCurrentChanged" highlight-current></el-tree>
+                <!-- Column Properties -->
+                <div slot="panel2">
+                    <el-form label-position="right" size="mini" label-width="80px" style="margin:5px">
+                        <el-form-item label="Field:">
+                            <el-input v-model="field"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Title:">
+                            <el-input v-model="title"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Width:">
+                            <el-input v-model="width"></el-input>
+                        </el-form-item>
+                    </el-form>
+                </div>
+            </ex-splitter>
+        </div>
+
+        <span slot="footer" class="dialog-footer">
+            <el-button type="primary" size="small">Done</el-button>
+        </span>
+    </el-dialog>
+</div>

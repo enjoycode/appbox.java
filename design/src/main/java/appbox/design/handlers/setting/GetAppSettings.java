@@ -8,6 +8,7 @@ import appbox.entities.Settings;
 import appbox.runtime.InvokeArgs;
 import appbox.store.query.IndexGet;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
 /** 根据App名称及配置名称获取配置值 */
@@ -35,9 +36,11 @@ public final class GetAppSettings implements IDesignHandler {
         q.where(Settings.NAME, settingsName);
 
         return q.toEntityAsync().thenApply(settings -> {
-            //TODO: 根据类型转换，暂只处理JSON
-            if (settings.getType().equals("Json")) {
+            //TODO: 根据类型转换
+            if (settings.getType().equals("json")) {
                 return new JsonResult(settings.getValue(), true);
+            } else if (settings.getType().equals("ts")) {
+                return new String(settings.getValue(), 0, settings.getValue().length, StandardCharsets.UTF_8);
             } else {
                 throw new RuntimeException("未实现");
             }

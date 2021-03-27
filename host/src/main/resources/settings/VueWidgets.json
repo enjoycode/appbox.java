@@ -3,7 +3,7 @@
     "Name": "Button",
     "Component": "ElButton",
     "Text": "Button",
-    "Icon": "fas fa-ad fa-fw",
+    "Icon": "fa fa-ad",
     "Width": 3,
     "Height": 1,
     "Style": {
@@ -36,6 +36,11 @@
           "small",
           "mini"
         ]
+      },
+      {
+        "Name": "icon",
+        "Type": "string",
+        "Editor": "Icon"
       }
     ],
     "Events": [
@@ -48,7 +53,7 @@
     "Name": "Input",
     "Component": "ElInput",
     "Model": "string",
-    "Icon": "fas fa-text-width fa-fw",
+    "Icon": "fa fa-text-width",
     "Width": 4,
     "Height": 1,
     "Props": [
@@ -66,8 +71,17 @@
       },
       {
         "Name": "placeholder",
+        "Type": "string"
+      },
+      {
+        "Name": "prefixIcon",
         "Type": "string",
-        "Default": ""
+        "Editor": "Icon"
+      },
+      {
+        "Name": "suffixIcon",
+        "Type": "string",
+        "Editor": "Icon"
       }
     ]
   },
@@ -76,7 +90,7 @@
     "Component": "ElCheckbox",
     "Text": "Checkbox",
     "Model": "string",
-    "Icon": "fas fa-check-square fa-fw",
+    "Icon": "fa fa-check-square",
     "Width": 4,
     "Height": 1,
     "Style": {
@@ -101,8 +115,35 @@
     "Name": "Switch",
     "Component": "ElSwitch",
     "Model": "boolean",
-    "Icon": "fas fa-toggle-on fa-fw",
+    "Icon": "fa fa-toggle-on",
     "Width": 4,
     "Height": 1
+  },
+  {
+    "Name": "Table",
+    "Component": "sys.ExTable",
+    "Icon": "fa fa-table",
+    "Width": 12,
+    "Height": 6,
+    "Props": [
+      {
+        "Name": "columns",
+        "Type": "array",
+        "Default": [],
+        "Editor": "sys.ExTableColumnEditor"
+      },
+      {
+        "Name": "rows",
+        "Type": "array",
+        "Default": []
+      }
+    ]
+  },
+  {
+    "Name": "Chart",
+    "Component": "sys.ExChart",
+    "Icon": "fa fa-chart-pie",
+    "Width": 12,
+    "Height": 6
   }
 ]
