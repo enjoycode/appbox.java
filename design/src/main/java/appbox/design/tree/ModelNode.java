@@ -91,7 +91,7 @@ public final class ModelNode extends DesignNode {
             writer.writeKeyValue("Language", ((ServiceModel) _model).language().value);
         } else if (_model.modelType() == ModelType.View) {
             //ViewModel输出类型
-            writer.writeKeyValue("ViewType", ((ViewModel)_model).getType());
+            writer.writeKeyValue("ViewType", ((ViewModel)_model).getType()); //TODO:重复输出
         }
     }
 

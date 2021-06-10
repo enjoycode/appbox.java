@@ -10,8 +10,10 @@ public class ViewModel extends ModelBase implements IBinSerializable {
     public static final byte FLAG_ROUTE  = 1; //加入路由表
     public static final byte FLAG_WIDGET = 2; //作为Widget
 
-    public static final byte TYPE_VUE        = 0;          //普通Vue视图
-    public static final byte TYPE_VISUAL_VUE = 1;   //可视化Vue视图
+    public static final byte TYPE_VUE             = 0;   //普通Vue视图
+    public static final byte TYPE_VISUAL_VUE      = 1;   //可视化Vue视图
+    public static final byte TYPE_FLUTTER         = 2;   //Flutter代码组件
+    public static final byte TYPE_FLUTTER_DYNAMIC = 3;   //Flutter动态组件
 
     //region ====Fields & Properties====
     private byte flag = FLAG_NONE;
@@ -122,7 +124,7 @@ public class ViewModel extends ModelBase implements IBinSerializable {
     }
 
     public void writeToJson(IJsonWriter writer) {
-        writer.writeKeyValue("Type", type);
+        writer.writeKeyValue("Type", type); //TODO:改为ViewType
         writer.writeKeyValue("Route", (flag & FLAG_ROUTE) == FLAG_ROUTE);
         writer.writeKeyValue("RouteParent", routeParent);
         writer.writeKeyValue("RoutePath", routePath);
