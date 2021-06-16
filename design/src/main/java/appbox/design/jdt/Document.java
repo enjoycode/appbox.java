@@ -52,7 +52,7 @@ public final class Document implements IBuffer {
 
                 fireBufferChanged(new BufferChangedEvent(this, 0, 0, null));
                 changeListeners.clear();
-                this.buffer   = null;
+                this.buffer = null;
 
                 Log.debug(String.format("Document[%s] closed.", file.getName()));
             }
@@ -227,6 +227,18 @@ public final class Document implements IBuffer {
         return lines.get(line - 1).end + 1 + column;
     }
 
+    /// 根据offset改变内容
+    public void changeText(int offset, int length, String newText) {
+        if (newText == null || newText.isEmpty()) {
+            buffer.delete(offset, offset + length);
+        } else {
+            buffer.replace(offset, offset + length, newText);
+        }
+        //需要激发变更事件,否则CompletionUnit不更新
+        fireBufferChanged(new BufferChangedEvent(this, offset, length, newText));
+    }
+
+    /// 根据行列改变内容
     public void changeText(int sline, int scol, int eline, int ecol, String newText) {
         //TODO:验证及优化
         int                     spos, epos;
@@ -237,7 +249,7 @@ public final class Document implements IBuffer {
         spos = sline == 0 ? scol : lines.get(sline - 1).end + 1 + scol;
         epos = eline == 0 ? ecol : lines.get(eline - 1).end + 1 + ecol;
 
-        if (newText == null) {
+        if (newText == null || newText.isEmpty()) {
             buffer.delete(spos, epos);
         } else {
             buffer.replace(spos, epos, newText);

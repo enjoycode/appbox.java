@@ -226,6 +226,12 @@ public final class LanguageServer {
         return openedFiles.get(modelId);
     }
 
+    public void changeDocument(Document doc, int offset, int length, String newText) {
+        doc.changeText(offset, length, newText);
+        //TODO:检查是否需要同步结构
+        //CompliationUnit.makeConsistent(null);
+    }
+
     public void changeDocument(Document doc, int startLine, int startColumn,
                                int endLine, int endColumn, String newText) {
         doc.changeText(startLine, startColumn, endLine, endColumn, newText);

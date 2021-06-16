@@ -13,19 +13,8 @@ import java.util.concurrent.CompletableFuture;
 public final class ChangeBuffer implements IDesignHandler { //TODO: rename
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
-        var type        = args.getInt();
-        var targetId    = args.getString();
-        var startLine   = args.getInt() - 1; //注意前端值-1
-        var startColumn = args.getInt() - 1;
-        var endLine     = args.getInt() - 1;
-        var endColumn   = args.getInt() - 1;
-        var newText     = args.getString();
-        if (newText == null) {
-            newText = "";
-        }
-
-        //Log.debug(String.format("%d %s %d.%d-%d.%d %s",
-        //        type, targetId, startLine, startColumn, endLine, endColumn, newText));
+        var type     = args.getInt();
+        var targetId = args.getString();
 
         var modelId   = Long.parseUnsignedLong(targetId);
         var modelNode = hub.designTree.findModelNode(ModelType.Service, modelId);
@@ -41,12 +30,29 @@ public final class ChangeBuffer implements IDesignHandler { //TODO: rename
         }
 
         //注意队列顺序执行
-        String finalNewText = newText;
-        CompletableFuture.runAsync(() -> {
-            hub.typeSystem.languageServer.changeDocument(doc, startLine, startColumn, endLine, endColumn, finalNewText);
-            //Log.debug(doc.getText());
-        }, hub.codeEditorTaskPool);
+        if (type >> 16 == 1) { //Changed by offset
+            var offset  = args.getInt();
+            var length  = args.getInt();
+            var newText = args.getString();
+            CompletableFuture.runAsync(() -> {
+                hub.typeSystem.languageServer.changeDocument(doc, offset, length, newText);
+                //Log.debug(doc.getText());
+            }, hub.codeEditorTaskPool);
+        } else { //Changed by position
+            var startLine   = args.getInt() - 1; //注意前端值-1
+            var startColumn = args.getInt() - 1;
+            var endLine     = args.getInt() - 1;
+            var endColumn   = args.getInt() - 1;
+            var newText     = args.getString();
+            //Log.debug(String.format("%d %s %d.%d-%d.%d %s",
+            //        type, targetId, startLine, startColumn, endLine, endColumn, newText));
+            CompletableFuture.runAsync(() -> {
+                hub.typeSystem.languageServer.changeDocument(doc, startLine, startColumn, endLine, endColumn, newText);
+                //Log.debug(doc.getText());
+            }, hub.codeEditorTaskPool);
+        }
 
         return CompletableFuture.completedFuture(null);
     }
+
 }
