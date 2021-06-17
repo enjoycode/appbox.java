@@ -101,7 +101,8 @@ public final class LanguageServer {
                     new StringMatcher[]{
                             new StringMatcher("java.awt.*", false, false),
                             new StringMatcher("com.sun.*", false, false),
-                            new StringMatcher("org.w3c.*", false, false)
+                            new StringMatcher("org.w3c.*", false, false),
+                            new StringMatcher("sun.*", false, false)
                     });
 
             //init default preferences (主要用于初始化JavaModelManager.optionNames,考虑直接设置)
