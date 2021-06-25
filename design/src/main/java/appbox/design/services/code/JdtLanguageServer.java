@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 /**
  * 一个TypeSystem对应一个实例，管理JavaProject及相应的虚拟文件
  */
-public final class LanguageServer {
+public final class JdtLanguageServer {
     //region ====static====
     public static final String BUILD_OUTPUT = "bin";
 
@@ -140,7 +140,7 @@ public final class LanguageServer {
 
     public Function<IPath, InputStream> loadFileDelegate; //仅用于测试环境 TODO: move to MockRuntimeContext
 
-    public LanguageServer(long sessionId) {
+    public JdtLanguageServer(long sessionId) {
         this.sessionId = sessionId;
         jdtWorkspace   = new ModelWorkspace(this);
         //TODO:如果不能共用JavaModelManager,在这里初始化
@@ -150,7 +150,7 @@ public final class LanguageServer {
      * 仅用于单元测试
      * @param loadFileDelegate 委托加载指定路径的测试文件
      */
-    public LanguageServer(Function<IPath, InputStream> loadFileDelegate) { //TODO: remove it
+    public JdtLanguageServer(Function<IPath, InputStream> loadFileDelegate) { //TODO: remove it
         sessionId                         = 0;
         jdtWorkspace                      = new ModelWorkspace(this);
         this.loadFileDelegate             = loadFileDelegate;
@@ -370,7 +370,7 @@ public final class LanguageServer {
         try {
             cu.makeConsistent(null);
             buffer = cu.getBuffer();
-            var position = getPosition(buffer, line, column);
+            var position = positionToOffset(buffer, line, column);
             var element  = cu.getElementAt(position);
             if (element instanceof SourceMethod) {
                 return makeMethodInfo((SourceMethod) element);
@@ -413,7 +413,7 @@ public final class LanguageServer {
         return methodInfo;
     }
 
-    private static int getPosition(IBuffer buffer, int line, int column) {
+    private static int positionToOffset(IBuffer buffer, int line, int column) {
         if (line == 0) {
             return column;
         }

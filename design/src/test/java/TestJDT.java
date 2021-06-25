@@ -1,5 +1,5 @@
 import appbox.design.jdt.JavaBuilderWrapper;
-import appbox.design.services.code.LanguageServer;
+import appbox.design.services.code.JdtLanguageServer;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Signature;
@@ -29,7 +29,7 @@ public class TestJDT {
         Function<IPath, InputStream> loadDelegate =
                 (path) -> new ByteArrayInputStream(finalTestCode.getBytes(StandardCharsets.UTF_8));
 
-        var ls      = new LanguageServer(loadDelegate);
+        var ls      = new JdtLanguageServer(loadDelegate);
         var project = ls.createProject("testbuild", null);
         var file    = project.getFile("Emploee.java");
         file.create(null, true, null);
@@ -49,7 +49,7 @@ public class TestJDT {
         Function<IPath, InputStream> loadDelegate =
                 (path) -> new ByteArrayInputStream(finalTestCode.getBytes(StandardCharsets.UTF_8));
 
-        var ls      = new LanguageServer(loadDelegate);
+        var ls      = new JdtLanguageServer(loadDelegate);
         var project = ls.createProject("testbuild", null);
         var file    = project.getFile("Emploee.java");
         file.create(null, true, null);

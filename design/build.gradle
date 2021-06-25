@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation project(':core')
     implementation project(':store')
+    implementation project(':dart')
 
     // 依赖的第三方包
     implementation 'com.alibaba:fastjson:1.2.73'

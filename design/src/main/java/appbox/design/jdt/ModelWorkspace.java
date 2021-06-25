@@ -1,6 +1,6 @@
 package appbox.design.jdt;
 
-import appbox.design.services.code.LanguageServer;
+import appbox.design.services.code.JdtLanguageServer;
 import appbox.design.utils.ReflectUtil;
 import org.eclipse.core.internal.resources.*;
 import org.eclipse.core.internal.utils.Messages;
@@ -23,9 +23,9 @@ public class ModelWorkspace implements IWorkspace {
     protected          long                 nextMarkerId = 0;
     protected          long                 nextNodeId   = 1;
 
-    public final LanguageServer languageServer;
+    public final JdtLanguageServer languageServer;
 
-    public ModelWorkspace(LanguageServer languageServer) {
+    public ModelWorkspace(JdtLanguageServer languageServer) {
         this.languageServer = languageServer;
 
         tree = new ElementTree();

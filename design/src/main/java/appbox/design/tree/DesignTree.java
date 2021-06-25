@@ -35,14 +35,6 @@ public final class DesignTree {
     }
 
     //region ====Properties====
-    public StagedItems getStaged() {
-        return staged;
-    }
-
-    public void setStaged(StagedItems value) {
-        staged = value;
-    }
-
     public DataStoreRootNode storeRootNode() {
         return storeRootNode;
     }
@@ -121,6 +113,9 @@ public final class DesignTree {
             for (ModelNode n : allModelNodes) {
                 designHub.typeSystem.createModelDocument(n);
             }
+
+            //最后加载完后通知DartLanguageServer开始初始化
+            designHub.dartLanguageServer.init();
 
             return true;
         }).handle((r, ex) -> {
@@ -237,6 +232,29 @@ public final class DesignTree {
             return null;
         }
         return modelRootNode.findModelNode(modelId);
+    }
+
+    /**
+     * 根据前端模型对应的文件名查找相应的模型节点
+     * @param fileName eg: sys.Views.HomePage.dart
+     * @return null for not found
+     */
+    public final ModelNode findModelNodeByFileName(String fileName) {
+        var firstDot  = fileName.indexOf('.');
+        var lastDot   = fileName.lastIndexOf('.');
+        var appName   = fileName.substring(0, firstDot);
+        var app       = findApplicationNodeByName(appName);
+        var secondDot = fileName.indexOf('.', firstDot + 1);
+        var typeName  = fileName.substring(firstDot + 1, secondDot);
+        var modelName = fileName.substring(secondDot + 1, lastDot);
+
+        if (typeName.equals("Services")) {
+            return findModelNodeByName(app.model.id(), ModelType.Service, modelName);
+        } else if (typeName.equals("Views")) {
+            return findModelNodeByName(app.model.id(), ModelType.View, modelName);
+        } else {
+            throw new RuntimeException("未实现");
+        }
     }
 
     /** 查找所有引用指定模型标识的EntityRef Member集合 */

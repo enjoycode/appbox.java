@@ -57,7 +57,7 @@ public class TestSysStore {
         var fut = SysStoreApi.beginTxnAsync() //启动事务
                 .thenCompose(res -> {
                     txnId.copyFrom(res.txnId);
-                    return SysStoreApi.execKVInsertAsync(makeInsertDataCommand(txnId)); //执行Insert命令
+                    return SysStoreApi.execCommandAsync(makeInsertDataCommand(txnId)); //执行Insert命令
                 })
                 .thenCompose(res -> SysStoreApi.commitTxnAsync(txnId)); //递交事务
 
@@ -81,7 +81,7 @@ public class TestSysStore {
         var cmd = new KVDeleteDataRequest(txn.txnId);
         cmd.key = new byte[]{65, 66, 67, 68}; //ABCD
 
-        var fut = SysStoreApi.execKVDeleteAsync(cmd)
+        var fut = SysStoreApi.execCommandAsync(cmd)
                 .thenCompose(res -> SysStoreApi.commitTxnAsync(txn.txnId));
 
         var res = fut.get();

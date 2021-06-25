@@ -5,7 +5,7 @@ import appbox.data.PersistentState;
 import appbox.design.DesignHub;
 import appbox.design.common.PublishPackage;
 import appbox.design.jdt.JavaBuilderWrapper;
-import appbox.design.services.code.LanguageServer;
+import appbox.design.services.code.JdtLanguageServer;
 import appbox.design.services.code.ServiceCodeGenerator;
 import appbox.design.services.code.TypeSystem;
 import appbox.logging.Log;
@@ -129,7 +129,7 @@ public final class PublishService {
         }
 
         //获取并压缩编译好的.class
-        var    classFolder = runtimeProject.getFolder(LanguageServer.BUILD_OUTPUT);
+        var    classFolder = runtimeProject.getFolder(JdtLanguageServer.BUILD_OUTPUT);
         var    classFiles  = classFolder.members();
         var    outStream   = new BytesOutputStream(2048);
         byte[] classData   = null;

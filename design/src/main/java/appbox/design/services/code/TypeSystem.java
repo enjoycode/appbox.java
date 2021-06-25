@@ -67,13 +67,13 @@ public final class TypeSystem {
     };
     //endregion
 
-    public final  LanguageServer languageServer;
-    protected     IProject       modelsProject; //实体、枚举等通用模型项目
+    public final JdtLanguageServer languageServer;
+    protected    IProject          modelsProject; //实体、枚举等通用模型项目
     private final DesignHub      hub;
 
     public TypeSystem(DesignHub designHub) {
         hub            = designHub;
-        languageServer = new LanguageServer(hub.session.sessionId());
+        languageServer = new JdtLanguageServer(hub.session.sessionId());
         //Do not use languageServer here! has not initialized.
     }
 

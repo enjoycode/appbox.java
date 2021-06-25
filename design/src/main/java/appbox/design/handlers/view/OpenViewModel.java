@@ -4,6 +4,7 @@ import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.design.services.StagedService;
+import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
 import appbox.model.ViewModel;
 import appbox.runtime.InvokeArgs;
@@ -25,20 +26,25 @@ public final class OpenViewModel implements IDesignHandler {
 
         final var res = new OpenViewModelResult();
         res.model = (ViewModel) modelNode.model();
+        return loadSourceCode(modelNode).thenApply(code -> {
+            hub.dartLanguageServer.openDocument(modelNode, code.Script);
+            return new JsonResult(code);
+        });
+    }
+
+    /**
+     * 加载视图模型的源代码,如果是已签出则先尝试加载当前版本
+     */
+    public static CompletableFuture<ViewCode> loadSourceCode(ModelNode modelNode) {
+        final long modelId = modelNode.model().id();
         if (modelNode.isCheckoutByMe()) {
             return StagedService.loadViewCodeAsync(modelId).thenCompose(code -> {
                 if (code == null)
                     return ModelStore.loadViewCodeAsync(modelId);
                 return CompletableFuture.completedFuture(code);
-            }).thenApply(code -> {
-                res.code = code;
-                return new JsonResult(res);
             });
         } else {
-            return ModelStore.loadViewCodeAsync(modelId).thenApply(code -> {
-                res.code = code;
-                return new JsonResult(res);
-            });
+            return ModelStore.loadViewCodeAsync(modelId);
         }
     }
 

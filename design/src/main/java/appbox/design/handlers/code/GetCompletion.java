@@ -3,6 +3,7 @@ package appbox.design.handlers.code;
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
+import appbox.design.tree.ModelNode;
 import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
@@ -52,7 +53,7 @@ public final class GetCompletion implements IDesignHandler {
                     wr.writeFieldValue(',', "endLineNumber", range.getEnd().getLine() + 1);
                     wr.writeFieldValue(',', "endColumn", range.getEnd().getCharacter() + 1);
                     wr.write('}');
-                    if(additional.getNewText() != null) {
+                    if (additional.getNewText() != null) {
                         wr.writeFieldValue(',', "text", additional.getNewText());
                     } else {
                         wr.writeFieldValue(',', "text", "null");
@@ -67,6 +68,7 @@ public final class GetCompletion implements IDesignHandler {
         });
     }
 
+    //TODO: 修改前端Kind与CompletionItemKind一致,取消转换
     private static int mapKind(CompletionItemKind kind) {
         switch (kind) {
             case Method:
@@ -126,22 +128,32 @@ public final class GetCompletion implements IDesignHandler {
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
         var type           = args.getInt();
         var fileName       = args.getString(); //TODO:考虑修改前端传模型标识
-        var line           = args.getInt() - 1; //注意：前端值需要-1
-        var column         = args.getInt() - 1; //注意：前端值需要-1
+        var line           = args.getInt();
+        var column         = args.getInt();
         var wordToComplete = args.getString();
 
         //Log.debug(String.format("%d %s %d-%d %s", type, fileName, line, column, wordToComplete));
 
         //TODO:待修改以下查找，暂根据名称找到模型
-        var firstDot  = fileName.indexOf('.');
-        var lastDot   = fileName.lastIndexOf('.');
-        var appName   = fileName.substring(0, firstDot);
-        var app       = hub.designTree.findApplicationNodeByName(appName);
-        var secondDot = fileName.indexOf('.', firstDot + 1);
-        var modelName = fileName.substring(secondDot + 1, lastDot);
-        var modelNode = hub.designTree.findModelNodeByName(app.model.id(), ModelType.Service, modelName);
-        var modelId   = modelNode.model().id();
-        var doc       = hub.typeSystem.languageServer.findOpenedDocument(modelId);
+        var modelNode = hub.designTree.findModelNodeByFileName(fileName);
+        if (modelNode == null)
+            return CompletableFuture.failedFuture(new RuntimeException("Can't find model: " + fileName));
+
+        if (modelNode.model().modelType() == ModelType.Service) {
+            //注意: 前端line及column值需要-1
+            return getJavaCompletion(hub, modelNode, fileName, line - 1, column - 1, wordToComplete);
+        } else if (modelNode.model().modelType() == ModelType.View) {
+            //注意: line实际为offset
+            return getDartCompletion(hub, modelNode, line);
+        }
+
+        return CompletableFuture.failedFuture(new RuntimeException("Not supported"));
+    }
+
+    private static CompletableFuture<Object> getJavaCompletion(DesignHub hub, ModelNode modelNode,
+                                                               String fileName, int line, int column, String wordToComplete) {
+        var modelId = modelNode.model().id();
+        var doc     = hub.typeSystem.languageServer.findOpenedDocument(modelId);
         if (doc == null) {
             var error = String.format("Can't find opened ServiceModel: %s", fileName);
             return CompletableFuture.failedFuture(new Exception(error));
@@ -151,6 +163,14 @@ public final class GetCompletion implements IDesignHandler {
         return CompletableFuture.supplyAsync(() -> {
             //Log.debug(String.format("GetCompletion: run at thread: %s", Thread.currentThread().getName()));
             var list = hub.typeSystem.languageServer.completion(doc, line, column, wordToComplete);
+            return new JsonResult(list);
+        }, hub.codeEditorTaskPool);
+    }
+
+    private static CompletableFuture<Object> getDartCompletion(DesignHub hub, ModelNode modelNode, int offset) {
+        return CompletableFuture.supplyAsync(() -> {
+            //TODO:fix join
+            var list = hub.dartLanguageServer.completion(modelNode, offset).join();
             return new JsonResult(list);
         }, hub.codeEditorTaskPool);
     }
