@@ -144,14 +144,14 @@ public final class GetCompletion implements IDesignHandler {
             return getJavaCompletion(hub, modelNode, fileName, line - 1, column - 1, wordToComplete);
         } else if (modelNode.model().modelType() == ModelType.View) {
             //注意: line实际为offset
-            return getDartCompletion(hub, modelNode, line);
+            return getDartCompletion(hub, modelNode, line, wordToComplete);
         }
 
         return CompletableFuture.failedFuture(new RuntimeException("Not supported"));
     }
 
-    private static CompletableFuture<Object> getJavaCompletion(DesignHub hub, ModelNode modelNode,
-                                                               String fileName, int line, int column, String wordToComplete) {
+    private static CompletableFuture<Object> getJavaCompletion(
+            DesignHub hub, ModelNode modelNode, String fileName, int line, int column, String wordToComplete) {
         var modelId = modelNode.model().id();
         var doc     = hub.typeSystem.languageServer.findOpenedDocument(modelId);
         if (doc == null) {
@@ -167,10 +167,11 @@ public final class GetCompletion implements IDesignHandler {
         }, hub.codeEditorTaskPool);
     }
 
-    private static CompletableFuture<Object> getDartCompletion(DesignHub hub, ModelNode modelNode, int offset) {
+    private static CompletableFuture<Object> getDartCompletion(
+            DesignHub hub, ModelNode modelNode, int offset, String wordToComplete) {
         return CompletableFuture.supplyAsync(() -> {
             //TODO:fix join
-            var list = hub.dartLanguageServer.completion(modelNode, offset).join();
+            var list = hub.dartLanguageServer.completion(modelNode, offset, wordToComplete).join();
             return new JsonResult(list);
         }, hub.codeEditorTaskPool);
     }

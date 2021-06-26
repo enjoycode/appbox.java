@@ -87,7 +87,8 @@ public class Location {
 
   public static Location fromJson(JsonObject jsonObject) {
     String file = jsonObject.get("file").getAsString();
-    int offset = jsonObject.get("offset").getAsInt();
+    // Rick: offset may be out of range
+    int offset = jsonObject.get("offset").getAsNumber().intValue(); //jsonObject.get("offset").getAsInt();
     int length = jsonObject.get("length").getAsInt();
     int startLine = jsonObject.get("startLine").getAsInt();
     int startColumn = jsonObject.get("startColumn").getAsInt();

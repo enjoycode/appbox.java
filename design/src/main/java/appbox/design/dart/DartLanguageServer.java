@@ -12,6 +12,8 @@ import com.google.dart.server.AnalysisServerListenerAdapter;
 import com.google.dart.server.GetSuggestionsConsumer;
 import com.google.dart.server.internal.remote.RemoteAnalysisServerImpl;
 import com.google.dart.server.internal.remote.StdioServerSocket;
+import com.google.dart.server.utilities.logging.Logger;
+import com.google.dart.server.utilities.logging.Logging;
 import org.dartlang.analysis.server.protocol.*;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
@@ -21,9 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,16 +40,18 @@ public class DartLanguageServer {
     private static final String analyzerSnapshotPath;
     //private static final String pubSnapshotPath;
 
-    private final DesignHub     hub;
-    private final Path          rootPath;
-    private final AtomicInteger _initDone = new AtomicInteger(0);
+    private final DesignHub             hub;
+    private final Path                  rootPath;
+    private final AtomicInteger         _initDone   = new AtomicInteger(0);
+    private final HashMap<Long, String> openedFiles = new HashMap<>();
 
     private StdioServerSocket        serverSocket;
     private RemoteAnalysisServerImpl analysisServer;
     private AnalysisServerListener   analysisServerListener;
 
-    private final HashMap<Long, String>                                    openedFiles     = new HashMap<>();
-    private final HashMap<String, CompletableFuture<List<CompletionItem>>> completionTasks = new HashMap<>();
+    private final HashMap<String, CompletionTask>                            completionTasks   = new HashMap<>();
+    private final HashMap<Integer, AvailableSuggestionSet>                   cachedCompletions = new HashMap<>();
+    private final HashMap<String, HashMap<String, HashMap<String, Boolean>>> _existingImports  = new HashMap<>();
 
     static {
         //TODO:fix sdk path with run command>: flutter sdk-path,或者读取配置
@@ -58,6 +60,28 @@ public class DartLanguageServer {
         flutterVMPath        = sdkPath + "bin/flutter";
         analyzerSnapshotPath = sdkPath + "bin/cache/dart-sdk/bin/snapshots/analysis_server.dart.snapshot";
         //pubSnapshotPath      = sdkPath + "bin/cache/dart-sdk/bin/snapshots/pub.dart.snapshot";
+
+        Logging.setLogger(new Logger() {
+            @Override
+            public void logError(String message) {
+                Log.error("DartAnalysisServer error: " + message);
+            }
+
+            @Override
+            public void logError(String message, Throwable exception) {
+                Log.error("DartAnalysisServer error: " + message);
+            }
+
+            @Override
+            public void logInformation(String message) {
+                Log.info("DartAnalysisServer info: " + message);
+            }
+
+            @Override
+            public void logInformation(String message, Throwable exception) {
+                Log.info("DartAnalysisServer info: " + message);
+            }
+        });
     }
 
     public DartLanguageServer(DesignHub hub) {
@@ -166,9 +190,135 @@ public class DartLanguageServer {
                 }
                 var items = new ArrayList<CompletionItem>(completions.size());
                 for (var suggestion : completions) {
-                    items.add(convertCompletionItem(suggestion));
+                    items.add(toCompletionItem(suggestion));
                 }
-                task.complete(items);
+
+                // getCachedResults
+                if (!includedSuggestionSets.isEmpty() && !includedElementKinds.isEmpty()) {
+                    var existingImports =
+                            libraryFile == null || libraryFile.isEmpty() ? null : _existingImports.get(libraryFile);
+
+                    // Create a fast lookup for which kinds to include.
+                    var elementKinds = new HashMap<String, Boolean>();
+                    includedElementKinds.forEach(k -> elementKinds.put(k, true));
+
+                    // Create a fast lookup for relevance boosts based on tag string.
+                    var tagBoosts = new HashMap<String, Integer>();
+                    includedSuggestionRelevanceTags.forEach(r -> tagBoosts.put(r.getTag(), r.getRelevanceBoost()));
+
+                    // Keep track of suggestion sets we've seen to avoid included them twice.
+                    // See https://github.com/dart-lang/sdk/issues/37211.
+                    var usedSuggestionSets = new HashMap<Integer, Boolean>();
+                    // Keep track of items items we've included so we don't show dupes if
+                    // there are multiple libraries importing the same thing.
+                    var includedItems = new HashMap<String, Boolean>();
+                    for (var includedSuggestionSet : includedSuggestionSets) {
+                        if (usedSuggestionSets.containsKey(includedSuggestionSet.getId())) continue;
+
+                        // Mark that we've done this one so we don't do it again.
+                        usedSuggestionSets.put(includedSuggestionSet.getId(), true);
+
+                        var suggestionSet = cachedCompletions.get(includedSuggestionSet.getId());
+                        if (suggestionSet == null) {
+                            Log.warn("Suggestion set [" + includedSuggestionSet.getId() + "] was not available now.");
+                            continue;
+                        }
+
+                        var unresolvedItems = suggestionSet.getItems().stream()
+                                .filter(suggestion -> {
+                                    if (!elementKinds.containsKey(suggestion.getElement().getKind()))
+                                        return false;
+
+                                    // 根据wordToComplete附加过滤
+                                    if (!task.wordToComplete.isEmpty() && !suggestion.getLabel().startsWith(task.wordToComplete))
+                                        return false;
+
+                                    // Check existing imports to ensure we don't already import
+                                    // this element (note: this exact element from its declaring
+                                    // library, not just something with the same name). If we do
+                                    // we'll want to skip it.
+                                    // Trim back to the . to handle enum values
+                                    // https://github.com/Dart-Code/Dart-Code/issues/1835
+                                    var key = String.format("%s/%s",
+                                            suggestion.getLabel().split("\\.")[0], suggestion.getDeclaringLibraryUri());
+                                    var importingUris = existingImports == null ? null : existingImports.get(key);
+
+                                    // If there are no URIs already importing this, then include it as an auto-import.
+                                    if (importingUris == null) return true;
+                                    // Otherwise, it is imported but if it's not by this file, then skip it.
+                                    if (importingUris.get(suggestionSet.getUri()) == null) return false;
+
+                                    // Finally, we're importing a file that has this item, so include
+                                    // it only if it has not already been included by another imported file.
+
+                                    // Unlike the above, we include the Kind here so that things with similar labels
+                                    // like Constructors+Class are still included.
+                                    var fullItemKey = String.format("%s/%s/%s",
+                                            suggestion.getLabel(), suggestion.getElement().getKind(), suggestion.getDeclaringLibraryUri());
+                                    var itemHasAlreadyBeenIncluded = includedItems.containsKey(fullItemKey);
+                                    includedItems.put(fullItemKey, true);
+
+                                    return !itemHasAlreadyBeenIncluded;
+                                })
+                                .map(suggestion -> {
+                                    //// Calculate the relevance for this item.
+                                    //int relevanceBoost = 0;
+                                    //if(suggestion.getRelevanceTags() != null)
+                                    //    suggestion.getRelevanceTags().forEach(t ->
+                                    //            relevanceBoost = Math.max(relevanceBoost, tagBoosts.getOrDefault(t, 0)));
+
+                                    return toCompletionItemFromSuggestion(suggestion);
+                                })
+                                .collect(Collectors.toList());
+
+                        items.addAll(unresolvedItems);
+                    }
+                }
+
+                //TODO: 排序及限制数量
+                //Log.debug("Get completion items: " + items.size());
+                task.future.complete(items);
+            }
+
+            @Override
+            public void computedAvailableSuggestions(List<AvailableSuggestionSet> changed, int[] removed) {
+                // storeCompletionSuggestions,暂缓存在后端(数据量较大),
+                for (var set : changed) {
+                    cachedCompletions.put(set.getId(), set);
+                }
+
+                for (var r : removed) {
+                    cachedCompletions.remove(r);
+                }
+            }
+
+            @Override
+            public void computedExistingImports(String file, ExistingImports existingImports) {
+                // storeExistingImports
+                // Map with key "elementName/elementDeclaringLibraryUri"
+                // Value is a set of imported URIs that import that element.
+                var alreadyImportedSymbols = new HashMap<String, HashMap<String, Boolean>>();
+                for (var existingImport : existingImports.getImports()) {
+                    for (var importedElement : existingImport.getElements()) {
+                        // This is the symbol name and declaring library. That is, the
+                        // library that declares the symbol, not the one that was imported.
+                        // This wil be the same for an element that is re-exported by other
+                        // libraries, so we can avoid showing the exact duplicate.
+                        var elementName = existingImports.getElements().getStrings()
+                                .get(existingImports.getElements().getNames()[importedElement]);
+                        var elementDeclaringLibraryUri = existingImports.getElements().getStrings()
+                                .get(existingImports.getElements().getUris()[importedElement]);
+                        var importedUri = existingImports.getElements().getStrings()
+                                .get(existingImport.getUri());
+                        var key = String.format("%s/%s", elementName, elementDeclaringLibraryUri);
+
+                        if (!alreadyImportedSymbols.containsKey(key))
+                            alreadyImportedSymbols.put(key, new HashMap<>());
+                        alreadyImportedSymbols.get(key).put(importedUri, true);
+                    }
+                }
+
+                _existingImports.put(file, alreadyImportedSymbols);
             }
         };
     }
@@ -180,9 +330,7 @@ public class DartLanguageServer {
         Log.warn("Dart analysis server stopped.");
     }
 
-    /**
-     * 创建Flutter应用的相关文件,相当于flutter create
-     */
+    /** 创建Flutter应用的相关文件,相当于flutter create */
     private void extractFlutterFiles() {
         //TODO: pubspec.yaml需要根据包生成,暂简单复制
         var fs       = DartLanguageServer.class.getResourceAsStream("/flutter/pubspec.yaml");
@@ -250,32 +398,38 @@ public class DartLanguageServer {
     }
     //endregion
 
-    //region ====Completion Converters====
-    private static CompletionItem convertCompletionItem(CompletionSuggestion suggestion) {
+    //region ====Completion Converters & Helpers====
+    private static CompletionItem toCompletionItem(CompletionSuggestion suggestion) {
         //TODO:暂简单处理
         var item = new CompletionItem(suggestion.getDisplayText() != null && !suggestion.getDisplayText().isEmpty()
                 ? suggestion.getDisplayText() : suggestion.getCompletion());
-        item.setKind(convertCompletionKind(suggestion.getKind()));
+        item.setKind(toCompletionKind(suggestion.getKind()));
         item.setInsertText(suggestion.getCompletion());
         return item;
     }
 
-    /**
-     * CompletionSuggestion.kind to CompletionItemKind
-     */
-    private static CompletionItemKind convertCompletionKind(String kind) {
+    private static CompletionItem toCompletionItemFromSuggestion(AvailableSuggestion suggestion) {
+        //TODO:暂简单处理
+        var item = new CompletionItem(suggestion.getLabel());
+        item.setKind(suggestion.getElement() != null ? toCompletionKind(suggestion.getElement().getKind()) : CompletionItemKind.Text);
+        item.setInsertText(suggestion.getLabel());
+        return item;
+    }
+
+    /** CompletionSuggestion.kind to CompletionItemKind */
+    private static CompletionItemKind toCompletionKind(String kind) {
         switch (kind) {
             case "ARGUMENT_LIST":
-                //return label.startsWith("dart:")
-                //        ? CompletionItemKind.Module
-                //        : path.extname(label.toLowerCase()) === ".dart"
-                //        ? CompletionItemKind.File
-                //        : CompletionItemKind.Folder;
             case "IDENTIFIER":
             case "OPTIONAL_ARGUMENT":
             case "NAMED_ARGUMENT":
                 return CompletionItemKind.Variable;
             case "IMPORT":
+                //return label.startsWith("dart:")
+                //        ? CompletionItemKind.Module
+                //        : path.extname(label.toLowerCase()) === ".dart"
+                //        ? CompletionItemKind.File
+                //        : CompletionItemKind.Folder;
                 return CompletionItemKind.Module;
             case "INVOCATION":
                 return CompletionItemKind.Method;
@@ -316,9 +470,9 @@ public class DartLanguageServer {
         analysisServer.analysis_updateContent(files, () -> {});
     }
 
-    public CompletableFuture<List<CompletionItem>> completion(ModelNode node, int offset) {
+    public CompletableFuture<List<CompletionItem>> completion(ModelNode node, int offset, String wordToComplete) {
         final var filePath = getModelFilePath(node);
-        var       task     = new CompletableFuture<List<CompletionItem>>();
+        var       task     = new CompletionTask(wordToComplete);
         analysisServer.completion_getSuggestions(filePath.toString(), offset, new GetSuggestionsConsumer() {
             @Override
             public void computedCompletionId(String completionId) {
@@ -327,10 +481,10 @@ public class DartLanguageServer {
 
             @Override
             public void onError(RequestError requestError) {
-                task.completeExceptionally(new RuntimeException(requestError.getMessage()));
+                task.future.completeExceptionally(new RuntimeException(requestError.getMessage()));
             }
         });
-        return task;
+        return task.future;
     }
     //endregion
 }
