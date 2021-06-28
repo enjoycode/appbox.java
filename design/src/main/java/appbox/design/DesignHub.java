@@ -1,7 +1,7 @@
 package appbox.design;
 
-import appbox.design.dart.DartLanguageServer;
-import appbox.design.services.debug.DebugService;
+import appbox.design.lang.dart.DartLanguageServer;
+import appbox.design.lang.java.debug.DebugService;
 import appbox.design.services.code.TypeSystem;
 import appbox.design.tree.DesignTree;
 import appbox.model.ApplicationModel;

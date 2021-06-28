@@ -1,8 +1,9 @@
 package appbox.design.services.code;
 
 import appbox.design.DesignHub;
-import appbox.design.jdt.ModelContainer;
-import appbox.design.jdt.ModelFile;
+import appbox.design.lang.java.JdtLanguageServer;
+import appbox.design.lang.java.jdt.ModelContainer;
+import appbox.design.lang.java.jdt.ModelFile;
 import appbox.design.services.CodeGenService;
 import appbox.design.tree.ApplicationNode;
 import appbox.design.tree.ModelNode;

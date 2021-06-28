@@ -1,5 +1,5 @@
-import appbox.design.jdt.JavaBuilderWrapper;
-import appbox.design.services.code.JdtLanguageServer;
+import appbox.design.lang.java.jdt.JavaBuilderWrapper;
+import appbox.design.lang.java.JdtLanguageServer;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Signature;
