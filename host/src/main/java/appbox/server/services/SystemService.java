@@ -32,11 +32,11 @@ public final class SystemService implements IService {
 
     static final class LoginResponse {
         public String  name;
-        public UUID    id; //对应的组织单元的标识号，非会话标识
+        public UUID    id;  //对应的组织单元的标识号，非会话标识
+        public String  sid; //会话标识号,TODO:考虑仅Developer返回
         public String  error;
         public boolean succeed;
     }
-
 
     public CompletableFuture<Object> login(long sessionId, String loginJson) {
         var req = JSON.parseObject(loginJson, LoginRequest.class);
@@ -72,7 +72,6 @@ public final class SystemService implements IService {
                 return EntityStore.loadTreePathAsync(OrgUnit.class, ous.get(0).id(), OrgUnit::getParentId, OrgUnit::getName)
                         .thenApply(path -> {
                             //注册会话
-                            //long sessionId = ((long) peerId) << 32 | ((long) StringUtil.getHashCode(user));
                             var session = new WebSession(sessionId, path, row.getTargetId());
                             SessionManager.register(session);
 
@@ -80,6 +79,7 @@ public final class SystemService implements IService {
                             res.succeed = true;
                             res.name    = req.u;
                             res.id      = ous.get(0).id().toUUID();
+                            res.sid     = Long.toString(sessionId);
                             return new JsonResult(res);
                         });
             });

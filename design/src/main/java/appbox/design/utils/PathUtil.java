@@ -7,6 +7,8 @@ public final class PathUtil {
 
     public static final String tmpPath = System.getProperty("java.io.tmpdir");
 
+    public static final String currentPath = System.getProperty("user.dir");
+
     private static final IPath tmpdir = Path.forPosix(tmpPath);
 
     public static final IPath INDEX_DATA = tmpdir.append("appbox").append("index");

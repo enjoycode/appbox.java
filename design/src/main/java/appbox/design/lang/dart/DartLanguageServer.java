@@ -18,6 +18,7 @@ import org.dartlang.analysis.server.protocol.*;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ public class DartLanguageServer {
     private static final String sdkPath;
     private static final String dartVMPath;
     private static final String flutterVMPath;
+    private static final String devcVMPath;
     private static final String analyzerSnapshotPath;
     //private static final String pubSnapshotPath;
 
@@ -49,15 +51,17 @@ public class DartLanguageServer {
     private RemoteAnalysisServerImpl analysisServer;
     private AnalysisServerListener   analysisServerListener;
 
-    private final HashMap<String, CompletionTask>          completionTasks   = new HashMap<>();
-    private final HashMap<Integer, AvailableSuggestionSet> cachedCompletions = new HashMap<>();
+    private final HashMap<String, CompletionTask>                            completionTasks   = new HashMap<>();
+    private final HashMap<Integer, AvailableSuggestionSet>                   cachedCompletions = new HashMap<>();
     private final HashMap<String, HashMap<String, HashMap<String, Boolean>>> _existingImports  = new HashMap<>();
 
     static {
         //TODO:fix sdk path with run command>: flutter sdk-path,或者读取配置
-        sdkPath              = "/home/rick/snap/flutter/common/flutter/";
-        dartVMPath           = sdkPath + "bin/dart";
-        flutterVMPath        = sdkPath + "bin/flutter";
+        sdkPath       = "/home/rick/snap/flutter/common/flutter/";
+        dartVMPath    = sdkPath + "bin/dart";
+        flutterVMPath = sdkPath + "bin/flutter";
+        devcVMPath    = Path.of(PathUtil.currentPath, "preview", "dartdevc").toString();
+
         analyzerSnapshotPath = sdkPath + "bin/cache/dart-sdk/bin/snapshots/analysis_server.dart.snapshot";
         //pubSnapshotPath      = sdkPath + "bin/cache/dart-sdk/bin/snapshots/pub.dart.snapshot";
 
@@ -84,16 +88,21 @@ public class DartLanguageServer {
         });
     }
 
-    public DartLanguageServer(DesignHub hub) {
+    public DartLanguageServer(DesignHub hub, boolean forTest) {
         this.hub      = hub;
-        this.rootPath = Path.of(PathUtil.tmpPath, "appbox", "flutter",
-                Long.toUnsignedString(hub.session.sessionId()));
-        if (!Files.exists(this.rootPath)) {
-            try {
-                Files.createDirectories(this.rootPath);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        this.rootPath = Path.of(PathUtil.tmpPath, "appbox", "flutter", hub.session.name());
+
+        if (forTest) return; //仅用于测试,不清空
+
+        //TODO:暂清空重建
+        try {
+            Files.walk(this.rootPath)
+                    .map(Path::toFile)
+                    .sorted((o1, o2) -> -o1.compareTo(o2))
+                    .forEach(File::delete);
+            Files.createDirectories(Path.of(this.rootPath.toString(), "build"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -390,11 +399,17 @@ public class DartLanguageServer {
                 types = "entities"; break;
             case View:
                 types = "views"; break;
+            case Enum:
+                types = "enums"; break;
             default:
                 types = "unknown"; break;
         }
+        return getFilePath(node.appNode.model.name(), types, node.model().name());
+    }
+
+    private Path getFilePath(String appName, String typeName, String modelName) {
         return Path.of(rootPath.toString(), "lib",
-                node.appNode.model.name(), types, node.model().name() + ".dart");
+                appName, typeName, modelName + ".dart");
     }
     //endregion
 
@@ -485,6 +500,62 @@ public class DartLanguageServer {
             }
         });
         return task.future;
+    }
+    //endregion
+
+    //region ====Preview Complier====
+
+    /**
+     * 编译预览js
+     * @param path eg: packages/appbox/sys/views/HomePage.dart.js
+     * @return true成功
+     */
+    public CompletableFuture<Object> compilePreview(String path) {
+        if (!path.startsWith("packages/")) {
+            Log.warn("Invalid preview path: " + path);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        //先判断是否已经编译好,是则直接返回
+        final String buildPath = Path.of(this.rootPath.toString(), "build").toString();
+        final var    fullPath  = Path.of(buildPath, path).toFile();
+        if (fullPath.exists()) {
+            return CompletableFuture.completedFuture(fullPath.toString());
+        }
+
+        //TODO:判断是否存在错误,是则直接返回
+        var cmd = new ArrayList<String>();
+        cmd.add(devcVMPath);
+        cmd.add("--modules=amd");
+        cmd.add("--no-summarize"); //不需要生成dill
+        cmd.add("--sound-null-safety");
+        cmd.add("--enable-experiment=non-nullable");
+
+        cmd.add("--dart-sdk-summary=" + Path.of(sdkPath, "bin", "cache", "flutter_web_sdk", "flutter_web_sdk",
+                "kernel", "flutter_ddc_sdk_sound.dill").toString());
+
+        cmd.add("-s");
+        cmd.add(Path.of(PathUtil.currentPath, "preview", "flutter_web.dill").toString());
+        //cmd.add("-s");
+        //cmd.add(Path.of(sdkPath, "bin", "cache", "flutter_web_sdk", "flutter_web_sdk",
+        //        "kernel", "flutter_ddc_sdk_sound.dill").toString());
+        //TODO:其他通用包
+
+        cmd.add("-o");
+        cmd.add(buildPath);
+
+        try {
+            final var    paths    = path.split("/");
+            final String viewName = paths[4].substring(0, paths[4].length() - 3); //remove '.js'
+            cmd.add(String.format("package:appbox/%s/%s/%s", paths[2], paths[3], viewName));
+
+            var process = new ProcessBuilder().command(cmd)
+                    .directory(rootPath.toFile()).inheritIO().start();
+            return process.onExit().thenApply((ps) -> ps.exitValue() == 0 ? fullPath.toString() : null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
     }
     //endregion
 }

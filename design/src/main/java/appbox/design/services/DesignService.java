@@ -18,6 +18,7 @@ import appbox.design.handlers.tree.Checkout;
 import appbox.design.handlers.tree.DeleteNode;
 import appbox.design.handlers.tree.DragDropNode;
 import appbox.design.handlers.tree.LoadDesignTree;
+import appbox.design.handlers.view.BuildPreview;
 import appbox.design.handlers.view.LoadView;
 import appbox.design.handlers.view.NewViewModel;
 import appbox.design.handlers.view.OpenViewModel;
@@ -72,6 +73,7 @@ public final class DesignService implements IService {
         put("NewViewModel", new NewViewModel());
         put("OpenViewModel", new OpenViewModel());
         put("LoadView", new LoadView());
+        put("BuildPreview", new BuildPreview());
         //----Permission----
         put("NewPermissionModel", new NewPermissionModel());
         //----Settings----

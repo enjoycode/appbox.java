@@ -32,7 +32,7 @@ public final class DesignHub implements IDesignContext { //TODO: rename to Desig
         this.session       = session;
         typeSystem         = new TypeSystem(this);
         designTree         = new DesignTree(this);
-        dartLanguageServer = new DartLanguageServer(this);
+        dartLanguageServer = new DartLanguageServer(this, session instanceof MockDeveloperSession);
     }
 
     public synchronized DebugService debugService() {
