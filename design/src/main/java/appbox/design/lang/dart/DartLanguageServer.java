@@ -114,10 +114,11 @@ public class DartLanguageServer {
 
         extractFlutterFiles();
 
-        extractModels().thenAccept(r -> {
+        extractModels().thenCompose(r -> {
             Log.debug("Extract flutter files done and start analyzer...");
+            return runPubGet();
+        }).thenAccept((ok) -> {
             try {
-                runPubGet();
                 startAnalysisServer();
                 _initDone.set(2);
             } catch (Exception e) {
@@ -339,6 +340,29 @@ public class DartLanguageServer {
         Log.warn("Dart analysis server stopped.");
     }
 
+    private CompletableFuture<Boolean> runPubGet() {
+        var cmd = List.of(flutterVMPath, "pub", "get");
+        try {
+            var process = new ProcessBuilder().command(cmd)
+                    .directory(rootPath.toFile()).inheritIO().start();
+            return process.onExit().thenApply((p) -> {
+                if (p.exitValue() != 0) {
+                    Log.error(String.format("Run flutter pub get with error: %d", p.exitValue()));
+                    return false;
+                }
+                Log.debug("Run flutter pub get done.");
+                return true;
+            });
+        } catch (IOException e) {
+            Log.error("Can't run flutter pub get");
+            return CompletableFuture.completedFuture(false);
+        }
+    }
+
+    //endregion
+
+    //region ====Extract Flutter Files====
+
     /** 创建Flutter应用的相关文件,相当于flutter create */
     private void extractFlutterFiles() {
         //TODO: pubspec.yaml需要根据包生成,暂简单复制
@@ -382,31 +406,6 @@ public class DartLanguageServer {
         }
     }
 
-    /// 用于保存时更新代码,同时删除已经编译的js文件
-    public void updateViewModelCode(ModelNode node, String code) {
-        writeViewModelFile(node, code);
-
-        final var jsFilePath = Path.of(this.rootPath.toString(),
-                "lib", node.appNode.model.name(), "views", node.model().name() + ".dart.js");
-        try {
-            Files.deleteIfExists(jsFilePath);
-            //TODO: need delete js.map file
-        } catch (IOException e) {
-            Log.warn(String.format("Delete compiled js file[%s] error: %s", node.model().name(), e));
-        }
-    }
-
-    private void runPubGet() throws IOException, InterruptedException {
-        var cmd = List.of(flutterVMPath, "pub", "get");
-        var process = new ProcessBuilder().command(cmd)
-                .directory(rootPath.toFile()).inheritIO().start();
-        boolean ok = process.waitFor(30, TimeUnit.SECONDS);
-        if (ok)
-            Log.debug("Run pub get done.");
-        else
-            Log.warn("Run pub get timeout.");
-    }
-
     private Path getModelFilePath(ModelNode node) {
         String types;
         switch (node.model().modelType()) {
@@ -428,6 +427,7 @@ public class DartLanguageServer {
         return Path.of(rootPath.toString(), "lib",
                 appName, typeName, modelName + ".dart");
     }
+
     //endregion
 
     //region ====Completion Converters & Helpers====
@@ -573,5 +573,20 @@ public class DartLanguageServer {
             return CompletableFuture.completedFuture(null);
         }
     }
+
+    /** 用于保存时更新代码,同时删除已经编译的js文件 */
+    public void updateViewModelCode(ModelNode node, String code) {
+        writeViewModelFile(node, code);
+
+        final var jsFilePath = Path.of(this.rootPath.toString(),
+                "lib", node.appNode.model.name(), "views", node.model().name() + ".dart.js");
+        try {
+            Files.deleteIfExists(jsFilePath);
+            //TODO: need delete js.map file
+        } catch (IOException e) {
+            Log.warn(String.format("Delete compiled js file[%s] error: %s", node.model().name(), e));
+        }
+    }
+
     //endregion
 }
