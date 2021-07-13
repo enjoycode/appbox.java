@@ -130,7 +130,7 @@ public class DartLanguageServer {
 
     private void startAnalysisServer() throws Exception {
         serverSocket = new StdioServerSocket(dartVMPath, null, analyzerSnapshotPath, null, null);
-        serverSocket.setClientId("VSCODE-REMOTE");
+        serverSocket.setClientId("AppBoxStudio");
         serverSocket.setClientVersion("1.0.0");
 
         analysisServer = new RemoteAnalysisServerImpl(serverSocket);
@@ -579,7 +579,9 @@ public class DartLanguageServer {
         writeViewModelFile(node, code);
 
         final var jsFilePath = Path.of(this.rootPath.toString(),
-                "lib", node.appNode.model.name(), "views", node.model().name() + ".dart.js");
+                "build", "packages", "appbox",
+                node.appNode.model.name(), "views", node.model().name() + ".dart.js");
+        //Log.debug(String.format("Delete js file: %s", jsFilePath));
         try {
             Files.deleteIfExists(jsFilePath);
             //TODO: need delete js.map file
