@@ -365,18 +365,35 @@ public class DartLanguageServer {
     }
 
     private CompletableFuture<Void> extractViewModel(ModelNode node) {
-        return OpenViewModel.loadSourceCode(node).thenApply(code -> {
-            var filePath = getModelFilePath(node);
-            try {
-                if (!filePath.toFile().getParentFile().exists())
-                    filePath.toFile().getParentFile().mkdirs();
+        return OpenViewModel.loadSourceCode(node)
+                .thenAccept(code -> writeViewModelFile(node, code.Script));
+    }
 
-                Files.writeString(filePath, code.Script, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        });
+    private void writeViewModelFile(ModelNode node, String code) {
+        final var filePath = getModelFilePath(node);
+        try {
+            if (!filePath.toFile().getParentFile().exists())
+                filePath.toFile().getParentFile().mkdirs();
+
+            Files.writeString(filePath, code, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            Log.error(String.format("Write view's dart file[%s.%s] error: %s",
+                    node.appNode.text(), node.text(), e));
+        }
+    }
+
+    /// 用于保存时更新代码,同时删除已经编译的js文件
+    public void updateViewModelCode(ModelNode node, String code) {
+        writeViewModelFile(node, code);
+
+        final var jsFilePath = Path.of(this.rootPath.toString(),
+                "lib", node.appNode.model.name(), "views", node.model().name() + ".dart.js");
+        try {
+            Files.deleteIfExists(jsFilePath);
+            //TODO: need delete js.map file
+        } catch (IOException e) {
+            Log.warn(String.format("Delete compiled js file[%s] error: %s", node.model().name(), e));
+        }
     }
 
     private void runPubGet() throws IOException, InterruptedException {
@@ -536,9 +553,8 @@ public class DartLanguageServer {
 
         cmd.add("-s");
         cmd.add(Path.of(PathUtil.currentPath, "preview", "flutter_web.dill").toString());
-        //cmd.add("-s");
-        //cmd.add(Path.of(sdkPath, "bin", "cache", "flutter_web_sdk", "flutter_web_sdk",
-        //        "kernel", "flutter_ddc_sdk_sound.dill").toString());
+        cmd.add("-s");
+        cmd.add(Path.of(PathUtil.currentPath, "preview", "get.dill").toString());
         //TODO:其他通用包
 
         cmd.add("-o");

@@ -74,8 +74,8 @@ public final class ModelNode extends DesignNode {
     protected void writeJsonMembers(IJsonWriter writer) {
         super.writeJsonMembers(writer);
 
-        writer.writeKeyValue("App",appNode.model.name()); //TODO:考虑不用，由前端处理
-        writer.writeKeyValue("ModelType",_model.modelType().value);
+        writer.writeKeyValue("App", appNode.model.name()); //TODO:考虑不用，由前端处理
+        writer.writeKeyValue("ModelType", _model.modelType().value);
 
         if (_model.modelType() == ModelType.Entity) {
             //EntityModel输出对应的存储标识，方便前端IDE筛选相同存储的实体
@@ -91,7 +91,7 @@ public final class ModelNode extends DesignNode {
             writer.writeKeyValue("Language", ((ServiceModel) _model).language().value);
         } else if (_model.modelType() == ModelType.View) {
             //ViewModel输出类型
-            writer.writeKeyValue("ViewType", ((ViewModel)_model).getType()); //TODO:重复输出
+            writer.writeKeyValue("ViewType", ((ViewModel) _model).getType()); //TODO:重复输出
         }
     }
 
@@ -102,34 +102,14 @@ public final class ModelNode extends DesignNode {
         }
 
         //TODO:考虑事务保存模型及相关代码
-
         return StagedService.saveModelAsync(_model).thenCompose(r -> {
             //更新相关模型的内容
             if (_model.persistentState() != PersistentState.Deleted) {
                 switch (_model.modelType()) {
-                    case Service: {
-                        //TODO:更新服务模型代理类
-                        //保存服务模型代码
-                        String sourceCode;
-                        if (modelInfos != null && modelInfos.length == 1)
-                        {
-                            sourceCode = (String)modelInfos[0];
-                        }
-                        else {
-                            var doc = designTree().designHub.typeSystem.languageServer.findOpenedDocument(_model.id());
-                            sourceCode = doc.getContents();
-                        }
-                        return StagedService.saveServiceCodeAsync(_model.id(), sourceCode);
-                    }
+                    case Service:
+                        return saveServiceCode(modelInfos);
                     case View:
-                    {
-                        //View模型保存
-                        if (modelInfos != null)
-                        {
-                            return StagedService.saveViewCodeAsync(_model.id(), (String)modelInfos[0], (String)modelInfos[1], (String)modelInfos[2])
-                                    .thenCompose(re->StagedService.saveViewRuntimeCodeAsync(_model.id(), (String)modelInfos[3]));
-                        }
-                    }
+                        return saveViewCode(modelInfos);
                     default:
                         return CompletableFuture.completedFuture(null);
                 }
@@ -137,6 +117,34 @@ public final class ModelNode extends DesignNode {
                 return CompletableFuture.completedFuture(null);
             }
         });
+    }
+
+    private CompletableFuture<Void> saveServiceCode(Object[] modelInfos) {
+        //TODO:更新服务模型代理类
+        //保存服务模型代码
+        String sourceCode;
+        if (modelInfos != null && modelInfos.length == 1) {
+            sourceCode = (String) modelInfos[0];
+        } else {
+            var doc = designTree().designHub.typeSystem.languageServer.findOpenedDocument(_model.id());
+            sourceCode = doc.getContents();
+        }
+        return StagedService.saveServiceCodeAsync(_model.id(), sourceCode);
+    }
+
+    private CompletableFuture<Void> saveViewCode(Object[] modelInfos) {
+        if (modelInfos != null) {
+            if (((ViewModel) _model).getType() == ViewModel.TYPE_FLUTTER) {
+                String code = (String) modelInfos[0];
+                return StagedService.saveViewCodeAsync(_model.id(), "", code, null)
+                        .thenAccept(re -> designTree().designHub.dartLanguageServer.updateViewModelCode(this, code));
+            } else {
+                return StagedService.saveViewCodeAsync(_model.id(),
+                        (String) modelInfos[0], (String) modelInfos[1], (String) modelInfos[2])
+                        .thenCompose(re -> StagedService.saveViewRuntimeCodeAsync(_model.id(), (String) modelInfos[3]));
+            }
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
 }

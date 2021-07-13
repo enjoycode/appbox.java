@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Previewer</title>
+    <script src="require.js"></script>
+</head>
+<body>
+<script>
+    function run() {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.has("s") || !params.has("a") || !params.has("v")) {
+            document.body.innerText = "Bad request."
+            return
+        }
+
+        const s = params.get("s")
+        const a = params.get("a")
+        const v = params.get("v")
+
+        //for debug fix cors not set cookie in iframe TODO:待改用代理通道
+        requirejs.config({
+            urlArgs: function (id, url) {
+                if (url.indexOf("/packages/") !== -1) {
+                    return "?s=" + s
+                }
+                return ''
+            }
+        })
+
+        const p = "packages/appbox/" + a + "/views/" + v + ".dart"
+
+        requirejs(["main.dart", p], function (main, view) {
+            // console.log(main, view)
+
+            const widget = view[a + "__views__" + v]
+            const instance = new widget[v].new()
+            // console.log(instance)
+            main.main.run(instance);
+        });
+    }
+
+    run();
+</script>
+</body>
+</html>
