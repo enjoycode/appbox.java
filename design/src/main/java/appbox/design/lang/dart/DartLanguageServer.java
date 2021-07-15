@@ -9,6 +9,7 @@ import appbox.model.ModelType;
 import appbox.model.ViewModel;
 import com.google.dart.server.AnalysisServerListener;
 import com.google.dart.server.AnalysisServerListenerAdapter;
+import com.google.dart.server.FormatConsumer;
 import com.google.dart.server.GetSuggestionsConsumer;
 import com.google.dart.server.internal.remote.RemoteAnalysisServerImpl;
 import com.google.dart.server.internal.remote.StdioServerSocket;
@@ -517,6 +518,27 @@ public class DartLanguageServer {
             }
         });
         return task.future;
+    }
+
+    /** 格式化整个文档 */
+    public CompletableFuture<List<SourceEdit>> formatDocument(ModelNode node) {
+        final var filePath = getModelFilePath(node);
+        var       task     = new CompletableFuture<List<SourceEdit>>();
+        analysisServer.edit_format(filePath.toString(), 0, 0, 0, new FormatConsumer() {
+
+            @Override
+            public void computedFormat(List<SourceEdit> edits, int selectionOffset, int selectionLength) {
+                task.complete(edits);
+            }
+
+            @Override
+            public void onError(RequestError requestError) {
+                Log.warn("Format document error: " + requestError.getMessage());
+                task.completeExceptionally(new RuntimeException(requestError.getMessage()));
+            }
+        });
+
+        return task;
     }
     //endregion
 

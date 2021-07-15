@@ -4,6 +4,7 @@ import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
 import appbox.design.handlers.code.ChangeBuffer;
 import appbox.design.handlers.code.CheckCode;
+import appbox.design.handlers.code.FormatDocument;
 import appbox.design.handlers.code.GetCompletion;
 import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.*;
@@ -37,6 +38,7 @@ public final class DesignService implements IService {
         put("ChangeBuffer", new ChangeBuffer());
         put("GetCompletion", new GetCompletion());
         put("CheckCode", new CheckCode());
+        put("FormatDocument", new FormatDocument());
         put("CloseDesigner", new CloseDesigner());
         put("SaveModel", new SaveModel());
         put("DeleteNode", new DeleteNode());
