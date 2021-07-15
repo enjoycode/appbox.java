@@ -528,23 +528,30 @@ public class DartLanguageServer {
      * @return true成功
      */
     public CompletableFuture<Object> compilePreview(String path) {
-        if (!path.startsWith("packages/")) {
+        if (!path.startsWith("packages/") && !path.startsWith("lib/")) {
             Log.warn("Invalid preview path: " + path);
             return CompletableFuture.completedFuture(null);
         }
 
-        //先判断是否已经编译好,是则直接返回
+        // 先判断是否源代码 xxx.dart
+        if (path.endsWith(".dart")) {
+            final var srcFile = Path.of(rootPath.toString(), path);
+            return CompletableFuture.completedFuture(srcFile.toString());
+        }
+
+        // 再判断是否已经编译好,是则直接返回
         final String buildPath = Path.of(this.rootPath.toString(), "build").toString();
         final var    fullPath  = Path.of(buildPath, path).toFile();
         if (fullPath.exists()) {
             return CompletableFuture.completedFuture(fullPath.toString());
         }
 
-        //TODO:判断是否存在错误,是则直接返回
+        // 开始编译 TODO: *** 1.增量编译;2.判断是否存在错误,是则直接返回
         var cmd = new ArrayList<String>();
         cmd.add(devcVMPath);
         cmd.add("--modules=amd");
         cmd.add("--no-summarize"); //不需要生成dill
+        //cmd.add("--inline-source-map"); //不是嵌入source map
         cmd.add("--sound-null-safety");
         cmd.add("--enable-experiment=non-nullable");
 
@@ -569,7 +576,7 @@ public class DartLanguageServer {
                     .directory(rootPath.toFile()).inheritIO().start();
             return process.onExit().thenApply((ps) -> ps.exitValue() == 0 ? fullPath.toString() : null);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.error(String.format("Can't start devc: %s", e));
             return CompletableFuture.completedFuture(null);
         }
     }
