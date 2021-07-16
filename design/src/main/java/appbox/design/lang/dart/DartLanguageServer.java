@@ -91,12 +91,15 @@ public class DartLanguageServer {
 
         if (forTest) return; //仅用于测试,不清空
 
-        //TODO:暂清空重建
         try {
-            Files.walk(this.rootPath)
-                    .map(Path::toFile)
-                    .sorted((o1, o2) -> -o1.compareTo(o2))
-                    .forEach(File::delete);
+            //TODO:暂清空重建
+            if (this.rootPath.toFile().exists()) {
+                Files.walk(this.rootPath)
+                        .map(Path::toFile)
+                        .sorted((o1, o2) -> -o1.compareTo(o2))
+                        .forEach(File::delete);
+            }
+
             Files.createDirectories(Path.of(this.rootPath.toString(), "build"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -131,7 +134,7 @@ public class DartLanguageServer {
     public void stop() {
         //TODO:判断是否已启动,另中止未完成的CompletionTask
 
-        stopAnalysisServer();
+        analysisServer.server_shutdown();
     }
 
     private void startAnalysisServer() throws Exception {
@@ -152,9 +155,9 @@ public class DartLanguageServer {
     }
 
     private void stopAnalysisServer() {
-        Log.debug("Stop dart analysis server.");
+        Log.debug("Stop analysis server.");
         analysisServer.removeAnalysisServerListener(analysisServerListener);
-        analysisServer.server_shutdown();
+        analysisServer.server_shutdown(); //TODO: check is need
         serverSocket.stop();
 
         serverSocket           = null;
@@ -166,7 +169,7 @@ public class DartLanguageServer {
         if (isAlive) return;
 
         stopAnalysisServer();
-        Log.warn("Dart analysis server stopped.");
+        Log.warn("Analysis server stopped.");
     }
 
     private CompletableFuture<Boolean> runPubGet() {
@@ -329,10 +332,11 @@ public class DartLanguageServer {
 
     /**
      * 编译预览js
-     * @param path eg: packages/appbox/sys/views/HomePage.dart.js
+     * @param path         eg: packages/appbox/sys/views/HomePage.dart.js
+     * @param forceRebuild only for test
      * @return true成功
      */
-    public CompletableFuture<Object> compilePreview(String path) {
+    public CompletableFuture<Object> compilePreview(String path, boolean forceRebuild) {
         if (!path.startsWith("packages/") && !path.startsWith("lib/")) {
             Log.warn("Invalid preview path: " + path);
             return CompletableFuture.completedFuture(null);
@@ -347,7 +351,7 @@ public class DartLanguageServer {
         // 再判断是否已经编译好,是则直接返回
         final String buildPath = Path.of(this.rootPath.toString(), "build").toString();
         final var    fullPath  = Path.of(buildPath, path).toFile();
-        if (fullPath.exists()) {
+        if (!forceRebuild && fullPath.exists()) {
             return CompletableFuture.completedFuture(fullPath.toString());
         }
 

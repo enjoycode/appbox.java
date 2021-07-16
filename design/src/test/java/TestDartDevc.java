@@ -1,7 +1,7 @@
 import appbox.design.MockDeveloperSession;
-import appbox.design.lang.dart.DartLanguageServer;
 import appbox.runtime.MockRuntimeContext;
 import appbox.runtime.RuntimeContext;
+import org.apache.commons.lang3.time.StopWatch;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -24,9 +24,12 @@ public class TestDartDevc {
         hub.setIDE(true);
         //hub.typeSystem.init(); //必须初始化
 
+        StopWatch stopWatch = StopWatch.createStarted();
         var result =
-                hub.dartLanguageServer.compilePreview("packages/appbox/sys/views/HomePage.dart.js").join();
+                hub.dartLanguageServer.compilePreview("packages/appbox/sys/views/HomePage.dart.js", true).join();
+        stopWatch.stop();
         assertNotNull(result);
+        System.out.println("耗时: " + stopWatch.getTime()); //约450毫秒
     }
 
 }
