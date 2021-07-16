@@ -220,6 +220,19 @@ public class DartLanguageServer {
         return fut;
     }
 
+    private void extractWebFiles() {
+        //TODO: other files
+        var fs       = DartLanguageServer.class.getResourceAsStream("/flutter/index.html");
+        var filePath = Path.of(rootPath.toString(), "web", "index.html");
+        try {
+            Files.createDirectory(Path.of(rootPath.toString(), "web"));
+
+            Files.copy(fs, filePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private CompletableFuture<Void> extractViewModel(ModelNode node) {
         return OpenViewModel.loadSourceCode(node)
                 .thenAccept(code -> writeViewModelFile(node, code.Script));
@@ -328,7 +341,7 @@ public class DartLanguageServer {
     }
     //endregion
 
-    //region ====Preview Complier====
+    //region ====Preview & Publish Complier====
 
     /**
      * 编译预览js
@@ -406,5 +419,68 @@ public class DartLanguageServer {
         }
     }
 
+    /** 生成并发布Web应用 */
+    public CompletableFuture<Object> buildWebApp(String appName, boolean isHtmlRenderer, boolean forTest) {
+        if (!forTest) {
+            final var appNode = hub.designTree.findApplicationNodeByName(appName);
+            if (appNode == null)
+                return CompletableFuture.failedFuture(new RuntimeException("Can't find application"));
+        }
+
+        //TODO: globle lock for only one can buid
+
+        //1.创建main.dart文件,并准备编译web所需要的文件
+        final var mainFilePath = Path.of(this.rootPath.toString(), "lib", appName, "main.dart");
+        try {
+            createAppMainFile(appName, mainFilePath);
+            extractWebFiles();
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+
+        //2.开始编译
+        var cmd = List.of(flutterVMPath, "build", "web",
+                "--web-renderer", isHtmlRenderer ? "html" : "auto",
+                //"--no-pub",
+                "--no-source-maps",
+                "-t",
+                mainFilePath.toString());
+        try {
+            var process = new ProcessBuilder().command(cmd)
+                    .directory(rootPath.toFile()).inheritIO().start();
+            return process.onExit().thenApply((p) -> {
+                if (p.exitValue() != 0) {
+                    Log.error(String.format("Run flutter buid web with error: %d", p.exitValue()));
+                    return false;
+                }
+                Log.debug("Run flutter buid web done.");
+                //开始保存编译结果
+                saveAppWebFiles(appName);
+                return true;
+            });
+        } catch (IOException e) {
+            Log.error("Can't run flutter build web");
+            return CompletableFuture.completedFuture(false);
+        }
+    }
+
+    private void createAppMainFile(String appName, Path mainFilePath) throws IOException {
+        final var sb = new StringBuilder(500);
+        sb.append("import 'package:flutter/material.dart';\n");
+        sb.append("import 'package:appbox/" + appName + "/views/HomePage.dart';\n");
+        sb.append("void main() {\n");
+        sb.append("  runApp(MaterialApp(\n");
+        sb.append("    title: '" + appName + "',\n");
+        sb.append("    home: HomePage()\n");
+        sb.append("  ));\n");
+        sb.append("}");
+
+
+        Files.writeString(mainFilePath, sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    private void saveAppWebFiles(String appName) {
+        Log.warn("保存编译结果");
+    }
     //endregion
 }
