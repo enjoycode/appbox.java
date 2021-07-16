@@ -23,6 +23,7 @@ public interface IRuntimeContext {
     /**
      * 异步调用服务
      * @param method eg: "sys.OrderService.Save"
+     * @param args nullable
      */
     CompletableFuture<Object> invokeAsync(String method, InvokeArgs args);
 

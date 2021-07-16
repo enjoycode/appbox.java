@@ -10,15 +10,14 @@ import appbox.model.ModelType;
 
 import java.util.concurrent.*;
 
-/**
- * 每个在线开发者对应一个DesignHub实例
- */
+/** 每个在线开发者对应一个DesignHub实例 */
 public final class DesignHub implements IDesignContext { //TODO: rename to DesignContext
     public final DesignTree         designTree;
     public final TypeSystem         typeSystem;
     public final IDeveloperSession  session;
+    public       DartLanguageServer dartLanguageServer;
     private      DebugService       _debugService;
-    public final DartLanguageServer dartLanguageServer;
+    private      boolean            _isFlutterIDE = false; //是否新版基于Flutter的IDE
 
     /** 用于发布时暂存挂起的修改 */
     public Object[] pendingChanges;
@@ -29,17 +28,29 @@ public final class DesignHub implements IDesignContext { //TODO: rename to Desig
             new LinkedBlockingQueue<Runnable>());
 
     public DesignHub(IDeveloperSession session) {
-        this.session       = session;
-        typeSystem         = new TypeSystem(this);
-        designTree         = new DesignTree(this);
-        //TODO:考虑延迟dartLanguageServer初始化与启动
-        dartLanguageServer = new DartLanguageServer(this, session instanceof MockDeveloperSession);
+        this.session = session;
+        typeSystem   = new TypeSystem(this);
+        designTree   = new DesignTree(this);
+    }
+
+    public void setIDE(boolean isFlutterIDE) {
+        _isFlutterIDE = isFlutterIDE;
+
+        if (_isFlutterIDE && dartLanguageServer == null) {
+            //TODO:考虑延迟dartLanguageServer初始化与启动
+            dartLanguageServer = new DartLanguageServer(this, session instanceof MockDeveloperSession);
+        }
+    }
+
+    public boolean isFlutterIDE() {
+        return _isFlutterIDE;
     }
 
     public void dispose() {
         //TODO:清理调试服务
 
-        dartLanguageServer.stop();
+        if (_isFlutterIDE && dartLanguageServer != null)
+            dartLanguageServer.stop();
     }
 
     public synchronized DebugService debugService() {

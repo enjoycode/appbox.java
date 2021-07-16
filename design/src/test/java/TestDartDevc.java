@@ -21,6 +21,7 @@ public class TestDartDevc {
         var session = new MockDeveloperSession();
         ctx.setCurrentSession(session);
         var hub = session.getDesignHub();
+        hub.setIDE(true);
         //hub.typeSystem.init(); //必须初始化
 
         var result =
