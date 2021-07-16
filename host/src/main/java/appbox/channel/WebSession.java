@@ -71,6 +71,13 @@ public final class WebSession implements IDeveloperSession {
     public UUID externalId() {
         return null;
     }
+
+    @Override
+    public void dispose() {
+        if (_designHub != null) {
+            _designHub.dispose();
+        }
+    }
     //endregion
 
     //region ====IDeveloperSession====

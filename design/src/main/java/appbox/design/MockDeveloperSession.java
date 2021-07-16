@@ -78,6 +78,9 @@ public final class MockDeveloperSession implements IDeveloperSession {
     }
 
     @Override
+    public void dispose() {}
+
+    @Override
     public CompletableFuture<Void> startDebugChannel(String service, byte[] invokeArgs) {
         throw new UnsupportedOperationException();
     }

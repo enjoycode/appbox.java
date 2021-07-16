@@ -86,12 +86,23 @@ public final class SystemService implements IService {
         });
     }
 
+    public CompletableFuture<Object> logout() {
+        final var session = RuntimeContext.current().currentSession();
+        if (session != null) {
+            SessionManager.unregister(session.sessionId());
+        }
+
+        return CompletableFuture.completedFuture(null);
+    }
+
     @Override
     public CompletableFuture<Object> invokeAsync(CharSequence method, InvokeArgs args) {
         if (method.equals("InitStore")) {
             return StoreInitiator.initAsync().thenApply(ok -> ok);
         } else if (method.equals("Login")) {
             return login(args.getLong(), args.getString());
+        } else if (method.equals("Logout")) { //TODO:考虑不公开,仅由主进程发特殊消息通知
+            return logout();
         } else if (method.equals("GetModelInfo")) {
             var res = new EntityModelInfo(RuntimeContext.current().getModel(args.getLong()));
             return CompletableFuture.completedFuture(res);

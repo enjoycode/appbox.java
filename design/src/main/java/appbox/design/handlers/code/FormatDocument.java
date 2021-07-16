@@ -6,7 +6,6 @@ import appbox.design.handlers.IDesignHandler;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
 import org.dartlang.analysis.server.protocol.SourceEdit;
-import org.eclipse.lsp4j.CompletionItem;
 
 import java.util.concurrent.CompletableFuture;
 

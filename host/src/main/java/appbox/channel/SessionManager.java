@@ -35,8 +35,13 @@ public final class SessionManager {
     public static void unregister(long id) {
         var lock = _mapLock.writeLock();
         lock.lock();
-        _sessions.remove(id);
+        final var old = _sessions.remove(id);
         lock.unlock();
+
+        // 清理会话资源
+        if (old != null) {
+            old.dispose();
+        }
     }
 
 }

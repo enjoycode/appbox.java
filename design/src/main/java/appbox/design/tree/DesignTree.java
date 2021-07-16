@@ -115,7 +115,7 @@ public final class DesignTree {
             }
 
             //最后加载完后通知DartLanguageServer开始初始化
-            designHub.dartLanguageServer.init();
+            designHub.dartLanguageServer.start();
 
             return true;
         }).handle((r, ex) -> {
