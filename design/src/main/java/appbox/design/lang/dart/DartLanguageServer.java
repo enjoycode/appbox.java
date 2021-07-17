@@ -7,6 +7,9 @@ import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.model.ViewModel;
+import appbox.serialization.BytesOutputStream;
+import appbox.store.KVTransaction;
+import appbox.store.ModelStore;
 import com.google.dart.server.AnalysisServerListener;
 import com.google.dart.server.FormatConsumer;
 import com.google.dart.server.GetSuggestionsConsumer;
@@ -18,6 +21,7 @@ import org.dartlang.analysis.server.protocol.*;
 import org.eclipse.lsp4j.CompletionItem;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +30,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * 用于前端Flutter工程的语言服务
@@ -448,15 +454,21 @@ public class DartLanguageServer {
         try {
             var process = new ProcessBuilder().command(cmd)
                     .directory(rootPath.toFile()).inheritIO().start();
-            return process.onExit().thenApply((p) -> {
+            return process.onExit().thenCompose((p) -> {
                 if (p.exitValue() != 0) {
                     Log.error(String.format("Run flutter buid web with error: %d", p.exitValue()));
-                    return false;
+                    return CompletableFuture.failedFuture(new RuntimeException("Build web app error."));
                 }
                 Log.debug("Run flutter buid web done.");
                 //开始保存编译结果
-                saveAppWebFiles(appName);
-                return true;
+                if (!forTest) {
+                    return saveAppWebFiles(appName).thenApply(r -> {
+                        Log.info("Save compiled web files done.");
+                        return null;
+                    });
+                }
+
+                return CompletableFuture.completedFuture(null);
             });
         } catch (IOException e) {
             Log.error("Can't run flutter build web");
@@ -479,8 +491,53 @@ public class DartLanguageServer {
         Files.writeString(mainFilePath, sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    private void saveAppWebFiles(String appName) {
-        Log.warn("保存编译结果");
+    private CompletableFuture<Void> saveAppWebFiles(String appName) {
+        //TODO:清空旧的,另考虑通用文件不用保存,或者直接传输路径给主进程，由主进程处理
+
+        return KVTransaction.beginAsync().thenCompose((txn) -> {
+            try {
+                final var outPath = Path.of(rootPath.toString(), "build", "web");
+                var files = Files.walk(outPath)
+                        .map(Path::toFile)
+                        .filter(file -> file.isFile() && !file.getName().equals("NOTICES"))
+                        .collect(Collectors.toList());
+
+                CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
+                for (var file : files) {
+                    final var zipData  = gzipFileToBytes(file);
+                    final var filePath = file.toPath();
+                    //asmName eg: "/erp/index.html"
+                    final var asmName =
+                            String.format("/%s/%s", appName,
+                                    filePath.subpath(outPath.getNameCount(), filePath.getNameCount()));
+                    task = task.thenCompose(r -> ModelStore.upsertAssemblyAsync(false, asmName, zipData, txn));
+                }
+
+                return task.thenCompose(r -> txn.commitAsync());
+            } catch (Exception ex) {
+                Log.error("Save compiled web files error: " + ex.getMessage());
+                return CompletableFuture.failedFuture(ex);
+            }
+        });
+    }
+
+    private byte[] gzipFileToBytes(File file) throws IOException {
+        var fis = new FileInputStream(file);
+        var fos = new BytesOutputStream(512);
+        fos.writeByte((byte) 2); //gzip compress flag
+        var gzipOS = new GZIPOutputStream(fos);
+
+        byte[] buffer = new byte[1024];
+        int    len;
+        while ((len = fis.read(buffer)) != -1) {
+            gzipOS.write(buffer, 0, len);
+        }
+        //close resources
+        gzipOS.close();
+        fos.close();
+        fis.close();
+
+        return fos.toByteArray(); //TODO:直接返BytesOutputStream,避免copy
     }
     //endregion
 }

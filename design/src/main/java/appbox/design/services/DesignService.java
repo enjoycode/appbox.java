@@ -19,10 +19,7 @@ import appbox.design.handlers.tree.Checkout;
 import appbox.design.handlers.tree.DeleteNode;
 import appbox.design.handlers.tree.DragDropNode;
 import appbox.design.handlers.tree.LoadDesignTree;
-import appbox.design.handlers.view.BuildPreview;
-import appbox.design.handlers.view.LoadView;
-import appbox.design.handlers.view.NewViewModel;
-import appbox.design.handlers.view.OpenViewModel;
+import appbox.design.handlers.view.*;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArgs;
 import appbox.runtime.RuntimeContext;
@@ -76,6 +73,7 @@ public final class DesignService implements IService {
         put("OpenViewModel", new OpenViewModel());
         put("LoadView", new LoadView());
         put("BuildPreview", new BuildPreview());
+        put("BuildWebApp", new BuildWebApp());
         //----Permission----
         put("NewPermissionModel", new NewPermissionModel());
         //----Settings----

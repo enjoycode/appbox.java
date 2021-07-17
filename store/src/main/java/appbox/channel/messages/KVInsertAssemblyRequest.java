@@ -10,6 +10,8 @@ public final class KVInsertAssemblyRequest extends KVInsertRequire {
     private final byte[]  asmData;
     private final boolean isService;
 
+    //TODO:支持传入BytesOutputStream，避免复制为byte[]
+
     public KVInsertAssemblyRequest(KVTxnId txnId, String asmName, byte[] asmData, boolean isService) {
         super(txnId);
 
