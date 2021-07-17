@@ -226,14 +226,20 @@ public class DartLanguageServer {
         return fut;
     }
 
-    private void extractWebFiles() {
+    private void extractWebFiles(String appName) {
         //TODO: other files
+
+        //index.html
         var fs       = DartLanguageServer.class.getResourceAsStream("/flutter/index.html");
         var filePath = Path.of(rootPath.toString(), "web", "index.html");
         try {
             Files.createDirectory(Path.of(rootPath.toString(), "web"));
 
-            Files.copy(fs, filePath, StandardCopyOption.REPLACE_EXISTING);
+            //注意修改index.html的<base href="/">
+            var indexHtml = new String(fs.readAllBytes());
+            indexHtml = indexHtml.replace("<base href=\"/\">", "<base href=\"/" + appName + "/\">");
+
+            Files.writeString(filePath, indexHtml, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -439,7 +445,7 @@ public class DartLanguageServer {
         final var mainFilePath = Path.of(this.rootPath.toString(), "lib", appName, "main.dart");
         try {
             createAppMainFile(appName, mainFilePath);
-            extractWebFiles();
+            extractWebFiles(appName);
         } catch (Exception e) {
             return CompletableFuture.failedFuture(e);
         }
