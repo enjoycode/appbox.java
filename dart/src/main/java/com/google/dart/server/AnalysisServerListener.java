@@ -148,6 +148,8 @@ public interface AnalysisServerListener {
 
   public void computedClosingLabels(String file, List<ClosingLabel> labels);
 
+  public void computedFolding(String file, List<FoldingRegion> regions);
+
   /**
    * A new collection of search results have been computed for the given completion id.
    *

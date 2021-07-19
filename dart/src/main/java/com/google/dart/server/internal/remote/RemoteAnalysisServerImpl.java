@@ -73,6 +73,7 @@ public class RemoteAnalysisServerImpl implements AnalysisServer {
   private static final String ANALYSIS_NOTIFICATION_OUTLINE = "analysis.outline";
   private static final String ANALYSIS_NOTIFICATION_OVERRIDES = "analysis.overrides";
   private static final String ANALYSIS_NOTIFICATION_CLOSING_LABELS = "analysis.closingLabels";
+  private static final String ANALYSIS_NOTIFICATION_FOLDING = "analysis.folding";
 
   // Code Completion domain
   private static final String COMPLETION_AVAILABLE_SUGGESTIONS = "completion.availableSuggestions";
@@ -679,6 +680,10 @@ public class RemoteAnalysisServerImpl implements AnalysisServer {
     else if (event.equals(ANALYSIS_NOTIFICATION_ANALYZED_FILES)) {
       // analysis.errors
       new NotificationAnalysisAnalyzedFilesProcessor(listener).process(response);
+    }
+    else if (event.equals(ANALYSIS_NOTIFICATION_FOLDING)) {
+      // analysis.folding
+      new NotificationAnalysisFoldingProcessor(listener).process(response);
     }
     else if (event.equals(COMPLETION_AVAILABLE_SUGGESTIONS)) {
       // completion.results

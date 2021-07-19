@@ -48,7 +48,7 @@ public class DartLanguageServer {
     private final DesignHub             hub;
     private final Path                  rootPath;
     private final AtomicInteger         _initDone   = new AtomicInteger(0);
-    private final HashMap<Long, String> openedFiles = new HashMap<>();
+    private final HashMap<Long, String> openedFiles = new HashMap<>(); //Key=ModelId, Value=FilePath
 
     private StdioServerSocket        serverSocket;
     private RemoteAnalysisServerImpl analysisServer;
@@ -152,7 +152,7 @@ public class DartLanguageServer {
         analysisServer.start();
         //订阅事件
         analysisServer.addStatusListener((this::onAnalysisServerStatusChanged));
-        analysisServer.completion_setSubscriptions(List.of("AVAILABLE_SUGGESTION_SETS"));
+        analysisServer.completion_setSubscriptions(List.of(CompletionService.AVAILABLE_SUGGESTION_SETS));
         analysisServerListener = new DartAnalysisListener(this);
         analysisServer.addAnalysisServerListener(analysisServerListener);
 
@@ -296,7 +296,9 @@ public class DartLanguageServer {
         var filePath = getModelFilePath(node);
         openedFiles.put(node.model().id(), filePath.toString());
 
+        //TODO: check analysis server is running
         analysisServer.analysis_setPriorityFiles(new ArrayList<>(openedFiles.values()));
+        analysisServer.analysis_setSubscriptions(Map.of(AnalysisService.FOLDING, new ArrayList<>(openedFiles.values())));
 
         var add = new AddContentOverlay(content);
         var files = new HashMap<String, Object>() {{

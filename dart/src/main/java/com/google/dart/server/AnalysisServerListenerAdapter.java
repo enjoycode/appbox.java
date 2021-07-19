@@ -116,4 +116,8 @@ public class AnalysisServerListenerAdapter implements AnalysisServerListener {
   @Override
   public void computedExistingImports(String file, ExistingImports existingImports) {
   }
+
+  @Override
+  public void computedFolding(String file, List<FoldingRegion> regions) {
+  }
 }

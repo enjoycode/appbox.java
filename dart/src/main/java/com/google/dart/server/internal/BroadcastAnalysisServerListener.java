@@ -103,6 +103,13 @@ public class BroadcastAnalysisServerListener implements AnalysisServerListener {
   }
 
   @Override
+  public void computedFolding(String file, List<FoldingRegion> regions) {
+    for (AnalysisServerListener listener : getListeners()) {
+      listener.computedFolding(file, regions);
+    }
+  }
+
+  @Override
   public void computedImplemented(String file, List<ImplementedClass> implementedClasses,
                                   List<ImplementedMember> implementedMembers) {
     for (AnalysisServerListener listener : getListeners()) {

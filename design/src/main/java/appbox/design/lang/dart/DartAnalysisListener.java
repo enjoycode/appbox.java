@@ -193,6 +193,19 @@ public final class DartAnalysisListener extends AnalysisServerListenerAdapter {
         server._existingImports.put(file, alreadyImportedSymbols);
     }
 
+    @Override
+    public void computedFolding(String file, List<FoldingRegion> regions) {
+        var sb = new StringBuilder();
+        sb.append("====Foldings for ");
+        sb.append(file);
+        sb.append("====\n");
+        for(var region : regions) {
+            sb.append(region);
+            sb.append("\n");
+        }
+        Log.debug(sb.toString());
+    }
+
     //region ====Completion Converters & Helpers====
     private static CompletionItem toCompletionItem(CompletionSuggestion suggestion) {
         //TODO:暂简单处理
