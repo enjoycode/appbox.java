@@ -1,4 +1,4 @@
-package appbox.design.lang.event;
+package appbox.design.event;
 
 public interface DebugEventType {
     byte START          = 0;

@@ -1,8 +1,8 @@
 package appbox.design.lang.java.debug;
 
-import appbox.design.lang.event.DebugPauseEvent;
-import appbox.design.lang.event.DebugStartEvent;
-import appbox.design.lang.event.DebugStopEvent;
+import appbox.design.event.DebugPauseEvent;
+import appbox.design.event.DebugStartEvent;
+import appbox.design.event.DebugStopEvent;
 import appbox.design.lang.java.debug.variables.Variable;
 import appbox.design.lang.java.debug.variables.VariableUtils;
 import appbox.logging.Log;

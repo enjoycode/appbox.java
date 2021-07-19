@@ -1,4 +1,4 @@
-package appbox.design.lang.event;
+package appbox.design.event;
 
 import appbox.channel.IClientMessage;
 import appbox.design.IDeveloperSession;

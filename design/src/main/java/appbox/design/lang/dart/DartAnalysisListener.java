@@ -1,5 +1,6 @@
 package appbox.design.lang.dart;
 
+import appbox.design.event.CodeFoldingEvent;
 import appbox.logging.Log;
 import com.google.dart.server.AnalysisServerListenerAdapter;
 import org.dartlang.analysis.server.protocol.*;
@@ -195,15 +196,15 @@ public final class DartAnalysisListener extends AnalysisServerListenerAdapter {
 
     @Override
     public void computedFolding(String file, List<FoldingRegion> regions) {
-        var sb = new StringBuilder();
-        sb.append("====Foldings for ");
-        sb.append(file);
-        sb.append("====\n");
-        for(var region : regions) {
-            sb.append(region);
-            sb.append("\n");
+        final var modelId = server.openedFiles.get(file);
+        if (modelId == null) {
+            Log.warn("Can't find opened file: " + file);
+            return;
         }
-        Log.debug(sb.toString());
+
+        //封装为事件发送给前端
+        final var event = new CodeFoldingEvent(modelId, regions);
+        server.hub.session.sendEvent(event);
     }
 
     //region ====Completion Converters & Helpers====

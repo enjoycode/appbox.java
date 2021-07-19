@@ -45,10 +45,10 @@ public class DartLanguageServer {
     private static final String analyzerSnapshotPath;
     //private static final String pubSnapshotPath;
 
-    private final DesignHub             hub;
-    private final Path                  rootPath;
-    private final AtomicInteger         _initDone   = new AtomicInteger(0);
-    private final HashMap<Long, String> openedFiles = new HashMap<>(); //Key=ModelId, Value=FilePath
+    protected final DesignHub             hub;
+    private final   Path                  rootPath;
+    private final   AtomicInteger         _initDone   = new AtomicInteger(0);
+    protected final HashMap<String, Long> openedFiles = new HashMap<>();
 
     private StdioServerSocket        serverSocket;
     private RemoteAnalysisServerImpl analysisServer;
@@ -289,16 +289,16 @@ public class DartLanguageServer {
 
     //region ====Dart Language Server====
     public void openDocument(ModelNode node, String content) {
+        final var filePath = getModelFilePath(node);
         //检查是否已打开
-        if (openedFiles.containsKey(node.model().id()))
+        if (openedFiles.containsKey(filePath))
             return;
 
-        var filePath = getModelFilePath(node);
-        openedFiles.put(node.model().id(), filePath.toString());
+        openedFiles.put(filePath.toString(), node.model().id());
 
         //TODO: check analysis server is running
-        analysisServer.analysis_setPriorityFiles(new ArrayList<>(openedFiles.values()));
-        analysisServer.analysis_setSubscriptions(Map.of(AnalysisService.FOLDING, new ArrayList<>(openedFiles.values())));
+        analysisServer.analysis_setPriorityFiles(new ArrayList<>(openedFiles.keySet()));
+        analysisServer.analysis_setSubscriptions(Map.of(AnalysisService.FOLDING, new ArrayList<>(openedFiles.keySet())));
 
         var add = new AddContentOverlay(content);
         var files = new HashMap<String, Object>() {{
