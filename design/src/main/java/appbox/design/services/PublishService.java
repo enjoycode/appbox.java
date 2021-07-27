@@ -248,14 +248,14 @@ public final class PublishService {
 
         //保存服务模型编译好的组件
         for (var entry : pkg.serviceAssemblies.entrySet()) {
-            task = task.thenCompose(
-                    r -> ModelStore.upsertAssemblyAsync(true, entry.getKey(), entry.getValue(), txn));
+            task = task.thenCompose(r ->
+                    ModelStore.upsertAssemblyAsync(MetaAssemblyType.Service, entry.getKey(), entry.getValue(), txn));
         }
 
         //保存视图模型编译好的运行时组件
         for (var entry : pkg.viewAssemblies.entrySet()) {
-            task = task.thenCompose(
-                    r -> ModelStore.upsertAssemblyAsync(false, entry.getKey(), entry.getValue(), txn));
+            task = task.thenCompose(r ->
+                    ModelStore.upsertAssemblyAsync(MetaAssemblyType.View, entry.getKey(), entry.getValue(), txn));
         }
 
         return task;
@@ -298,12 +298,12 @@ public final class PublishService {
                 var appName    = hub.designTree.findApplicationNode(model.appId()).model.name();
                 var oldAsmName = String.format("%s.%s", appName, model.originalName());
                 return ModelStore.deleteModelCodeAsync(model.id(), txn)
-                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(true, oldAsmName, txn));
+                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(MetaAssemblyType.Service, oldAsmName, txn));
             } else if (model.modelType() == ModelType.View) {
                 var appName     = hub.designTree.findApplicationNode(model.appId()).model.name();
                 var oldViewName = String.format("%s.%s", appName, model.originalName());
                 return ModelStore.deleteModelCodeAsync(model.id(), txn)
-                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(false, oldViewName, txn))
+                        .thenCompose(r2 -> ModelStore.deleteAssemblyAsync(MetaAssemblyType.View, oldViewName, txn))
                         .thenCompose(r2 -> ModelStore.deleteViewRouteAsync(oldViewName, txn));
             }
             return CompletableFuture.completedFuture(null);

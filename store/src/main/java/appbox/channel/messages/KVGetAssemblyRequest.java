@@ -2,14 +2,15 @@ package appbox.channel.messages;
 
 import appbox.serialization.IOutputStream;
 import appbox.store.KVUtil;
+import appbox.store.MetaAssemblyType;
 
 public final class KVGetAssemblyRequest extends KVGetRequest {
-    private final boolean isService;
-    private final String  asmName;
+    private final MetaAssemblyType asmType;
+    private final String           asmName;
 
-    public KVGetAssemblyRequest(boolean isService, String asmName) {
-        this.isService = isService;
-        this.asmName   = asmName;
+    public KVGetAssemblyRequest(MetaAssemblyType asmType, String asmName) {
+        this.asmType = asmType;
+        this.asmName = asmName;
     }
 
     @Override
@@ -18,6 +19,6 @@ public final class KVGetAssemblyRequest extends KVGetRequest {
         bs.writeLong(KVUtil.META_RAFTGROUP_ID); //raftGroupId
         bs.writeByte((byte) -1);    //dataCF
         bs.writeLong(0);      //timestamp
-        KVUtil.writeAssemblyKey(bs, isService, asmName, false); //key
+        KVUtil.writeAssemblyKey(bs, asmType, asmName, false); //key
     }
 }

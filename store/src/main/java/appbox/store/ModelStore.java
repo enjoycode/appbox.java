@@ -172,15 +172,15 @@ public final class ModelStore {
      * @param asmName eg: sys.HelloService or sys.CustomerView
      */
     public static CompletableFuture<Void> upsertAssemblyAsync(
-            boolean isService, String asmName, byte[] asmData, KVTransaction txn) {
-        var req = new KVInsertAssemblyRequest(txn.id(), asmName, asmData, isService);
+            MetaAssemblyType asmType, String asmName, byte[] asmData, KVTransaction txn) {
+        var req = new KVInsertAssemblyRequest(txn.id(), asmName, asmData, asmType);
         return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
-    public static CompletableFuture<Void> deleteAssemblyAsync(boolean isService, String asmName, KVTransaction txn) {
-        var req = new KVDeleteAssemblyRequest(txn.id(), asmName, isService);
+    public static CompletableFuture<Void> deleteAssemblyAsync(MetaAssemblyType asmType, String asmName, KVTransaction txn) {
+        var req = new KVDeleteAssemblyRequest(txn.id(), asmType, asmName);
         return SysStoreApi.execCommandAsync(req)
                 .thenAccept(StoreResponse::checkStoreError)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
@@ -198,7 +198,7 @@ public final class ModelStore {
      * @param asmName eg:sys.HelloService
      */
     public static CompletableFuture<byte[]> loadServiceAssemblyAsync(String asmName) {
-        var req = new KVGetAssemblyRequest(true, asmName);
+        var req = new KVGetAssemblyRequest(MetaAssemblyType.Service, asmName);
         return SysStoreApi.execKVGetAsync(req, new KVGetAssemblyResponse())
                 .thenApply(KVGetAssemblyResponse::getAssemblyData);
     }
@@ -211,7 +211,7 @@ public final class ModelStore {
 
     /** 加载视图模型的运行时代码，已解码为字符串 */
     public static CompletableFuture<byte[]> loadViewAssemblyAsync(String asmName) {
-        var req = new KVGetAssemblyRequest(false, asmName);
+        var req = new KVGetAssemblyRequest(MetaAssemblyType.View, asmName);
         return SysStoreApi.execKVGetAsync(req, new KVGetAssemblyResponse())
                 .thenApply(KVGetAssemblyResponse::getAssemblyData);
     }

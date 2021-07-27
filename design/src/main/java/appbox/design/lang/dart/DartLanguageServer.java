@@ -9,6 +9,7 @@ import appbox.model.ModelType;
 import appbox.model.ViewModel;
 import appbox.serialization.BytesOutputStream;
 import appbox.store.KVTransaction;
+import appbox.store.MetaAssemblyType;
 import appbox.store.ModelStore;
 import com.google.dart.server.AnalysisServerListener;
 import com.google.dart.server.FormatConsumer;
@@ -561,7 +562,8 @@ public class DartLanguageServer {
                     final var asmName =
                             String.format("/%s/%s", appName,
                                     filePath.subpath(outPath.getNameCount(), filePath.getNameCount()));
-                    task = task.thenCompose(r -> ModelStore.upsertAssemblyAsync(false, asmName, zipData, txn));
+                    task = task.thenCompose(r ->
+                            ModelStore.upsertAssemblyAsync(MetaAssemblyType.View, asmName, zipData, txn));
                 }
 
                 return task.thenCompose(r -> txn.commitAsync());

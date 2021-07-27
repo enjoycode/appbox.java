@@ -27,6 +27,7 @@ public final class KVUtil {
     public static final byte METACF_SERVICE_ASSEMBLY_PREFIX = (byte) 0xB0;
     public static final byte METACF_VIEW_ASSEMBLY_PREFIX    = (byte) 0xB1;
     public static final byte METACF_VIEW_ROUTE_PREFIX       = (byte) 0xB2;
+    public static final byte METACF_APP_ASSEMBLY_PREFIX     = (byte) 0xB3;
 
     public static final byte PARTCF_INDEX             = 4;
     public static final byte PARTCF_GLOBAL_TABLE_FLAG = 0x01;
@@ -84,17 +85,13 @@ public final class KVUtil {
         bs.writeByte(modelType.value);
     }
 
-    public static void writeAssemblyKey(IOutputStream bs, boolean isService, String asmName, boolean withSize) {
+    public static void writeAssemblyKey(IOutputStream bs, MetaAssemblyType type, String asmName, boolean withSize) {
         var data = asmName.getBytes(StandardCharsets.UTF_8);
         if (withSize) {
             bs.writeNativeVariant(data.length + 1);
         }
 
-        if (isService)
-            bs.writeByte(METACF_SERVICE_ASSEMBLY_PREFIX);
-        else
-            bs.writeByte(METACF_VIEW_ASSEMBLY_PREFIX);
-
+        bs.writeByte(type.value);
         bs.write(data, 0, data.length);
     }
 

@@ -305,7 +305,7 @@ public final class StoreInitiator {
         }).thenCompose(r -> {
             try (var asmStream = getResourceStream("services", name, "bin")) {
                 var asmData = asmStream.readAllBytes();
-                return ModelStore.upsertAssemblyAsync(true, "sys." + name, asmData, txn);
+                return ModelStore.upsertAssemblyAsync(MetaAssemblyType.Service, "sys." + name, asmData, txn);
             } catch (Exception ex) {
                 return CompletableFuture.failedFuture(ex);
             }
@@ -347,7 +347,7 @@ public final class StoreInitiator {
             try (var asmStream = getResourceStream("views", name, "bin")) {
                 if (asmStream != null) {
                     var asmData = asmStream.readAllBytes();
-                    return ModelStore.upsertAssemblyAsync(false, "sys." + name, asmData, txn);
+                    return ModelStore.upsertAssemblyAsync(MetaAssemblyType.View, "sys." + name, asmData, txn);
                 } else {
                     return CompletableFuture.completedFuture(null);
                 }
