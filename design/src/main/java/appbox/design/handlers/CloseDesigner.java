@@ -12,9 +12,17 @@ public final class CloseDesigner implements IDesignHandler {
         var nodeType = DesignNodeType.fromValue((byte) args.getInt());
         var modelId  = Long.parseUnsignedLong(args.getString());
 
+        //注意可能已被删除了，即由删除节点引发的关闭
         if (nodeType == DesignNodeType.ServiceModelNode) {
-            //注意可能已被删除了，即由删除节点引发的关闭
             hub.typeSystem.languageServer.closeDocument(modelId);
+        } else if (nodeType == DesignNodeType.ViewModelNode) {
+            //TODO:如果由删除节点激发的,则前端必须先调用此关闭后再删除
+            var modelNode = hub.designTree.findModelNode(modelId);
+            if (modelNode == null) {
+                var error = String.format("Can't find model: %d", modelId);
+                return CompletableFuture.failedFuture(new RuntimeException(error));
+            }
+            hub.dartLanguageServer.closeDocument(modelNode);
         }
 
         return CompletableFuture.completedFuture(null);

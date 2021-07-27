@@ -12,6 +12,7 @@ import appbox.store.KVTransaction;
 import appbox.store.ModelStore;
 import com.google.dart.server.AnalysisServerListener;
 import com.google.dart.server.FormatConsumer;
+import com.google.dart.server.GetHoverConsumer;
 import com.google.dart.server.GetSuggestionsConsumer;
 import com.google.dart.server.internal.remote.RemoteAnalysisServerImpl;
 import com.google.dart.server.internal.remote.StdioServerSocket;
@@ -54,6 +55,7 @@ public class DartLanguageServer {
     private RemoteAnalysisServerImpl analysisServer;
     private AnalysisServerListener   analysisServerListener;
 
+    //TODO:考虑发送Completion事件给IDE,而不是用CompletionTask等待
     protected final HashMap<String, CompletionTask>                            completionTasks   = new HashMap<>();
     protected final HashMap<Integer, AvailableSuggestionSet>                   cachedCompletions = new HashMap<>();
     protected final HashMap<String, HashMap<String, HashMap<String, Boolean>>> _existingImports  = new HashMap<>();
@@ -288,17 +290,23 @@ public class DartLanguageServer {
     //endregion
 
     //region ====Dart Language Server====
+
+    /** 打开的文件改变后更新分析服务的相关订阅 */
+    private void onOpennedChanges() {
+        analysisServer.analysis_setPriorityFiles(new ArrayList<>(openedFiles.keySet()));
+        analysisServer.analysis_setSubscriptions(Map.of(AnalysisService.FOLDING, new ArrayList<>(openedFiles.keySet())));
+    }
+
     public void openDocument(ModelNode node, String content) {
         final var filePath = getModelFilePath(node);
         //检查是否已打开
-        if (openedFiles.containsKey(filePath))
+        if (openedFiles.containsKey(filePath.toString()))
             return;
 
         openedFiles.put(filePath.toString(), node.model().id());
 
         //TODO: check analysis server is running
-        analysisServer.analysis_setPriorityFiles(new ArrayList<>(openedFiles.keySet()));
-        analysisServer.analysis_setSubscriptions(Map.of(AnalysisService.FOLDING, new ArrayList<>(openedFiles.keySet())));
+        onOpennedChanges();
 
         var add = new AddContentOverlay(content);
         var files = new HashMap<String, Object>() {{
@@ -308,10 +316,26 @@ public class DartLanguageServer {
     }
 
     public void changeDocument(ModelNode node, int offset, int length, String newText) {
-        var filePath = getModelFilePath(node);
-        var change   = new ChangeContentOverlay(List.of(new SourceEdit(offset, length, newText, null)));
+        final var filePath = getModelFilePath(node);
+        var       change   = new ChangeContentOverlay(List.of(new SourceEdit(offset, length, newText, null)));
         var files = new HashMap<String, Object>() {{
             put(filePath.toString(), change);
+        }};
+        analysisServer.analysis_updateContent(files, () -> {});
+    }
+
+    public void closeDocument(ModelNode node) {
+        final var filePath = getModelFilePath(node);
+        if (!openedFiles.containsKey(filePath.toString()))
+            return;
+
+        openedFiles.remove(filePath.toString());
+
+        onOpennedChanges();
+
+        var remove = new RemoveContentOverlay();
+        var files = new HashMap<String, Object>() {{
+            put(filePath.toString(), remove);
         }};
         analysisServer.analysis_updateContent(files, () -> {});
     }
@@ -347,6 +371,25 @@ public class DartLanguageServer {
             @Override
             public void onError(RequestError requestError) {
                 Log.warn("Format document error: " + requestError.getMessage());
+                task.completeExceptionally(new RuntimeException(requestError.getMessage()));
+            }
+        });
+
+        return task;
+    }
+
+    public CompletableFuture<HoverInformation[]> getHover(ModelNode node, int offset) {
+        final var filePath = getModelFilePath(node);
+        var       task     = new CompletableFuture<HoverInformation[]>();
+        analysisServer.analysis_getHover(filePath.toString(), offset, new GetHoverConsumer() {
+            @Override
+            public void computedHovers(HoverInformation[] hovers) {
+                task.complete(hovers);
+            }
+
+            @Override
+            public void onError(RequestError requestError) {
+                Log.warn("Get hover error: " + requestError.getMessage());
                 task.completeExceptionally(new RuntimeException(requestError.getMessage()));
             }
         });
