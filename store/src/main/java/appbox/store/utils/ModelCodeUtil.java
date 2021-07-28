@@ -1,6 +1,7 @@
 package appbox.store.utils;
 
 import appbox.compression.BrotliUtil;
+import appbox.compression.CompressType;
 import appbox.serialization.BytesInputStream;
 import appbox.serialization.BytesOutputStream;
 import appbox.store.ServiceCode;
@@ -122,7 +123,7 @@ public final class ModelCodeUtil {
         var utf8data = runtimeCode.getBytes(StandardCharsets.UTF_8);
         var out      = new ByteArrayOutputStream();
         //写入1字节压缩类型标记
-        out.write(1);
+        out.write(CompressType.Brotli.value);
         //再写入压缩的utf8
         try {
             BrotliUtil.compressTo(utf8data, out);

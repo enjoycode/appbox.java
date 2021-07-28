@@ -6,8 +6,6 @@ dependencies {
     implementation project(':core')
 
     implementation 'com.alibaba:fastjson:1.2.73'
-    // brotli压缩库，暂使用此库
-    implementation 'com.nixxcode.jvmbrotli:jvmbrotli:0.2.0'
     implementation 'com.github.jasync-sql:jasync-postgresql:1.1.5'
 }
 

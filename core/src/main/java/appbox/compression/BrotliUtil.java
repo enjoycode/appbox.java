@@ -14,11 +14,11 @@ public final class BrotliUtil {
 
     private BrotliUtil() {}
 
-    public static BrotliOutputStream makeCompressStream (OutputStream out) throws IOException {
+    public static OutputStream makeCompressStream(OutputStream out) throws IOException {
         return new BrotliOutputStream(out);
     }
 
-    public static BrotliInputStream makeDecompressStream(InputStream input) throws IOException {
+    public static InputStream makeDecompressStream(InputStream input) throws IOException {
         return new BrotliInputStream(input);
     }
 

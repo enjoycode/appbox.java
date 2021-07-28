@@ -1,5 +1,6 @@
 package appbox.design.lang.dart;
 
+import appbox.compression.GZipUtil;
 import appbox.design.DesignHub;
 import appbox.design.handlers.view.OpenViewModel;
 import appbox.design.tree.ModelNode;
@@ -7,7 +8,6 @@ import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.model.ViewModel;
-import appbox.serialization.BytesOutputStream;
 import appbox.store.KVTransaction;
 import appbox.store.MetaAssemblyType;
 import appbox.store.ModelStore;
@@ -23,7 +23,6 @@ import org.dartlang.analysis.server.protocol.*;
 import org.eclipse.lsp4j.CompletionItem;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +32,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * 用于前端Flutter工程的语言服务
@@ -556,7 +554,7 @@ public class DartLanguageServer {
 
                 CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
                 for (var file : files) {
-                    final var zipData  = gzipFileToBytes(file);
+                    final var zipData  = GZipUtil.compressFileToBytes(file); //TODO:直接返BytesOutputStream,避免copy
                     final var filePath = file.toPath();
                     //asmName eg: "/erp/index.html"
                     final var asmName =
@@ -572,25 +570,6 @@ public class DartLanguageServer {
                 return CompletableFuture.failedFuture(ex);
             }
         });
-    }
-
-    private byte[] gzipFileToBytes(File file) throws IOException {
-        var fis = new FileInputStream(file);
-        var fos = new BytesOutputStream(512);
-        fos.writeByte((byte) 2); //gzip compress flag
-        var gzipOS = new GZIPOutputStream(fos);
-
-        byte[] buffer = new byte[1024];
-        int    len;
-        while ((len = fis.read(buffer)) != -1) {
-            gzipOS.write(buffer, 0, len);
-        }
-        //close resources
-        gzipOS.close();
-        fos.close();
-        fis.close();
-
-        return fos.toByteArray(); //TODO:直接返BytesOutputStream,避免copy
     }
     //endregion
 }
