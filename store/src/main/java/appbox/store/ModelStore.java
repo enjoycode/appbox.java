@@ -216,6 +216,13 @@ public final class ModelStore {
                 .thenApply(KVGetAssemblyResponse::getAssemblyData);
     }
 
+    /** 根据应用名称加载依赖的第三方库列表,仅用于设计时前端绑定 */
+    public static CompletableFuture<String[]> loadAppAssemblies(String appName) {
+        final var req = new KVScanAppAssemblyRequest(appName);
+        return SysStoreApi.execKVScanAsync(req, new KVScanAppAssemblyResponse())
+                .thenApply(r -> r.assemblyNames);
+    }
+
     //endregion
 
     //region ====视图模型路由相关====
