@@ -285,6 +285,18 @@ public interface IInputStream extends IEntityMemberReader {
         return list;
     }
 
+    default List<String> readListString() {
+        final var count = readVariant();
+        if (count == -1)
+            return null;
+
+        final var list = new ArrayList<String>(count);
+        for (int i = 0; i < count; i++) {
+            list.add(readString());
+        }
+        return list;
+    }
+
     default List<Short> readListShort() {
         var count = readVariant();
         if (count == -1)

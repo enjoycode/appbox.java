@@ -3,6 +3,8 @@ package appbox.model;
 import appbox.serialization.IInputStream;
 import appbox.serialization.IOutputStream;
 
+import java.util.List;
+
 public final class ServiceModel extends ModelBase {
     //region ====Enum Language====
     public enum Language {
@@ -20,7 +22,8 @@ public final class ServiceModel extends ModelBase {
     }
     //endregion
 
-    private Language _language;
+    private Language     _language;
+    private List<String> _references;
 
     /** Only for serialization */
     public ServiceModel() {}
@@ -40,10 +43,19 @@ public final class ServiceModel extends ModelBase {
         return _language;
     }
 
+    public boolean hasReference() {
+        return _references != null && _references.size() > 0;
+    }
+
     //region ====Serialization====
     @Override
     public void writeTo(IOutputStream bs) {
         super.writeTo(bs);
+
+        if (hasReference()) {
+            bs.writeVariant(1);
+            bs.writeListString(_references);
+        }
 
         bs.writeByteField(_language.value, 2);
 
@@ -58,6 +70,9 @@ public final class ServiceModel extends ModelBase {
         do {
             propIndex = bs.readVariant();
             switch (propIndex) {
+                case 1:
+                    _references = bs.readListString();
+                    break;
                 case 2:
                     _language = Language.fromValue(bs.readByte());
                     break;
