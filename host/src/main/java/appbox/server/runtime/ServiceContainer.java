@@ -47,15 +47,13 @@ public final class ServiceContainer {
 
     /** 预先注入调试目标服务,防止从存储加载 */
     protected void injectDebugService(Path serviceFile) throws Exception {
-        byte[] pkgData = null;
-
-        var fileName        = serviceFile.toFile().getName();
-        var serviceFullName = fileName.substring(0, fileName.length() - 4);
-        var serviceName     = getServiceName(serviceFullName);
-        pkgData = Files.readAllBytes(serviceFile);
-        var serviceClassLoader = new ServiceClassLoader();
-        var clazz              = serviceClassLoader.loadServiceClass(serviceName, pkgData);
-        var obj                = (IService) clazz.getDeclaredConstructor().newInstance();
+        final var fileName           = serviceFile.toFile().getName();
+        final var serviceFullName    = fileName.substring(0, fileName.length() - 4);
+        final var serviceName        = getServiceName(serviceFullName);
+        final var pkgData            = Files.readAllBytes(serviceFile);
+        final var serviceClassLoader = new ServiceClassLoader();
+        final var clazz              = serviceClassLoader.loadServiceClass(serviceName, pkgData);
+        final var obj                = (IService) clazz.getDeclaredConstructor().newInstance();
         registerService(serviceFullName, obj);
         Log.debug("Inject debug service: " + serviceFullName);
     }

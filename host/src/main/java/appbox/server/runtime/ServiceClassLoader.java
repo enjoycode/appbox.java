@@ -1,6 +1,7 @@
 package appbox.server.runtime;
 
 import appbox.compression.BrotliUtil;
+import appbox.logging.Log;
 import appbox.serialization.BytesInputStream;
 
 import java.util.ArrayList;
@@ -66,6 +67,7 @@ public final class ServiceClassLoader extends ClassLoader {
                 return defineClass(aClass.name, classData, aClass.position, aClass.length);
             }
         }
+        Log.debug("Find class: " + name);
         return super.findClass(name);
     }
 }

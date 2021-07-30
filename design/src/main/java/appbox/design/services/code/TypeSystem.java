@@ -180,10 +180,11 @@ public final class TypeSystem {
         try {
             if (model.modelType() == ModelType.Service) {
                 //创建服务模型的虚拟工程及代码
-                var projectName = JdtLanguageServer.makeServiceProjectName(node);
-                var project     = languageServer.createProject(projectName, makeServiceProjectDeps(node));
+                final var projectName = JdtLanguageServer.makeServiceProjectName(node);
+                final var libs        = makeServiceProjectDeps(node, false);
+                final var project     = languageServer.createProject(projectName, libs);
 
-                var file = project.getFile(fileName);
+                final var file = project.getFile(fileName);
                 file.create(null, true, null);
                 //创建服务模型的虚拟代理(暂放在modelsProject内)
                 createModelFile(appName, "services", fileName);
@@ -324,7 +325,7 @@ public final class TypeSystem {
         return extractDeps(serviceNode.appNode.model.name(), serviceModel.getReferences())
                 .thenAccept(r -> {
                     //再更新虚拟工程
-                    final var libs = makeServiceProjectDeps(serviceNode);
+                    final var libs = makeServiceProjectDeps(serviceNode, false);
                     languageServer.updateServiceReferences(serviceNode, libs);
                 });
     }
@@ -341,20 +342,28 @@ public final class TypeSystem {
     }
 
     /** 创建服务模型虚拟工程的依赖项,包括内置及第三方,但不包括JRE及源码 */
-    private IClasspathEntry[] makeServiceProjectDeps(ModelNode serviceNode) {
+    public IClasspathEntry[] makeServiceProjectDeps(ModelNode serviceNode, boolean forRuntime) {
         final var serviceModel = (ServiceModel) serviceNode.model();
 
-        int depsCount = 2;
+        final int baseCount = forRuntime ? 3 : 2;
+        int       depsCount = baseCount;
         if (serviceModel.hasReference()) {
             depsCount += serviceModel.getReferences().size();
         }
         IClasspathEntry[] deps = new IClasspathEntry[depsCount];
-        deps[0] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null);
-        deps[1] = JavaCore.newProjectEntry(modelsProject.getFullPath());
+        if (forRuntime) {
+            deps[0] = JavaCore.newLibraryEntry(TypeSystem.libEA_AsyncPath, null, null);
+            deps[1] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null);
+            deps[2] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxStorePath, null, null);
+        } else {
+            deps[0] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null);
+            deps[1] = JavaCore.newProjectEntry(modelsProject.getFullPath());
+        }
+
         //处理服务模型引用的第三方包
-        for (int i = 2; i < depsCount; i++) {
+        for (int i = baseCount; i < depsCount; i++) {
             final var libPath = new Path(java.nio.file.Path.of(PathUtil.LIB_PATH,
-                    serviceModel.getReferences().get(i - 2)).toString());
+                    serviceModel.getReferences().get(i - baseCount)).toString());
             deps[i] = JavaCore.newLibraryEntry(libPath, null, null);
         }
         return deps;

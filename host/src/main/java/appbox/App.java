@@ -22,12 +22,14 @@ public class App {
         //先判断是否调试服务
         String debugSessionId = null;
         String channelName    = "AppChannel";
+        String hostName       = "Java AppHost";
         if (args.length > 0) {
             debugSessionId = args[0];
             channelName    = args[0];
+            hostName += "[Debug-" + debugSessionId + "]";
         }
 
-        System.out.println("Java AppHost running...");
+        Log.info(hostName + " running...");
 
         //初始化运行时
         var ctx = new HostRuntimeContext(channelName);
@@ -37,11 +39,11 @@ public class App {
         if (debugSessionId != null) {
             ctx.injectDebugServiceAndSession(debugSessionId);
         }
-        //Channel并开始阻塞接收
+        //Channel开始阻塞接收
         SysStoreApi.init(ctx.channel);
         ctx.channel.startReceive();
 
-        System.out.println("Java AppHost stopped.");
+        Log.info(hostName + " stopped.");
     }
 
     private static void hackAsyncPool() {

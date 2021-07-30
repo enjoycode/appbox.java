@@ -8,6 +8,7 @@ import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.services.code.ServiceCodeGenerator;
 import appbox.design.services.code.TypeSystem;
+import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.model.*;
 import appbox.runtime.RuntimeContext;
@@ -32,6 +33,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -64,15 +66,21 @@ public final class PublishService {
      */
     public static byte[] compileService(DesignHub hub, ServiceModel model, boolean forDebug) throws Exception {
         //获取对应的虚拟文件
-        var designNode = hub.designTree.findModelNode(ModelType.Service, model.id());
-        var appName    = designNode.appNode.model.name();
-        var vfile      = hub.typeSystem.findFileForServiceModel(designNode);
-        var cu         = JDTUtils.resolveCompilationUnit(vfile);
+        final var designNode = hub.designTree.findModelNode(ModelType.Service, model.id());
+        final var appName    = designNode.appNode.model.name();
+        final var vfile      = hub.typeSystem.findFileForServiceModel(designNode);
+        final var cu         = JDTUtils.resolveCompilationUnit(vfile);
 
+        //创建ASTParser
         var astParser = ASTParser.newParser(AST.JLS15);
         astParser.setSource(cu);
         astParser.setResolveBindings(true);
-        //astParser.setStatementsRecovery(true);
+        if (model.hasReference()) { //处理第三方包
+            final var classPaths = model.getReferences().stream()
+                    .map(libName -> Path.of(PathUtil.LIB_PATH, libName).toString()).toArray(String[]::new);
+            astParser.setEnvironment(classPaths, null, null, false);
+        }
+
         var astNode = astParser.createAST(null);
 
         //检测虚拟代码错误
@@ -105,20 +113,17 @@ public final class PublishService {
         var runtimeCode       = newdoc.get();
         var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
 
-        //生成运行时临时Project并进行编译 //TODO:引用的其他第三方包
-        var libs = new IClasspathEntry[]{
-                JavaCore.newLibraryEntry(TypeSystem.libEA_AsyncPath, null, null),
-                JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null),
-                JavaCore.newLibraryEntry(TypeSystem.libAppBoxStorePath, null, null)
-        };
-        var runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
-        var runtimeProject     = hub.typeSystem.languageServer.createProject(runtimeProjectName, libs);
-        var runtimeFile        = runtimeProject.getFile(vfile.getName());
+        //生成运行时临时Project并进行编译
+        final var libs               = hub.typeSystem.makeServiceProjectDeps(designNode, true);
+        var       runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
+        var       runtimeProject     = hub.typeSystem.languageServer.createProject(runtimeProjectName, libs);
+        var       runtimeFile        = runtimeProject.getFile(vfile.getName());
         runtimeFile.create(runtimeCodeStream, true, null);
 
         var config  = new BuildConfiguration(runtimeProject);
         var builder = new JavaBuilderWrapper(config);
         builder.build();
+        //TODO:check build errors
 
         //准备异步转换器
         Transformer asyncTransformer = null;
