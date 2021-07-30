@@ -1,6 +1,5 @@
 package appbox.server.services;
 
-import appbox.channel.messages.KVScanModelResponse;
 import appbox.data.EntityId;
 import appbox.data.JsonResult;
 import appbox.data.PermissionNode;
@@ -111,7 +110,7 @@ public final class AdminService implements IService {
         if (method.equals("LoadPermissionNodes")) { //TODO:暂兼容旧版名称
             return loadPermissionTree().thenApply(JsonResult::new);
         } else if (method.equals("SavePermission")) {
-            return savePermission(args.getString(), args.getArrayOfEntityId());
+            return savePermission(args.getString(), args.getEntityIdArray());
         } else {
             var ex = new NoSuchMethodException("AdminService can't find method: " + method.toString());
             return CompletableFuture.failedFuture(ex);

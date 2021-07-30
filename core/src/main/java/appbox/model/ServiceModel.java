@@ -22,8 +22,8 @@ public final class ServiceModel extends ModelBase {
     }
     //endregion
 
-    private Language     _language;
-    private List<String> _references;
+    private Language     _language;   //开发语言
+    private List<String> _references; //第三方包
 
     /** Only for serialization */
     public ServiceModel() {}
@@ -45,6 +45,14 @@ public final class ServiceModel extends ModelBase {
 
     public boolean hasReference() {
         return _references != null && _references.size() > 0;
+    }
+
+    public List<String> getReferences() {
+        return _references;
+    }
+
+    public void setReferences(List<String> newRefs) {
+        _references = newRefs;
     }
 
     //region ====Serialization====

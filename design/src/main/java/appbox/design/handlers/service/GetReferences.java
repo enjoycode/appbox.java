@@ -25,6 +25,7 @@ public final class GetReferences implements IDesignHandler {
         final var modelNode = hub.designTree.findModelNode(ModelType.Service, modelId);
         if (modelNode == null)
             return CompletableFuture.failedFuture(new RuntimeException("Can't find service model"));
+        final var model = (ServiceModel) modelNode.model();
         final var appName = modelNode.appNode.model.name();
 
         return ModelStore.loadAppAssemblies(appName)
@@ -32,7 +33,7 @@ public final class GetReferences implements IDesignHandler {
                     final var appDeps = Arrays.stream(names)
                             .map(n -> n.substring(appName.length() + 1))
                             .collect(Collectors.toList());
-                    final var modelDeps = new ArrayList<String>(); //TODO:从ServiceModel获取
+                    final var modelDeps = model.getReferences();
                     return new JsonResult(new Dependencies(appDeps, modelDeps));
                 });
     }

@@ -193,12 +193,9 @@ public final class ModelStore {
                 .thenApply(r -> (ServiceCode) r.sourceCode);
     }
 
-    /**
-     * 加载编译好的压缩的服务组件的字节码
-     * @param asmName eg:sys.HelloService
-     */
-    public static CompletableFuture<byte[]> loadServiceAssemblyAsync(String asmName) {
-        var req = new KVGetAssemblyRequest(MetaAssemblyType.Service, asmName);
+    /** 加载应用第三方库(eg: sys/http.jar)或服务(eg:sys.HelloService)或视图的组件 */
+    public static CompletableFuture<byte[]> loadAssemblyAsync(MetaAssemblyType asmType, String asmName) {
+        var req = new KVGetAssemblyRequest(asmType, asmName);
         return SysStoreApi.execKVGetAsync(req, new KVGetAssemblyResponse())
                 .thenApply(KVGetAssemblyResponse::getAssemblyData);
     }
@@ -207,13 +204,6 @@ public final class ModelStore {
         var req = new KVGetModelCodeRequest(modelId);
         return SysStoreApi.execKVGetAsync(req, new KVGetModelCodeResponse())
                 .thenApply(r -> (ViewCode) r.sourceCode);
-    }
-
-    /** 加载视图模型的运行时代码，已解码为字符串 */
-    public static CompletableFuture<byte[]> loadViewAssemblyAsync(String asmName) {
-        var req = new KVGetAssemblyRequest(MetaAssemblyType.View, asmName);
-        return SysStoreApi.execKVGetAsync(req, new KVGetAssemblyResponse())
-                .thenApply(KVGetAssemblyResponse::getAssemblyData);
     }
 
     /** 根据应用名称加载依赖的第三方库列表,仅用于设计时前端绑定 */

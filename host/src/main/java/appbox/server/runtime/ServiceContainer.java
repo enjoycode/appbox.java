@@ -6,6 +6,7 @@ import appbox.runtime.IService;
 import appbox.server.services.AdminService;
 import appbox.server.services.SystemService;
 import appbox.server.services.TestService;
+import appbox.store.MetaAssemblyType;
 import appbox.store.ModelStore;
 
 import java.nio.file.Files;
@@ -73,7 +74,7 @@ public final class ServiceContainer {
         var serviceName     = getServiceName(serviceFullName);
 
         //TODO:暂并发时会多余加载，待修改
-        return ModelStore.loadServiceAssemblyAsync(serviceFullName).handle((r, ex) -> {
+        return ModelStore.loadAssemblyAsync(MetaAssemblyType.Service, serviceFullName).handle((r, ex) -> {
             if (ex != null || r == null) {
                 String error = ex == null ? "Not exists" : ex.toString();
                 Log.error("Load service assembly[" + service + "] error: " + error);

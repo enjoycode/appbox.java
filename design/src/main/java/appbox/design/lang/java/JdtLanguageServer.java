@@ -158,9 +158,23 @@ public final class JdtLanguageServer {
         ResourcesPlugin.workspaceSupplier = () -> jdtWorkspace;
     }
 
-    //region ====create XXX====
-    public String makeServiceProjectName(ModelNode serviceNode) {
+    //region ====Project Management====
+    public static String makeServiceProjectName(ModelNode serviceNode) {
         return Long.toUnsignedString(serviceNode.model().id());
+    }
+
+    private static IClasspathEntry[] makeBuildPaths(IProject project, IClasspathEntry[] deps) {
+        int buildPathCount = 2;
+        if (deps != null) {
+            buildPathCount += deps.length;
+        }
+        IClasspathEntry[] buildPath = new IClasspathEntry[buildPathCount];
+        buildPath[0] = JavaRuntime.getDefaultJREContainerEntry();
+        buildPath[1] = JavaCore.newSourceEntry(project.getFullPath());
+        if (deps != null) {
+            System.arraycopy(deps, 0, buildPath, 2, deps.length);
+        }
+        return buildPath;
     }
 
     /**
@@ -180,22 +194,22 @@ public final class JdtLanguageServer {
         var javaProject = JavaCore.create(project);
         JVMConfigurator.configureJVMSettings(javaProject, JavaRuntime.getDefaultVMInstall());
 
-        int buildPathCount = 2;
-        if (deps != null) {
-            buildPathCount += deps.length;
-        }
-        IClasspathEntry[] buildPath = new IClasspathEntry[buildPathCount];
-        buildPath[0] = JavaRuntime.getDefaultJREContainerEntry();
-        buildPath[1] = JavaCore.newSourceEntry(project.getFullPath());
-        if (deps != null) {
-            System.arraycopy(deps, 0, buildPath, 2, deps.length);
-        }
-
         //TODO: 待检查setRawClasspath的referencedEntries参数
-        var outPath = project.getFullPath().append(BUILD_OUTPUT);
+        final var buildPath = makeBuildPaths(project, deps);
+        final var outPath   = project.getFullPath().append(BUILD_OUTPUT);
         perProjectInfo.setRawClasspath(buildPath, outPath, JavaModelStatus.VERIFIED_OK);
 
         return project;
+    }
+
+    /** 更新服务模型的第三方依赖(引用的jar包) */
+    public void updateServiceReferences(ModelNode node, IClasspathEntry[] deps) {
+        final var prjName = makeServiceProjectName(node);
+        final var project = jdtWorkspace.getRoot().getProject(prjName);
+        final var perProjectInfo = JavaModelManager.getJavaModelManager()
+                .getPerProjectInfo(project, false);
+        final var buildPath = makeBuildPaths(project, deps);
+        perProjectInfo.setRawClasspath(buildPath, perProjectInfo.outputLocation, JavaModelStatus.VERIFIED_OK);
     }
 
     //endregion
@@ -361,6 +375,8 @@ public final class JdtLanguageServer {
         // hoverInfoProvider.computeHover(line, column, monitor);
     }
 
+    //region ====Find Methods====
+
     /** 根据行号列号找到服务方法相关信息,找不到返回null */
     public ServiceMethodInfo findServiceMethod(ModelNode serviceNode, int line, int column) {
         var     projectName = makeServiceProjectName(serviceNode);
@@ -414,6 +430,7 @@ public final class JdtLanguageServer {
         return methodInfo;
     }
 
+    //TODO: remove this
     private static int positionToOffset(IBuffer buffer, int line, int column) {
         if (line == 0) {
             return column;
@@ -430,5 +447,5 @@ public final class JdtLanguageServer {
         }
         return -1;
     }
-
+    //endregion
 }

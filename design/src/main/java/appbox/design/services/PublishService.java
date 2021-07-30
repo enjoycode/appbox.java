@@ -111,10 +111,9 @@ public final class PublishService {
                 JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null),
                 JavaCore.newLibraryEntry(TypeSystem.libAppBoxStorePath, null, null)
         };
-        var runtimeProject =
-                hub.typeSystem.languageServer.createProject(
-                        "runtime_" + Long.toUnsignedString(model.id()), libs);
-        var runtimeFile = runtimeProject.getFile(vfile.getName());
+        var runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
+        var runtimeProject     = hub.typeSystem.languageServer.createProject(runtimeProjectName, libs);
+        var runtimeFile        = runtimeProject.getFile(vfile.getName());
         runtimeFile.create(runtimeCodeStream, true, null);
 
         var config  = new BuildConfiguration(runtimeProject);

@@ -64,7 +64,7 @@ public class DartLanguageServer {
         sdkPath       = "/home/rick/snap/flutter/common/flutter/";
         dartVMPath    = sdkPath + "bin/dart";
         flutterVMPath = sdkPath + "bin/flutter";
-        devcVMPath    = Path.of(PathUtil.currentPath, "preview", "dartdevc").toString();
+        devcVMPath    = Path.of(PathUtil.CURRENT_PATH, "preview", "dartdevc").toString();
 
         analyzerSnapshotPath = sdkPath + "bin/cache/dart-sdk/bin/snapshots/analysis_server.dart.snapshot";
         //pubSnapshotPath      = sdkPath + "bin/cache/dart-sdk/bin/snapshots/pub.dart.snapshot";
@@ -94,7 +94,7 @@ public class DartLanguageServer {
 
     public DartLanguageServer(DesignHub hub, boolean forTest) {
         this.hub      = hub;
-        this.rootPath = Path.of(PathUtil.tmpPath, "appbox", "flutter", hub.session.name());
+        this.rootPath = Path.of(PathUtil.TMP_PATH, "appbox", "flutter", hub.session.name());
 
         if (forTest) return; //仅用于测试,不清空
 
@@ -437,9 +437,9 @@ public class DartLanguageServer {
                 "kernel", "flutter_ddc_sdk_sound.dill").toString());
 
         cmd.add("-s");
-        cmd.add(Path.of(PathUtil.currentPath, "preview", "flutter_web.dill").toString());
+        cmd.add(Path.of(PathUtil.CURRENT_PATH, "preview", "flutter_web.dill").toString());
         cmd.add("-s");
-        cmd.add(Path.of(PathUtil.currentPath, "preview", "get.dill").toString());
+        cmd.add(Path.of(PathUtil.CURRENT_PATH, "preview", "get.dill").toString());
         //TODO:其他通用包
 
         cmd.add("-o");

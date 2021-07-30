@@ -5,6 +5,7 @@ import appbox.design.handlers.IDesignHandler;
 import appbox.design.services.StagedService;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
+import appbox.store.MetaAssemblyType;
 import appbox.store.ModelStore;
 import appbox.store.utils.ModelCodeUtil;
 
@@ -27,8 +28,8 @@ public final class LoadView implements IDesignHandler {
         return task.thenCompose(code -> {
             if (code != null)
                 return CompletableFuture.completedFuture(code);
-            return ModelStore.loadViewAssemblyAsync(modelId)
-                    .thenApply(ModelCodeUtil::decodeViewRuntimeCode);
+            return ModelStore.loadAssemblyAsync(MetaAssemblyType.View, modelId)
+                    .thenApply(ModelCodeUtil::decodeViewRuntimeCode); //TODO:考虑返回解压缩的字节码,避免转换为String
         }).thenApply(r -> r);
     }
 

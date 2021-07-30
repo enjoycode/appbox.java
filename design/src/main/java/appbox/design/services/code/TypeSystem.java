@@ -8,11 +8,14 @@ import appbox.design.services.CodeGenService;
 import appbox.design.tree.ApplicationNode;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.CodeHelper;
+import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
+import appbox.model.ServiceModel;
 import appbox.runtime.IService;
 import appbox.store.SqlStore;
+import appbox.store.utils.AssemblyUtil;
 import com.ea.async.Async;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -25,6 +28,9 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public final class TypeSystem {
 
@@ -68,9 +74,9 @@ public final class TypeSystem {
     };
     //endregion
 
-    public final JdtLanguageServer languageServer;
-    protected    IProject          modelsProject; //实体、枚举等通用模型项目
-    private final DesignHub      hub;
+    public final  JdtLanguageServer languageServer;
+    private       IProject          modelsProject; //实体、枚举等通用模型项目
+    private final DesignHub         hub;
 
     public TypeSystem(DesignHub designHub) {
         hub            = designHub;
@@ -81,8 +87,7 @@ public final class TypeSystem {
     /** 用于初始化通用项目等 */
     public void init() {
         try {
-            var libAppBoxCorePath = new Path(IService.class.getProtectionDomain()
-                    .getCodeSource().getLocation().getPath());
+            //创建通用模型虚拟工程
             var libs = new IClasspathEntry[]{
                     JavaCore.newLibraryEntry(libAppBoxCorePath, null, null)
             };
@@ -93,7 +98,7 @@ public final class TypeSystem {
             createDummyFiles(sysFolder, SYS_DUMMY_FILES);
             createDummyFiles(modelsProject, ROOT_DUMMY_FILES);
 
-            //TODO:创建服务代理项目
+            //TODO:考虑创建单独服务代理项目,目前服务代理均放在ModelsProject内
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -175,12 +180,8 @@ public final class TypeSystem {
         try {
             if (model.modelType() == ModelType.Service) {
                 //创建服务模型的虚拟工程及代码
-                var projectName = languageServer.makeServiceProjectName(node);
-                var project = languageServer.createProject(projectName,
-                        new IClasspathEntry[]{
-                                JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null),
-                                JavaCore.newProjectEntry(modelsProject.getFullPath())
-                        });
+                var projectName = JdtLanguageServer.makeServiceProjectName(node);
+                var project     = languageServer.createProject(projectName, makeServiceProjectDeps(node));
 
                 var file = project.getFile(fileName);
                 file.create(null, true, null);
@@ -316,4 +317,47 @@ public final class TypeSystem {
     }
     //endregion
 
+    //region ====Service References====
+    public CompletableFuture<Void> updateServiceReferences(ModelNode serviceNode) {
+        final var serviceModel = (ServiceModel) serviceNode.model();
+        //先加载解压缩第三方类库
+        return extractDeps(serviceNode.appNode.model.name(), serviceModel.getReferences())
+                .thenAccept(r -> {
+                    //再更新虚拟工程
+                    final var libs = makeServiceProjectDeps(serviceNode);
+                    languageServer.updateServiceReferences(serviceNode, libs);
+                });
+    }
+
+    /** 释放服务模型的所有第三方包 */
+    private static CompletableFuture<Void> extractDeps(String appName, List<String> deps) {
+        CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
+        if (deps != null && deps.size() > 0) {
+            for (var dep : deps) {
+                task = task.thenCompose(r -> AssemblyUtil.extract3rdLib(appName, dep));
+            }
+        }
+        return task;
+    }
+
+    /** 创建服务模型虚拟工程的依赖项,包括内置及第三方,但不包括JRE及源码 */
+    private IClasspathEntry[] makeServiceProjectDeps(ModelNode serviceNode) {
+        final var serviceModel = (ServiceModel) serviceNode.model();
+
+        int depsCount = 2;
+        if (serviceModel.hasReference()) {
+            depsCount += serviceModel.getReferences().size();
+        }
+        IClasspathEntry[] deps = new IClasspathEntry[depsCount];
+        deps[0] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null);
+        deps[1] = JavaCore.newProjectEntry(modelsProject.getFullPath());
+        //处理服务模型引用的第三方包
+        for (int i = 2; i < depsCount; i++) {
+            final var libPath = new Path(java.nio.file.Path.of(PathUtil.LIB_PATH,
+                    serviceModel.getReferences().get(i - 2)).toString());
+            deps[i] = JavaCore.newLibraryEntry(libPath, null, null);
+        }
+        return deps;
+    }
+    //endregion
 }

@@ -13,7 +13,10 @@ dependencies {
     implementation 'com.ea.async:ea-async:1.2.3'
     implementation 'org.apache.commons:commons-lang3:3.6'
     implementation fileTree(dir: 'lib', include: ['*.jar'])
+
+    //TODO:以下测试依赖待移除
     testImplementation 'org.javassist:javassist:3.27.0-GA'
+    testImplementation 'org.ow2.asm:asm:9.0'
 }
 
 tasks.jar {

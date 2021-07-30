@@ -69,6 +69,7 @@ public final class DesignService implements IService {
         put("StartDebugging", new StartDebugging());
         put("ContinueBreakpoint", new ContinueDebug()); //TODO:改名，暂兼容旧名称
         put("GetReferences", new GetReferences());
+        put("UpdateReferences", new UpdateReferences());
         put("Validate3rdLib", new Validate3rdLib());
         put("Upload3rdLib", new Upload3rdLib());
         //----view----

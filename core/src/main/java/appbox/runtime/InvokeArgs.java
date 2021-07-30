@@ -184,7 +184,7 @@ public final class InvokeArgs implements IInputStream {
         throw new RuntimeException("PayloadType Error");
     }
 
-    public EntityId[] getArrayOfEntityId() {
+    public EntityId[] getEntityIdArray() {
         //TODO:暂只实现前端传回的格式
         var payloadType = readByte();
         if (payloadType != PayloadType.Array)
@@ -196,6 +196,22 @@ public final class InvokeArgs implements IInputStream {
         var array = new EntityId[size];
         for (int i = 0; i < size; i++) {
             array[i] = getEntityId();
+        }
+        return array;
+    }
+
+    public String[] getStringArray() {
+        //TODO:暂只实现前端传回的格式
+        var payloadType = readByte();
+        if (payloadType != PayloadType.Array)
+            throw new RuntimeException("PayloadType Error: " + payloadType);
+        var elementType = readByte();
+        if (elementType != PayloadType.Object)
+            throw new RuntimeException("Array element type Error: " + elementType);
+        var size  = readVariant();
+        var array = new String[size];
+        for (int i = 0; i < size; i++) {
+            array[i] = getString();
         }
         return array;
     }
