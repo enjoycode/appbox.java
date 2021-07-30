@@ -19,15 +19,19 @@ public final class OpenViewModel implements IDesignHandler {
 
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
-        var modelId   = Long.parseUnsignedLong(args.getString());
-        var modelNode = hub.designTree.findModelNode(ModelType.View, modelId);
+        final var modelId   = Long.parseUnsignedLong(args.getString());
+        final var modelNode = hub.designTree.findModelNode(ModelType.View, modelId);
         if (modelNode == null)
             throw new RuntimeException("Can't find view model");
+        final var model = (ViewModel) modelNode.model();
 
         final var res = new OpenViewModelResult();
         res.model = (ViewModel) modelNode.model();
         return loadSourceCode(modelNode).thenApply(code -> {
-            hub.dartLanguageServer.openDocument(modelNode, code.Script);
+            if (model.getType() == ViewModel.TYPE_FLUTTER) {
+                hub.dartLanguageServer.openDocument(modelNode, code.Script);
+            }
+
             return new JsonResult(code);
         });
     }
