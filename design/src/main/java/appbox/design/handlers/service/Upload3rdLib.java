@@ -1,13 +1,9 @@
 package appbox.design.handlers.service;
 
-import appbox.compression.BrotliUtil;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.runtime.InvokeArgs;
-import appbox.serialization.BytesOutputStream;
-import appbox.store.KVTransaction;
-import appbox.store.MetaAssemblyType;
-import appbox.store.ModelStore;
+import appbox.store.utils.AssemblyUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,26 +23,12 @@ public final class Upload3rdLib implements IDesignHandler {
         if (appNode == null)
             return CompletableFuture.failedFuture(new RuntimeException("Can't find app: " + appName));
 
-        //comperss temp file to bytes
         final var filePath = Path.of(temp);
         if (!Files.exists(filePath))
             return CompletableFuture.failedFuture(new RuntimeException("Upload file not exists."));
 
-        final var out = new BytesOutputStream(2048);
-        out.write(1); //写入1字节压缩类型标记
-        try {
-            try (var compress = BrotliUtil.makeCompressStream(out)) {
-                Files.copy(filePath, compress);
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        final var bytes = out.toByteArray();
-
-        //save to ModelStore
-        return KVTransaction.beginAsync()
-                .thenCompose(txn -> ModelStore.upsertAssemblyAsync(MetaAssemblyType.Application, path, bytes, txn)
-                        .thenCompose(r -> txn.commitAsync()))
+        //compress and save to ModelStore
+        return AssemblyUtil.save3rdLibToModelStore(filePath, path)
                 .thenApply(r -> true);
 
         //TODO:*****
