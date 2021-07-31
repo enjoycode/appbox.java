@@ -5,14 +5,10 @@ import appbox.model.ModelBase;
 
 import java.util.concurrent.CompletableFuture;
 
-/**
- * 运行时上下文，用于提供模型容器及服务调用
- */
+/** 运行时上下文，用于提供模型容器及服务调用 */
 public interface IRuntimeContext {
 
-    /**
-     * 获取当前会话信息
-     */
+    /** 获取当前会话信息 */
     IUserSession currentSession();
 
     /** 设置当前会话信息 */
@@ -32,6 +28,7 @@ public interface IRuntimeContext {
 
     ApplicationModel getApplicationModel(int appId);
 
+    /** 根据模型标识获取模型定义 */
     <T extends ModelBase> T getModel(long modelId);
 
     /** 用于发布成功后更新模型缓存 */

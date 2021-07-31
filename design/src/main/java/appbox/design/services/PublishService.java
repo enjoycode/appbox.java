@@ -7,7 +7,6 @@ import appbox.design.common.PublishPackage;
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.services.code.ServiceCodeGenerator;
-import appbox.design.services.code.TypeSystem;
 import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.model.*;
@@ -17,9 +16,8 @@ import appbox.store.*;
 import com.ea.async.instrumentation.Transformer;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -71,8 +69,8 @@ public final class PublishService {
         final var vfile      = hub.typeSystem.findFileForServiceModel(designNode);
         final var cu         = JDTUtils.resolveCompilationUnit(vfile);
 
-        //创建ASTParser
-        var astParser = ASTParser.newParser(AST.JLS15);
+        //创建ASTParser并创建ASTNode
+        final var astParser = ASTParser.newParser(AST.JLS15);
         astParser.setSource(cu);
         astParser.setResolveBindings(true);
         if (model.hasReference()) { //处理第三方包
@@ -81,22 +79,9 @@ public final class PublishService {
             astParser.setEnvironment(classPaths, null, null, false);
         }
 
-        var astNode = astParser.createAST(null);
-
+        final var astNode = astParser.createAST(null);
         //检测虚拟代码错误
-        var problems = ((CompilationUnit) astNode).getProblems();
-        if (problems != null && problems.length > 0) {
-            //TODO:友好提示
-            boolean hasError = false;
-            for (var pb : problems) {
-                if (pb.isError()) {
-                    hasError = true;
-                    Log.error(pb.getMessage());
-                }
-            }
-            if (hasError)
-                throw new RuntimeException("Has problems.");
-        }
+        checkAstError(astNode, String.format("%s.%s", appName, model.name()));
 
         //开始转换编译服务模型的运行时代码
         var astRewrite           = ASTRewrite.create(astNode.getAST());
@@ -160,6 +145,35 @@ public final class PublishService {
         runtimeProject.delete(true, null);
 
         return classData;
+    }
+
+    /** 检查ASTNode的错误信息,有则抛出异常 */
+    private static void checkAstError(ASTNode astNode, String serviceName) {
+        final var problems = ((CompilationUnit) astNode).getProblems();
+        if (problems == null || problems.length == 0)
+            return;
+
+        boolean       hasError = false;
+        StringBuilder sb       = null;
+        for (var pb : problems) {
+            if (pb.isError()) {
+                if (!hasError) {
+                    hasError = true;
+                    sb       = new StringBuilder(200);
+                    sb.append("Compile service[");
+                    sb.append(serviceName);
+                    sb.append("] error:\n");
+                }
+
+                sb.append(pb.getMessage());
+                sb.append('\n');
+            }
+        }
+        if (hasError) {
+            final var error = sb.toString();
+            Log.warn(error);
+            throw new RuntimeException(error);
+        }
     }
 
     /** 转换服务类内的await */
