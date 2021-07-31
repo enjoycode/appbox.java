@@ -29,7 +29,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class TypeSystem {
@@ -322,7 +321,7 @@ public final class TypeSystem {
     public CompletableFuture<Void> updateServiceReferences(ModelNode serviceNode) {
         final var serviceModel = (ServiceModel) serviceNode.model();
         //先加载解压缩第三方类库
-        return extractDeps(serviceNode.appNode.model.name(), serviceModel.getReferences())
+        return AssemblyUtil.extractService3rdLibs(serviceNode.appNode.model.name(), serviceModel.getReferences())
                 .thenAccept(r -> {
                     //再更新虚拟工程
                     final var libs = makeServiceProjectDeps(serviceNode, false);
@@ -330,20 +329,10 @@ public final class TypeSystem {
                 });
     }
 
-    /** 释放服务模型的所有第三方包 */
-    private static CompletableFuture<Void> extractDeps(String appName, List<String> deps) {
-        CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
-        if (deps != null && deps.size() > 0) {
-            for (var dep : deps) {
-                task = task.thenCompose(r -> AssemblyUtil.extract3rdLib(appName, dep));
-            }
-        }
-        return task;
-    }
-
     /** 创建服务模型虚拟工程的依赖项,包括内置及第三方,但不包括JRE及源码 */
     public IClasspathEntry[] makeServiceProjectDeps(ModelNode serviceNode, boolean forRuntime) {
         final var serviceModel = (ServiceModel) serviceNode.model();
+        final var appName      = serviceNode.appNode.model.name();
 
         final int baseCount = forRuntime ? 3 : 2;
         int       depsCount = baseCount;
@@ -362,7 +351,7 @@ public final class TypeSystem {
 
         //处理服务模型引用的第三方包
         for (int i = baseCount; i < depsCount; i++) {
-            final var libPath = new Path(java.nio.file.Path.of(PathUtil.LIB_PATH,
+            final var libPath = new Path(java.nio.file.Path.of(PathUtil.LIB_PATH, appName,
                     serviceModel.getReferences().get(i - baseCount)).toString());
             deps[i] = JavaCore.newLibraryEntry(libPath, null, null);
         }

@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class PublishService {
 
@@ -63,27 +64,27 @@ public final class PublishService {
      * @return 返回的是已经压缩过的
      */
     public static byte[] compileService(DesignHub hub, ServiceModel model, boolean forDebug) throws Exception {
-        //获取对应的虚拟文件
+        //1.获取对应的虚拟文件
         final var designNode = hub.designTree.findModelNode(ModelType.Service, model.id());
         final var appName    = designNode.appNode.model.name();
         final var vfile      = hub.typeSystem.findFileForServiceModel(designNode);
         final var cu         = JDTUtils.resolveCompilationUnit(vfile);
 
-        //创建ASTParser并创建ASTNode
+        //2.创建ASTParser并创建ASTNode
         final var astParser = ASTParser.newParser(AST.JLS15);
         astParser.setSource(cu);
         astParser.setResolveBindings(true);
         if (model.hasReference()) { //处理第三方包
             final var classPaths = model.getReferences().stream()
-                    .map(libName -> Path.of(PathUtil.LIB_PATH, libName).toString()).toArray(String[]::new);
+                    .map(libName -> Path.of(PathUtil.LIB_PATH, appName, libName).toString()).toArray(String[]::new);
             astParser.setEnvironment(classPaths, null, null, false);
         }
 
         final var astNode = astParser.createAST(null);
-        //检测虚拟代码错误
+        //2.1检测虚拟代码错误
         checkAstError(astNode, String.format("%s.%s", appName, model.name()));
 
-        //开始转换编译服务模型的运行时代码
+        //3.开始转换编译服务模型的运行时代码
         var astRewrite           = ASTRewrite.create(astNode.getAST());
         var serviceCodeGenerator = new ServiceCodeGenerator(hub, appName, model, astRewrite);
         astNode.accept(serviceCodeGenerator);
@@ -98,7 +99,7 @@ public final class PublishService {
         var runtimeCode       = newdoc.get();
         var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
 
-        //生成运行时临时Project并进行编译
+        //4.生成运行时临时Project并进行编译
         final var libs               = hub.typeSystem.makeServiceProjectDeps(designNode, true);
         var       runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
         var       runtimeProject     = hub.typeSystem.languageServer.createProject(runtimeProjectName, libs);
@@ -110,19 +111,19 @@ public final class PublishService {
         builder.build();
         //TODO:check build errors
 
-        //准备异步转换器
+        //5.准备异步转换器
         Transformer asyncTransformer = null;
         if (!forDebug && serviceCodeGenerator.hasAwaitInvocation) {
             asyncTransformer = new Transformer();
             asyncTransformer.setErrorListener(err -> {throw new RuntimeException(err);});
         }
 
-        //获取并压缩编译好的.class
-        var    classFolder = runtimeProject.getFolder(JdtLanguageServer.BUILD_OUTPUT);
-        var    classFiles  = classFolder.members();
-        var    outStream   = new BytesOutputStream(2048);
-        byte[] classData   = null;
+        //6.获取并压缩编译好的.class
+        var classFolder = runtimeProject.getFolder(JdtLanguageServer.BUILD_OUTPUT);
+        var classFiles  = classFolder.members();
+        var outStream   = new BytesOutputStream(2048);
 
+        //6.1先写入类数据
         outStream.writeVariant(classFiles.length); //.class文件数
         for (var classFile : classFiles) {
             var className = classFile.getName().replace(".class", "");
@@ -138,9 +139,15 @@ public final class PublishService {
             classFile.delete(true, null);
         }
 
-        classData = BrotliUtil.compress(outStream.getBuffer(), 0, outStream.size());
+        //6.2如果服务引用第三方包,再写入第三方引用数据, 注意已转换为全路径 eg: "sys/aa.jar"
+        if (model.hasReference()) {
+            outStream.writeListString(model.getReferences().stream()
+                    .map(libName -> appName + "/" + libName).collect(Collectors.toList()));
+        }
 
-        //删除用于编译的临时Project及运行时服务代码
+        final var classData = BrotliUtil.compress(outStream.getBuffer(), 0, outStream.size());
+
+        //7.删除用于编译的临时Project及运行时服务代码
         runtimeFile.delete(true, null);
         runtimeProject.delete(true, null);
 

@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class AssemblyUtil {
@@ -48,23 +49,39 @@ public final class AssemblyUtil {
                         .thenCompose(r -> txn.commitAsync()));
     }
 
+    /** 释放服务模型的所有第三方包 */
+    public static CompletableFuture<Void> extractService3rdLibs(String appName, List<String> deps) {
+        CompletableFuture<Void> task = CompletableFuture.completedFuture(null);
+        if (deps != null && deps.size() > 0) {
+            for (var libName : deps) {
+                final var asmName = String.format("%s/%s", appName, libName);
+                task = task.thenCompose(r -> AssemblyUtil.extract3rdLib(asmName, false));
+            }
+        }
+        return task;
+    }
+
     /** 将应用依赖的第三方包释放至/tmp/appbox/lib/目录内 */
-    public static CompletableFuture<Void> extract3rdLib(String appName, String libName) {
-        //TODO:考虑判断是否已存在
-        final String asmName = appName + "/" + libName;
+    public static CompletableFuture<Void> extract3rdLib(String asmName, boolean overrideExists) {
+        final var libFilePath = LIB_PATH.resolve(asmName);
+
+        //判断是否已存在
+        if (!overrideExists && Files.exists(libFilePath)) {
+            return CompletableFuture.completedFuture(null);
+        }
+
         return ModelStore.loadAssemblyAsync(MetaAssemblyType.Application, asmName)
                 .thenAccept(asmData -> {
                     var input = new ByteArrayInputStream(asmData);
                     //读压缩类型, TODO:检查类型或根据类型解压缩
                     var compressType = input.read();
-
                     try {
-                        if (!Files.exists(LIB_PATH)) {
-                            Files.createDirectories(LIB_PATH);
+                        if (!Files.exists(libFilePath.getParent())) {
+                            Files.createDirectories(libFilePath.getParent());
                         }
 
                         var libData = BrotliUtil.decompressFrom(input);
-                        Files.write(java.nio.file.Path.of(LIB_PATH.toString(), libName), libData,
+                        Files.write(libFilePath, libData,
                                 StandardOpenOption.CREATE,
                                 StandardOpenOption.WRITE,
                                 StandardOpenOption.TRUNCATE_EXISTING);

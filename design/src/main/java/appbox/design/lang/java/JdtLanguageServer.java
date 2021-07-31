@@ -225,7 +225,6 @@ public final class JdtLanguageServer {
             return doc;
         }
 
-        var appName     = node.appNode.model.name();
         var fileName    = String.format("%s.java", node.model().name());
         var projectName = makeServiceProjectName(node);
 
