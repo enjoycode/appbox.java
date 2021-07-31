@@ -6,6 +6,7 @@ import appbox.design.DesignHub;
 import appbox.design.common.PublishPackage;
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.JdtLanguageServer;
+import appbox.design.lang.java.jdt.ModelFile;
 import appbox.design.services.code.ServiceCodeGenerator;
 import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
@@ -16,6 +17,7 @@ import appbox.store.*;
 import com.ea.async.instrumentation.Transformer;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -119,33 +121,7 @@ public final class PublishService {
         }
 
         //6.获取并压缩编译好的.class
-        var classFolder = runtimeProject.getFolder(JdtLanguageServer.BUILD_OUTPUT);
-        var classFiles  = classFolder.members();
-        var outStream   = new BytesOutputStream(2048);
-
-        //6.1先写入类数据
-        outStream.writeVariant(classFiles.length); //.class文件数
-        for (var classFile : classFiles) {
-            var className = classFile.getName().replace(".class", "");
-            outStream.writeString(className);
-            //如果是服务类且用到了await，需要转换
-            if (asyncTransformer != null
-                    && classFile.getName().equals(vfile.getName().replace(".java", ".class"))) {
-                outStream.writeByteArray(transformAsync(asyncTransformer, (IFile) classFile));
-            } else {
-                outStream.writeByteArray(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
-            }
-
-            classFile.delete(true, null);
-        }
-
-        //6.2如果服务引用第三方包,再写入第三方引用数据, 注意已转换为全路径 eg: "sys/aa.jar"
-        if (model.hasReference()) {
-            outStream.writeListString(model.getReferences().stream()
-                    .map(libName -> appName + "/" + libName).collect(Collectors.toList()));
-        }
-
-        final var classData = BrotliUtil.compress(outStream.getBuffer(), 0, outStream.size());
+        final var classData = compressClassesData(runtimeProject, vfile, model, appName, asyncTransformer);
 
         //7.删除用于编译的临时Project及运行时服务代码
         runtimeFile.delete(true, null);
@@ -197,6 +173,39 @@ public final class PublishService {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    /** 压缩编码编译好的class文件,包括其引用的第三方包信息 */
+    private static byte[] compressClassesData(IProject runtimeProject, ModelFile vfile,
+                                              ServiceModel model, String appName,
+                                              Transformer asyncTransformer) throws Exception {
+        final var classFolder = runtimeProject.getFolder(JdtLanguageServer.BUILD_OUTPUT);
+        final var classFiles  = classFolder.members();
+        final var outStream   = new BytesOutputStream(2048);
+
+        //先写入类数据
+        outStream.writeVariant(classFiles.length); //.class文件数
+        for (var classFile : classFiles) {
+            final var className = classFile.getName().replace(".class", "");
+            outStream.writeString(className);
+            //如果是服务类且用到了await，需要转换
+            if (asyncTransformer != null
+                    && classFile.getName().equals(vfile.getName().replace(".java", ".class"))) {
+                outStream.writeByteArray(transformAsync(asyncTransformer, (IFile) classFile));
+            } else {
+                outStream.writeByteArray(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
+            }
+
+            classFile.delete(true, null);
+        }
+
+        //如果服务引用第三方包,再写入第三方引用数据, 注意已转换为全路径 eg: "sys/aa.jar"
+        if (model.hasReference()) {
+            outStream.writeListString(model.getReferences().stream()
+                    .map(libName -> appName + "/" + libName).collect(Collectors.toList()));
+        }
+
+        return BrotliUtil.compress(outStream.getBuffer(), 0, outStream.size());
     }
 
     /**

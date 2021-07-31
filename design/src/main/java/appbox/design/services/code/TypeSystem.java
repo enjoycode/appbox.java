@@ -311,7 +311,7 @@ public final class TypeSystem {
     /** 找到服务模型对应的虚拟文件 */
     public ModelFile findFileForServiceModel(ModelNode serviceNode) {
         var fileName    = String.format("%s.java", serviceNode.model().name());
-        var projectName = languageServer.makeServiceProjectName(serviceNode);
+        var projectName = JdtLanguageServer.makeServiceProjectName(serviceNode);
         var project     = languageServer.jdtWorkspace.getRoot().getProject(projectName);
         return (ModelFile) project.findMember(fileName);
     }
