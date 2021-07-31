@@ -64,29 +64,37 @@ public final class MessageDispatcher {
                 //先设置当前会话信息
                 final IUserSession sessionInfo = sessionId == 0 ? null : SessionManager.tryGet(sessionId);
                 RuntimeContext.current().setCurrentSession(sessionInfo);
-                //再调用服务
-                RuntimeContext.invokeAsync(service, args).handle((r, ex) -> {
-                    var error  = ex == null ? InvokeResponse.ErrorCode.None : InvokeResponse.ErrorCode.ServiceInnerError;
-                    var result = ex == null ? r : ex.getMessage();
-                    //发送请求响应
-                    sendInvokeResponse(channel, shard, reqId, error, result);
+                //再调用服务,注意必须捕获处理异常(如NoClassDefFoundError)
+                try {
+                    RuntimeContext.invokeAsync(service, args).handle((r, ex) -> {
+                        var error  = ex == null ? InvokeResponse.ErrorCode.None : InvokeResponse.ErrorCode.ServiceInnerError;
+                        var result = ex == null ? r : ex.getMessage();
+                        //发送请求响应
+                        sendInvokeResponse(channel, shard, reqId, error, result);
 
-                    if (ex != null) {
-                        Log.error(String.format("Invoke Service[%s] Error:%s", service, ex));
-                        ex.printStackTrace(); //TODO: to log
-                    }
-                    //注意返回InvokeArgs所租用的BytesSegment
-                    if (args != null)
-                        args.free();
-                    return null;
-                });
+                        if (ex != null) {
+                            Log.error(String.format("Invoke service[%s] error: %s", service, ex));
+                            ex.printStackTrace(); //TODO: to log
+                        }
+                        //注意返回InvokeArgs所租用的BytesSegment
+                        if (args != null)
+                            args.free();
+                        return null;
+                    });
+                } catch (Throwable ex) {
+                    CompletableFuture.runAsync(() -> {
+                        sendInvokeResponse(channel, shard, reqId,
+                                InvokeResponse.ErrorCode.ServiceInnerError, ex.getMessage());
+                        Log.error(String.format("Invoke service[%s] error: %s", service, ex));
+                    });
+                }
             });
         } catch (Exception e) {
             //反序列化错误直接发送响应并返回
             CompletableFuture.runAsync(() -> {
                 sendInvokeResponse(channel, shard, reqId,
                         InvokeResponse.ErrorCode.DeserializeRequestFail, e.getMessage());
-                Log.warn("反序列化InvokeRequire错误: " + e.getMessage());
+                Log.warn("Deserialize InvokeRequest error: " + e.getMessage());
             });
         } finally {
             channel.returnAllChunks(first);
@@ -104,7 +112,7 @@ public final class MessageDispatcher {
         try {
             channel.sendMessage(channel.newMessageId(), res);
         } catch (Exception e) {
-            Log.warn("发送响应消息失败: " + e.getMessage());
+            Log.warn("Send InvokeResponse error: " + e.getMessage());
         } finally {
             InvokeResponse.backToPool(res);
         }
