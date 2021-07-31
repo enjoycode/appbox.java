@@ -2,6 +2,7 @@ package appbox.design.handlers;
 
 import appbox.design.DesignHub;
 import appbox.design.tree.DesignNodeType;
+import appbox.model.ViewModel;
 import appbox.runtime.InvokeArgs;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +23,10 @@ public final class CloseDesigner implements IDesignHandler {
                 var error = String.format("Can't find model: %d", modelId);
                 return CompletableFuture.failedFuture(new RuntimeException(error));
             }
-            hub.dartLanguageServer.closeDocument(modelNode);
+            final var model = (ViewModel) modelNode.model();
+            if (model.getType() == ViewModel.TYPE_VUE) {
+                hub.dartLanguageServer.closeDocument(modelNode);
+            }
         }
 
         return CompletableFuture.completedFuture(null);
