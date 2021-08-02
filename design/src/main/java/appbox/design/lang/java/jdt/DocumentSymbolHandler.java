@@ -218,7 +218,7 @@ public final class DocumentSymbolHandler {
     }
 
     private static Location toLocation(ICompilationUnit unit, int offset, int length) throws JavaModelException {
-        return new Location(unit.getResource().getRawLocationURI().toString(), JDTUtils.toRange(unit, offset, length));
+        return new Location(unit.getResource().getFullPath().toString(), JDTUtils.toRange(unit, offset, length));
     }
 
     private static ISourceRange getSourceRange(IJavaElement element) throws JavaModelException {
