@@ -4,6 +4,7 @@ import appbox.design.IDeveloperSession;
 import appbox.design.lang.java.jdt.*;
 import appbox.design.lang.java.lsp.DiagnosticsHandler;
 import appbox.design.lang.java.lsp.DocumentSymbolHandler;
+import appbox.design.lang.java.lsp.FormatterHandler;
 import appbox.design.lang.java.lsp.SignatureHelpHandler;
 import appbox.design.services.code.ServiceMethodInfo;
 import appbox.design.tree.ModelNode;
@@ -387,6 +388,12 @@ public final class JdtLanguageServer {
     public List<DocumentSymbol> documentSymbol(Document doc) {
         final var cu = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
         return DocumentSymbolHandler.getHierarchicalOutline(cu, null);
+    }
+
+    public List<TextEdit> formatting(Document doc) {
+        final var cu            = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+        final var formatOptions = new FormattingOptions(4, true);
+        return FormatterHandler.format(cu, formatOptions, null, new ProgressMonitor());
     }
     //endregion
 

@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Document implements IBuffer {
+public final class Document implements IBuffer { //TODO: 实现IDocument
     //TODO:暂简单实现行检测，参考LineTracker实现
     public static final class TextLine {
         public final int start;
