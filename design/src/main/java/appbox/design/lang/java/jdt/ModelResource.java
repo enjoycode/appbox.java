@@ -287,7 +287,7 @@ public abstract class ModelResource implements IResource {
 
     @Override
     public URI getRawLocationURI() {
-        return null;
+        return null; //URI.create("model:" + path.toString());
     }
 
     @Override

@@ -16,20 +16,15 @@ public final class GetCompletion implements IDesignHandler {
 
     static {
         JsonResult.registerType(CompletionItem.class, (serializer, object, fieldName, fieldType, features) -> {
-            var item = (CompletionItem) object;
-            var wr   = serializer.getWriter();
+            final var item = (CompletionItem) object;
+            final var wr   = serializer.getWriter();
 
             wr.writeFieldValue('{', "label", item.getLabel()); //必须有值，否则前端报错
             if (item.getInsertText() == null) {
                 wr.writeFieldValue(',', "insertText", item.getTextEdit().getNewText());
-                var range = item.getTextEdit().getRange();
                 wr.write(',');
                 wr.writeFieldName("range");
-                wr.writeFieldValue('{', "startLineNumber", range.getStart().getLine() + 1);
-                wr.writeFieldValue(',', "startColumn", range.getStart().getCharacter() + 1);
-                wr.writeFieldValue(',', "endLineNumber", range.getEnd().getLine() + 1);
-                wr.writeFieldValue(',', "endColumn", range.getEnd().getCharacter() + 1);
-                wr.write('}');
+                serializer.write(item.getTextEdit().getRange());
             } else {
                 wr.writeFieldValue(',', "insertText", item.getInsertText());
             }
@@ -45,14 +40,10 @@ public final class GetCompletion implements IDesignHandler {
                 wr.writeFieldName("additionalTextEdits");
                 wr.write('[');
                 for (var additional : item.getAdditionalTextEdits()) {
-                    var range = additional.getRange();
                     wr.write('{');
+
                     wr.writeFieldName("range");
-                    wr.writeFieldValue('{', "startLineNumber", range.getStart().getLine() + 1);
-                    wr.writeFieldValue(',', "startColumn", range.getStart().getCharacter() + 1);
-                    wr.writeFieldValue(',', "endLineNumber", range.getEnd().getLine() + 1);
-                    wr.writeFieldValue(',', "endColumn", range.getEnd().getCharacter() + 1);
-                    wr.write('}');
+                    serializer.write(additional.getRange());
                     if (additional.getNewText() != null) {
                         wr.writeFieldValue(',', "text", additional.getNewText());
                     } else {
@@ -156,7 +147,7 @@ public final class GetCompletion implements IDesignHandler {
         var doc     = hub.typeSystem.languageServer.findOpenedDocument(modelId);
         if (doc == null) {
             var error = String.format("Can't find opened ServiceModel: %s", fileName);
-            return CompletableFuture.failedFuture(new Exception(error));
+            return CompletableFuture.failedFuture(new RuntimeException(error));
         }
 
         //暂在同一线程内处理

@@ -1,11 +1,9 @@
 package appbox.design.services;
 
+import appbox.data.JsonResult;
 import appbox.design.IDeveloperSession;
 import appbox.design.handlers.*;
-import appbox.design.handlers.code.ChangeBuffer;
-import appbox.design.handlers.code.CheckCode;
-import appbox.design.handlers.code.FormatDocument;
-import appbox.design.handlers.code.GetCompletion;
+import appbox.design.handlers.code.*;
 import appbox.design.handlers.entity.*;
 import appbox.design.handlers.service.*;
 import appbox.design.handlers.setting.GetAppSettings;
@@ -23,11 +21,27 @@ import appbox.design.handlers.view.*;
 import appbox.runtime.IService;
 import appbox.runtime.InvokeArgs;
 import appbox.runtime.RuntimeContext;
+import org.eclipse.lsp4j.Range;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 public final class DesignService implements IService {
+
+    static {
+        //注册通用类型的Json序列化
+        JsonResult.registerType(Range.class, (serializer, object, fieldName, fieldType, features) -> {
+            final var item = (Range) object;
+            final var wr   = serializer.getWriter();
+
+            //注意前端+1
+            wr.writeFieldValue('{', "startLineNumber", item.getStart().getLine() + 1);
+            wr.writeFieldValue(',', "startColumn", item.getStart().getCharacter() + 1);
+            wr.writeFieldValue(',', "endLineNumber", item.getEnd().getLine() + 1);
+            wr.writeFieldValue(',', "endColumn", item.getEnd().getCharacter() + 1);
+            wr.write('}');
+        });
+    }
 
     private final HashMap<CharSequence, IDesignHandler> handlers = new HashMap<>() {{
         put("LoadDesignTree", new LoadDesignTree());
@@ -36,6 +50,7 @@ public final class DesignService implements IService {
         put("GetCompletion", new GetCompletion());
         put("CheckCode", new CheckCode());
         put("FormatDocument", new FormatDocument());
+        put("GetDocSymbol", new GetDocSymbol());
         put("CloseDesigner", new CloseDesigner());
         put("SaveModel", new SaveModel());
         put("DeleteNode", new DeleteNode());

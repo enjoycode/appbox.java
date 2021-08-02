@@ -273,6 +273,7 @@ public final class JdtLanguageServer {
     }
     //endregion
 
+    //region ====LSP Methods====
     public List<CompletionItem> completion(Document doc, int line, int column, String wordToComplete) {
         //参考CompletionHandler实现
         var offset = doc.getOffset(line, column);
@@ -373,6 +374,12 @@ public final class JdtLanguageServer {
 
         // hoverInfoProvider.computeHover(line, column, monitor);
     }
+
+    public List<DocumentSymbol> documentSymbol(Document doc) {
+        final var cu = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+        return DocumentSymbolHandler.getHierarchicalOutline(cu, null);
+    }
+    //endregion
 
     //region ====Find Methods====
 
