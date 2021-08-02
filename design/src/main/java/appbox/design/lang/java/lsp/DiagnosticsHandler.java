@@ -1,4 +1,4 @@
-package appbox.design.lang.java.jdt;
+package appbox.design.lang.java.lsp;
 
 import org.eclipse.jdt.core.IProblemRequestor;
 import org.eclipse.jdt.core.compiler.IProblem;

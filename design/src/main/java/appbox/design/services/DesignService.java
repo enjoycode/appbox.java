@@ -48,6 +48,7 @@ public final class DesignService implements IService {
         put("Checkout", new Checkout());
         put("ChangeBuffer", new ChangeBuffer());
         put("GetCompletion", new GetCompletion());
+        put("SignatureHelp", new SignatureHelp());
         put("CheckCode", new CheckCode());
         put("FormatDocument", new FormatDocument());
         put("GetDocSymbol", new GetDocSymbol());

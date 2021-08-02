@@ -1,4 +1,4 @@
-package appbox.design.lang.java.jdt;
+package appbox.design.lang.java.lsp;
 
 import appbox.logging.Log;
 import org.eclipse.core.runtime.IProgressMonitor;

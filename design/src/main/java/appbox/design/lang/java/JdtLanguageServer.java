@@ -2,6 +2,9 @@ package appbox.design.lang.java;
 
 import appbox.design.IDeveloperSession;
 import appbox.design.lang.java.jdt.*;
+import appbox.design.lang.java.lsp.DiagnosticsHandler;
+import appbox.design.lang.java.lsp.DocumentSymbolHandler;
+import appbox.design.lang.java.lsp.SignatureHelpHandler;
 import appbox.design.services.code.ServiceMethodInfo;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.PathUtil;
@@ -300,6 +303,12 @@ public final class JdtLanguageServer {
             ex.printStackTrace();
             return Collections.emptyList();
         }
+    }
+
+    public SignatureHelp signatureHelp(Document doc, int line, int column) {
+        final var offset = doc.getOffset(line, column);
+        final var cu     = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+        return SignatureHelpHandler.signatureHelp(cu, offset, new ProgressMonitor());
     }
 
     public List<DiagnosticsHandler.Diagnostic> diagnostics(Document doc) {
