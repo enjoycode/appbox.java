@@ -80,14 +80,12 @@ public final class DocumentSymbolHandler {
     }
 
     private static Range getRange(IJavaElement element) throws JavaModelException {
-        //Location location = JDTUtils.toLocation(element, FULL_RANGE);
-        Location location = toLocation(element, true);
+        Location location = Utils.toLocation(element, true); //JDTUtils.toLocation(element, FULL_RANGE);
         return location == null ? DEFAULT_RANGE : location.getRange();
     }
 
     private static Range getSelectionRange(IJavaElement element) throws JavaModelException {
-        //Location location = JDTUtils.toLocation(element);
-        Location location = toLocation(element, false);
+        Location location = Utils.toLocation(element, false); //JDTUtils.toLocation(element);
         return location == null ? DEFAULT_RANGE : location.getRange();
     }
 
@@ -196,50 +194,5 @@ public final class DocumentSymbolHandler {
         }
         return SymbolKind.String;
     }
-
-    //region ====Changed====
-    private static Location toLocation(IJavaElement element, boolean fullRange) throws JavaModelException {
-        ICompilationUnit unit = (ICompilationUnit) element.getAncestor(5);
-        IClassFile       cf   = (IClassFile) element.getAncestor(6);
-        if (unit != null || cf != null) {
-            if (element instanceof ISourceReference) {
-                ISourceRange nameRange = fullRange ? getSourceRange(element) : JDTUtils.getNameRange(element);
-                if (SourceRange.isAvailable(nameRange)) {
-                    if (cf == null) {
-                        return toLocation(unit, nameRange.getOffset(), nameRange.getLength());
-                    }
-
-                    return JDTUtils.toLocation(cf, nameRange.getOffset(), nameRange.getLength());
-                }
-            }
-
-        }
-        return null;
-    }
-
-    private static Location toLocation(ICompilationUnit unit, int offset, int length) throws JavaModelException {
-        return new Location(unit.getResource().getFullPath().toString(), JDTUtils.toRange(unit, offset, length));
-    }
-
-    private static ISourceRange getSourceRange(IJavaElement element) throws JavaModelException {
-        ISourceRange sourceRange = null;
-        if (element instanceof IMember) {
-            IMember member = (IMember) element;
-            sourceRange = member.getSourceRange();
-        } else if (!(element instanceof ITypeParameter) && !(element instanceof ILocalVariable)) {
-            if (element instanceof ISourceReference) {
-                sourceRange = ((ISourceReference) element).getSourceRange();
-            }
-        } else {
-            sourceRange = ((ISourceReference) element).getSourceRange();
-        }
-
-        if (!SourceRange.isAvailable(sourceRange) && element.getParent() != null) {
-            sourceRange = getSourceRange(element.getParent());
-        }
-
-        return sourceRange;
-    }
-    //endregion
 
 }
