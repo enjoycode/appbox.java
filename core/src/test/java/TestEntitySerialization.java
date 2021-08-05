@@ -8,9 +8,13 @@ import appbox.runtime.RuntimeContext;
 import appbox.serialization.*;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class TestEntitySerialization {
     //测试实体类
     public static final class Emploee extends SysEntity {
+
+        public static final long MODELID = 12345678L;
 
         private String name;
         private int    age;
@@ -31,8 +35,9 @@ public class TestEntitySerialization {
             age = value;
         }
 
-        public Emploee() {
-            super(12345678L);
+        @Override
+        public long modelId() {
+            return MODELID;
         }
 
         @Override
@@ -71,7 +76,7 @@ public class TestEntitySerialization {
 
         var appModel = new ApplicationModel("appbox", "sys");
         ctx.injectApplicationModel(appModel);
-        var empModel   = new EntityModel(12345678L, "Emploee");
+        var empModel = new EntityModel(12345678L, "Emploee");
         empModel.bindToSysStore(true, false);
         var nameMember = new DataFieldModel(empModel, "Name", DataFieldModel.DataFieldType.String, true);
         empModel.addSysMember(nameMember, (short) 1);
@@ -79,13 +84,18 @@ public class TestEntitySerialization {
         empModel.addSysMember(ageMember, (short) 2);
         ctx.injectEntityModel(empModel);
 
-
         var emp = new Emploee();
         emp.setName("Rick");
         emp.setAge(33);
 
-        var outStream  = new BytesOutputStream(1000);
-        emp.writeTo(outStream);
+        var outStream = new BytesOutputStream(1000);
+        outStream.serialize(emp);
+
+        var input = new BytesInputStream(outStream.toByteArray());
+        var emp2  = input.deserializeEntity(Emploee::new);
+        assertFalse(input.hasRemaining());
+        assertEquals("Rick", emp.getName());
+        assertEquals(33, emp.getAge());
     }
 
 }
