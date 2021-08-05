@@ -25,11 +25,27 @@ public interface IInputStream extends IEntityMemberReader {
      */
     int remaining();
 
+    /** 获取反序列化时的上下文 */
+    DeserializeContext getContext();
+
+    //endregion
+
+    //region ====Context====
+
     /** 添加已反序列化列表，用于解决实体循环引用 */
-    void addToDeserialized(Entity obj);
+    default void addToDeserialized(Entity obj) {
+        final var ctx = getContext();
+        if (ctx != null)
+            ctx.addToDeserialized(obj);
+    }
 
     /** 根据序号获取已序列化的实体 */
-    Entity getDeserialized(int index);
+    default Entity getDeserialized(int index) {
+        final var ctx = getContext();
+        if (ctx == null)
+            throw new RuntimeException("Can't get DeserializeContext");
+        return ctx.getDeserialized(index);
+    }
     //endregion
 
     //region ====Deserialize====
@@ -79,6 +95,8 @@ public interface IInputStream extends IEntityMemberReader {
     }
     //endregion
 
+    //region ====BaseType====
+
     /** 是否流内有剩余字节 */
     default boolean hasRemaining() {
         return remaining() > 0;
@@ -95,9 +113,7 @@ public interface IInputStream extends IEntityMemberReader {
         return data;
     }
 
-    /**
-     * 跳过指定字节数
-     */
+    /** 跳过指定字节数 */
     default void skip(int size) {
         for (int i = 0; i < size; i++) {
             readByte();
@@ -243,6 +259,7 @@ public interface IInputStream extends IEntityMemberReader {
 
         return new String(dst);
     }
+    //endregion
 
     //region ====Collections====
     //private static <E extends IBinSerializable> Supplier<E> getCreator(Class<E> clazz) {

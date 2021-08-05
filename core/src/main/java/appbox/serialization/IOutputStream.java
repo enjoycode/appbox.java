@@ -8,20 +8,33 @@ import appbox.utils.IdUtil;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
+import javax.annotation.Nonnull;
 
 public interface IOutputStream extends IEntityMemberWriter {
 
-    //region ====abstract====
+    //region ====Abstract====
     void writeByte(byte value);
 
     /** 写入原始数据 */
     void write(byte[] src, int offset, int count);
 
+    /** 获取序列化时的上下文 */
+    SerializeContext getContext();
+    //endregion
+
+    //region ====Context====
+
     /** 获取已经序列化的实体索引号,不存在返回-1 */
-    int getSerializedIndex(Entity obj);
+    default int getSerializedIndex(@Nonnull Entity obj) {
+        final var ctx = getContext();
+        return ctx == null ? -1 : ctx.getSerializedIndex(obj);
+    }
 
     /** 将实体加入已序列化列表 */
-    void addToSerialized(Entity obj);
+    default void addToSerialized(@Nonnull Entity obj) {
+        final var ctx = getContext();
+        if (ctx != null) ctx.addToSerialized(obj);
+    }
     //endregion
 
     //region ====Serialize(写入类型信息头) Methods====

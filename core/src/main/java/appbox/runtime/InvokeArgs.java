@@ -3,23 +3,20 @@ package appbox.runtime;
 import appbox.cache.BytesSegment;
 import appbox.data.Entity;
 import appbox.data.EntityId;
-import appbox.serialization.IInputStream;
-import appbox.serialization.IOutputStream;
-import appbox.serialization.PayloadType;
+import appbox.serialization.*;
 
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import java.util.function.Supplier;
 
+/** 服务调用的参数列表,内部为序列化后的数据,通过getXXX反序列化为相应的参数 */
 public final class InvokeArgs implements IInputStream {
 
     //region ====Maker====
     public static class Maker implements IOutputStream {
 
-        private BytesSegment _current;
-        private int          _pos;
-        private List<Entity> _serializedList;
+        private BytesSegment     _current;
+        private int              _pos;
+        private SerializeContext _ctx;
 
         private Maker() {
             _current = BytesSegment.rent();
@@ -48,6 +45,13 @@ public final class InvokeArgs implements IInputStream {
         }
 
         @Override
+        public SerializeContext getContext() {
+            if (_ctx == null)
+                _ctx = new SerializeContext();
+            return _ctx;
+        }
+
+        @Override
         public void writeByte(byte value) {
             if (_pos >= BytesSegment.FRAME_SIZE) {
                 createSegment();
@@ -72,24 +76,6 @@ public final class InvokeArgs implements IInputStream {
                 write(src, offset, count);
             }
         }
-
-        @Override
-        public int getSerializedIndex(Entity obj) {
-            if (_serializedList == null || _serializedList.size() == 0)
-                return -1;
-            for (int i = _serializedList.size() - 1; i >= 0; i--) {
-                if (_serializedList.get(i) == obj)
-                    return i;
-            }
-            return -1;
-        }
-
-        @Override
-        public void addToSerialized(Entity obj) {
-            if (_serializedList == null)
-                _serializedList = new ArrayList<>();
-            _serializedList.add(obj);
-        }
         //endregion
     }
 
@@ -98,9 +84,9 @@ public final class InvokeArgs implements IInputStream {
     }
     //endregion
 
-    private BytesSegment _current;
-    private int          _pos;
-    private List<Entity> _deserialized;
+    private BytesSegment       _current;
+    private int                _pos;
+    private DeserializeContext _ctx;
 
     public InvokeArgs(BytesSegment first) {
         if (first == null || first.first() != first)
@@ -221,6 +207,13 @@ public final class InvokeArgs implements IInputStream {
     }
 
     @Override
+    public DeserializeContext getContext() {
+        if (_ctx == null)
+            _ctx = new DeserializeContext();
+        return _ctx;
+    }
+
+    @Override
     public byte readByte() {
         if (_pos >= _current.getDataSize()) {
             moveToNext();
@@ -255,18 +248,6 @@ public final class InvokeArgs implements IInputStream {
             temp = temp.next();
         }
         return remaining;
-    }
-
-    @Override
-    public void addToDeserialized(Entity obj) {
-        if (_deserialized == null)
-            _deserialized = new ArrayList<>();
-        _deserialized.add(obj);
-    }
-
-    @Override
-    public Entity getDeserialized(int index) {
-        return _deserialized.get(index);
     }
     //endregion
 

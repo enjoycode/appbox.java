@@ -1,20 +1,23 @@
 package appbox.serialization;
 
-import appbox.data.Entity;
-
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 public final class BytesInputStream extends ByteArrayInputStream implements IInputStream {
 
-    private List<Entity> _deserialized;
+    private DeserializeContext _ctx;
 
     public BytesInputStream(byte[] data) {
         super(data);
     }
 
     public int getPosition() { return pos; }
+
+    @Override
+    public DeserializeContext getContext() {
+        if (_ctx == null)
+            _ctx = new DeserializeContext();
+        return _ctx;
+    }
 
     @Override
     public void skip(int size) {
@@ -37,17 +40,5 @@ public final class BytesInputStream extends ByteArrayInputStream implements IInp
     public void readBytes(byte[] dest, int offset, int count) {
         System.arraycopy(buf, pos, dest, offset, count);
         pos += count;
-    }
-
-    @Override
-    public void addToDeserialized(Entity obj) {
-        if (_deserialized == null)
-            _deserialized = new ArrayList<>();
-        _deserialized.add(obj);
-    }
-
-    @Override
-    public Entity getDeserialized(int index) {
-        return _deserialized.get(index);
     }
 }

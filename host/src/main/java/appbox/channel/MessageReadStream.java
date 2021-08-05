@@ -2,17 +2,12 @@ package appbox.channel;
 
 import appbox.cache.BytesSegment;
 import appbox.cache.ObjectPool;
-import appbox.data.Entity;
 import appbox.runtime.InvokeArgs;
+import appbox.serialization.DeserializeContext;
 import appbox.serialization.IInputStream;
 import com.sun.jna.Pointer;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * 消息读取流，用于从消息链中读取完整消息
- */
+/** 消息读取流，用于从消息链中读取完整消息 */
 public final class MessageReadStream implements IInputStream {
 
     //region ====ObjectPool====
@@ -25,19 +20,18 @@ public final class MessageReadStream implements IInputStream {
     }
 
     public static void backToPool(MessageReadStream obj) {
-        if (obj._deserialized != null)
-            obj._deserialized.clear();
+        obj._ctx = null;
         pool.back(obj);
     }
     //endregion
 
-    private Pointer      _curChunk;
-    private Pointer      _dataPtr;
-    private int          _dataLen;
-    private int          _index;
-    private List<Entity> _deserialized;
+    private Pointer            _curChunk;
+    private Pointer            _dataPtr;
+    private int                _dataLen;
+    private int                _index;
+    private DeserializeContext _ctx;
 
-    protected void reset(Pointer first) {
+    void reset(Pointer first) {
         _curChunk = first;
         _dataPtr  = NativeSmq.getDataPtr(_curChunk);
         _dataLen  = NativeSmq.getMsgDataLen(_curChunk);
@@ -45,7 +39,7 @@ public final class MessageReadStream implements IInputStream {
     }
 
     /** 复制剩余部分(已读取消息头)作为Invoke参数 */
-    protected InvokeArgs copyToArgs() {
+    InvokeArgs copyToArgs() {
         var segment = BytesSegment.rent();
         _dataPtr.read(_index, segment.buffer, 0, _dataLen - _index);
         segment.setDataSize(_dataLen - _index);
@@ -77,6 +71,13 @@ public final class MessageReadStream implements IInputStream {
         }
 
         reset(next);
+    }
+
+    @Override
+    public DeserializeContext getContext() {
+        if (_ctx == null)
+            _ctx = new DeserializeContext();
+        return _ctx;
     }
 
     @Override
@@ -129,18 +130,6 @@ public final class MessageReadStream implements IInputStream {
             return res;
         }
         return IInputStream.super.readShort();
-    }
-
-    @Override
-    public void addToDeserialized(Entity obj) {
-        if (_deserialized == null)
-            _deserialized = new ArrayList<>();
-        _deserialized.add(obj);
-    }
-
-    @Override
-    public Entity getDeserialized(int index) {
-        return _deserialized.get(index);
     }
 
 }
