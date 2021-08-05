@@ -25,7 +25,7 @@ public class Employee extends SysEntity {
     public static final short ACCOUNT_ID  = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short PASSWORD_ID = (short) (5 << IdUtil.MEMBERID_SEQ_OFFSET);
 
-    public static final KVFieldExpression NAME    = new KVFieldExpression(NAME_ID, DataFieldModel.DataFieldType.String);
+    public static final KVFieldExpression NAME     = new KVFieldExpression(NAME_ID, DataFieldModel.DataFieldType.String);
     public static final KVFieldExpression ACCOUNT  = new KVFieldExpression(ACCOUNT_ID, DataFieldModel.DataFieldType.String);
     public static final KVFieldExpression PASSWORD = new KVFieldExpression(PASSWORD_ID, DataFieldModel.DataFieldType.Binary);
 
@@ -91,7 +91,10 @@ public class Employee extends SysEntity {
         }
     }
 
-    public Employee() { super(MODELID);}
+    @Override
+    public long modelId() {
+        return MODELID;
+    }
 
     @Override
     public void writeMember(short id, IEntityMemberWriter bs, byte flags) {

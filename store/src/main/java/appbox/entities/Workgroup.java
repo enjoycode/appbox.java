@@ -8,11 +8,9 @@ import appbox.utils.IdUtil;
 
 public class Workgroup extends SysEntity {
 
-    public static final short NAME_ID = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final long MODELID = IdUtil.SYS_WORKGROUP_MODEL_ID;
 
-    public Workgroup() {
-        super(IdUtil.SYS_WORKGROUP_MODEL_ID);
-    }
+    public static final short NAME_ID = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
 
     private String _name;
 
@@ -25,6 +23,11 @@ public class Workgroup extends SysEntity {
             this._name = name;
             onPropertyChanged(NAME_ID);
         }
+    }
+
+    @Override
+    public long modelId() {
+        return MODELID;
     }
 
     @Override

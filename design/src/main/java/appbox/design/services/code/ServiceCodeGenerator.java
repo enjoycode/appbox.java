@@ -214,7 +214,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 var permissionName = node.getName().getIdentifier();
                 var permissionNode = hub.designTree.findModelNodeByName(
                         appNode.model.id(), ModelType.Permission, permissionName);
-                
+
                 var newNode = ast.newMethodInvocation();
                 newNode.setName(ast.newSimpleName("hasPermission"));
                 newNode.setExpression(ast.newName(RuntimeContext.class.getName()));
@@ -464,7 +464,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
                 throw new RuntimeException("makeInvokeArgsGet: 未实现type=" + typeName);
             }
         } else {
-            throw new RuntimeException("makeInvokeArgsGet: 未实现type=" + paraType.toString());
+            throw new RuntimeException("makeInvokeArgsGet: 未实现type=" + paraType);
         }
 
         getMethod.setName(ast.newSimpleName(getMethodName));

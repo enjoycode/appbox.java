@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 
 public interface IInputStream extends IEntityMemberReader {
 
-    //region ====abstract====
+    //region ====Abstract====
     byte readByte();
 
     void readBytes(byte[] dest, int offset, int count);
@@ -56,6 +56,26 @@ public interface IInputStream extends IEntityMemberReader {
             //addToObjectRefs(result);
             serializer.read(this, result); return result;
         }
+    }
+
+    default <T extends Entity> T deserializeEntity(Supplier<T> creator) {
+        final var payloadType = readByte();
+        if (payloadType == PayloadType.Null)
+            return null;
+        if (payloadType == PayloadType.Entity) {
+            final var modelId = readLong(); //先读取模型标识号
+            //TODO:creator == null 从流上下文获取,如果还没有解析为KVO
+            final var obj = creator.get();
+            if (modelId != obj.modelId())
+                throw new RuntimeException("EntityModel's id not same");
+            obj.readFrom(this);
+            return obj;
+        }
+        if (payloadType == PayloadType.ObjectRef) {
+            final var index = readVariant();
+            return (T) getDeserialized(index);
+        }
+        throw new RuntimeException("PayloadType Error");
     }
     //endregion
 
@@ -382,18 +402,15 @@ public interface IInputStream extends IEntityMemberReader {
 
     @Override
     default <T extends Entity> T readRefMember(int flags, Supplier<T> creator) {
-        var obj = creator.get();
-        obj.readFrom(this);
-        return obj;
+        return deserializeEntity(creator);
     }
 
     @Override
     default <T extends Entity> List<T> readSetMember(int flags, Supplier<T> creator) {
-        var count = readVariant();
-        var list  = new ArrayList<T>(count);
+        final var count = readVariant();
+        final var list  = new ArrayList<T>(count);
         for (int i = 0; i < count; i++) {
-            var obj = creator.get();
-            obj.readFrom(this);
+            var obj = deserializeEntity(creator);
             list.add(obj);
         }
         return list;

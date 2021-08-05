@@ -173,15 +173,7 @@ public final class InvokeArgs implements IInputStream {
     }
 
     public <E extends Entity> E getEntity(Supplier<E> creator) {
-        var payloadType = readByte();
-        if (payloadType == PayloadType.Null)
-            return null;
-        if (payloadType == PayloadType.Entity) {
-            var obj = creator.get();
-            obj.readFrom(this);
-            return obj;
-        }
-        throw new RuntimeException("PayloadType Error");
+        return deserializeEntity(creator);
     }
 
     public EntityId[] getEntityIdArray() {

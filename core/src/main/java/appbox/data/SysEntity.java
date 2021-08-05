@@ -6,10 +6,6 @@ import appbox.serialization.IOutputStream;
 public abstract class SysEntity extends DBEntity implements IKVRow {
     private final EntityId _id = new EntityId();
 
-    public SysEntity(long modelId) {
-        super(modelId);
-    }
-
     public final EntityId id() {
         return _id;
     }

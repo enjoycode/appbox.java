@@ -10,7 +10,8 @@ import appbox.utils.IdUtil;
 
 import java.util.UUID;
 
-public class Checkout extends SysEntity {
+public final class Checkout extends SysEntity {
+    public static final long MODELID = IdUtil.SYS_CHECKOUT_MODEL_ID;
 
     public static final short NODE_TYPE_ID      = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short TARGET_ID         = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -20,19 +21,11 @@ public class Checkout extends SysEntity {
 
     public static final KVFieldExpression DEVELOPER = new KVFieldExpression(DEVELOPER_ID, DataFieldModel.DataFieldType.Guid);
 
-    public Checkout() {
-        super(IdUtil.SYS_CHECKOUT_MODEL_ID);
-    }
-
-    private byte _nodeType;
-
+    private byte   _nodeType;
     private String _targetId;
-
-    private UUID _developerId;
-
+    private UUID   _developerId;
     private String _developerName;
-
-    private int _version;
+    private int    _version;
 
     public byte getNodeType() {
         return _nodeType;
@@ -87,6 +80,11 @@ public class Checkout extends SysEntity {
             this._version = value;
             onPropertyChanged(VERSION_ID);
         }
+    }
+
+    @Override
+    public long modelId() {
+        return MODELID;
     }
 
     @Override

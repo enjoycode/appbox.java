@@ -31,32 +31,33 @@ public final class Settings extends SysEntity {
     private String   _type;
     private byte[]   _value;
 
-    public int getAppId() {return _appId; }
+    public int getAppId() {return _appId;}
 
-    public void setAppId(int appId) { _appId = appId; }
+    public void setAppId(int appId) {_appId = appId;}
 
-    public EntityId getUserId() { return _userId; }
+    public EntityId getUserId() {return _userId;}
 
-    public void setUserId(EntityId userId) { _userId = userId; }
+    public void setUserId(EntityId userId) {_userId = userId;}
 
-    public String getCatlog() { return _catlog; }
+    public String getCatlog() {return _catlog;}
 
-    public void setCatlog(String catlog) { _catlog = catlog; }
+    public void setCatlog(String catlog) {_catlog = catlog;}
 
-    public String getName() { return _name; }
+    public String getName() {return _name;}
 
-    public void setName(String name) { _name = name; }
+    public void setName(String name) {_name = name;}
 
-    public String getType() { return _type; }
+    public String getType() {return _type;}
 
-    public void setType(String type) { _type = type; }
+    public void setType(String type) {_type = type;}
 
     public byte[] getValue() {return _value;}
 
-    public void setValue(byte[] value) { _value = value; }
+    public void setValue(byte[] value) {_value = value;}
 
-    public Settings() {
-        super(MODELID);
+    @Override
+    public long modelId() {
+        return MODELID;
     }
 
     @Override

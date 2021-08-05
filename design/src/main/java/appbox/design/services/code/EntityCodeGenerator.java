@@ -49,6 +49,9 @@ public final class EntityCodeGenerator {
             entityClass.setSuperclassType(ast.newSimpleType(ast.newName(SqlEntity.class.getName())));
         }
 
+        //static MODELID
+        makeStaticModelId(ast, entityClass, model);
+
         //ctor
         makeEntityCtorMethod(ast, entityClass, model);
 
@@ -70,6 +73,7 @@ public final class EntityCodeGenerator {
         }
 
         //overrides
+        entityClass.bodyDeclarations().add(makeEntityModelIdMethod(ast));
         entityClass.bodyDeclarations().add(makeEntityWriteMemberMethod(ast, model, entityClassName));
         entityClass.bodyDeclarations().add(makeEntityReadMemberMethod(generator, model, entityClassName));
         if (model.storeOptions() != null && naviProperties.size() > 0) {
@@ -82,6 +86,21 @@ public final class EntityCodeGenerator {
     /** 生成运行时实体名称 eg: SYS_Employee */
     static String makeEntityClassName(ModelNode modelNode) {
         return String.format("%s_%s", modelNode.appNode.model.name().toUpperCase(), modelNode.model().name());
+    }
+
+    /** 生成 public static final long MODELID = xxxxxL */
+    private static void makeStaticModelId(AST ast, TypeDeclaration entityClass, EntityModel model) {
+        var vdf = ast.newVariableDeclarationFragment();
+        vdf.setName(ast.newSimpleName("MODELID"));
+        vdf.setInitializer(ast.newNumberLiteral(model.id() + "L"));
+
+        var field = ast.newFieldDeclaration(vdf);
+        field.setType(ast.newPrimitiveType(PrimitiveType.LONG));
+        field.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        field.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+        field.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.FINAL_KEYWORD));
+
+        entityClass.bodyDeclarations().add(field);
     }
 
     private static void makeSysEntityFetchMethod(AST ast, TypeDeclaration entityClass, String entityClassName) {
@@ -123,22 +142,19 @@ public final class EntityCodeGenerator {
     }
 
     private static void makeEntityCtorMethod(AST ast, TypeDeclaration entityClass, EntityModel model) {
+        //目前仅Sql存储且具备主键的生成两个构造,TODO:另考虑SysStore生成指定时间戳的构造
+        if (model.sqlStoreOptions() == null || !model.sqlStoreOptions().hasPrimaryKeys())
+            return;
+
         var ctor = ast.newMethodDeclaration();
         ctor.setConstructor(true);
         ctor.setName(ast.newSimpleName(entityClass.getName().getIdentifier()));
         ctor.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-
-        var body          = ast.newBlock();
-        var superCall     = ast.newSuperConstructorInvocation();
-        var supperCallArg = ast.newNumberLiteral(model.id() + "L");
-        superCall.arguments().add(supperCallArg);
-        body.statements().add(superCall);
-
-        ctor.setBody(body);
+        ctor.setBody(ast.newBlock());
         entityClass.bodyDeclarations().add(ctor);
 
         //绑定至存储且具备主键的生成带主键的构造, eg: Employee(String pkName) { _Name = pkName; }
-        if (model.sqlStoreOptions() != null && model.sqlStoreOptions().hasPrimaryKeys()) {
+        if (/*model.sqlStoreOptions() != null &&*/ model.sqlStoreOptions().hasPrimaryKeys()) {
             ctor = ast.newMethodDeclaration();
             ctor.setConstructor(true);
             ctor.setName(ast.newSimpleName(entityClass.getName().getIdentifier()));
@@ -152,12 +168,7 @@ public final class EntityCodeGenerator {
                 ctor.parameters().add(ctorPara);
             }
 
-            body          = ast.newBlock();
-            superCall     = ast.newSuperConstructorInvocation();
-            supperCallArg = ast.newNumberLiteral(model.id() + "L");
-            superCall.arguments().add(supperCallArg);
-            body.statements().add(superCall);
-
+            var body = ast.newBlock();
             for (var pk : model.sqlStoreOptions().primaryKeys()) {
                 var pkMember = (DataFieldModel) model.getMember(pk.memberId);
                 var pkAssign = ast.newAssignment();
@@ -392,6 +403,24 @@ public final class EntityCodeGenerator {
         conditional.setThenExpression(ast.newNullLiteral());
         conditional.setElseExpression(getValue);
         return conditional;
+    }
+
+    /** 实现modelId() */
+    private static MethodDeclaration makeEntityModelIdMethod(AST ast) {
+        final var method = ast.newMethodDeclaration();
+        method.setName(ast.newSimpleName("modelId"));
+        method.modifiers().add(makeOverrideAnnotation(ast));
+        method.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
+        method.setReturnType2(ast.newPrimitiveType(PrimitiveType.LONG));
+
+        final var body = ast.newBlock();
+
+        final var returnst = ast.newReturnStatement();
+        returnst.setExpression(ast.newSimpleName("MODELID"));
+        body.statements().add(returnst);
+
+        method.setBody(body);
+        return method;
     }
 
     /** 实现writeMember */

@@ -29,7 +29,7 @@ public final class Utils {
         return null;
     }
 
-    private static Location toLocation(ICompilationUnit unit, int offset, int length) throws JavaModelException {
+    public static Location toLocation(ICompilationUnit unit, int offset, int length) throws JavaModelException {
         //TODO: fix Location.uri
         final var uri = String.format("file:/%s", unit.getResource().getFullPath());
         return new Location(uri, JDTUtils.toRange(unit, offset, length));

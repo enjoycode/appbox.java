@@ -8,12 +8,13 @@ import appbox.utils.IdUtil;
  * 测试用映射至Sql存储的实体
  */
 public class ELog extends SqlEntity {
-    public static final long  MODEL_ID = 8888L;
-    public static final short ID_ID    = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
-    public static final short NAME_ID  = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
-    public static final short ADDR_ID  = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final long MODELID = 8888L;
 
-    public static final short MSG_ID  = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short ID_ID   = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short NAME_ID = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
+    public static final short ADDR_ID = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
+
+    public static final short MSG_ID = (short) (4 << IdUtil.MEMBERID_SEQ_OFFSET);
 
     private int    _id;
     private String _name;
@@ -21,21 +22,17 @@ public class ELog extends SqlEntity {
 
     private String _msg;
 
-    public ELog() {
-        super(MODEL_ID);
-    }
+    public int getId() {return _id;}
 
-    public int getId() { return _id; }
+    public void setId(int value) {_id = value;}
 
-    public void setId(int value) { _id = value; }
+    public String getName() {return _name;}
 
-    public String getName() { return _name; }
+    public void setName(String value) {_name = value;}
 
-    public void setName(String value) { _name = value; }
+    public String getAddress() {return _address;}
 
-    public String getAddress() { return _address; }
-
-    public void setAddress(String value) { _address = value; }
+    public void setAddress(String value) {_address = value;}
 
     public String getMsg() {
         return _msg;
@@ -43,6 +40,11 @@ public class ELog extends SqlEntity {
 
     public void setMsg(String msg) {
         this._msg = _msg;
+    }
+
+    @Override
+    public long modelId() {
+        return MODELID;
     }
 
     @Override

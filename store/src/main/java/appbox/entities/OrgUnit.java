@@ -16,6 +16,8 @@ import java.util.Objects;
 
 public class OrgUnit extends SysEntity {
 
+    public static final long MODELID = IdUtil.SYS_ORGUNIT_MODEL_ID;
+
     public static final short NAME_ID      = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short BASEID_ID    = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short BASE_TYPE_ID = (short) (3 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -26,10 +28,6 @@ public class OrgUnit extends SysEntity {
 
     public static final KVFieldExpression NAME   = new KVFieldExpression(NAME_ID, DataFieldModel.DataFieldType.String);
     public static final KVFieldExpression BASEID = new KVFieldExpression(BASEID_ID, DataFieldModel.DataFieldType.EntityId);
-
-    public OrgUnit() {
-        super(IdUtil.SYS_ORGUNIT_MODEL_ID);
-    }
 
     private String        _name;
     private EntityId      _baseId;
@@ -71,7 +69,7 @@ public class OrgUnit extends SysEntity {
         }
     }
 
-    public EntityId getParentId() { return _parentId; }
+    public EntityId getParentId() {return _parentId;}
 
     public void setParentId(EntityId value) {
         if (!Objects.equals(_parentId, value)) {
@@ -106,6 +104,11 @@ public class OrgUnit extends SysEntity {
         }
 
         return _childs;
+    }
+
+    @Override
+    public long modelId() {
+        return MODELID;
     }
 
     @Override

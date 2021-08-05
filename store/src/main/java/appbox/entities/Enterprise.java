@@ -9,6 +9,8 @@ import appbox.serialization.IEntityMemberWriter;
 import appbox.utils.IdUtil;
 
 public final class Enterprise extends SysEntity {
+    public static final long MODELID = IdUtil.SYS_ENTERPRISE_MODEL_ID;
+
     public static final short NAME_ID    = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short ADDRESS_ID = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
 
@@ -17,10 +19,6 @@ public final class Enterprise extends SysEntity {
 
     private String _name;
     private String _address;
-
-    public Enterprise() {
-        super(IdUtil.SYS_ENTERPRISE_MODEL_ID);
-    }
 
     public String getName() {
         return _name;
@@ -42,6 +40,11 @@ public final class Enterprise extends SysEntity {
             _address = value;
             onPropertyChanged(ADDRESS_ID);
         }
+    }
+
+    @Override
+    public long modelId() {
+        return MODELID;
     }
 
     @Override

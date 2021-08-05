@@ -10,9 +10,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 消息发送流, 注意目前实现边写边发
- */
+/** 消息发送流, 注意目前实现边写边发 */
 final class MessageWriteStream extends OutputStream implements IOutputStream /*暂继承OutputStream方便写Json*/ {
 
     //region ====ObjectPool====

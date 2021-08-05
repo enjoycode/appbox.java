@@ -11,9 +11,12 @@ public final class SqlEntityKVO extends SqlEntity implements IJsonSerializable {
     private final EntityKVO kvo;
 
     public SqlEntityKVO(EntityModel model) {
-        super(model.id());
-
         kvo = new EntityKVO(model);
+    }
+
+    @Override
+    public long modelId() {
+        return kvo.model.id();
     }
 
     @Override

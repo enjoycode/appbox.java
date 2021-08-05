@@ -13,10 +13,6 @@ public abstract class DBEntity extends Entity {
     private PersistentState _persistentState = PersistentState.Detached;
     private List<Short>     _changedMembers  = null;
 
-    public DBEntity(long modelId) {
-        super(modelId);
-    }
-
     /** 实体持久化状态 */
     public final PersistentState persistentState() { return _persistentState; }
 
@@ -39,8 +35,12 @@ public abstract class DBEntity extends Entity {
     //TODO: acceptChanges()
 
     /** 标记实体为删除状态 */
+    @Deprecated
     public final void markDeleted() {
-        //TODO:新建的考虑报错
+        //新建的暂直接报错
+        if (_persistentState == PersistentState.Detached)
+            throw new RuntimeException("Detached entity can't mark to deleted");
+
         _persistentState = PersistentState.Deleted;
     }
 
@@ -90,12 +90,12 @@ public abstract class DBEntity extends Entity {
         _persistentState = PersistentState.fromValue(bs.readByte());
         _changedMembers  = bs.readListShort();
 
-        //读取扩展信息，暂忽略
-        var extFields = bs.readVariant();
+        //读取扩展字段信息，暂忽略
+        final var extFields = bs.readVariant();
         if (extFields > 0) {
             for (int i = 0; i < extFields; i++) {
-                var fieldName  = bs.readString();
-                var fieldValue = bs.deserialize();
+                final var fieldName  = bs.readString();
+                final var fieldValue = bs.deserialize();
                 Log.debug("Read ext field: " + fieldName + "=" + fieldValue);
             }
         }

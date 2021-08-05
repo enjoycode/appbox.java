@@ -18,7 +18,7 @@ public abstract class TypeSerializer {
 
     static {
         //实例创建返回null表示不支持反序列化
-        Log.debug("开始注册序列化器...");
+        Log.debug("Register type serializer...");
         registerKnownType(IntSerializer.instance);
         registerKnownType(ByteSerializer.instance);
         registerKnownType(LongSerializer.instance);
@@ -43,9 +43,7 @@ public abstract class TypeSerializer {
         registerKnownType(new UserSerializer(PayloadType.KVFieldExpression, KVFieldExpression.class, () -> null));
     }
 
-    /**
-     * 注册已知类型的序列化器
-     */
+    /** 注册已知类型的序列化器 */
     public static void registerKnownType(TypeSerializer serializer) {
         _knownTypes.put(serializer.targetType, serializer);
         if (serializer.payloadType == PayloadType.ExtKnownType) {
@@ -54,9 +52,7 @@ public abstract class TypeSerializer {
         _sysKnownTypes.put(serializer.payloadType, serializer);
     }
 
-    /**
-     * 序列化时根据目标类型获取相应的序列化实现
-     */
+    /** 序列化时根据目标类型获取相应的序列化实现 */
     public static TypeSerializer getSerializer(Class<?> type) {
         //TODO: 范型及容器类型的处理
         //TypeSerializer serializer = null;
@@ -66,9 +62,7 @@ public abstract class TypeSerializer {
         return _knownTypes.get(type);
     }
 
-    /**
-     * 反序列化时根据PayloadType获取相应的系统已知类型的序列化实现
-     */
+    /** 反序列化时根据PayloadType获取相应的系统已知类型的序列化实现 */
     public static TypeSerializer getSerializer(byte payloadType) {
         return _sysKnownTypes.get(payloadType);
     }

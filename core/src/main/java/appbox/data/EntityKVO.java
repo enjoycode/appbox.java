@@ -12,14 +12,14 @@ import java.util.Map;
 final class EntityKVO {
 
     private final Map<String, Object> _kvo = new HashMap<>(8);
-    private final EntityModel         _model;
+    public final  EntityModel         model;
 
     public EntityKVO(EntityModel model) {
-        _model = model;
+        this.model = model;
     }
 
     void readMember(short id, IEntityMemberReader bs, int flags) {
-        var m = _model.getMember(id);
+        final var m = model.getMember(id);
         if (m.type() == EntityMemberModel.EntityMemberType.DataField) {
             var    field      = (DataFieldModel) m;
             Object fieldValue = null;

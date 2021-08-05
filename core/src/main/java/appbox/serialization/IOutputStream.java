@@ -90,10 +90,11 @@ public interface IOutputStream extends IEntityMemberWriter {
         }
 
         //判断是否已经序列化过(解决实体循环引用)
-        var index = getSerializedIndex(obj);
+        final var index = getSerializedIndex(obj);
         if (index < 0) {
             writeByte(PayloadType.Entity);
-            obj.writeTo(this);
+            writeLong(obj.modelId());  //先写入实体模型标识,TODO:考虑写入版本号
+            obj.writeTo(this);      //再写入实体数据
         } else {
             writeByte(PayloadType.ObjectRef);
             writeVariant(index);
@@ -138,9 +139,7 @@ public interface IOutputStream extends IEntityMemberWriter {
         writeInt(value);
     }
 
-    /**
-     * 大字节序写入
-     */
+    /** 大字节序写入 */
     default void writeIntBE(int value) {
         writeByte((byte) (value >>> 24));
         writeByte((byte) (value >>> 16));
@@ -164,9 +163,7 @@ public interface IOutputStream extends IEntityMemberWriter {
         writeLong(value);
     }
 
-    /**
-     * 大字序写入
-     */
+    /** 大字序写入 */
     default void writeLongBE(long value) {
         writeByte((byte) (value >>> 56));
         writeByte((byte) (value >>> 48));
@@ -517,7 +514,7 @@ public interface IOutputStream extends IEntityMemberWriter {
             return;
 
         writeShort(id);
-        serialize(value); //注意写入类型且判断是否已序列化
+        serialize(value); //写入类型且判断是否已序列化
     }
 
     @Override
@@ -531,7 +528,7 @@ public interface IOutputStream extends IEntityMemberWriter {
         writeShort(id);
         writeVariant(value.size());
         for (var item : value) {
-            item.writeTo(this);
+            serialize(item); //写入类型且判断是否已序列化
         }
     }
 

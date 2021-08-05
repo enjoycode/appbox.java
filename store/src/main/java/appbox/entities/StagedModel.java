@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 public class StagedModel extends SysEntity {
+    public static final long MODELID = IdUtil.SYS_STAGED_MODEL_ID;
 
     public static final short TYPE_ID      = (short) (1 << IdUtil.MEMBERID_SEQ_OFFSET);
     public static final short MODEL_ID     = (short) (2 << IdUtil.MEMBERID_SEQ_OFFSET);
@@ -26,10 +27,6 @@ public class StagedModel extends SysEntity {
     private String _modelId;
     private UUID   _developerId;
     private byte[] _data;
-
-    public StagedModel() {
-        super(IdUtil.SYS_STAGED_MODEL_ID);
-    }
 
     public byte getType() {
         return _type;
@@ -73,6 +70,11 @@ public class StagedModel extends SysEntity {
             this._data = value;
             onPropertyChanged(DATA_ID);
         }
+    }
+
+    @Override
+    public long modelId() {
+        return MODELID;
     }
 
     @Override
