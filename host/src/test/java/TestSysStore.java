@@ -124,8 +124,8 @@ public class TestSysStore {
         var obj = new Enterprise();
         obj.setName("Future Studio");
 
-        var batch = EntityStore.insertEntityAsync(obj, txn)
-                .thenCompose(r -> EntityStore.insertEntityAsync(obj, txn)) //重复插入相同主键引发异常
+        var batch = EntityStore.insertAsync(obj, txn)
+                .thenCompose(r -> EntityStore.insertAsync(obj, txn)) //重复插入相同主键引发异常
                 .thenCompose(r -> txn.commitAsync());
 
         try {
@@ -145,9 +145,9 @@ public class TestSysStore {
         emp.setPassword(new byte[]{1, 2, 3, 4});
 
         //insert
-        EntityStore.insertEntityAsync(emp).get();
+        EntityStore.insertAsync(emp).get();
         //delete
-        EntityStore.deleteEntityAsync(emp).get();
+        EntityStore.deleteAsync(emp).get();
     }
 
     /** 测试通过惟一索引查找 */

@@ -211,6 +211,10 @@ public abstract class SqlStore {
         return cmd;
     }
 
+    public final CompletableFuture<Void> insertAsync(SqlEntity entity) {
+        return insertAsync(entity, null);
+    }
+
     public final CompletableFuture<Void> insertAsync(SqlEntity entity, DbTransaction txn) {
         if (entity == null || entity.persistentState() != PersistentState.Detached) {
             tryRollbackTxn(txn);
@@ -227,6 +231,11 @@ public abstract class SqlStore {
                     handleDbCommandResult(txn, cmd, ex);
                     return null;
                 });
+    }
+
+    /** 仅适用于更新具备主键的实体，否则使用SqlUpdateCommand明确字段及条件更新 */
+    public final CompletableFuture<Void> updateAsync(SqlEntity entity) {
+        return updateAsync(entity, null);
     }
 
     /** 仅适用于更新具备主键的实体，否则使用SqlUpdateCommand明确字段及条件更新 */
@@ -253,12 +262,19 @@ public abstract class SqlStore {
     }
 
     /** 仅适用于删除具备主键的实体，否则使用SqlDeleteCommand明确指定条件删除 */
+    public final CompletableFuture<Void> deleteAsync(SqlEntity entity) {
+        return deleteAsync(entity, null);
+    }
+
+    /** 仅适用于删除具备主键的实体，否则使用SqlDeleteCommand明确指定条件删除 */
     public final CompletableFuture<Void> deleteAsync(SqlEntity entity, DbTransaction txn) {
-        if (entity == null || entity.persistentState() != PersistentState.Deleted) {
+        if (entity == null || entity.persistentState() == PersistentState.Detached
+                || entity.persistentState() == PersistentState.Deleted) {
             tryRollbackTxn(txn);
             throw new UnsupportedOperationException();
         }
 
+        entity.markDeleted(); //暂需要标记为删除状态,否则AcceptChanges时无法转为Detached状态
         var model = entity.model();
         if (!model.sqlStoreOptions().hasPrimaryKeys()) {
             tryRollbackTxn(txn);
@@ -275,7 +291,13 @@ public abstract class SqlStore {
                 });
     }
 
+    @Deprecated
+    public final CompletableFuture<Void> saveAsync(SqlEntity entity) {
+        return saveAsync(entity, null);
+    }
+
     /** 根据实体持久化状态调用相应的Insert/Update/Delete */
+    @Deprecated
     public final CompletableFuture<Void> saveAsync(SqlEntity entity, DbTransaction txn) {
         switch (entity.persistentState()) {
             case Detached:

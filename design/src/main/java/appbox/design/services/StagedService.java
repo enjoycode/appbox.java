@@ -136,7 +136,7 @@ public final class StagedService {
             stagedItem.setDeveloperId(developerId);
             stagedItem.setData(data);
             return stagedItem;
-        }).thenCompose(item -> EntityStore.insertEntityAsync(item, true));
+        }).thenCompose(item -> EntityStore.insertAsync(item, true));
     }
 
     /**
@@ -167,9 +167,9 @@ public final class StagedService {
                     CompletableFuture<Void> future = null;
                     for (StagedModel stagedModel : res) {
                         if (future == null) {
-                            future = EntityStore.deleteEntityAsync(model, stagedModel.id(), txn);
+                            future = EntityStore.deleteAsync(model, stagedModel.id(), txn);
                         } else {
-                            future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, stagedModel.id(), txn));
+                            future = future.thenCompose(r -> EntityStore.deleteAsync(model, stagedModel.id(), txn));
                         }
                     }
                     return future.thenCompose(r -> txn.commitAsync());
@@ -193,9 +193,9 @@ public final class StagedService {
                     CompletableFuture<Void> future = null;
                     for (StagedModel stagedModel : res) {
                         if (future == null) {
-                            future = EntityStore.deleteEntityAsync(stagedModel);
+                            future = EntityStore.deleteAsync(stagedModel);
                         } else {
-                            future = future.thenCompose(r -> EntityStore.deleteEntityAsync(stagedModel));
+                            future = future.thenCompose(r -> EntityStore.deleteAsync(stagedModel));
                         }
                     }
                     return future.thenCompose(r -> txn.commitAsync());

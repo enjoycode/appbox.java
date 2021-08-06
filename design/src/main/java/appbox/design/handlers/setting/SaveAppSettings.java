@@ -50,7 +50,7 @@ public final class SaveAppSettings implements IDesignHandler {
                 throw new RuntimeException("未实现");
             }
 
-            return EntityStore.updateEntityAsync(settings);
+            return EntityStore.updateAsync(settings);
         }).thenApply(r -> null);
     }
 

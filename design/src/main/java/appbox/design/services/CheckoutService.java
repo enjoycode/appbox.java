@@ -38,9 +38,9 @@ public final class CheckoutService {
                 obj.setDeveloperName(info.developerName);
                 obj.setVersion(info.version);
                 if (future == null) {
-                    future = EntityStore.insertEntityAsync(obj, txn);
+                    future = EntityStore.insertAsync(obj, txn);
                 } else {
-                    future = future.thenCompose(r -> EntityStore.insertEntityAsync(obj, txn));
+                    future = future.thenCompose(r -> EntityStore.insertAsync(obj, txn));
                 }
             }
             return future.thenCompose(r -> txn.commitAsync());
@@ -93,7 +93,7 @@ public final class CheckoutService {
                     CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
                     if (res != null && res.size() > 0) {
                         for (Checkout checkout : res) {
-                            future = future.thenCompose(r -> EntityStore.deleteEntityAsync(model, checkout.id(), txn));
+                            future = future.thenCompose(r -> EntityStore.deleteAsync(model, checkout.id(), txn));
                         }
                     }
                     return future;

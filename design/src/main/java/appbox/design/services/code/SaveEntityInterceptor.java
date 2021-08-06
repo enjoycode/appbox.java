@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
+/** 转换DbEntity.insertAsync()等 */
 public final class SaveEntityInterceptor implements IMethodInterceptor {
 
     @Override
@@ -54,7 +55,7 @@ public final class SaveEntityInterceptor implements IMethodInterceptor {
         }
 
         var saveMethod = generator.ast.newMethodInvocation();
-        saveMethod.setName(generator.ast.newSimpleName("saveAsync"));
+        saveMethod.setName(generator.ast.newSimpleName(node.getName().getIdentifier()));
         saveMethod.setExpression(expression);
         saveMethod.arguments().add(arg1);
         if (arg2 != null)

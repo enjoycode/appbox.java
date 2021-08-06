@@ -35,7 +35,6 @@ public abstract class DBEntity extends Entity {
     //TODO: acceptChanges()
 
     /** 标记实体为删除状态 */
-    @Deprecated
     public final void markDeleted() {
         //新建的暂直接报错
         if (_persistentState == PersistentState.Detached)

@@ -419,17 +419,17 @@ public final class StoreInitiator {
         if (widgetSettings == null || widgetSchema == null || extraLib == null)
             return CompletableFuture.failedFuture(new RuntimeException("Can't create default settings"));
 
-        return EntityStore.insertEntityAsync(defaultEnterprise, txn)
-                .thenCompose(r -> EntityStore.insertEntityAsync(admin, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(test, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(itdept, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(entou, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(itdeptou, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(adminou, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(testou, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(widgetSettings, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(widgetSchema, txn))
-                .thenCompose(r -> EntityStore.insertEntityAsync(extraLib, txn))
+        return EntityStore.insertAsync(defaultEnterprise, txn)
+                .thenCompose(r -> EntityStore.insertAsync(admin, txn))
+                .thenCompose(r -> EntityStore.insertAsync(test, txn))
+                .thenCompose(r -> EntityStore.insertAsync(itdept, txn))
+                .thenCompose(r -> EntityStore.insertAsync(entou, txn))
+                .thenCompose(r -> EntityStore.insertAsync(itdeptou, txn))
+                .thenCompose(r -> EntityStore.insertAsync(adminou, txn))
+                .thenCompose(r -> EntityStore.insertAsync(testou, txn))
+                .thenCompose(r -> EntityStore.insertAsync(widgetSettings, txn))
+                .thenCompose(r -> EntityStore.insertAsync(widgetSchema, txn))
+                .thenCompose(r -> EntityStore.insertAsync(extraLib, txn))
                 .thenApply(r -> list);
     }
 

@@ -3,6 +3,7 @@ package appbox.store;
 import appbox.channel.KVRowReader;
 import appbox.channel.messages.*;
 import appbox.data.EntityId;
+import appbox.data.PersistentState;
 import appbox.data.SysEntity;
 import appbox.data.TreeNodePath;
 import appbox.model.ApplicationModel;
@@ -69,30 +70,34 @@ public final class EntityStore { //TODO: rename to SysStore
     //TODO:*** Insert/Update/Delete本地索引及数据通过BatchCommand优化，减少RPC次数
 
     //region ----Insert----
-    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity) {
-        return insertEntityAsync(entity, false);
+    public static CompletableFuture<Void> insertAsync(SysEntity entity) {
+        return insertAsync(entity, false);
     }
 
-    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, boolean overrideExists) {
+    public static CompletableFuture<Void> insertAsync(SysEntity entity, boolean overrideExists) {
         return KVTransaction.beginAsync()
-                .thenCompose(txn -> insertEntityAsync(entity, txn, overrideExists)
+                .thenCompose(txn -> insertAsync(entity, txn, overrideExists)
                         .thenCompose(r -> txn.commitAsync()));
     }
 
-    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn) {
-        return insertEntityAsync(entity, txn, false);
+    public static CompletableFuture<Void> insertAsync(SysEntity entity, KVTransaction txn) {
+        return insertAsync(entity, txn, false);
     }
 
-    public static CompletableFuture<Void> insertEntityAsync(SysEntity entity, KVTransaction txn, boolean overrideExists) {
-        //TODO:考虑自动新建事务, 分区已存在且模型没有索引没有关系则可以不需要事务
+    public static CompletableFuture<Void> insertAsync(SysEntity entity, KVTransaction txn, boolean overrideExists) {
+        //TODO:分区已存在且模型没有索引没有关系则可以不需要事务
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");
-        return insertEntityInternal(entity, txn, overrideExists)
+        return insertInternal(entity, txn, overrideExists)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
-    private static CompletableFuture<Void> insertEntityInternal(SysEntity entity, KVTransaction txn, boolean overrideExists) {
-        //TODO:判断模型运行时及持久化状态
+    private static CompletableFuture<Void> insertInternal(SysEntity entity, KVTransaction txn, boolean overrideExists) {
+        if (entity == null || entity.persistentState() != PersistentState.Detached) {
+            throw new UnsupportedOperationException();
+        }
+
+        //TODO:判断模型运行时状态
         var model = entity.model(); //肯定存在，不需要RuntimeContext.Current.GetEntityModel
         //暂不允许没有成员的插入操作
         if (model.getMembers().size() == 0)
@@ -138,24 +143,27 @@ public final class EntityStore { //TODO: rename to SysStore
     //endregion insert
 
     //region ----Update----
-    public static CompletableFuture<Void> updateEntityAsync(SysEntity entity) {
+    public static CompletableFuture<Void> updateAsync(SysEntity entity) {
         if (entity == null)
             throw new IllegalArgumentException();
         return KVTransaction.beginAsync()
-                .thenCompose(txn -> updateEntityAsync(entity, txn)
+                .thenCompose(txn -> updateAsync(entity, txn)
                         .thenCompose(r -> txn.commitAsync()));
     }
 
-    public static CompletableFuture<Void> updateEntityAsync(SysEntity entity, KVTransaction txn) {
+    public static CompletableFuture<Void> updateAsync(SysEntity entity, KVTransaction txn) {
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");
-        return updateEntityInternal(entity, txn)
+        return updateInternal(entity, txn)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
-    private static CompletableFuture<Void> updateEntityInternal(SysEntity entity, KVTransaction txn) {
-        if (entity == null || txn == null)
-            throw new IllegalArgumentException();
+    private static CompletableFuture<Void> updateInternal(SysEntity entity, KVTransaction txn) {
+        if (entity == null || entity.persistentState() == PersistentState.Detached ||
+                entity.persistentState() == PersistentState.Deleted) {
+            throw new UnsupportedOperationException();
+        }
+
         var model = entity.model(); //肯定存在，不需要RuntimeContext.Current.GetEntityModel
         //先获取强制外键引用
         var refsWithFK = model.getEntityRefsWithFKConstraint();
@@ -180,22 +188,39 @@ public final class EntityStore { //TODO: rename to SysStore
     //endregion
 
     //region ----Delete----
-    public static CompletableFuture<Void> deleteEntityAsync(SysEntity entity) {
-        if (entity == null)
-            throw new IllegalArgumentException();
+    public static CompletableFuture<Void> deleteAsync(SysEntity entity) {
+        if (entity == null || entity.persistentState() == PersistentState.Detached
+                || entity.persistentState() == PersistentState.Deleted) {
+            throw new UnsupportedOperationException();
+        }
+
+        entity.markDeleted(); //暂需要标记为删除状态,否则AcceptChanges时无法转为Detached状态
+
         return KVTransaction.beginAsync()
-                .thenCompose(txn -> deleteEntityAsync(entity.model(), entity.id(), txn)
+                .thenCompose(txn -> deleteAsync(entity.model(), entity.id(), txn)
                         .thenCompose(r -> txn.commitAsync()));
     }
 
-    public static CompletableFuture<Void> deleteEntityAsync(EntityModel model, EntityId id, KVTransaction txn) {
+    public static CompletableFuture<Void> deleteAsync(SysEntity entity, KVTransaction txn) {
+        if (entity == null || entity.persistentState() == PersistentState.Detached
+                || entity.persistentState() == PersistentState.Deleted) {
+            txn.rollback();
+            throw new UnsupportedOperationException();
+        }
+
+        entity.markDeleted(); //暂需要标记为删除状态,否则AcceptChanges时无法转为Detached状态
+
+        return deleteAsync(entity.model(), entity.id(), txn);
+    }
+
+    public static CompletableFuture<Void> deleteAsync(EntityModel model, EntityId id, KVTransaction txn) {
         if (txn == null)
             throw new RuntimeException("Must enlist transaction");
-        return deleteEntityInternal(model, id, txn)
+        return deleteInternal(model, id, txn)
                 .whenComplete((r, ex) -> txn.rollbackOnException(ex));
     }
 
-    private static CompletableFuture<Void> deleteEntityInternal(EntityModel model, EntityId id, KVTransaction txn) {
+    private static CompletableFuture<Void> deleteInternal(EntityModel model, EntityId id, KVTransaction txn) {
         if (id == null || model == null)
             throw new IllegalArgumentException();
 
@@ -323,29 +348,31 @@ public final class EntityStore { //TODO: rename to SysStore
     //endregion index
 
     //region ----Save----
+    @Deprecated
     public static CompletableFuture<Void> saveAsync(SysEntity entity) {
         switch (entity.persistentState()) {
             case Detached:
-                return insertEntityAsync(entity);
+                return insertAsync(entity);
             case Unchnaged: //TODO:临时
             case Modified:
-                return updateEntityAsync(entity);
+                return updateAsync(entity);
             case Deleted:
-                return deleteEntityAsync(entity);
+                return deleteAsync(entity);
             default:
                 return CompletableFuture.completedFuture(null);
         }
     }
 
+    @Deprecated
     public static CompletableFuture<Void> saveAsync(SysEntity entity, KVTransaction txn) {
         switch (entity.persistentState()) {
             case Detached:
-                return insertEntityAsync(entity, txn);
+                return insertAsync(entity, txn);
             case Unchnaged: //TODO:临时
             case Modified:
-                return updateEntityAsync(entity, txn);
+                return updateAsync(entity, txn);
             case Deleted:
-                return deleteEntityAsync(entity.model(), entity.id(), txn);
+                return deleteAsync(entity.model(), entity.id(), txn);
             default:
                 return CompletableFuture.completedFuture(null);
         }
