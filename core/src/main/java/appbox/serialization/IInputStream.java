@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
@@ -32,6 +33,13 @@ public interface IInputStream extends IEntityMemberReader {
 
     //region ====Context====
 
+    /** 用于反序列化时根据实体模型标识创建实体实例 */
+    default void setEntityFactory(Map<Long, Supplier<? extends Entity>> factoryMap) {
+        final var ctx = getContext();
+        if(ctx != null)
+            ctx.setEntityFactory(factoryMap);
+    }
+
     /** 添加已反序列化列表，用于解决实体循环引用 */
     default void addToDeserialized(Entity obj) {
         final var ctx = getContext();
@@ -46,6 +54,7 @@ public interface IInputStream extends IEntityMemberReader {
             throw new RuntimeException("Can't get DeserializeContext");
         return ctx.getDeserialized(index);
     }
+
     //endregion
 
     //region ====Deserialize====

@@ -210,7 +210,7 @@ public final class FastJsonWriter implements IJsonWriter {
         }
     }
 
-    public void flush() throws IOException {
+    public void flush() {
         writer.flush();
     }
 

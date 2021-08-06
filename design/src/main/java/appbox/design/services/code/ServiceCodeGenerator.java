@@ -29,7 +29,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         put("SqlQuery", new SqlQueryCtorInterceptor());
     }};
 
-    protected static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
+    static final Map<String, IMethodInterceptor> methodInterceptors = new HashMap<>() {{
         put("AsyncAwait", new AsyncAwaitInterceptor());
         put("SqlQueryWhere", new SqlQueryWhereInterceptor());
         put("SqlQueryMapper", new SqlQueryMapperInterceptor());
@@ -41,17 +41,19 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }};
     //endregion
 
+    private static final String ENTITY_FACTORY_MAP_NAME = "ENTITY_FACTORY";
+
     private       TypeDeclaration         _serviceTypeDeclaration;
     /** 公开的服务方法集合 */
     private final List<MethodDeclaration> publicMethods = new ArrayList<>();
     private final Map<String, ModelNode>  usedEntities  = new HashMap<>();
 
-    protected final DesignHub    hub;
-    protected final String       appName;
-    protected final ServiceModel serviceModel;
-    protected final ASTRewrite   astRewrite;
-    protected final AST          ast;
-    public          boolean      hasAwaitInvocation;
+    final  DesignHub    hub;
+    final  String       appName;
+    final  ServiceModel serviceModel;
+    final  ASTRewrite   astRewrite;
+    final  AST          ast;
+    public boolean      hasAwaitInvocation;
 
     public ServiceCodeGenerator(DesignHub hub, String appName,
                                 ServiceModel serviceModel, ASTRewrite astRewrite) {
@@ -275,13 +277,13 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     //endregion
 
     /** 根据实体名称(eg: sys.entities.Employee)获取对应的ModelNode，如果不存在加入使用列表 */
-    protected ModelNode getUsedEntity(ITypeBinding entityType) {
+    ModelNode getUsedEntity(ITypeBinding entityType) {
         var pkg     = entityType.getPackage().getJavaElement();
         var appName = pkg.getPath().segment(1);
         return getUsedEntity(appName, entityType.getName());
     }
 
-    protected ModelNode getUsedEntity(long modelId) {
+    ModelNode getUsedEntity(long modelId) {
         var entityModelNode = hub.designTree.findModelNode(ModelType.Entity, modelId);
         return getUsedEntity(entityModelNode.appNode.model.name(), entityModelNode.model().name());
     }
@@ -320,7 +322,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
      * 用于生成实体运行时导航属性时判断
      * @param entityFullName eg: sys.entities.Employee
      */
-    protected boolean isUsedEntity(String entityFullName) {
+    boolean isUsedEntity(String entityFullName) {
         return usedEntities.get(entityFullName) != null;
     }
 
@@ -336,11 +338,17 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     /** 最后附加服务接口实现及使用的实体类 */
     public void finish() {
-        //附加IService.invokeAsync()
-        var invokeMethod = makeIServiceImplements();
-
-        var listRewrite =
+        final var listRewrite =
                 astRewrite.getListRewrite(_serviceTypeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
+
+        //附加ENTITY_FACTORY
+        if (!usedEntities.isEmpty()) {
+            final var entityFactoryMap = makeEntityFactoryMap();
+            listRewrite.insertLast(entityFactoryMap, null);
+        }
+
+        //附加IService.invokeAsync()
+        final var invokeMethod = makeIServiceImplements();
         listRewrite.insertLast(invokeMethod, null);
 
         //附加用到的实体
@@ -349,7 +357,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         }
     }
 
-    /** 生成实现IService的代码 */
+    /** 生成实现IService.invokeAsyn()的代码 */
     private MethodDeclaration makeIServiceImplements() {
         //返回类型
         var typeCompletableFuture =
@@ -372,7 +380,16 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         para2.setName(ast.newSimpleName("args"));
         invokeMethod.parameters().add(para2);
 
-        var body = ast.newBlock();
+        final var body = ast.newBlock();
+        //先设置EntityFactoryMap
+        if (!usedEntities.isEmpty()) {
+            final var setMap = ast.newMethodInvocation();
+            setMap.setName(ast.newSimpleName("setEntityFactory"));
+            setMap.setExpression(ast.newSimpleName("args"));
+            setMap.arguments().add(ast.newSimpleName(ENTITY_FACTORY_MAP_NAME));
+            body.statements().add(ast.newExpressionStatement(setMap));
+        }
+
         //switch处理各公开方法
         var methodToString = ast.newMethodInvocation(); //TODO:暂转换为method.toString()
         methodToString.setName(ast.newSimpleName("toString"));
@@ -471,7 +488,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         return getMethod;
     }
 
-    protected MethodInvocation makeFutureCast(Expression expression, Type castType) {
+    MethodInvocation makeFutureCast(Expression expression, Type castType) {
         var castEx = ast.newMethodInvocation();
         castEx.setName(ast.newSimpleName("thenApply"));
 
@@ -498,7 +515,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     /** t.Name 转换为 t.m("Name") */
-    protected MethodInvocation makeEntityExpression(Expression exp, String memberName) {
+    MethodInvocation makeEntityExpression(Expression exp, String memberName) {
         var newNode = ast.newMethodInvocation();
         newNode.setName(ast.newSimpleName("m"));
         newNode.setExpression(exp);
@@ -509,7 +526,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     /** t.Name 转换为 t.getName() */
-    protected MethodInvocation makeEntityGetMember(Expression owner, String memberName) {
+    MethodInvocation makeEntityGetMember(Expression owner, String memberName) {
         ASTNode newOwner = ASTNode.copySubtree(ast, owner);
 
         var newNode = ast.newMethodInvocation();
@@ -520,11 +537,58 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     /** 获取e.City.Name or e.Name的e */
-    protected static String getIdentifier(Name node) {
+    static String getIdentifier(Name node) {
         if (node.isSimpleName()) {
             return ((SimpleName) node).getIdentifier();
         } else {
             return getIdentifier(((QualifiedName) node).getQualifier());
         }
+    }
+
+    private FieldDeclaration makeEntityFactoryMap() {
+        final var mapOf = ast.newMethodInvocation();
+        mapOf.setName(ast.newSimpleName("of"));
+        mapOf.setExpression(ast.newName("java.util.Map"));
+        for (var modelNode : usedEntities.values()) {
+            var runtimeEntityClassName = EntityCodeGenerator.makeEntityClassName(modelNode);
+
+            var arg1 = ast.newName(runtimeEntityClassName + ".MODELID");
+            var arg2 = ast.newCreationReference();
+            arg2.setType(ast.newSimpleType(ast.newSimpleName(runtimeEntityClassName)));
+            mapOf.arguments().add(arg1);
+            mapOf.arguments().add(arg2);
+        }
+
+        final var vdf = ast.newVariableDeclarationFragment();
+        vdf.setName(ast.newSimpleName(ENTITY_FACTORY_MAP_NAME));
+        vdf.setInitializer(mapOf);
+
+        final var field = ast.newFieldDeclaration(vdf);
+        field.setType(makeEntityFactoryMapType());
+        field.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD));
+        field.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+        field.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.FINAL_KEYWORD));
+
+        return field;
+    }
+
+    /** 生成类型: Map<Long,Supplier<? extends Entity>> */
+    private ParameterizedType makeEntityFactoryMapType() {
+        final var mapType = ast.newSimpleType(ast.newName("java.util.Map"));
+        final var resType = ast.newParameterizedType(mapType);
+        //generic type 1
+        final var geType1 = ast.newSimpleType(ast.newSimpleName("Long"));
+        resType.typeArguments().add(geType1);
+        //generic type 2
+        final var supplierType = ast.newSimpleType(ast.newName("java.util.function.Supplier"));
+        final var entityType   = ast.newSimpleType(ast.newName("appbox.data.Entity"));
+        final var wildcardType = ast.newWildcardType();
+        wildcardType.setBound(entityType, true);
+
+        final var geType2 = ast.newParameterizedType(supplierType);
+        geType2.typeArguments().add(wildcardType);
+        resType.typeArguments().add(geType2);
+
+        return resType;
     }
 }
