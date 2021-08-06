@@ -36,8 +36,13 @@ public interface IInputStream extends IEntityMemberReader {
     /** 用于反序列化时根据实体模型标识创建实体实例 */
     default void setEntityFactory(Map<Long, Supplier<? extends Entity>> factoryMap) {
         final var ctx = getContext();
-        if(ctx != null)
+        if (ctx != null)
             ctx.setEntityFactory(factoryMap);
+    }
+
+    default Supplier<? extends Entity> getEntityFactory(long modelId) {
+        final var ctx = getContext();
+        return ctx == null ? null : ctx.getEntityFactory(modelId);
     }
 
     /** 添加已反序列化列表，用于解决实体循环引用 */
@@ -59,11 +64,19 @@ public interface IInputStream extends IEntityMemberReader {
 
     //region ====Deserialize====
     default Object deserialize() {
-        var payloadType = readByte();
-        if (payloadType == PayloadType.Null) return null;
-        else if (payloadType == PayloadType.BooleanTrue) return Boolean.TRUE;
-        else if (payloadType == PayloadType.BooleanFalse) return Boolean.FALSE;
-        else if (payloadType == PayloadType.ObjectRef) return getDeserialized(readVariant());
+        final var payloadType = readByte();
+        switch (payloadType) {
+            case PayloadType.Null:
+                return null;
+            case PayloadType.BooleanTrue:
+                return Boolean.TRUE;
+            case PayloadType.BooleanFalse:
+                return Boolean.FALSE;
+            case PayloadType.ObjectRef:
+                return getDeserialized(readVariant());
+            case PayloadType.Entity:
+                return readEntity(null);
+        }
 
         TypeSerializer serializer = null;
         if (payloadType == PayloadType.ExtKnownType) throw new RuntimeException("TODO");
@@ -88,19 +101,29 @@ public interface IInputStream extends IEntityMemberReader {
         if (payloadType == PayloadType.Null)
             return null;
         if (payloadType == PayloadType.Entity) {
-            final var modelId = readLong(); //先读取模型标识号
-            //TODO:creator == null 从流上下文获取,如果还没有解析为KVO
-            final var obj = creator.get();
-            if (modelId != obj.modelId())
-                throw new RuntimeException("EntityModel's id not same");
-            obj.readFrom(this);
-            return obj;
+            return (T) readEntity(creator);
         }
         if (payloadType == PayloadType.ObjectRef) {
             final var index = readVariant();
             return (T) getDeserialized(index);
         }
         throw new RuntimeException("PayloadType Error");
+    }
+
+    private Entity readEntity(Supplier<? extends Entity> creator) {
+        final var modelId = readLong(); //先读取模型标识号
+        if (creator == null) //先尝试从上下文中获取
+            creator = getEntityFactory(modelId);
+        if (creator == null) {
+            //TODO:解析为KVO
+            throw new RuntimeException("未实现");
+        } else {
+            final var obj = creator.get();
+            if (modelId != obj.modelId())
+                throw new RuntimeException("EntityModel's id not same");
+            obj.readFrom(this);
+            return obj;
+        }
     }
     //endregion
 
