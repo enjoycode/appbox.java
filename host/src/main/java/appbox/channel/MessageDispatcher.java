@@ -86,6 +86,7 @@ public final class MessageDispatcher {
                         sendInvokeResponse(channel, shard, reqId,
                                 InvokeResponse.ErrorCode.ServiceInnerError, ex.getMessage());
                         Log.error(String.format("Invoke service[%s] error: %s", service, ex));
+                        ex.printStackTrace();
                     });
                 }
             });

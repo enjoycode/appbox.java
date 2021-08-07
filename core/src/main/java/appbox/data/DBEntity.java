@@ -14,7 +14,7 @@ public abstract class DBEntity extends Entity {
     private List<Short>     _changedMembers  = null;
 
     /** 实体持久化状态 */
-    public final PersistentState persistentState() { return _persistentState; }
+    public final PersistentState persistentState() {return _persistentState;}
 
     protected final void onPropertyChanged(short memberId) {
         if (_persistentState == PersistentState.Unchnaged) {
@@ -53,6 +53,7 @@ public abstract class DBEntity extends Entity {
      * @return EntityRef成员返回DbEntity实例，EntitySet成员返回List<DbEntity>
      */
     public Object getNaviPropForFetch(String propName) { //TODO:考虑参数baseType:long用于聚合引用
+        //TODO:考虑从ServiceClassLoader内实例化,或者从EntityFactoryMap内实例化
         throw new UnsupportedOperationException(propName);
     }
 

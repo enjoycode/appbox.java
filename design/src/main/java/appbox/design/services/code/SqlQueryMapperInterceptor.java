@@ -1,6 +1,5 @@
 package appbox.design.services.code;
 
-import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.entity.EntityMemberModel;
 import appbox.store.DbFunc;
@@ -65,7 +64,7 @@ final class SqlQueryMapperInterceptor implements IMethodInterceptor {
             @Override
             public boolean visit(QualifiedName node) {
                 //注意需要排除相同成员的引用
-                var identifier = ServiceCodeGenerator.getIdentifier(node);
+                var identifier = ServiceCodeGenerator.getTopIdentifier(node);
                 if (lambdaParameters.containsKey(identifier)) {
                     if (!inDbFunc) {
                         //final String CityName = t.City.Name

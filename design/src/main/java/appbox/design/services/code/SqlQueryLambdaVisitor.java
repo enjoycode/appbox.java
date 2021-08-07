@@ -45,7 +45,7 @@ final class SqlQueryLambdaVisitor extends ServiceCodeGeneratorProxy {
     public boolean visit(QualifiedName node) {
         //eg: e.name or e.customer.name
         //TODO:检查EntitySet成员报错 eg: e.orderItems
-        var identifier = ServiceCodeGenerator.getIdentifier(node);
+        var identifier = ServiceCodeGenerator.getTopIdentifier(node);
         if (lambdaParameters.containsKey(identifier)) {
             if (node.getQualifier().isQualifiedName()) {
                 visit((QualifiedName) node.getQualifier()); //继续向上转换
@@ -84,7 +84,7 @@ final class SqlQueryLambdaVisitor extends ServiceCodeGeneratorProxy {
         var left = node.getLeftHandSide();
         if (left instanceof QualifiedName) {
             var qualified  = (QualifiedName) left;
-            var identifier = ServiceCodeGenerator.getIdentifier(qualified);
+            var identifier = ServiceCodeGenerator.getTopIdentifier(qualified);
             if (lambdaParameters.containsKey(identifier)) {
                 if (qualified.getQualifier().isQualifiedName()) //eg: t.City.Name = "Wuxi"
                     throw new RuntimeException("EntityRef path not allowed");

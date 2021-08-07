@@ -1,5 +1,6 @@
 package appbox.design.lang.java.jdt;
 
+import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.utils.PathUtil;
 import org.eclipse.core.internal.resources.*;
 import org.eclipse.core.internal.utils.Messages;
@@ -7,10 +8,7 @@ import org.eclipse.core.internal.utils.WrappedRuntimeException;
 import org.eclipse.core.internal.watson.ElementTreeIterator;
 import org.eclipse.core.internal.watson.IElementContentVisitor;
 import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 import java.net.URI;
@@ -218,9 +216,18 @@ public abstract class ModelResource implements IResource {
 
     @Override
     public IPath getLocation() {
-        //注意返回指向临时目录, eg: /tmp/appbox/workspace/sessionid
-        var workingroot = PathUtil.getWorkingLocation(workspace.languageServer.sessionId);
-        return workingroot.append(this.path);
+        //注意:返回指向临时目录, eg: /tmp/appbox/workspace/sessionid
+        final var workingroot = PathUtil.getWorkingLocation(workspace.languageServer.sessionId);
+
+        //如果是编译输出的class文件,统一放在bin目录内
+        if ("class".equals(getFileExtension())) {
+            final var rp = this.path.removeFirstSegments(2);
+            return workingroot.append(this.path.segment(0))
+                    .append(JdtLanguageServer.BUILD_OUTPUT)
+                    .append(String.join(".", rp.segments()));
+        } else {
+            return workingroot.append(this.path);
+        }
     }
 
     @Override

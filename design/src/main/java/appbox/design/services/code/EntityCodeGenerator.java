@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 //TODO:考虑仅生成服务使用到的成员
+//TODO:重写,直接使用字符串
 
 /** 生成实体的运行时代码 */
 @SuppressWarnings("unchecked")
@@ -32,14 +33,27 @@ public final class EntityCodeGenerator {
     private EntityCodeGenerator() {}
 
     /** 生成实体的运行时代码 */
-    static TypeDeclaration makeEntityRuntimeCode(ServiceCodeGenerator generator, ModelNode modelNode) {
+    public static String makeEntityRuntimeCode(ServiceCodeGenerator generator, ModelNode modelNode) {
+        var sb = new StringBuilder(1024);
+        sb.append("package ");
+        sb.append(modelNode.appNode.model.name());
+        sb.append(".entities;\n");
+
+        final var runtimeType = makeEntityRuntimeType(generator, modelNode);
+        sb.append(runtimeType);
+
+        return sb.toString();
+    }
+
+    /** 生成实体的运行时类型 */
+    private static TypeDeclaration makeEntityRuntimeType(ServiceCodeGenerator generator, ModelNode modelNode) {
         final AST ast             = generator.ast;
         var       model           = (EntityModel) modelNode.model();
         var       entityClass     = ast.newTypeDeclaration();
-        var       entityClassName = makeEntityClassName(modelNode);
+        var       entityClassName = modelNode.model().name();
         entityClass.setName(ast.newSimpleName(entityClassName));
         entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD));
-        entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
+        //entityClass.modifiers().add(ast.newModifier(Modifier.ModifierKeyword.STATIC_KEYWORD));
 
         //extends
         if (model.sysStoreOptions() != null) {
@@ -83,9 +97,9 @@ public final class EntityCodeGenerator {
         return entityClass;
     }
 
-    /** 生成运行时实体名称 eg: SYS_Employee */
+    /** 生成运行时实体名称 eg: sys.entities.Employee */
     static String makeEntityClassName(ModelNode modelNode) {
-        return String.format("%s_%s", modelNode.appNode.model.name().toUpperCase(), modelNode.model().name());
+        return String.format("%s.entities.%s", modelNode.appNode.model.name(), modelNode.model().name());
     }
 
     /** 生成 public static final long MODELID = xxxxxL */

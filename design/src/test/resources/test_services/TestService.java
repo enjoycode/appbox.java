@@ -5,6 +5,8 @@ import static sys.Async.await;
 
 public class TestService {
 
+    private final long modelId = sys.entities.Employee.MODELID;
+
     private void test(sys.entities.Employee a, sys.entities.Employee b) {
         if (!a.Name.equals(b.Name))
             a.Age = b.Age;

@@ -46,7 +46,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     private       TypeDeclaration         _serviceTypeDeclaration;
     /** 公开的服务方法集合 */
     private final List<MethodDeclaration> publicMethods = new ArrayList<>();
-    private final Map<String, ModelNode>  usedEntities  = new HashMap<>();
+    /** 当前服务使用到的实体模型 */
+    public final  Map<String, ModelNode>  usedEntities  = new HashMap<>();
 
     final  DesignHub    hub;
     final  String       appName;
@@ -65,20 +66,20 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     //region ====visit methods====
+
+    /** 排除特殊import */
     @Override
     public boolean visit(ImportDeclaration node) {
-        if (node.getName().isQualifiedName()) {
-            var identifier = getIdentifier(node.getName());
-            if (hub.designTree.findApplicationNodeByName(identifier) != null) {
-                var newNode = ast.newLineComment();
-                astRewrite.replace(node, newNode, null);
-                return false;
-            }
+        if (node.getName().toString().equals("sys.Async.await")) {
+            var newNode = ast.newLineComment();
+            astRewrite.replace(node, newNode, null);
+            return false;
         }
 
         return super.visit(node);
     }
 
+    /** 修改服务实现IService */
     @Override
     public boolean visit(TypeDeclaration node) {
         if (TypeHelper.isServiceClass(node, appName, serviceModel.name())) {
@@ -93,21 +94,22 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         return true;
     }
 
-    @Override
-    public boolean visit(SimpleType node) {
-        var entityType = TypeHelper.getEntityType(node);
-        if (entityType != null) {
-            //转换为运行时类型
-            if (!node.isVar()) {
-                var entityRuntimeType = makeEntityRuntimeType(entityType);
-                astRewrite.replace(node, entityRuntimeType, null);
-            }
-            return false;
-        }
+    //@Override
+    //public boolean visit(SimpleType node) {
+    //    var entityType = TypeHelper.getEntityType(node);
+    //    if (entityType != null) {
+    //        //转换为运行时类型
+    //        if (!node.isVar()) {
+    //            var entityRuntimeType = makeEntityRuntimeType(entityType);
+    //            astRewrite.replace(node, entityRuntimeType, null);
+    //        }
+    //        return false;
+    //    }
+    //
+    //    return super.visit(node);
+    //}
 
-        return super.visit(node);
-    }
-
+    /** 将公开方法加入服务方法列表 */
     @Override
     public boolean visit(MethodDeclaration node) {
         //判断方法是否服务方法
@@ -179,11 +181,11 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     @Override
     public boolean visit(QualifiedName node) {
-        var owner     = node.getQualifier();
-        var ownerType = owner.resolveTypeBinding();
-        if (TypeHelper.isEntityType(ownerType)) {
-            //TODO:判断是否实体属性
-            var newNode = makeEntityGetMember(owner, node.getName().getIdentifier());
+        var       owner     = node.getQualifier();
+        var       ownerType = owner.resolveTypeBinding();
+        final var name      = node.getName().getIdentifier();
+        if (TypeHelper.isEntityMember(ownerType, name)) {
+            var newNode = makeEntityGetMember(owner, name);
             astRewrite.replace(node, newNode, null);
 
             owner.accept(this);
@@ -194,9 +196,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
             return false;
         } else if (TypeHelper.isDataStoreType(ownerType) && owner.isSimpleName()) {
-            String storeName     = node.getName().getIdentifier();
             String storeTypeName = null;
-            var    storeNode     = hub.designTree.findDataStoreNodeByName(storeName);
+            var    storeNode     = hub.designTree.findDataStoreNodeByName(name);
             if (storeNode.model().kind() == DataStoreModel.DataStoreKind.Sql) {
                 storeTypeName = SqlStore.class.getName();
                 var newNode = ast.newMethodInvocation();
@@ -231,10 +232,10 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     @Override
     public boolean visit(FieldAccess node) {
-        var ownerType = node.getExpression().resolveTypeBinding();
-        if (TypeHelper.isEntityType(ownerType)) {
-            //TODO:判断是否实体属性
-            var newNode = makeEntityGetMember(node.getExpression(), node.getName().getIdentifier());
+        var       ownerType = node.getExpression().resolveTypeBinding();
+        final var name      = node.getName().getIdentifier();
+        if (TypeHelper.isEntityMember(ownerType, name)) {
+            var newNode = makeEntityGetMember(node.getExpression(), name);
             astRewrite.replace(node, newNode, null);
 
             node.getExpression().accept(this);
@@ -350,11 +351,6 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         //附加IService.invokeAsync()
         final var invokeMethod = makeIServiceImplements();
         listRewrite.insertLast(invokeMethod, null);
-
-        //附加用到的实体
-        for (var modelNode : usedEntities.values()) {
-            listRewrite.insertLast(EntityCodeGenerator.makeEntityRuntimeCode(this, modelNode), null);
-        }
     }
 
     /** 生成实现IService.invokeAsyn()的代码 */
@@ -381,13 +377,23 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         invokeMethod.parameters().add(para2);
 
         final var body = ast.newBlock();
-        //先设置EntityFactoryMap
+        //先设置EntityFactoryMap, TODO:考虑移除此实现,由InvokeArgs.getXXX()时传入EntityFactory
         if (!usedEntities.isEmpty()) {
+            final var ifcondition = ast.newInfixExpression();
+            ifcondition.setOperator(InfixExpression.Operator.NOT_EQUALS);
+            ifcondition.setLeftOperand(ast.newSimpleName("args"));
+            ifcondition.setRightOperand(ast.newNullLiteral());
+
             final var setMap = ast.newMethodInvocation();
             setMap.setName(ast.newSimpleName("setEntityFactory"));
             setMap.setExpression(ast.newSimpleName("args"));
             setMap.arguments().add(ast.newSimpleName(ENTITY_FACTORY_MAP_NAME));
-            body.statements().add(ast.newExpressionStatement(setMap));
+
+            final var ifArgsNotNull = ast.newIfStatement();
+            ifArgsNotNull.setExpression(ifcondition);
+            ifArgsNotNull.setThenStatement(ast.newExpressionStatement(setMap));
+
+            body.statements().add(ifArgsNotNull);
         }
 
         //switch处理各公开方法
@@ -537,11 +543,11 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     /** 获取e.City.Name or e.Name的e */
-    static String getIdentifier(Name node) {
+    static String getTopIdentifier(Name node) {
         if (node.isSimpleName()) {
             return ((SimpleName) node).getIdentifier();
         } else {
-            return getIdentifier(((QualifiedName) node).getQualifier());
+            return getTopIdentifier(((QualifiedName) node).getQualifier());
         }
     }
 
@@ -554,7 +560,7 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
             var arg1 = ast.newName(runtimeEntityClassName + ".MODELID");
             var arg2 = ast.newCreationReference();
-            arg2.setType(ast.newSimpleType(ast.newSimpleName(runtimeEntityClassName)));
+            arg2.setType(ast.newSimpleType(ast.newName(runtimeEntityClassName)));
             mapOf.arguments().add(arg1);
             mapOf.arguments().add(arg2);
         }

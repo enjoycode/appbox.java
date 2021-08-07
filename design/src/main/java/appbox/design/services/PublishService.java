@@ -6,8 +6,9 @@ import appbox.design.DesignHub;
 import appbox.design.common.PublishPackage;
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.JdtLanguageServer;
-import appbox.design.lang.java.jdt.ModelFile;
+import appbox.design.services.code.EntityCodeGenerator;
 import appbox.design.services.code.ServiceCodeGenerator;
+import appbox.design.tree.ModelNode;
 import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 import appbox.model.*;
@@ -16,8 +17,8 @@ import appbox.serialization.BytesOutputStream;
 import appbox.store.*;
 import com.ea.async.instrumentation.Transformer;
 import org.eclipse.core.internal.resources.BuildConfiguration;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -27,6 +28,7 @@ import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jface.text.Document;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -98,15 +100,19 @@ public final class PublishService {
         var edits  = astRewrite.rewriteAST(newdoc, options);
         edits.apply(newdoc);
 
-        var runtimeCode       = newdoc.get();
-        var runtimeCodeStream = new ByteArrayInputStream(runtimeCode.getBytes(StandardCharsets.UTF_8));
+        var runtimeServiceCode       = newdoc.get();
+        var runtimeServiceCodeStream = new ByteArrayInputStream(runtimeServiceCode.getBytes(StandardCharsets.UTF_8));
 
         //4.生成运行时临时Project并进行编译
         final var libs               = hub.typeSystem.makeServiceProjectDeps(designNode, true);
         var       runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
         var       runtimeProject     = hub.typeSystem.languageServer.createProject(runtimeProjectName, libs);
-        var       runtimeFile        = runtimeProject.getFile(vfile.getName());
-        runtimeFile.create(runtimeCodeStream, true, null);
+        var       runtimeServiceFile = runtimeProject.getFile(vfile.getName());
+        runtimeServiceFile.create(runtimeServiceCodeStream, true, null);
+        //附加使用到的实体模型
+        for (var entityNode : serviceCodeGenerator.usedEntities.values()) {
+            createEntityFile(runtimeProject, serviceCodeGenerator, entityNode);
+        }
 
         var config  = new BuildConfiguration(runtimeProject);
         var builder = new JavaBuilderWrapper(config);
@@ -121,10 +127,10 @@ public final class PublishService {
         }
 
         //6.获取并压缩编译好的.class
-        final var classData = compressClassesData(runtimeProject, vfile, model, appName, asyncTransformer);
+        final var classData = compressClassesData(runtimeProject, model, appName, asyncTransformer);
 
         //7.删除用于编译的临时Project及运行时服务代码
-        runtimeFile.delete(true, null);
+        runtimeServiceFile.delete(true, null);
         runtimeProject.delete(true, null);
 
         return classData;
@@ -159,13 +165,27 @@ public final class PublishService {
         }
     }
 
+    /** 创建运行时实体类文件 */
+    private static void createEntityFile(IProject project, ServiceCodeGenerator generator,
+                                         ModelNode modelNode) throws CoreException {
+        var entityCode       = EntityCodeGenerator.makeEntityRuntimeCode(generator, modelNode);
+        var entityCodeStream = new ByteArrayInputStream(entityCode.getBytes(StandardCharsets.UTF_8));
+        var appFolder        = project.getFolder(modelNode.appNode.model.name());
+        if (!appFolder.exists())
+            appFolder.create(true, true, null);
+        var typeFolder = appFolder.getFolder("entities");
+        if (!typeFolder.exists())
+            typeFolder.create(true, true, null);
+        var entityFile = typeFolder.getFile(modelNode.model().name() + ".java");
+        entityFile.create(entityCodeStream, true, null);
+    }
+
     /** 转换服务类内的await */
-    private static byte[] transformAsync(Transformer transformer, IFile serviceClassFile) {
+    private static byte[] transformAsync(Transformer transformer, File serviceClassFile) {
         try {
-            final var file        = serviceClassFile.getLocation().toFile();
-            final var url         = file.toURI().toURL();
+            final var url         = serviceClassFile.toURI().toURL();
             final var classLoader = new URLClassLoader(new URL[]{url});
-            try (FileInputStream fis = new FileInputStream(file)) {
+            try (FileInputStream fis = new FileInputStream(serviceClassFile)) {
                 return transformer.instrument(classLoader, fis);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -176,12 +196,13 @@ public final class PublishService {
     }
 
     /** 压缩编码编译好的class文件,包括其引用的第三方包信息 */
-    private static byte[] compressClassesData(IProject runtimeProject, ModelFile vfile,
+    private static byte[] compressClassesData(IProject runtimeProject,
                                               ServiceModel model, String appName,
                                               Transformer asyncTransformer) throws Exception {
-        final var classFolder = runtimeProject.getFolder(JdtLanguageServer.BUILD_OUTPUT);
-        final var classFiles  = classFolder.members();
-        final var outStream   = new BytesOutputStream(2048);
+        final var classFolder = runtimeProject.getFolder(JdtLanguageServer.BUILD_OUTPUT)
+                .getLocation().toFile();
+        final var classFiles = classFolder.listFiles();
+        final var outStream  = new BytesOutputStream(2048);
 
         //先写入类数据
         outStream.writeVariant(classFiles.length); //.class文件数
@@ -189,20 +210,20 @@ public final class PublishService {
             final var className = classFile.getName().replace(".class", "");
             outStream.writeString(className);
             //如果是服务类且用到了await，需要转换
-            if (asyncTransformer != null
-                    && classFile.getName().equals(vfile.getName().replace(".java", ".class"))) {
-                outStream.writeByteArray(transformAsync(asyncTransformer, (IFile) classFile));
+            if (asyncTransformer != null && classFile.getName().equals(model.name() + ".class")) {
+                outStream.writeByteArray(transformAsync(asyncTransformer, classFile));
             } else {
-                outStream.writeByteArray(Files.readAllBytes(classFile.getLocation().toFile().toPath()));
+                outStream.writeByteArray(Files.readAllBytes(classFile.toPath()));
             }
 
-            classFile.delete(true, null);
+            //classFile.delete(true, null);
         }
 
         //如果服务引用第三方包,再写入第三方引用数据, 注意已转换为全路径 eg: "sys/aa.jar"
         if (model.hasReference()) {
             outStream.writeListString(model.getReferences().stream()
-                    .map(libName -> appName + "/" + libName).collect(Collectors.toList()));
+                    .map(libName -> appName + "/" + libName)
+                    .collect(Collectors.toList()));
         }
 
         return BrotliUtil.compress(outStream.getBuffer(), 0, outStream.size());
