@@ -93,7 +93,7 @@ public final class EntityStore { //TODO: rename to SysStore
     }
 
     private static CompletableFuture<Void> insertInternal(SysEntity entity, KVTransaction txn, boolean overrideExists) {
-        if (entity == null || entity.persistentState() != PersistentState.Detached) {
+        if (entity == null || (!overrideExists && entity.persistentState() != PersistentState.Detached)) {
             throw new UnsupportedOperationException();
         }
 
