@@ -184,17 +184,22 @@ public final class ServiceCodeGenerator extends GenericVisitor {
         var       owner     = node.getQualifier();
         var       ownerType = owner.resolveTypeBinding();
         final var name      = node.getName().getIdentifier();
-        if (TypeHelper.isEntityMember(ownerType, name)) {
-            var newNode = makeEntityGetMember(owner, name);
-            astRewrite.replace(node, newNode, null);
+        if (TypeHelper.isEntityType(ownerType)) {
+            //TODO:考虑Enityt.MODELID直接转换为常量
+            if (isEntityMember(ownerType, name)) {
+                final var newNode = makeEntityGetMember(owner, name);
+                astRewrite.replace(node, newNode, null);
 
-            owner.accept(this);
+                owner.accept(this);
 
-            var newExp = (ASTNode) astRewrite.get(node, QualifiedName.QUALIFIER_PROPERTY);
-            if (newExp.getParent() == null)
-                newNode.setExpression((Expression) newExp);
+                final var newExp = (ASTNode) astRewrite.get(node, QualifiedName.QUALIFIER_PROPERTY);
+                if (newExp.getParent() == null)
+                    newNode.setExpression((Expression) newExp);
 
-            return false;
+                return false;
+            } else {
+                return super.visit(node);
+            }
         } else if (TypeHelper.isDataStoreType(ownerType) && owner.isSimpleName()) {
             String storeTypeName = null;
             var    storeNode     = hub.designTree.findDataStoreNodeByName(name);
@@ -232,19 +237,21 @@ public final class ServiceCodeGenerator extends GenericVisitor {
 
     @Override
     public boolean visit(FieldAccess node) {
-        var       ownerType = node.getExpression().resolveTypeBinding();
+        final var ownerType = node.getExpression().resolveTypeBinding();
         final var name      = node.getName().getIdentifier();
-        if (TypeHelper.isEntityMember(ownerType, name)) {
-            var newNode = makeEntityGetMember(node.getExpression(), name);
-            astRewrite.replace(node, newNode, null);
+        if (TypeHelper.isEntityType(ownerType)) {
+            if (isEntityMember(ownerType, name)) {
+                final var newNode = makeEntityGetMember(node.getExpression(), name);
+                astRewrite.replace(node, newNode, null);
 
-            node.getExpression().accept(this);
+                node.getExpression().accept(this);
 
-            var newExp = (ASTNode) astRewrite.get(node, FieldAccess.EXPRESSION_PROPERTY);
-            if (newExp.getParent() == null)
-                newNode.setExpression((Expression) newExp);
+                final var newExp = (ASTNode) astRewrite.get(node, FieldAccess.EXPRESSION_PROPERTY);
+                if (newExp.getParent() == null)
+                    newNode.setExpression((Expression) newExp);
 
-            return false;
+                return false;
+            }
         }
 
         return super.visit(node);
@@ -276,11 +283,16 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     //endregion
+    private boolean isEntityMember(ITypeBinding entityType, String name) {
+        final var modelNode = getUsedEntity(entityType);
+        final var model     = (EntityModel) modelNode.model();
+        return model.tryGetMember(name) != null;
+    }
 
     /** 根据实体名称(eg: sys.entities.Employee)获取对应的ModelNode，如果不存在加入使用列表 */
     ModelNode getUsedEntity(ITypeBinding entityType) {
-        var pkg     = entityType.getPackage().getJavaElement();
-        var appName = pkg.getPath().segment(1);
+        final var pkg     = entityType.getPackage().getJavaElement();
+        final var appName = pkg.getPath().segment(1);
         return getUsedEntity(appName, entityType.getName());
     }
 
@@ -290,8 +302,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     private ModelNode getUsedEntity(String appName, String entityName) {
-        var fullName        = String.format("%s.entities.%s", appName, entityName);
-        var entityModelNode = usedEntities.get(fullName);
+        final var fullName        = String.format("%s.entities.%s", appName, entityName);
+        var       entityModelNode = usedEntities.get(fullName);
         if (entityModelNode == null) {
             var appNode = hub.designTree.findApplicationNodeByName(appName);
             entityModelNode = hub.designTree.findModelNodeByName(
@@ -515,8 +527,8 @@ public final class ServiceCodeGenerator extends GenericVisitor {
     }
 
     private SimpleType makeEntityRuntimeType(ITypeBinding entityType) {
-        var entityModelNode = getUsedEntity(entityType);
-        var entityClassName = EntityCodeGenerator.makeEntityClassName(entityModelNode);
+        final var entityModelNode = getUsedEntity(entityType);
+        final var entityClassName = EntityCodeGenerator.makeEntityClassName(entityModelNode);
         return ast.newSimpleType(ast.newName(entityClassName));
     }
 

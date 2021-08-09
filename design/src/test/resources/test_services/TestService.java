@@ -47,7 +47,7 @@ public class TestService {
     public CompletableFuture<String> invoke() {
         var obj = new sys.entities.Employee("Rick");
 
-        //sys.services.TestService.test1();
+        hello("Rick", 100).join();
         return sys.services.TestService.hello(obj.Name, 100);
     }
 

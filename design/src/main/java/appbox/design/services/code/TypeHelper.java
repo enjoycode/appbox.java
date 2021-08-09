@@ -22,11 +22,6 @@ public final class TypeHelper {
         return pkg.getPath().lastSegment().equals("entities");
     }
 
-    public static boolean isEntityMember(ITypeBinding type, String memberName) {
-        //TODO:判断是否实体成员,暂简单排除
-        return isEntityType(type) && !memberName.equals("MODELID");
-    }
-
     /**
      * 是否应用权限
      * @return 如果是返回对应的应用节点,否则返回null
