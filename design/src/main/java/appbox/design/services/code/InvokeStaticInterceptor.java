@@ -7,16 +7,16 @@ public final class InvokeStaticInterceptor implements IMethodInterceptor {
 
     @Override
     public boolean visit(MethodInvocation node, ServiceCodeGenerator generator) {
-        var entityType = node.getExpression().resolveTypeBinding();
-        if (TypeHelper.isEntityType(entityType)) {
-            var modelNode       = generator.getUsedEntity(entityType);
-            var entityClassName = EntityCodeGenerator.makeEntityClassName(modelNode);
+        final var ownerType = node.getExpression().resolveTypeBinding();
+        if (TypeHelper.isEntityType(ownerType)) {
+            final var modelNode       = generator.getUsedEntity(ownerType);
+            final var entityClassName = EntityCodeGenerator.makeEntityClassName(modelNode);
 
-            var newExp = generator.ast.newSimpleName(entityClassName);
+            final var newExp = generator.ast.newName(entityClassName);
             generator.astRewrite.replace(node.getExpression(), newExp, null);
         } else {
-            var runtimeType = TypeHelper.getRuntimeType(entityType);
-            var newExp      = generator.ast.newName(runtimeType);
+            final var runtimeType = TypeHelper.getRuntimeType(ownerType);
+            final var newExp      = generator.ast.newName(runtimeType);
             generator.astRewrite.replace(node.getExpression(), newExp, null);
         }
 
