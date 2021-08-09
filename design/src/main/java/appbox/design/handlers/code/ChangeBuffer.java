@@ -37,7 +37,7 @@ public final class ChangeBuffer implements IDesignHandler { //TODO: rename
      * 改变服务模型的代码(Java)
      */
     private static CompletableFuture<Object> changeJavaCode(DesignHub hub, InvokeArgs args, int type, ModelNode modelNode) {
-        var doc = hub.typeSystem.languageServer.findOpenedDocument(modelNode.model().id());
+        var doc = hub.typeSystem.javaLanguageServer.findOpenedDocument(modelNode.model().id());
         if (doc == null) {
             var error = String.format("Can't find opened ServiceModel: %s", modelNode.model().name());
             return CompletableFuture.failedFuture(new RuntimeException(error));
@@ -49,7 +49,7 @@ public final class ChangeBuffer implements IDesignHandler { //TODO: rename
             var length  = args.getInt();
             var newText = args.getString();
             CompletableFuture.runAsync(() -> {
-                hub.typeSystem.languageServer.changeDocument(doc, offset, length, newText);
+                hub.typeSystem.javaLanguageServer.changeDocument(doc, offset, length, newText);
                 //Log.debug(doc.getText());
             }, hub.codeEditorTaskPool);
         } else { //Changed by position
@@ -60,7 +60,7 @@ public final class ChangeBuffer implements IDesignHandler { //TODO: rename
             var newText     = args.getString();
             //Log.debug(String.format("%d %s %d.%d-%d.%d %s", type, targetId, startLine, startColumn, endLine, endColumn, newText));
             CompletableFuture.runAsync(() -> {
-                hub.typeSystem.languageServer.changeDocument(doc, startLine, startColumn, endLine, endColumn, newText);
+                hub.typeSystem.javaLanguageServer.changeDocument(doc, startLine, startColumn, endLine, endColumn, newText);
                 //Log.debug(doc.getText());
             }, hub.codeEditorTaskPool);
         }

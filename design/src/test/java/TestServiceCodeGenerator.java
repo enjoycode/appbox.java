@@ -83,7 +83,7 @@ public class TestServiceCodeGenerator {
         ctx.setCurrentSession(session);
         var hub = session.getDesignHub();
         hub.typeSystem.init(); //必须初始化
-        hub.typeSystem.languageServer.loadFileDelegate = TestServiceCodeGenerator::loadTestServiceCode;
+        hub.typeSystem.javaLanguageServer.loadFileDelegate = TestServiceCodeGenerator::loadTestServiceCode;
         hub.designTree.loadNodesForTest(appModel, dataStoreModel, models);
 
         //测试实体虚拟代码生成

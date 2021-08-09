@@ -24,13 +24,13 @@ public final class GetHover implements IDesignHandler {
         var modelName = fileName.substring(secondDot + 1, lastDot);
         var modelNode = hub.designTree.findModelNodeByName(app.model.id(), ModelType.Service, modelName);
         var modelId   = modelNode.model().id();
-        var doc       = hub.typeSystem.languageServer.findOpenedDocument(modelId);
+        var doc       = hub.typeSystem.javaLanguageServer.findOpenedDocument(modelId);
         if (doc == null) {
             var error = String.format("Can't find opened ServiceModel: %s", fileName);
             return CompletableFuture.failedFuture(new Exception(error));
         }
 
-        var contents = hub.typeSystem.languageServer.hover(doc, line, column);
+        var contents = hub.typeSystem.javaLanguageServer.hover(doc, line, column);
         if (contents == null || contents.length == 0)
             return CompletableFuture.completedFuture(null);
 

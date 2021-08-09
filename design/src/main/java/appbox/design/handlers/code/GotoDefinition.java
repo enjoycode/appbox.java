@@ -22,13 +22,13 @@ public final class GotoDefinition implements IDesignHandler {
 
         if (modelNode.model().modelType() == ModelType.Service) {
             final var modelId = modelNode.model().id();
-            final var doc     = hub.typeSystem.languageServer.findOpenedDocument(modelId);
+            final var doc     = hub.typeSystem.javaLanguageServer.findOpenedDocument(modelId);
             if (doc == null) {
                 var error = String.format("Can't find opened ServiceModel: %s", fileName);
                 return CompletableFuture.failedFuture(new RuntimeException(error));
             }
 
-            final var locations = hub.typeSystem.languageServer.definition(doc, line, column);
+            final var locations = hub.typeSystem.javaLanguageServer.definition(doc, line, column);
             return CompletableFuture.completedFuture(new JsonResult(locations));
         } else if (modelNode.model().modelType() == ModelType.View) {
             return CompletableFuture.failedFuture(new RuntimeException("未实现"));

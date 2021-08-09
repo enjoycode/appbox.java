@@ -5,7 +5,6 @@ import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
-import com.alibaba.fastjson.JSON;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -26,7 +25,7 @@ public final class GetMethodInfo implements IDesignHandler {
         if (serviceNode == null)
             throw new RuntimeException("Can't find Service");
 
-        var methodInfo = hub.typeSystem.languageServer.findServiceMethod(serviceNode, path[2]);
+        var methodInfo = hub.typeSystem.javaLanguageServer.findServiceMethod(serviceNode, path[2]);
         if (methodInfo == null)
             throw new RuntimeException("Can't find Service method");
 

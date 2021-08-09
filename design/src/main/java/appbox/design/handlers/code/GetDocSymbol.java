@@ -45,13 +45,13 @@ public final class GetDocSymbol implements IDesignHandler {
 
         if (modelNode.model().modelType() == ModelType.Service) {
             final var modelId = modelNode.model().id();
-            final var doc     = hub.typeSystem.languageServer.findOpenedDocument(modelId);
+            final var doc     = hub.typeSystem.javaLanguageServer.findOpenedDocument(modelId);
             if (doc == null) {
                 var error = String.format("Can't find opened ServiceModel: %s", fileName);
                 return CompletableFuture.failedFuture(new RuntimeException(error));
             }
 
-            final var list = hub.typeSystem.languageServer.documentSymbol(doc);
+            final var list = hub.typeSystem.javaLanguageServer.documentSymbol(doc);
             return CompletableFuture.completedFuture(new JsonResult(list));
         } else if (modelNode.model().modelType() == ModelType.View) {
             //TODO:

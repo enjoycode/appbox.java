@@ -103,7 +103,7 @@ final class JdtHacker {
         //hack ResourcesPlugin
         ResourcesPlugin.workspaceSupplier =
                 () -> ((IDeveloperSession) RuntimeContext.current()
-                        .currentSession()).getDesignHub().typeSystem.languageServer.jdtWorkspace;
+                        .currentSession()).getDesignHub().typeSystem.javaLanguageServer.jdtWorkspace;
 
         WorkingCopyOwner.setPrimaryBufferProvider(new WorkingCopyOwner() {
             @Override

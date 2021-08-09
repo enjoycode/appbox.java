@@ -73,13 +73,13 @@ public final class TypeSystem {
     };
     //endregion
 
-    public final  JdtLanguageServer languageServer;
+    public final  JdtLanguageServer javaLanguageServer;
     private       IProject          modelsProject; //实体、枚举等通用模型项目
     private final DesignHub         hub;
 
     public TypeSystem(DesignHub designHub) {
-        hub            = designHub;
-        languageServer = new JdtLanguageServer(hub.session.sessionId());
+        hub                = designHub;
+        javaLanguageServer = new JdtLanguageServer(hub.session.sessionId());
         //Do not use languageServer here! has not initialized.
     }
 
@@ -90,7 +90,7 @@ public final class TypeSystem {
             var libs = new IClasspathEntry[]{
                     JavaCore.newLibraryEntry(libAppBoxCorePath, null, null)
             };
-            modelsProject = languageServer.createProject(PROJECT_MODELS, libs);
+            modelsProject = javaLanguageServer.createProject(PROJECT_MODELS, libs);
             //添加基础虚拟文件,从resources中加载
             var sysFolder = modelsProject.getFolder("sys");
             sysFolder.create(true, true, null);
@@ -181,7 +181,7 @@ public final class TypeSystem {
                 //创建服务模型的虚拟工程及代码
                 final var projectName = JdtLanguageServer.makeServiceProjectName(node);
                 final var libs        = makeServiceProjectDeps(node, false);
-                final var project     = languageServer.createProject(projectName, libs);
+                final var project     = javaLanguageServer.createProject(projectName, libs);
 
                 final var file = project.getFile(fileName);
                 file.create(null, true, null);
@@ -312,12 +312,12 @@ public final class TypeSystem {
     public ModelFile findFileForServiceModel(ModelNode serviceNode) {
         var fileName    = String.format("%s.java", serviceNode.model().name());
         var projectName = JdtLanguageServer.makeServiceProjectName(serviceNode);
-        var project     = languageServer.jdtWorkspace.getRoot().getProject(projectName);
+        var project     = javaLanguageServer.jdtWorkspace.getRoot().getProject(projectName);
         return (ModelFile) project.findMember(fileName);
     }
     //endregion
 
-    //region ====Service References====
+    //region ====Service Dependencies====
     public CompletableFuture<Void> updateServiceReferences(ModelNode serviceNode) {
         final var serviceModel = (ServiceModel) serviceNode.model();
         //先加载解压缩第三方类库
@@ -325,7 +325,7 @@ public final class TypeSystem {
                 .thenAccept(r -> {
                     //再更新虚拟工程
                     final var libs = makeServiceProjectDeps(serviceNode, false);
-                    languageServer.updateServiceReferences(serviceNode, libs);
+                    javaLanguageServer.updateServiceReferences(serviceNode, libs);
                 });
     }
 

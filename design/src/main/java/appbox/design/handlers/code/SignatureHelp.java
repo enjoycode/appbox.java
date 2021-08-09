@@ -22,7 +22,7 @@ public final class SignatureHelp implements IDesignHandler {
 
         if (modelNode.model().modelType() == ModelType.Service) {
             final var modelId = modelNode.model().id();
-            final var doc     = hub.typeSystem.languageServer.findOpenedDocument(modelId);
+            final var doc     = hub.typeSystem.javaLanguageServer.findOpenedDocument(modelId);
             if (doc == null) {
                 var error = String.format("Can't find opened ServiceModel: %s", fileName);
                 return CompletableFuture.failedFuture(new RuntimeException(error));
@@ -30,7 +30,7 @@ public final class SignatureHelp implements IDesignHandler {
 
             //暂在同一线程内处理
             return CompletableFuture.supplyAsync(() -> {
-                final var res = hub.typeSystem.languageServer.signatureHelp(doc, line, column);
+                final var res = hub.typeSystem.javaLanguageServer.signatureHelp(doc, line, column);
                 return new JsonResult(res);
             }, hub.codeEditorTaskPool);
         } else if (modelNode.model().modelType() == ModelType.View) {

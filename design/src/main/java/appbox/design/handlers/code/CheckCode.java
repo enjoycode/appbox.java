@@ -21,13 +21,13 @@ public final class CheckCode implements IDesignHandler {
             var error = String.format("Can't find ServiceModel: %d", modelId);
             return CompletableFuture.failedFuture(new Exception(error));
         }
-        var doc       = hub.typeSystem.languageServer.findOpenedDocument(modelId);
+        var doc       = hub.typeSystem.javaLanguageServer.findOpenedDocument(modelId);
         if (doc == null) {
             var error = String.format("Can't find ServiceModel: %d", modelId);
             return CompletableFuture.failedFuture(new Exception(error));
         }
         return CompletableFuture.supplyAsync(() -> {
-            var problems = hub.typeSystem.languageServer.diagnostics(doc);
+            var problems = hub.typeSystem.javaLanguageServer.diagnostics(doc);
             return new JsonResult(problems);
         }, hub.codeEditorTaskPool);
     }

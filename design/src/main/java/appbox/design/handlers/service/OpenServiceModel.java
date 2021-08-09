@@ -25,7 +25,7 @@ public final class OpenServiceModel implements IDesignHandler {
                 .thenApply(r -> {
                     //注意与C#实现不同，不需要从Staged或存储加载代码，由虚拟文件加载代码
                     try {
-                        final var doc = hub.typeSystem.languageServer.openDocument(modelNode);
+                        final var doc = hub.typeSystem.javaLanguageServer.openDocument(modelNode);
                         return doc.getContents();
                     } catch (Exception e) {
                         throw new RuntimeException(e);

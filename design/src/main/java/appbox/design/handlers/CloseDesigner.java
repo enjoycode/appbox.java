@@ -15,7 +15,7 @@ public final class CloseDesigner implements IDesignHandler {
 
         //注意可能已被删除了，即由删除节点引发的关闭
         if (nodeType == DesignNodeType.ServiceModelNode) {
-            hub.typeSystem.languageServer.closeDocument(modelId);
+            hub.typeSystem.javaLanguageServer.closeDocument(modelId);
         } else if (nodeType == DesignNodeType.ViewModelNode) {
             //TODO:如果由删除节点激发的,则前端必须先调用此关闭后再删除
             var modelNode = hub.designTree.findModelNode(modelId);

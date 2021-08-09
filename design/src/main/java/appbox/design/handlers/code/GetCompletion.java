@@ -4,7 +4,6 @@ import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.design.tree.ModelNode;
-import appbox.logging.Log;
 import appbox.model.ModelType;
 import appbox.runtime.InvokeArgs;
 import org.eclipse.lsp4j.CompletionItem;
@@ -144,7 +143,7 @@ public final class GetCompletion implements IDesignHandler {
     private static CompletableFuture<Object> getJavaCompletion(
             DesignHub hub, ModelNode modelNode, String fileName, int line, int column, String wordToComplete) {
         var modelId = modelNode.model().id();
-        var doc     = hub.typeSystem.languageServer.findOpenedDocument(modelId);
+        var doc     = hub.typeSystem.javaLanguageServer.findOpenedDocument(modelId);
         if (doc == null) {
             var error = String.format("Can't find opened ServiceModel: %s", fileName);
             return CompletableFuture.failedFuture(new RuntimeException(error));
@@ -153,7 +152,7 @@ public final class GetCompletion implements IDesignHandler {
         //暂在同一线程内处理
         return CompletableFuture.supplyAsync(() -> {
             //Log.debug(String.format("GetCompletion: run at thread: %s", Thread.currentThread().getName()));
-            var list = hub.typeSystem.languageServer.completion(doc, line, column, wordToComplete);
+            var list = hub.typeSystem.javaLanguageServer.completion(doc, line, column, wordToComplete);
             return new JsonResult(list);
         }, hub.codeEditorTaskPool);
     }

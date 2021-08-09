@@ -106,7 +106,7 @@ public final class PublishService {
         //4.生成运行时临时Project并进行编译
         final var libs               = hub.typeSystem.makeServiceProjectDeps(designNode, true);
         var       runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
-        var       runtimeProject     = hub.typeSystem.languageServer.createProject(runtimeProjectName, libs);
+        var       runtimeProject     = hub.typeSystem.javaLanguageServer.createProject(runtimeProjectName, libs);
         var       runtimeServiceFile = runtimeProject.getFile(vfile.getName());
         runtimeServiceFile.create(runtimeServiceCodeStream, true, null);
         //附加使用到的实体模型
