@@ -24,7 +24,7 @@ public final class CloseDesigner implements IDesignHandler {
                 return CompletableFuture.failedFuture(new RuntimeException(error));
             }
             final var model = (ViewModel) modelNode.model();
-            if (model.getType() == ViewModel.TYPE_VUE) {
+            if (model.getType() == ViewModel.TYPE_FLUTTER) {
                 hub.dartLanguageServer.closeDocument(modelNode);
             }
         }
