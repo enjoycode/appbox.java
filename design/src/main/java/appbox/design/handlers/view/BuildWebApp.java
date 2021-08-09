@@ -13,6 +13,6 @@ public final class BuildWebApp implements IDesignHandler {
         final String  appName        = args.getString();
         final boolean isHtmlRenderer = args.getBool();
 
-        return hub.dartLanguageServer.buildWebApp(appName, isHtmlRenderer, false);
+        return hub.typeSystem.dartLanguageServer.buildWebApp(appName, isHtmlRenderer, false);
     }
 }

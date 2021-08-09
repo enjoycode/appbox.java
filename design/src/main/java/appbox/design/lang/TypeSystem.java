@@ -1,6 +1,7 @@
-package appbox.design.services.code;
+package appbox.design.lang;
 
 import appbox.design.DesignHub;
+import appbox.design.lang.dart.DartLanguageServer;
 import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.lang.java.jdt.ModelContainer;
 import appbox.design.lang.java.jdt.ModelFile;
@@ -73,9 +74,10 @@ public final class TypeSystem {
     };
     //endregion
 
-    public final  JdtLanguageServer javaLanguageServer;
-    private       IProject          modelsProject; //实体、枚举等通用模型项目
-    private final DesignHub         hub;
+    private final DesignHub          hub;
+    public final  JdtLanguageServer  javaLanguageServer;
+    private       IProject           modelsProject; //实体、枚举等通用模型项目
+    public        DartLanguageServer dartLanguageServer;
 
     public TypeSystem(DesignHub designHub) {
         hub                = designHub;

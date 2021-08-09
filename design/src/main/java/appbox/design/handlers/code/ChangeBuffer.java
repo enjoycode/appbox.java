@@ -80,7 +80,7 @@ public final class ChangeBuffer implements IDesignHandler { //TODO: rename
         var length  = args.getInt();
         var newText = args.getString();
         CompletableFuture.runAsync(() -> {
-            hub.dartLanguageServer.changeDocument(modelNode, offset, length, newText);
+            hub.typeSystem.dartLanguageServer.changeDocument(modelNode, offset, length, newText);
         }, hub.codeEditorTaskPool);
 
         return CompletableFuture.completedFuture(null);

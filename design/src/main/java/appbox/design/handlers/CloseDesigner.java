@@ -25,7 +25,7 @@ public final class CloseDesigner implements IDesignHandler {
             }
             final var model = (ViewModel) modelNode.model();
             if (model.getType() == ViewModel.TYPE_FLUTTER) {
-                hub.dartLanguageServer.closeDocument(modelNode);
+                hub.typeSystem.dartLanguageServer.closeDocument(modelNode);
             }
         }
 

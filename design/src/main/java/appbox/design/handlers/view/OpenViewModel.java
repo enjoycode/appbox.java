@@ -29,7 +29,7 @@ public final class OpenViewModel implements IDesignHandler {
         res.model = (ViewModel) modelNode.model();
         return loadSourceCode(modelNode).thenApply(code -> {
             if (model.getType() == ViewModel.TYPE_FLUTTER) {
-                hub.dartLanguageServer.openDocument(modelNode, code.Script);
+                hub.typeSystem.dartLanguageServer.openDocument(modelNode, code.Script);
             }
 
             return new JsonResult(code);

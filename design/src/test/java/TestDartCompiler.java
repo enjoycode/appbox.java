@@ -32,7 +32,8 @@ public class TestDartCompiler {
 
         StopWatch stopWatch = StopWatch.createStarted();
         var result =
-                hub.dartLanguageServer.compilePreview("packages/appbox/sys/views/HomePage.dart.js", true).join();
+                hub.typeSystem.dartLanguageServer.compilePreview(
+                        "packages/appbox/sys/views/HomePage.dart.js", true).join();
         stopWatch.stop();
         assertNotNull(result);
         System.out.println("耗时: " + stopWatch.getTime()); //约450毫秒
@@ -43,7 +44,7 @@ public class TestDartCompiler {
         final var hub = setup();
 
         StopWatch stopWatch = StopWatch.createStarted();
-        hub.dartLanguageServer.buildWebApp("sys", true, true).join();
+        hub.typeSystem.dartLanguageServer.buildWebApp("sys", true, true).join();
         stopWatch.stop();
         System.out.println("耗时: " + stopWatch.getTime());
     }

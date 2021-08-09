@@ -54,7 +54,7 @@ public final class FormatDocument implements IDesignHandler {
             final var list = hub.typeSystem.javaLanguageServer.formatting(doc);
             return CompletableFuture.completedFuture(new JsonResult(list)); //TODO:转为新IDE格式
         } else if (modelNode.model().modelType() == ModelType.View) {
-            return hub.dartLanguageServer.formatDocument(modelNode)
+            return hub.typeSystem.dartLanguageServer.formatDocument(modelNode)
                     .thenApply(JsonResult::new);
         }
 

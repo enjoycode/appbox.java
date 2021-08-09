@@ -161,7 +161,7 @@ public final class GetCompletion implements IDesignHandler {
             DesignHub hub, ModelNode modelNode, int offset, String wordToComplete) {
         return CompletableFuture.supplyAsync(() -> {
             //TODO:fix join
-            var list = hub.dartLanguageServer.completion(modelNode, offset, wordToComplete).join();
+            var list = hub.typeSystem.dartLanguageServer.completion(modelNode, offset, wordToComplete).join();
             return new JsonResult(list);
         }, hub.codeEditorTaskPool);
     }

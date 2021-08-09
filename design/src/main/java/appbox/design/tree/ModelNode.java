@@ -137,7 +137,7 @@ public final class ModelNode extends DesignNode {
             if (((ViewModel) _model).getType() == ViewModel.TYPE_FLUTTER) {
                 String code = (String) modelInfos[0];
                 return StagedService.saveViewCodeAsync(_model.id(), "", code, null)
-                        .thenAccept(re -> designTree().designHub.dartLanguageServer.updateViewModelCode(this, code));
+                        .thenAccept(re -> designTree().designHub.typeSystem.dartLanguageServer.updateViewModelCode(this, code));
             } else {
                 return StagedService.saveViewCodeAsync(_model.id(),
                         (String) modelInfos[0], (String) modelInfos[1], (String) modelInfos[2])

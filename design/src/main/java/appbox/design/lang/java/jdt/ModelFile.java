@@ -3,7 +3,7 @@ package appbox.design.lang.java.jdt;
 import appbox.design.IDeveloperSession;
 import appbox.design.services.CodeGenService;
 import appbox.design.services.StagedService;
-import appbox.design.services.code.TypeSystem;
+import appbox.design.lang.TypeSystem;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;

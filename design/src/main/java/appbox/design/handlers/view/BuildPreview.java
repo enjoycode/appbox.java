@@ -11,6 +11,6 @@ public final class BuildPreview implements IDesignHandler {
     @Override
     public CompletableFuture<Object> handle(DesignHub hub, InvokeArgs args) {
         final String path = args.getString();
-        return hub.dartLanguageServer.compilePreview(path, false);
+        return hub.typeSystem.dartLanguageServer.compilePreview(path, false);
     }
 }
