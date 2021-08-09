@@ -81,7 +81,6 @@ public class CodeGenService {
         if (model.sysStoreOptions() != null) {
             sb.append(" extends SysEntityBase {\n");
             //静态fetchAsync()
-            sb.append("\t@MethodInterceptor(name = \"InvokeStatic\")");
             sb.append("\tpublic static java.util.concurrent.CompletableFuture<");
             sb.append(className);
             sb.append("> fetchAsync(appbox.data.EntityId id) {return null;}\n");
