@@ -22,14 +22,13 @@ public class TestServiceCodeGenerator {
         final var hub = TestHelper.makeDesignHub(TestServiceCodeGenerator::loadTestServiceCode, true);
 
         //准备测试模型
-        final var appModel             = TestHelper.makeApplicationModel();
         final var dataStoreModel       = TestHelper.makeSqlDataStoreModel();
         final var entityModel          = TestHelper.makeEmployeeModel(dataStoreModel);
         final var testServiceModel     = TestHelper.makeServiceModel(10, "TestService");
         final var adminPermissionModel = TestHelper.makeAdminPermissionModel();
 
         final List<ModelBase> models = List.of(entityModel, testServiceModel, adminPermissionModel);
-        TestHelper.injectAndLoadTree(appModel, dataStoreModel, models);
+        TestHelper.injectAndLoadTree(dataStoreModel, models);
 
         //测试实体代码生成
         var entityCode = CodeGenService.genEntityDummyCode(entityModel, "sys", hub.designTree);

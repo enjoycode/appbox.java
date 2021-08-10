@@ -1,4 +1,5 @@
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
+import appbox.model.ModelType;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Signature;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,6 +63,26 @@ public class TestJDT {
         var element        = (SourceMethod) cu.getElementAt(38);
         var paraTypeString = Signature.toString(element.getParameters()[0].getTypeSignature());
         assertNotNull(element);
+    }
+
+    @Test
+    public void testGetEntitySymbol() throws Exception {
+        final var hub = TestHelper.makeDesignHub(null, true);
+        //准备测试模型
+        final var dataStoreModel = TestHelper.makeSqlDataStoreModel();
+        final var entityModel    = TestHelper.makeEmployeeModel(dataStoreModel);
+        TestHelper.injectAndLoadTree(dataStoreModel, List.of(entityModel));
+
+        final var symbolFinder = hub.typeSystem.javaLanguageServer.symbolFinder;
+
+        var symbol = symbolFinder.getModelSymbol(ModelType.Entity, "sys","Employee");
+        assertNotNull(symbol);
+
+        var name = symbolFinder.getEntityMemberSymbol("sys","Employee", "Name");
+        assertNotNull(name);
+
+        var notExists = symbolFinder.getEntityMemberSymbol("sys","Employee", "NotExists");
+        assertNull(notExists);
     }
 
 }

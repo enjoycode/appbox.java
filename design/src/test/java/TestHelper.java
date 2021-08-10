@@ -31,7 +31,8 @@ public final class TestHelper {
         return hub;
     }
 
-    public static void injectAndLoadTree(ApplicationModel appModel, DataStoreModel dataStoreModel, List<ModelBase> models) {
+    public static void injectAndLoadTree(DataStoreModel dataStoreModel, List<ModelBase> models) {
+        final var appModel = makeApplicationModel();
         final var ctx = (MockRuntimeContext) RuntimeContext.current();
         //注入测试模型
         ctx.injectApplicationModel(appModel);
