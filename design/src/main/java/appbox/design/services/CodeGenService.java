@@ -2,7 +2,7 @@ package appbox.design.services;
 
 import appbox.data.EntityId;
 import appbox.design.DesignHub;
-import appbox.design.services.code.TypeHelper;
+import appbox.design.lang.java.code.TypeHelper;
 import appbox.design.tree.DataStoreNode;
 import appbox.design.tree.DesignTree;
 import appbox.design.tree.ModelNode;
@@ -260,7 +260,7 @@ public class CodeGenService {
         sb.append(".services;\n");
 
         //获取服务实现文件
-        var file = hub.typeSystem.findFileForServiceModel(serviceNode);
+        var file = hub.typeSystem.javaLanguageServer.findFileForServiceModel(serviceNode);
         var unit = JDTUtils.resolveCompilationUnit(file);
 
         var astParser = ASTParser.newParser(AST.JLS15);
@@ -302,7 +302,7 @@ public class CodeGenService {
         var serviceName = serviceNode.model().name();
 
         //获取服务实现文件
-        var file = hub.typeSystem.findFileForServiceModel(serviceNode);
+        var file = hub.typeSystem.javaLanguageServer.findFileForServiceModel(serviceNode);
         var unit = JDTUtils.resolveCompilationUnit(file);
 
         var astParser = ASTParser.newParser(AST.JLS15);

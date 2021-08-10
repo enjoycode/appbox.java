@@ -1,4 +1,4 @@
-package appbox.design.services.code;
+package appbox.design.lang.java.code;
 
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.LambdaExpression;

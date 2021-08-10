@@ -6,8 +6,8 @@ import appbox.design.DesignHub;
 import appbox.design.common.PublishPackage;
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.JdtLanguageServer;
-import appbox.design.services.code.EntityCodeGenerator;
-import appbox.design.services.code.ServiceCodeGenerator;
+import appbox.design.lang.java.code.EntityCodeGenerator;
+import appbox.design.lang.java.code.ServiceCodeGenerator;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
@@ -71,7 +71,7 @@ public final class PublishService {
         //1.获取对应的虚拟文件
         final var designNode = hub.designTree.findModelNode(ModelType.Service, model.id());
         final var appName    = designNode.appNode.model.name();
-        final var vfile      = hub.typeSystem.findFileForServiceModel(designNode);
+        final var vfile      = hub.typeSystem.javaLanguageServer.findFileForServiceModel(designNode);
         final var cu         = JDTUtils.resolveCompilationUnit(vfile);
 
         //2.创建ASTParser并创建ASTNode
@@ -104,7 +104,7 @@ public final class PublishService {
         var runtimeServiceCodeStream = new ByteArrayInputStream(runtimeServiceCode.getBytes(StandardCharsets.UTF_8));
 
         //4.生成运行时临时Project并进行编译
-        final var libs               = hub.typeSystem.makeServiceProjectDeps(designNode, true);
+        final var libs               = hub.typeSystem.javaLanguageServer.makeServiceProjectDeps(designNode, true);
         var       runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
         var       runtimeProject     = hub.typeSystem.javaLanguageServer.createProject(runtimeProjectName, libs);
         var       runtimeServiceFile = runtimeProject.getFile(vfile.getName());

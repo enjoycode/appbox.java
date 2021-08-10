@@ -1,4 +1,4 @@
-package appbox.design.services.code;
+package appbox.design.lang.java.code;
 
 import appbox.design.tree.ApplicationNode;
 import appbox.design.tree.DesignTree;

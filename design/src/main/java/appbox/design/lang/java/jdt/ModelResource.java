@@ -217,7 +217,7 @@ public abstract class ModelResource implements IResource {
     @Override
     public IPath getLocation() {
         //注意:返回指向临时目录, eg: /tmp/appbox/workspace/sessionid
-        final var workingroot = PathUtil.getWorkingLocation(workspace.languageServer.sessionId);
+        final var workingroot = PathUtil.getWorkingLocation(workspace.languageServer.hub.session.sessionId());
 
         //如果是编译输出的class文件,统一放在bin目录内
         if ("class".equals(getFileExtension())) {

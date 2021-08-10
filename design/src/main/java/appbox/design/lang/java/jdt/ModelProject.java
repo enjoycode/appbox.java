@@ -194,7 +194,7 @@ public class ModelProject extends ModelContainer implements IProject {
     public IPath getWorkingLocation(String id) {
         if (id != null && this.exists()) {
             //注意暂指向临时目录,eg:/tmp/appbox/workspace/sessionid/
-            IPath result = PathUtil.getWorkingLocation(workspace.languageServer.sessionId);
+            IPath result = PathUtil.getWorkingLocation(workspace.languageServer.hub.session.sessionId());
             result.toFile().mkdirs();
             return result;
         } else {
@@ -206,7 +206,7 @@ public class ModelProject extends ModelContainer implements IProject {
     public IProject[] getReferencedProjects() throws CoreException {
         ResourceInfo info = this.getResourceInfo(false, false);
         this.checkAccessible(this.getFlags(info));
-        ProjectDescription description = ((ProjectInfo)info).getDescription();
+        ProjectDescription description = ((ProjectInfo) info).getDescription();
         if (description == null) {
             this.checkAccessible(-1);
         }

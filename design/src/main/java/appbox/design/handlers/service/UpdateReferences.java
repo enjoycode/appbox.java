@@ -25,7 +25,7 @@ public final class UpdateReferences implements IDesignHandler {
         //先更新服务模型的第三方依赖
         model.setReferences(List.of(newDeps));
         //再通知类型系统更新
-        return hub.typeSystem.updateServiceReferences(modelNode).thenApply(r -> null);
+        return hub.typeSystem.javaLanguageServer.updateServiceReferences(modelNode).thenApply(r -> null);
     }
 
 }

@@ -34,330 +34,44 @@ import java.util.concurrent.CompletableFuture;
 
 public final class TypeSystem {
 
-    //region ====Consts====
-    public static final String PROJECT_MODELS     = "models";
-    public static final IPath  libEA_AsyncPath    =
-            new Path(Async.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-    public static final IPath  libAppBoxCorePath  =
-            new Path(IService.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-    public static final IPath  libAppBoxStorePath =
-            new Path(SqlStore.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-
-    /** /models/sys/下的虚拟文件列表 */
-    private static final String[] SYS_DUMMY_FILES = new String[]{
-            "Async.java",
-            "EntityBase.java",
-            "SqlEntityBase.java",
-            "SysEntityBase.java",
-            "DbTransaction.java",
-            "SqlStore.java",
-            "RuntimeType.java",
-            "CtorInterceptor.java",
-            "MethodInterceptor.java",
-            "ISqlQueryJoin.java",
-            "ISqlIncluder.java",
-            "ISqlIncludable.java",
-            "KVTransaction.java"
-    };
-
-    /** /models/下的虚拟文件列表 */
-    private static final String[] ROOT_DUMMY_FILES = new String[]{
-            "DataStore.java",
-            "SqlQuery.java",
-            "SqlQueryJoin.java",
-            "SqlSubQuery.java",
-            "SqlUpdateCommand.java",
-            "SqlDeleteCommand.java",
-            "DbFunc.java",
-            "Authorize.java",
-            "TableScan.java"
-    };
-    //endregion
-
     private final DesignHub          hub;
     public final  JdtLanguageServer  javaLanguageServer;
-    private       IProject           modelsProject; //实体、枚举等通用模型项目
     public        DartLanguageServer dartLanguageServer;
 
     public TypeSystem(DesignHub designHub) {
         hub                = designHub;
-        javaLanguageServer = new JdtLanguageServer(hub.session.sessionId());
+        javaLanguageServer = new JdtLanguageServer(hub);
         //Do not use languageServer here! has not initialized.
     }
 
-    /** 用于初始化通用项目等 */
     public void init() {
-        try {
-            //创建通用模型虚拟工程
-            var libs = new IClasspathEntry[]{
-                    JavaCore.newLibraryEntry(libAppBoxCorePath, null, null)
-            };
-            modelsProject = javaLanguageServer.createProject(PROJECT_MODELS, libs);
-            //添加基础虚拟文件,从resources中加载
-            var sysFolder = modelsProject.getFolder("sys");
-            sysFolder.create(true, true, null);
-            createDummyFiles(sysFolder, SYS_DUMMY_FILES);
-            createDummyFiles(modelsProject, ROOT_DUMMY_FILES);
-
-            //TODO:考虑创建单独服务代理项目,目前服务代理均放在ModelsProject内
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        javaLanguageServer.init();
     }
 
-    //region ====Dummy Files====
-
-    /** 在指定目录下创建虚拟文件 */
-    private static void createDummyFiles(IContainer container, String[] files) throws CoreException {
-        var modelContainer = (ModelContainer) container;
-        for (var file : files) {
-            modelContainer.getFile(file).create(null, true, null);
-        }
-    }
-
-    /** 是否从资源中加载的虚拟文件，否则表示代码生成器生成的 */
-    public static boolean isDummyFileInResources(IFile file) {
-        var parent = file.getParent();
-        if (parent instanceof IProject && parent.getName().equals(PROJECT_MODELS)) {
-            return !file.getName().equals("DataStore.java"); //DataStore.java排除
-        }
-
-        if (parent.getName().equals("sys")
-                && parent.getParent() instanceof IProject
-                && parent.getParent().getName().equals(PROJECT_MODELS)) {
-            return !file.getName().equals("Permissions.java"); //Permissions.java排除
-        }
-
-        return false;
-    }
-
-    public static boolean isDataStoreFile(IFile file) {
-        if (file.getName().equals("DataStore.java")) {
-            var parent = file.getParent();
-            return parent instanceof IProject && parent.getName().equals(PROJECT_MODELS);
-        }
-        return false;
-    }
-
-    public static boolean isPermissionsFile(IFile file) {
-        if (file.getName().equals("Permissions.java")) {
-            var parent = file.getParent();
-            return parent.getParent() != null && parent.getParent() instanceof IProject
-                    && parent.getParent().getName().equals(PROJECT_MODELS);
-        }
-        return false;
-    }
-
-    private void createModelFile(String appName, String type, String fileName) throws CoreException {
-        var appFolder = modelsProject.getFolder(appName);
-        if (!appFolder.exists()) {
-            appFolder.create(true, true, null);
-        }
-
-        if (type == null) { //only for Permissions.java
-            var file = appFolder.getFile(fileName);
-            file.create(null, true, null);
-        } else {
-            var typeFolder = appFolder.getFolder(type);
-            if (!typeFolder.exists()) {
-                typeFolder.create(true, true, null);
-            }
-            var file = typeFolder.getFile(fileName);
-            file.create(null, true, null);
-        }
-    }
-
-    //endregion
-
-    //region ====Model Files====
-
-    /** 用于加载设计树后创建模型相应的虚拟文件 */
+    //region ====Model Document====
     public void createModelDocument(ModelNode node) {
-        var appName  = node.appNode.model.name();
-        var model    = node.model();
-        var fileName = String.format("%s.java", model.name());
-
-        //TODO:其他类型模型
-        try {
-            if (model.modelType() == ModelType.Service) {
-                //创建服务模型的虚拟工程及代码
-                final var projectName = JdtLanguageServer.makeServiceProjectName(node);
-                final var libs        = makeServiceProjectDeps(node, false);
-                final var project     = javaLanguageServer.createProject(projectName, libs);
-
-                final var file = project.getFile(fileName);
-                file.create(null, true, null);
-                //创建服务模型的虚拟代理(暂放在modelsProject内)
-                createModelFile(appName, "services", fileName);
-            } else if (model.modelType() == ModelType.Entity) {
-                //需要包含目录,如sys/entities/Order.java
-                createModelFile(appName, "entities", fileName);
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        javaLanguageServer.filesManager.createModelDocument(node);
     }
 
-    /** 注意：服务模型也会更新，如不需要由调用者忽略 */
     public void updateModelDocument(ModelNode node) {
-        var appName  = node.appNode.model.name();
-        var model    = node.model();
-        var fileName = String.format("%s.java", model.name());
-
-        try {
-            if (model.modelType() == ModelType.Entity) {
-                var appFolder  = modelsProject.getFolder(appName);
-                var typeFolder = appFolder.getFolder("entities");
-                var file       = typeFolder.getFile(fileName);
-                var newContent = CodeGenService.genEntityDummyCode((EntityModel) model
-                        , appName, hub.designTree);
-                updateFileContent(file, newContent);
-            } else {
-                Log.warn("updateModelDocument暂未实现: " + model.modelType().name());
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        javaLanguageServer.filesManager.updateModelDocument(node);
     }
 
     public void removeModelDocument(ModelNode node) {
-        var appName  = node.appNode.model.name();
-        var model    = node.model();
-        var fileName = String.format("%s.java", model.name());
-
-        try {
-            if (model.modelType() == ModelType.Entity) {
-                var appFolder  = modelsProject.getFolder(appName);
-                var typeFolder = appFolder.getFolder("entities");
-                var file       = typeFolder.getFile(fileName);
-                var cu         = JDTUtils.resolveCompilationUnit(file);
-                cu.delete(true, null);
-                //不需要file.delete(),上一步会调用
-            } else {
-                Log.warn("removeModelDocument 未实现");
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        javaLanguageServer.filesManager.removeModelDocument(node);
     }
 
-    /** 仅用于添加或删除存储模型后更新DataStore.java虚拟代码 */
-    public void updateStoresDocument() {
-        //TODO:*****
-    }
-
-    /** 用于加载设计树后创建所有权限的虚拟文件，一个应用对应一个权限文件 */
     public void createPermissionsDocuments() {
-        var appRootNode = hub.designTree.appRootNode();
-        for (int i = 0; i < appRootNode.nodes.size(); i++) {
-            var appNode        = (ApplicationNode) appRootNode.nodes.get(i);
-            var permissionRoot = appNode.findModelRootNode(ModelType.Permission);
-            if (!permissionRoot.hasAnyModel())
-                continue;
-
-            try {
-                createModelFile(appNode.model.name(), null, "Permissions.java");
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
+        javaLanguageServer.filesManager.createPermissionsDocuments();
     }
 
-    /** 仅用于添加或删除权限模型后更新指定应用的Permissions.java */
     public void updatePermissionsDocument(String appName) {
-        var file = modelsProject.getFolder(appName).getFile("Permissions.java");
-        try {
-            if (file.exists()) {
-                var newContent = CodeGenService.genPermissionsDummyCode(hub.designTree, appName);
-                updateFileContent(file, newContent);
-            } else {
-                file.create(null, true, null);
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        javaLanguageServer.filesManager.updatePermissionsDocument(appName);
     }
 
-    private static void updateFileContent(IFile file, String newContent) throws JavaModelException {
-        var cu = (CompilationUnit) JDTUtils.resolveCompilationUnit(file);
-        if (cu.getBuffer() != null) {
-            cu.getBuffer().setContents(newContent);
-            cu.makeConsistent(null);
-            //Log.debug(cu.getBuffer().getContents());
-        } else {
-            Log.warn("Can't get buffer from file: " + file.getName());
-        }
-    }
-
-    //endregion
-
-    //region ====Find Methods====
-    public ModelNode findModelNodeByModelFile(ModelFile file) {
-        //TODO:暂简单处理路径
-        var fileName = file.getName();
-        fileName = fileName.substring(0, fileName.length() - 5); //去掉扩展名
-
-        var project = file.getProject();
-        if (project.equals(modelsProject)) {
-            var typeFolder = file.getParent();
-            var appFolder  = typeFolder.getParent();
-            var appNode    = hub.designTree.findApplicationNodeByName(appFolder.getName());
-            var modelType  = CodeHelper.getModelTypeFromLCC(typeFolder.getName());
-            return hub.designTree.findModelNodeByName(appNode.model.id(), modelType, fileName);
-        } else {
-            var projectName = project.getName();
-            return hub.designTree.findModelNode(Long.parseUnsignedLong(projectName));
-        }
-    }
-
-    /** 找到服务模型对应的虚拟文件 */
-    public ModelFile findFileForServiceModel(ModelNode serviceNode) {
-        var fileName    = String.format("%s.java", serviceNode.model().name());
-        var projectName = JdtLanguageServer.makeServiceProjectName(serviceNode);
-        var project     = javaLanguageServer.jdtWorkspace.getRoot().getProject(projectName);
-        return (ModelFile) project.findMember(fileName);
+    public void updateStoresDocument() {
+        javaLanguageServer.filesManager.updateStoresDocument();
     }
     //endregion
 
-    //region ====Service Dependencies====
-    public CompletableFuture<Void> updateServiceReferences(ModelNode serviceNode) {
-        final var serviceModel = (ServiceModel) serviceNode.model();
-        //先加载解压缩第三方类库
-        return AssemblyUtil.extractService3rdLibs(serviceNode.appNode.model.name(), serviceModel.getReferences())
-                .thenAccept(r -> {
-                    //再更新虚拟工程
-                    final var libs = makeServiceProjectDeps(serviceNode, false);
-                    javaLanguageServer.updateServiceReferences(serviceNode, libs);
-                });
-    }
-
-    /** 创建服务模型虚拟工程的依赖项,包括内置及第三方,但不包括JRE及源码 */
-    public IClasspathEntry[] makeServiceProjectDeps(ModelNode serviceNode, boolean forRuntime) {
-        final var serviceModel = (ServiceModel) serviceNode.model();
-        final var appName      = serviceNode.appNode.model.name();
-
-        final int baseCount = forRuntime ? 3 : 2;
-        int       depsCount = baseCount;
-        if (serviceModel.hasReference()) {
-            depsCount += serviceModel.getReferences().size();
-        }
-        IClasspathEntry[] deps = new IClasspathEntry[depsCount];
-        if (forRuntime) {
-            deps[0] = JavaCore.newLibraryEntry(TypeSystem.libEA_AsyncPath, null, null);
-            deps[1] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null);
-            deps[2] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxStorePath, null, null);
-        } else {
-            deps[0] = JavaCore.newLibraryEntry(TypeSystem.libAppBoxCorePath, null, null);
-            deps[1] = JavaCore.newProjectEntry(modelsProject.getFullPath());
-        }
-
-        //处理服务模型引用的第三方包
-        for (int i = baseCount; i < depsCount; i++) {
-            final var libPath = new Path(java.nio.file.Path.of(PathUtil.LIB_PATH, appName,
-                    serviceModel.getReferences().get(i - baseCount)).toString());
-            deps[i] = JavaCore.newLibraryEntry(libPath, null, null);
-        }
-        return deps;
-    }
-    //endregion
 }

@@ -1,4 +1,4 @@
-package appbox.design.services.code;
+package appbox.design.lang.java.code;
 
 import appbox.model.EntityModel;
 import appbox.model.entity.EntityMemberModel;
