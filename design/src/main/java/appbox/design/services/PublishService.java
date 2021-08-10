@@ -154,6 +154,8 @@ public final class PublishService {
                     sb.append("] error:\n");
                 }
 
+                sb.append(pb.getSourceLineNumber());
+                sb.append(" ");
                 sb.append(pb.getMessage());
                 sb.append('\n');
             }

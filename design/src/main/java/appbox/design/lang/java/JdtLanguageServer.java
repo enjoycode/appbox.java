@@ -4,11 +4,13 @@ import appbox.design.DesignHub;
 import appbox.design.lang.java.jdt.*;
 import appbox.design.lang.java.lsp.*;
 import appbox.design.lang.java.code.ServiceMethodInfo;
+import appbox.design.lang.java.utils.ModelTypeUtil;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.CodeHelper;
 import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
 
+import appbox.model.ModelType;
 import appbox.model.ServiceModel;
 import appbox.runtime.IService;
 import appbox.store.SqlStore;
@@ -18,7 +20,6 @@ import org.eclipse.core.internal.resources.ProjectPreferences;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.*;
@@ -32,10 +33,8 @@ import org.eclipse.jdt.ls.core.internal.preferences.PreferenceManager;
 import org.eclipse.jdt.ls.core.internal.syntaxserver.ModelBasedCompletionEngine;
 import org.eclipse.lsp4j.*;
 
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -69,33 +68,20 @@ public final class JdtLanguageServer {
     }
     //endregion
 
-    public final DesignHub      hub;
-    public final ModelWorkspace jdtWorkspace;
+    public final  DesignHub               hub;
+    public final  ModelWorkspace          jdtWorkspace;
     public final  ModelFilesManager       filesManager;
+    public final  ModelSymbolFinder       symbolFinder;
     private final HashMap<Long, Document> openedFiles = new HashMap<>();
     /** 实体、枚举等通用模型项目 */
     IProject modelsProject;
-
-    public Function<IPath, InputStream> loadFileDelegate; //仅用于测试环境 TODO: move to MockRuntimeContext
 
     public JdtLanguageServer(DesignHub hub) {
         this.hub     = hub;
         jdtWorkspace = new ModelWorkspace(this);
         filesManager = new ModelFilesManager(this);
+        symbolFinder = new ModelSymbolFinder(this);
         //TODO:如果不能共用JavaModelManager,在这里初始化
-    }
-
-    /**
-     * 仅用于单元测试
-     * @param loadFileDelegate 委托加载指定路径的测试文件
-     */
-    public JdtLanguageServer(Function<IPath, InputStream> loadFileDelegate) { //TODO: remove it
-        hub                   = null;
-        jdtWorkspace          = new ModelWorkspace(this);
-        filesManager          = new ModelFilesManager(this);
-        this.loadFileDelegate = loadFileDelegate;
-
-        ResourcesPlugin.workspaceSupplier = () -> jdtWorkspace;
     }
 
     /** 用于初始化通用项目等 */
@@ -117,6 +103,8 @@ public final class JdtLanguageServer {
             e.printStackTrace();
         }
     }
+
+    public IProject getModelsProject() {return modelsProject;}
 
     //region ====Project Management====
     public static String makeServiceProjectName(ModelNode serviceNode) {
@@ -491,10 +479,17 @@ public final class JdtLanguageServer {
 
     /** 找到服务模型对应的虚拟文件 */
     public ModelFile findFileForServiceModel(ModelNode serviceNode) {
-        var fileName    = String.format("%s.java", serviceNode.model().name());
-        var projectName = JdtLanguageServer.makeServiceProjectName(serviceNode);
-        var project     = jdtWorkspace.getRoot().getProject(projectName);
+        final var fileName    = String.format("%s.java", serviceNode.model().name());
+        final var projectName = JdtLanguageServer.makeServiceProjectName(serviceNode);
+        final var project     = jdtWorkspace.getRoot().getProject(projectName);
         return (ModelFile) project.findMember(fileName);
+    }
+
+    /** 从通用项目内查找模型对应的虚拟文件 */
+    public ModelFile findFileFromModelsProject(ModelType type, String appName, String modelName) {
+        final var typeName = ModelTypeUtil.toLowercaseTypeName(type);
+        final var fileName = String.format("%s.java", modelName);
+        return (ModelFile) modelsProject.getFolder(appName).getFolder(typeName).getFile(fileName);
     }
     //endregion
 }

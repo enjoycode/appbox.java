@@ -100,7 +100,7 @@ final class JdtHacker {
         //init default preferences (主要用于初始化JavaModelManager.optionNames,考虑直接设置)
         new JavaCorePreferenceInitializer().initializeDefaultPreferences();
 
-        //hack ResourcesPlugin
+        //hack ResourcesPlugin (主要用于每个会话对应一个Workspace)
         ResourcesPlugin.workspaceSupplier =
                 () -> ((IDeveloperSession) RuntimeContext.current()
                         .currentSession()).getDesignHub().typeSystem.javaLanguageServer.jdtWorkspace;

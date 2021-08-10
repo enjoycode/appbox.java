@@ -2,9 +2,12 @@ package appbox.design;
 
 import appbox.channel.IClientMessage;
 import appbox.data.TreeNodePath;
+import org.eclipse.core.runtime.IPath;
 
+import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**仅用于测试*/
 public final class MockDeveloperSession implements IDeveloperSession {
@@ -12,6 +15,9 @@ public final class MockDeveloperSession implements IDeveloperSession {
     private final TreeNodePath _path;
     private final UUID         _emploeeId;
     private final DesignHub    _hub;
+
+    /** 委托加载指定路径的测试文件 */
+    public Function<IPath, InputStream> loadFileDelegate;
 
     public MockDeveloperSession() {
         var nodes = new TreeNodePath.TreeNodeInfo[] {

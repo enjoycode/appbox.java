@@ -1,5 +1,4 @@
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
-import appbox.design.lang.java.JdtLanguageServer;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Signature;
@@ -29,7 +28,8 @@ public class TestJDT {
         Function<IPath, InputStream> loadDelegate =
                 (path) -> new ByteArrayInputStream(finalTestCode.getBytes(StandardCharsets.UTF_8));
 
-        var ls      = new JdtLanguageServer(loadDelegate);
+        var hub     = TestHelper.makeDesignHub(loadDelegate, false);
+        var ls      = hub.typeSystem.javaLanguageServer;
         var project = ls.createProject("testbuild", null);
         var file    = project.getFile("Emploee.java");
         file.create(null, true, null);
@@ -49,14 +49,15 @@ public class TestJDT {
         Function<IPath, InputStream> loadDelegate =
                 (path) -> new ByteArrayInputStream(finalTestCode.getBytes(StandardCharsets.UTF_8));
 
-        var ls      = new JdtLanguageServer(loadDelegate);
+        var hub     = TestHelper.makeDesignHub(loadDelegate, false);
+        var ls      = hub.typeSystem.javaLanguageServer;
         var project = ls.createProject("testbuild", null);
         var file    = project.getFile("Emploee.java");
         file.create(null, true, null);
 
         var cu             = JDTUtils.resolveCompilationUnit(file);
-        var buffer = cu.getBuffer();
-        var chars = buffer.getCharacters();
+        var buffer         = cu.getBuffer();
+        var chars          = buffer.getCharacters();
         var element        = (SourceMethod) cu.getElementAt(38);
         var paraTypeString = Signature.toString(element.getParameters()[0].getTypeSignature());
         assertNotNull(element);

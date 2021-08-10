@@ -1,11 +1,10 @@
 package appbox.design.lang.java.jdt;
 
 import appbox.design.IDeveloperSession;
-import appbox.design.lang.java.JdtLanguageServer;
+import appbox.design.MockDeveloperSession;
 import appbox.design.lang.java.ModelFilesManager;
 import appbox.design.services.CodeGenService;
 import appbox.design.services.StagedService;
-import appbox.design.lang.TypeSystem;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
@@ -102,14 +101,22 @@ public final class ModelFile extends ModelResource implements IFile {
 
     @Override
     public InputStream getContents(boolean force) throws CoreException {
-        //暂简单判断是否转译的运行时服务代码
-        if (this.path.segment(0).startsWith("runtime_")) {
+        //先判断是否转译的运行时服务代码
+        if (isInRuntimeServiceProject()) {
             var file = this.getLocation().toFile();
             try {
                 return new FileInputStream(file);
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        //通过代理加载(仅用于单元测试)
+        if (RuntimeContext.current() instanceof MockRuntimeContext && !isInModelsProject()) {
+            final var mockSession = (MockDeveloperSession) RuntimeContext.current().currentSession();
+            final var stream      = mockSession.loadFileDelegate.apply(this.path);
+            if (stream != null)
+                return stream;
         }
 
         //虚拟基础代码从资源文件加载
@@ -139,19 +146,14 @@ public final class ModelFile extends ModelResource implements IFile {
                 //通过CodeGenService生成虚拟代码
                 var entityDummyCode = CodeGenService.genEntityDummyCode(
                         (EntityModel) modelNode.model(), modelNode.appNode.model.name(), hub.designTree);
-                Log.debug("生成实体模型虚拟代码:" + this.getName());
+                Log.debug("Generate Entity dummy code:" + this.getName());
                 return new ByteArrayInputStream(entityDummyCode.getBytes(StandardCharsets.UTF_8));
             } else if (modelNode.model().modelType() == ModelType.Service) {
-                if (getProject().getName().equals(JdtLanguageServer.PROJECT_MODELS)) { //服务代理
+                if (isInModelsProject()) { //服务代理
                     var proxyCode = CodeGenService.genServiceProxyCode(hub, modelNode);
-                    Log.debug("生成服务代理虚拟代码:" + this.getName());
+                    Log.debug("Generate Service proxy code:" + this.getName());
                     return new ByteArrayInputStream(proxyCode.getBytes(StandardCharsets.UTF_8));
                 } else { //服务实现
-                    //测试服务通过代理加载(仅用于单元测试)
-                    if (RuntimeContext.current() instanceof MockRuntimeContext) {
-                        return ((ModelWorkspace) getWorkspace()).languageServer.loadFileDelegate.apply(this.path);
-                    }
-
                     //TODO:**直接加载为utf8 bytes,避免字符串转换
                     if (modelNode.isCheckoutByMe()) {
                         var stagedCode = StagedService.loadServiceCode(modelNode.model().id()).get();
@@ -231,5 +233,16 @@ public final class ModelFile extends ModelResource implements IFile {
     @Override
     public int getType() {
         return IResource.FILE;
+    }
+
+    /** 是否隶属于通用模型项目 */
+    private boolean isInModelsProject() {
+        return getProject() == ((ModelWorkspace) getWorkspace()).languageServer.getModelsProject();
+    }
+
+    /** 是否隶属于运行时服务模型项目 */
+    private boolean isInRuntimeServiceProject() {
+        //TODO:暂简单实现
+        return this.path.segment(0).startsWith("runtime_");
     }
 }
