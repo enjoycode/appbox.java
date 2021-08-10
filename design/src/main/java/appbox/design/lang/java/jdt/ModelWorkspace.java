@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class ModelWorkspace implements IWorkspace {
 
-    protected          IWorkspaceRoot       defaultRoot  = new ModelWorkspaceRoot(new ModelPath("/"), this);
+    protected          IWorkspaceRoot       defaultRoot  = new ModelWorkspaceRoot(new Path("/"), this);
     private            IResourceRuleFactory ruleFactory;
     protected          WorkspacePreferences description;
     protected volatile ElementTree          tree;

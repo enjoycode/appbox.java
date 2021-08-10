@@ -4,6 +4,7 @@ import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 
 import java.net.URI;
 import java.util.Collections;
@@ -85,7 +86,7 @@ public class ModelWorkspaceRoot extends ModelContainer implements IWorkspaceRoot
     public IProject getProject(String name) {
         var result = projectTable.get(name);
         if (result == null) {
-            IPath projectPath = (new ModelPath(null, name)).makeAbsolute();
+            IPath projectPath = (new Path(null, name)).makeAbsolute();
             result = new ModelProject(projectPath, workspace);
             projectTable.put(name, result);
         }
