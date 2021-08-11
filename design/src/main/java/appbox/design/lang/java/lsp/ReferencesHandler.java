@@ -81,6 +81,7 @@ public final class ReferencesHandler {
     }
 
     private static IJavaSearchScope createSearchScope() throws JavaModelException {
+        //TODO:忽略不需要搜索的项目
         IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot()).getJavaProjects();
         int            scope    = IJavaSearchScope.SOURCES;
         //if (preferenceManager.isClientSupportsClassFileContent()) {

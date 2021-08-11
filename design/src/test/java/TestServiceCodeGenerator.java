@@ -13,13 +13,9 @@ import java.util.List;
 
 public class TestServiceCodeGenerator {
 
-    private static InputStream loadTestServiceCode(IPath path) {
-        return TestServiceCodeGenerator.class.getResourceAsStream("/test_services/" + path.lastSegment());
-    }
-
     @Test
     public void testGenServiceCode() throws Exception {
-        final var hub = TestHelper.makeDesignHub(TestServiceCodeGenerator::loadTestServiceCode, true);
+        final var hub = TestHelper.makeDesignHub(TestHelper::loadTestServiceCode, true);
 
         //准备测试模型
         final var dataStoreModel       = TestHelper.makeSqlDataStoreModel();

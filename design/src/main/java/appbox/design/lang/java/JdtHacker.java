@@ -74,6 +74,7 @@ final class JdtHacker {
 
         //hack JavaModelManager //TODO:*** 暂共用JavaModelManager
         var indexManager = new IndexManager(PathUtil.INDEX_DATA);
+        //ReflectUtil.setField(IndexManager.class, "javaPluginLocation", indexManager, PathUtil.PLUGIN);
         ReflectUtil.setField(JavaModelManager.class, "indexManager", JavaModelManager.getJavaModelManager(), indexManager);
         ReflectUtil.setField(JavaModelManager.class, "cache", JavaModelManager.getJavaModelManager(), new JavaModelCache());
         var NO_PARTICIPANTS = ReflectUtil.getField(JavaModelManager.class, "NO_PARTICIPANTS", null);

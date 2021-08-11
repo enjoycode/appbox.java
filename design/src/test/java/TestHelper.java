@@ -17,6 +17,11 @@ import java.util.function.Function;
 
 public final class TestHelper {
 
+    /** 从资源中加载待测试的服务代码 */
+    public static InputStream loadTestServiceCode(IPath path) {
+        return TestHelper.class.getResourceAsStream("/test_services/" + path.lastSegment());
+    }
+
     public static DesignHub makeDesignHub(Function<IPath, InputStream> loadFileDelegate, boolean needInit) {
         var ctx = new MockRuntimeContext();
         RuntimeContext.init(ctx, (short) 10421);

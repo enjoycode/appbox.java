@@ -53,6 +53,7 @@ public final class DesignService implements IService {
         put("CheckCode", new CheckCode());
         put("FormatDocument", new FormatDocument());
         put("GetDocSymbol", new GetDocSymbol());
+        put("FindUsages", new FindUsages());
         put("CloseDesigner", new CloseDesigner());
         put("SaveModel", new SaveModel());
         put("DeleteNode", new DeleteNode());

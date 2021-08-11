@@ -1,15 +1,25 @@
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
+import appbox.design.lang.java.jdt.ProgressMonitor;
+import appbox.design.lang.java.lsp.ReferencesHandler;
+import appbox.design.utils.PathUtil;
+import appbox.design.utils.ReflectUtil;
 import appbox.model.ModelType;
 import org.eclipse.core.internal.resources.BuildConfiguration;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.SourceMethod;
+import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -75,14 +85,37 @@ public class TestJDT {
 
         final var symbolFinder = hub.typeSystem.javaLanguageServer.symbolFinder;
 
-        var symbol = symbolFinder.getModelSymbol(ModelType.Entity, "sys","Employee");
+        var symbol = symbolFinder.getModelSymbol(ModelType.Entity, "sys", "Employee");
         assertNotNull(symbol);
 
-        var name = symbolFinder.getEntityMemberSymbol("sys","Employee", "Name");
+        var name = symbolFinder.getEntityMemberSymbol("sys", "Employee", "Name");
         assertNotNull(name);
 
-        var notExists = symbolFinder.getEntityMemberSymbol("sys","Employee", "NotExists");
+        var notExists = symbolFinder.getEntityMemberSymbol("sys", "Employee", "NotExists");
         assertNull(notExists);
+    }
+
+    @Test
+    public void testSearchRefernces() throws Exception {
+        final var hub = TestHelper.makeDesignHub(TestHelper::loadTestServiceCode, true);
+        //准备测试模型
+        final var dataStoreModel   = TestHelper.makeSqlDataStoreModel();
+        final var entityModel      = TestHelper.makeEmployeeModel(dataStoreModel);
+        final var testServiceModel = TestHelper.makeServiceModel(10, "TestService");
+        TestHelper.injectAndLoadTree(dataStoreModel, List.of(entityModel, testServiceModel));
+
+        final var symbol = hub.typeSystem.javaLanguageServer.symbolFinder
+                .getModelSymbol(ModelType.Entity, "sys", "Employee");
+        final List<Location> locations = new ArrayList<>();
+        var javaCore = new JavaCore();
+        JavaModelManager.getIndexManager().reset();
+        ReflectUtil.setField(IndexManager.class, "javaPluginLocation", JavaModelManager.getIndexManager(), PathUtil.PLUGIN);
+        ReferencesHandler.search(symbol, locations, new ProgressMonitor());
+        for (var loc : locations) {
+            //hub.typeSystem.javaLanguageServer.findModelNodeByModelFile(loc.)
+            System.out.println(loc.getUri() + " " + loc.getRange());
+        }
+
     }
 
 }

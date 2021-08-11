@@ -22,4 +22,13 @@ public enum ModelReferenceType {
         value = v;
     }
 
+    public static ModelReferenceType fromValue(byte v) {
+        for (ModelReferenceType item : ModelReferenceType.values()) {
+            if (item.value == v) {
+                return item;
+            }
+        }
+        throw new RuntimeException("Unknown value: " + v);
+    }
+
 }

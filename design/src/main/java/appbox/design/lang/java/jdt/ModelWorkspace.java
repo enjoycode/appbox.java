@@ -153,7 +153,7 @@ public class ModelWorkspace implements IWorkspace {
     @Override
     public IWorkspaceDescription getDescription() {
         WorkspaceDescription workingCopy = defaultWorkspaceDescription();
-        description.copyTo(workingCopy);
+        //description.copyTo(workingCopy); //不用复制
         return workingCopy;
     }
 

@@ -1,6 +1,5 @@
 package appbox.design.lang.java.jdt;
 
-import appbox.design.IDeveloperSession;
 import appbox.design.MockDeveloperSession;
 import appbox.design.lang.java.ModelFilesManager;
 import appbox.design.services.CodeGenService;
@@ -8,8 +7,6 @@ import appbox.design.services.StagedService;
 import appbox.logging.Log;
 import appbox.model.EntityModel;
 import appbox.model.ModelType;
-import appbox.runtime.MockRuntimeContext;
-import appbox.runtime.RuntimeContext;
 import appbox.store.ModelStore;
 import org.eclipse.core.internal.resources.ResourceStatus;
 import org.eclipse.core.resources.IFile;
@@ -101,6 +98,7 @@ public final class ModelFile extends ModelResource implements IFile {
 
     @Override
     public InputStream getContents(boolean force) throws CoreException {
+        //注意:不要使用RuntimeContext.current()获取上下文,因可能在JobManager的线程内执行
         //先判断是否转译的运行时服务代码
         if (isInRuntimeServiceProject()) {
             var file = this.getLocation().toFile();
@@ -111,10 +109,13 @@ public final class ModelFile extends ModelResource implements IFile {
             }
         }
 
+        final var workspace      = (ModelWorkspace) getWorkspace();
+        final var languageServer = workspace.languageServer;
+        final var session        = languageServer.hub.session;
+        final var hub            = languageServer.hub;
         //通过代理加载(仅用于单元测试)
-        if (RuntimeContext.current() instanceof MockRuntimeContext && !isInModelsProject()) {
-            final var mockSession = (MockDeveloperSession) RuntimeContext.current().currentSession();
-            final var stream      = mockSession.loadFileDelegate.apply(this.path);
+        if (session instanceof MockDeveloperSession && !isInModelsProject()) {
+            final var stream = ((MockDeveloperSession) session).loadFileDelegate.apply(this.path);
             if (stream != null)
                 return stream;
         }
@@ -125,7 +126,6 @@ public final class ModelFile extends ModelResource implements IFile {
             return ModelFile.class.getResourceAsStream("/dummy/" + getName());
         }
 
-        var hub = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
         //DataStore及Permissions特殊生成
         if (ModelFilesManager.isDataStoreFile(this)) {
             var storesDummyCode = CodeGenService.genStoresDummyCode(hub.designTree);
@@ -140,7 +140,7 @@ public final class ModelFile extends ModelResource implements IFile {
         //注意:判断当前节点是否签出，是则首先尝试从Staged中加载，再从ModelStore加载代码
         try {
             //根据类型查找模型节点
-            var modelNode = hub.typeSystem.javaLanguageServer.findModelNodeByModelFile(this);
+            var modelNode = languageServer.findModelNodeByModelFile(this);
             //TODO:其他类型处理
             if (modelNode.model().modelType() == ModelType.Entity) {
                 //通过CodeGenService生成虚拟代码
