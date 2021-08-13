@@ -218,11 +218,6 @@ public final class ModelProject extends Project {
         return PathUtil.WORKSPACE_PATH.append(getFullPath());
     }
 
-    @Override
-    public IMarker[] findMarkers(String type, boolean includeSubtypes, int depth) throws CoreException {
-        return new IMarker[0]; //return super.findMarkers(type, includeSubtypes, depth);
-    }
-
     public enum ModelProjectType {
         Models,
         DesigntimeService,

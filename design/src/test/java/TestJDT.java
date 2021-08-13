@@ -4,7 +4,9 @@ import appbox.design.lang.java.jdt.ProgressMonitor;
 import appbox.design.lang.java.lsp.ReferencesHandler;
 import appbox.model.ModelType;
 import org.eclipse.core.internal.resources.BuildConfiguration;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.SourceMethod;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
@@ -53,6 +55,33 @@ public class TestJDT {
         var config  = new BuildConfiguration(project);
         var builder = new JavaBuilderWrapper(config);
         builder.build();
+    }
+
+    @Test
+    public void testBuildWithError() throws Exception {
+        final var testCode = "public class Emploee {aa";
+        //注意编译器会重复调用加载文件内容
+        Function<IPath, InputStream> loadDelegate =
+                (path) -> new ByteArrayInputStream(testCode.getBytes(StandardCharsets.UTF_8));
+
+        var hub     = TestHelper.makeDesignHub(loadDelegate, false);
+        var ls      = hub.typeSystem.javaLanguageServer;
+        var project = ls.createProject(ModelProject.ModelProjectType.Test, "testbuild", null);
+        var file    = project.getFile("Emploee.java");
+        file.create(null, true, null);
+
+        var config  = new BuildConfiguration(project);
+        var builder = new JavaBuilderWrapper(config);
+        builder.build();
+
+        //参考WorkspaceDiagnosticsHandler
+        var markers = project.findMarkers(
+                IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER/*null*/, true, IResource.DEPTH_INFINITE);
+        assertNotNull(markers);
+        assertTrue(markers.length > 0);
+        for(var mark : markers) {
+            System.out.println(mark);
+        }
     }
 
     @Test
