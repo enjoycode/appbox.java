@@ -20,10 +20,10 @@ public final class GetCompletion implements IDesignHandler {
 
             wr.writeFieldValue('{', "label", item.getLabel()); //必须有值，否则前端报错
             if (item.getInsertText() == null) {
-                wr.writeFieldValue(',', "insertText", item.getTextEdit().getNewText());
+                wr.writeFieldValue(',', "insertText", item.getTextEdit().getLeft().getNewText());
                 wr.write(',');
                 wr.writeFieldName("range");
-                serializer.write(item.getTextEdit().getRange());
+                serializer.write(item.getTextEdit().getLeft().getRange());
             } else {
                 wr.writeFieldValue(',', "insertText", item.getInsertText());
             }

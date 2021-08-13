@@ -8,6 +8,7 @@ import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.lang.java.code.EntityCodeGenerator;
 import appbox.design.lang.java.code.ServiceCodeGenerator;
+import appbox.design.lang.java.jdt.ModelProject;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.PathUtil;
 import appbox.logging.Log;
@@ -105,9 +106,10 @@ public final class PublishService {
 
         //4.生成运行时临时Project并进行编译
         final var libs               = hub.typeSystem.javaLanguageServer.makeServiceProjectDeps(designNode, true);
-        var       runtimeProjectName = "runtime_" + Long.toUnsignedString(model.id());
-        var       runtimeProject     = hub.typeSystem.javaLanguageServer.createProject(runtimeProjectName, libs);
-        var       runtimeServiceFile = runtimeProject.getFile(vfile.getName());
+        final var runtimeProjectName = hub.typeSystem.javaLanguageServer.makeRuntimeProjectName(designNode);
+        final var runtimeProject = hub.typeSystem.javaLanguageServer.createProject(
+                ModelProject.ModelProjectType.RuntimeService, runtimeProjectName, libs);
+        final var runtimeServiceFile = runtimeProject.getFile(vfile.getName());
         runtimeServiceFile.create(runtimeServiceCodeStream, true, null);
         //附加使用到的实体模型
         for (var entityNode : serviceCodeGenerator.usedEntities.values()) {

@@ -1,12 +1,7 @@
-package appbox.design.lang.java;
+package appbox.design.lang.java.jdt;
 
-import appbox.design.IDeveloperSession;
-import appbox.design.lang.java.jdt.DefaultVMType;
-import appbox.design.lang.java.jdt.Document;
-import appbox.design.lang.java.jdt.HackRegistryProvider;
 import appbox.design.utils.PathUtil;
 import appbox.design.utils.ReflectUtil;
-import appbox.runtime.RuntimeContext;
 import org.eclipse.core.internal.filesystem.InternalFileSystemCore;
 import org.eclipse.core.internal.filesystem.NullFileSystem;
 import org.eclipse.core.internal.preferences.DefaultPreferences;
@@ -14,11 +9,16 @@ import org.eclipse.core.internal.preferences.EclipsePreferences;
 import org.eclipse.core.internal.preferences.InstancePreferences;
 import org.eclipse.core.internal.preferences.PreferencesService;
 import org.eclipse.core.internal.resources.ProjectPreferences;
+import org.eclipse.core.internal.runtime.DataArea;
+import org.eclipse.core.internal.runtime.InternalPlatform;
+import org.eclipse.core.internal.runtime.MetaDataKeeper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.RegistryFactory;
 import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -36,24 +36,53 @@ import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.contentassist.TypeFilter;
 import org.eclipse.jdt.ls.core.internal.preferences.PreferenceManager;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.osgi.util.tracker.ServiceTracker;
 
 import java.util.HashMap;
 import java.util.HashSet;
 
-final class JdtHacker {
+public final class JdtHacker {
 
-    static PreferenceManager hack(JREContainerInitializer jreContainerInitializer,
-                                  ProjectPreferences defaultProjectPreferences) throws Exception {
+    public static PreferenceManager hack(JREContainerInitializer jreContainerInitializer,
+                                         ProjectPreferences defaultProjectPreferences) throws Exception {
         defaultProjectPreferences.put(JavaCore.COMPILER_SOURCE, "11");
         defaultProjectPreferences.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, "11");
         defaultProjectPreferences.put(JavaCore.COMPILER_COMPLIANCE, "11");
 
+        final var bundleContext = new HackBundleContext();
+        RegistryFactory.setDefaultRegistryProvider(new HackRegistryProvider());
+
         //init defaut java runtime
         DefaultVMType.init();
+
         //hack JAVA_LIKE_EXTENSIONS
         char[][] extensions = new char[1][];
         extensions[0] = "java".toCharArray();
-        ReflectUtil.setField(org.eclipse.jdt.internal.core.util.Util.class, "JAVA_LIKE_EXTENSIONS", null, extensions);
+        ReflectUtil.setField(org.eclipse.jdt.internal.core.util.Util.class,
+                "JAVA_LIKE_EXTENSIONS", null, extensions);
+
+        //hack InternalPlatform
+        ReflectUtil.setField(InternalPlatform.class, "context",
+                InternalPlatform.getDefault(), bundleContext);
+        ReflectUtil.setField(InternalPlatform.class, "cachedInstanceLocation",
+                InternalPlatform.getDefault(), PathUtil.WORKSPACE_PATH);
+        ReflectUtil.setField(InternalPlatform.class, "initialized",
+                InternalPlatform.getDefault(), true);
+        final var preferencesService = new HackPreferencesService();
+        final var preferencesTracker = new ServiceTracker<IPreferencesService, IPreferencesService>(
+                bundleContext, IPreferencesService.class, null);
+        ReflectUtil.setField(ServiceTracker.class, "cachedService", preferencesTracker, preferencesService);
+        ReflectUtil.setField(InternalPlatform.class, "preferencesTracker",
+                InternalPlatform.getDefault(), preferencesTracker);
+
+        //hack DataArea
+        ReflectUtil.setField(DataArea.class, "location", MetaDataKeeper.getMetaArea(), PathUtil.WORKSPACE_PATH);
+        ReflectUtil.invokeMethod(DataArea.class, "initializeLocation", MetaDataKeeper.getMetaArea());
+
+        //hack JavaCore (after above)
+        final var javaCore = new JavaCore();
+        ReflectUtil.setField(Plugin.class, "bundle", javaCore, bundleContext.getBundle());
+
         //hack preferences
         var rootNode            = PreferencesService.getDefault().getRootNode();
         var instanceNode        = rootNode.node(InstanceScope.INSTANCE.getName());
@@ -73,7 +102,7 @@ final class JdtHacker {
         ReflectUtil.setField(EclipsePreferences.class, "children", defaultNode, dmap);
 
         //hack JavaModelManager //TODO:*** 暂共用JavaModelManager
-        var indexManager = new IndexManager(PathUtil.INDEX_DATA);
+        final var indexManager = new IndexManager();
         //ReflectUtil.setField(IndexManager.class, "javaPluginLocation", indexManager, PathUtil.PLUGIN);
         ReflectUtil.setField(JavaModelManager.class, "indexManager", JavaModelManager.getJavaModelManager(), indexManager);
         ReflectUtil.setField(JavaModelManager.class, "cache", JavaModelManager.getJavaModelManager(), new JavaModelCache());
@@ -82,10 +111,11 @@ final class JdtHacker {
                 JavaModelManager.getJavaModelManager().compilationParticipants, NO_PARTICIPANTS);
         ReflectUtil.setField(JavaModelManager.CompilationParticipants.class, "managedMarkerTypes",
                 JavaModelManager.getJavaModelManager().compilationParticipants, new HashSet<String>());
-        //JavaModelManager.getJavaModelManager().initializePreferences();
+        //JavaModelManager.getJavaModelManager().initializePreferences(); 等同于以下3句
         JavaModelManager.getJavaModelManager().preferencesLookup[0] = instancePreferences;
         JavaModelManager.getJavaModelManager().preferencesLookup[1] = defaultPreferences;
         JavaModelManager.getJavaModelManager().containerInitializersCache.put(JavaRuntime.JRE_CONTAINER, jreContainerInitializer);
+        //var jreInitializer = JavaCore.getClasspathContainerInitializer(JavaRuntime.JRE_CONTAINER);
 
         //hack JavaLanguageServerPlugin & TypeFilter
         var javaLanguageServerPlugin = new JavaLanguageServerPlugin();
@@ -101,10 +131,11 @@ final class JdtHacker {
         //init default preferences (主要用于初始化JavaModelManager.optionNames,考虑直接设置)
         new JavaCorePreferenceInitializer().initializeDefaultPreferences();
 
-        //hack ResourcesPlugin (主要用于每个会话对应一个Workspace)
-        ResourcesPlugin.workspaceSupplier =
-                () -> ((IDeveloperSession) RuntimeContext.current()
-                        .currentSession()).getDesignHub().typeSystem.javaLanguageServer.jdtWorkspace;
+        //hack ResourcesPlugin
+        final var resourcesPlugin = new ResourcesPlugin();
+        ReflectUtil.setField(Plugin.class, "bundle", resourcesPlugin, bundleContext.getBundle());
+        final var workspace = new ModelWorkspace();
+        ReflectUtil.setField(ResourcesPlugin.class, "workspace", null, workspace);
 
         WorkingCopyOwner.setPrimaryBufferProvider(new WorkingCopyOwner() {
             @Override
@@ -123,11 +154,14 @@ final class JdtHacker {
         JavaLanguageServerPlugin.setPreferencesManager(lsPreferenceManager);
 
         //hack InternalFileSystemCore for build runtime service code
-        RegistryFactory.setDefaultRegistryProvider(new HackRegistryProvider());
         ReflectUtil.setField(InternalFileSystemCore.class, "fileSystems", InternalFileSystemCore.getInstance(),
                 new HashMap<String, Object>() {{
                     put("file", new NullFileSystem());
                 }});
+
+        //finally
+        workspace.open(null);
+        indexManager.reset(); //start indexing
 
         return lsPreferenceManager;
     }

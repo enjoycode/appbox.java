@@ -1,33 +1,48 @@
 package appbox.design.lang.java.jdt;
 
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IResource;
+import appbox.design.utils.PathUtil;
+import org.eclipse.core.internal.resources.Folder;
+import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
-public class ModelFolder extends ModelContainer implements IFolder {
+public final class ModelFolder extends Folder {
 
-    public ModelFolder(IPath path, ModelWorkspace workspace) {
-        super(path, workspace);
-    }
-
-    @Override
-    public void create(boolean force, boolean local, IProgressMonitor monitor) throws CoreException {
-        create(force ? 1 : 0, local, monitor);
+    ModelFolder(IPath path, Workspace container) {
+        super(path, container);
     }
 
     @Override
     public void create(int updateFlags, boolean local, IProgressMonitor monitor) throws CoreException {
-        //TODO:internalCreate
-        workspace.createResource(this, updateFlags);
-        //if (!local) {
-        this.getResourceInfo(true, true).clearModificationStamp();
-        //}
+        final var       workspace = (Workspace) getWorkspace();
+        ISchedulingRule rule      = workspace.getRuleFactory().createRule(this);
+
+        try {
+            workspace.prepareOperation(rule, monitor);
+            workspace.beginOperation(true);
+            //TODO:internalCreate
+            ((Workspace) getWorkspace()).createResource(this, updateFlags);
+            //if (!local) {
+            this.getResourceInfo(true, true).clearModificationStamp();
+            //}
+        } catch (OperationCanceledException ex) {
+            workspace.getWorkManager().operationCanceled();
+            throw ex;
+        } finally {
+            workspace.endOperation(rule, true);
+        }
     }
 
     @Override
-    public int getType() {
-        return IResource.FOLDER;
+    public IPath getLocation() {
+        return PathUtil.WORKSPACE_PATH.append(getFullPath());
+    }
+
+    @Override
+    public String getDefaultCharset(boolean checkImplicit) {
+        return "UTF8";
     }
 }

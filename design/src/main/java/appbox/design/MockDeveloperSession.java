@@ -21,7 +21,7 @@ public final class MockDeveloperSession implements IDeveloperSession {
 
     public MockDeveloperSession() {
         var nodes = new TreeNodePath.TreeNodeInfo[] {
-          new TreeNodePath.TreeNodeInfo(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Admin")
+          new TreeNodePath.TreeNodeInfo(UUID.fromString("11111111-1111-1111-1111-111111111111"), "MockUser")
         };
         _path = new TreeNodePath(nodes);
         _emploeeId = UUID.fromString("11111111-1111-1111-1111-222222222222");

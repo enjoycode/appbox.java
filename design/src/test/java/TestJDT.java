@@ -1,17 +1,12 @@
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
+import appbox.design.lang.java.jdt.ModelProject;
 import appbox.design.lang.java.jdt.ProgressMonitor;
 import appbox.design.lang.java.lsp.ReferencesHandler;
-import appbox.design.utils.PathUtil;
-import appbox.design.utils.ReflectUtil;
 import appbox.model.ModelType;
 import org.eclipse.core.internal.resources.BuildConfiguration;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.SourceMethod;
-import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
@@ -28,6 +23,15 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestJDT {
 
     @Test
+    public void testCreateProject() throws Exception {
+        var hub     = TestHelper.makeDesignHub(null, false);
+        var ls      = hub.typeSystem.javaLanguageServer;
+        var project = ls.createProject(ModelProject.ModelProjectType.Test, "testbuild", null);
+        assertTrue(project.exists());
+        assertTrue(project.isOpen());
+    }
+
+    @Test
     public void testBuild() throws Exception {
         var testCode = "public class Emploee {\n";
         testCode += "public String getName() {\n";
@@ -42,7 +46,7 @@ public class TestJDT {
 
         var hub     = TestHelper.makeDesignHub(loadDelegate, false);
         var ls      = hub.typeSystem.javaLanguageServer;
-        var project = ls.createProject("testbuild", null);
+        var project = ls.createProject(ModelProject.ModelProjectType.Test, "testbuild", null);
         var file    = project.getFile("Emploee.java");
         file.create(null, true, null);
 
@@ -63,7 +67,7 @@ public class TestJDT {
 
         var hub     = TestHelper.makeDesignHub(loadDelegate, false);
         var ls      = hub.typeSystem.javaLanguageServer;
-        var project = ls.createProject("testbuild", null);
+        var project = ls.createProject(ModelProject.ModelProjectType.Test, "testbuild", null);
         var file    = project.getFile("Emploee.java");
         file.create(null, true, null);
 
@@ -107,15 +111,13 @@ public class TestJDT {
         final var symbol = hub.typeSystem.javaLanguageServer.symbolFinder
                 .getModelSymbol(ModelType.Entity, "sys", "Employee");
         final List<Location> locations = new ArrayList<>();
-        var javaCore = new JavaCore();
-        JavaModelManager.getIndexManager().reset();
-        ReflectUtil.setField(IndexManager.class, "javaPluginLocation", JavaModelManager.getIndexManager(), PathUtil.PLUGIN);
         ReferencesHandler.search(symbol, locations, new ProgressMonitor());
         for (var loc : locations) {
             //hub.typeSystem.javaLanguageServer.findModelNodeByModelFile(loc.)
             System.out.println(loc.getUri() + " " + loc.getRange());
         }
 
+        assertTrue(locations.size() > 4);
     }
 
 }

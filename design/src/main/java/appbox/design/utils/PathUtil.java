@@ -13,14 +13,10 @@ public final class PathUtil {
 
     public static final IPath INDEX_DATA = TMP_DIR.append("appbox").append("index");
 
-    public static final IPath PLUGIN = TMP_DIR.append("appbox").append("plugin");
+    public static final IPath WORKSPACE_PATH = TMP_DIR.append("appbox").append("workspace");
 
     /** 释放的第三方库路径 */
     public static final String LIB_PATH = java.nio.file.Path.of(TMP_PATH, "appbox", "lib").toString();
-
-    public static IPath getWorkingLocation(long sessionId) {
-        return TMP_DIR.append("appbox").append("workspace").append(Long.toUnsignedString(sessionId));
-    }
 
     public static java.nio.file.Path getDebugPath(String debugSessionId) {
         return java.nio.file.Path.of(TMP_PATH, "appbox", "debug", debugSessionId);

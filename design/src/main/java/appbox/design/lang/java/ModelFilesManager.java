@@ -1,6 +1,6 @@
 package appbox.design.lang.java;
 
-import appbox.design.lang.java.jdt.ModelContainer;
+import appbox.design.lang.java.jdt.ModelProject;
 import appbox.design.services.CodeGenService;
 import appbox.design.tree.ApplicationNode;
 import appbox.design.tree.ModelNode;
@@ -9,8 +9,8 @@ import appbox.model.EntityModel;
 import appbox.model.ModelType;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
@@ -60,43 +60,10 @@ public final class ModelFilesManager {
 
     /** 在指定目录下创建虚拟文件 */
     public static void createDummyFiles(IContainer container, String[] files) throws CoreException {
-        var modelContainer = (ModelContainer) container;
-        for (var file : files) {
-            modelContainer.getFile(file).create(null, true, null);
+        for (var fileName : files) {
+            final var file = container.getFile(new Path(fileName));
+            file.create(null, true, null);
         }
-    }
-
-    /** 是否从资源中加载的虚拟文件，否则表示代码生成器生成的 */
-    public static boolean isDummyFileInResources(IFile file) {
-        var parent = file.getParent();
-        if (parent instanceof IProject && parent.getName().equals(JdtLanguageServer.PROJECT_MODELS)) {
-            return !file.getName().equals("DataStore.java"); //DataStore.java排除
-        }
-
-        if (parent.getName().equals("sys")
-                && parent.getParent() instanceof IProject
-                && parent.getParent().getName().equals(JdtLanguageServer.PROJECT_MODELS)) {
-            return !file.getName().equals("Permissions.java"); //Permissions.java排除
-        }
-
-        return false;
-    }
-
-    public static boolean isDataStoreFile(IFile file) {
-        if (file.getName().equals("DataStore.java")) {
-            var parent = file.getParent();
-            return parent instanceof IProject && parent.getName().equals(JdtLanguageServer.PROJECT_MODELS);
-        }
-        return false;
-    }
-
-    public static boolean isPermissionsFile(IFile file) {
-        if (file.getName().equals("Permissions.java")) {
-            var parent = file.getParent();
-            return parent.getParent() != null && parent.getParent() instanceof IProject
-                    && parent.getParent().getName().equals(JdtLanguageServer.PROJECT_MODELS);
-        }
-        return false;
     }
 
     private void createModelFile(String appName, String type, String fileName) throws CoreException {
@@ -106,14 +73,14 @@ public final class ModelFilesManager {
         }
 
         if (type == null) { //only for Permissions.java
-            var file = appFolder.getFile(fileName);
+            final var file = appFolder.getFile(fileName);
             file.create(null, true, null);
         } else {
-            var typeFolder = appFolder.getFolder(type);
+            final var typeFolder = appFolder.getFolder(type);
             if (!typeFolder.exists()) {
                 typeFolder.create(true, true, null);
             }
-            var file = typeFolder.getFile(fileName);
+            final var file = typeFolder.getFile(fileName);
             file.create(null, true, null);
         }
     }
@@ -132,9 +99,10 @@ public final class ModelFilesManager {
         try {
             if (model.modelType() == ModelType.Service) {
                 //创建服务模型的虚拟工程及代码
-                final var projectName = JdtLanguageServer.makeServiceProjectName(node);
+                final var projectName = languageServer.makeServiceProjectName(node);
                 final var libs        = languageServer.makeServiceProjectDeps(node, false);
-                final var project     = languageServer.createProject(projectName, libs);
+                final var project = languageServer.createProject(
+                        ModelProject.ModelProjectType.DesigntimeService, projectName, libs);
 
                 final var file = project.getFile(fileName);
                 file.create(null, true, null);

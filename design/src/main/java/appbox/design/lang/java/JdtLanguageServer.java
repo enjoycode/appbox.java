@@ -20,6 +20,7 @@ import org.eclipse.core.internal.resources.ProjectPreferences;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.*;
@@ -42,8 +43,7 @@ import java.util.stream.Stream;
  */
 public final class JdtLanguageServer {
     //region ====static====
-    public static final String BUILD_OUTPUT   = "bin";
-    public static final String PROJECT_MODELS = "models";
+    public static final String BUILD_OUTPUT = "bin";
 
     public static final IPath libEA_AsyncPath    =
             new Path(Async.class.getProtectionDomain().getCodeSource().getLocation().getPath());
@@ -54,7 +54,7 @@ public final class JdtLanguageServer {
 
     private static final JREContainerInitializer jreContainerInitializer   = new JREContainerInitializer();
     private static final ProjectPreferences      defaultProjectPreferences = new ProjectPreferences();
-    private static final PreferenceManager       lsPreferenceManager;
+    private static final PreferenceManager       lsPreferenceManager; //TODO:move out
 
     static {
         PreferenceManager preferenceManager;
@@ -68,8 +68,9 @@ public final class JdtLanguageServer {
     }
     //endregion
 
+    public static final ModelWorkspace jdtWorkspace = (ModelWorkspace) ResourcesPlugin.getWorkspace();
+
     public final  DesignHub               hub;
-    public final  ModelWorkspace          jdtWorkspace;
     public final  ModelFilesManager       filesManager;
     public final  ModelSymbolFinder       symbolFinder;
     private final HashMap<Long, Document> openedFiles = new HashMap<>();
@@ -77,23 +78,22 @@ public final class JdtLanguageServer {
     IProject modelsProject;
 
     public JdtLanguageServer(DesignHub hub) {
-        this.hub     = hub;
-        jdtWorkspace = new ModelWorkspace(this);
+        this.hub = hub;
         filesManager = new ModelFilesManager(this);
         symbolFinder = new ModelSymbolFinder(this);
-        //TODO:如果不能共用JavaModelManager,在这里初始化
     }
 
     /** 用于初始化通用项目等 */
     public void init() {
         try {
             //创建通用模型虚拟工程
-            var libs = new IClasspathEntry[]{
+            final var libs = new IClasspathEntry[]{
                     JavaCore.newLibraryEntry(libAppBoxCorePath, null, null)
             };
-            modelsProject = createProject(PROJECT_MODELS, libs);
+            final var modelsProjectName = makeModelsProjectName();
+            modelsProject = createProject(ModelProject.ModelProjectType.Models, modelsProjectName, libs);
             //添加基础虚拟文件,从resources中加载
-            var sysFolder = modelsProject.getFolder("sys");
+            final var sysFolder = modelsProject.getFolder("sys");
             sysFolder.create(true, true, null);
             ModelFilesManager.createDummyFiles(sysFolder, ModelFilesManager.SYS_DUMMY_FILES);
             ModelFilesManager.createDummyFiles(modelsProject, ModelFilesManager.ROOT_DUMMY_FILES);
@@ -107,8 +107,21 @@ public final class JdtLanguageServer {
     public IProject getModelsProject() {return modelsProject;}
 
     //region ====Project Management====
-    public static String makeServiceProjectName(ModelNode serviceNode) {
-        return Long.toUnsignedString(serviceNode.model().id());
+    private String makeModelsProjectName() {
+        return String.format("%s_models", hub.session.name());
+    }
+
+    public String makeServiceProjectName(ModelNode serviceNode) {
+        return String.format("%s_%s", hub.session.name(), Long.toUnsignedString(serviceNode.model().id()));
+    }
+
+    public String makeRuntimeProjectName(ModelNode serviceNode) {
+        return String.format("%s_runtime_%s", hub.session.name(), Long.toUnsignedString(serviceNode.model().id()));
+    }
+
+    private long getModelIdFromServiceProjectName(String projectName) {
+        final var modelIdString = projectName.replace(hub.session.name() + "_", "");
+        return Long.parseUnsignedLong(modelIdString);
     }
 
     private static IClasspathEntry[] makeBuildPaths(IProject project, IClasspathEntry[] deps) {
@@ -129,11 +142,11 @@ public final class JdtLanguageServer {
      * 创建指定名称的项目
      * @param deps 所依赖的内部项目列表，可为null
      */
-    public IProject createProject(String name, IClasspathEntry[] deps) throws Exception {
-        //TODO:check exists
-        var project = jdtWorkspace.getRoot().getProject(name);
+    public IProject createProject(ModelProject.ModelProjectType type, String name, IClasspathEntry[] deps) throws Exception {
+        final var project = (ModelProject) jdtWorkspace.getRoot().getProject(name);
         project.create(null);
-        //project.open(null);
+        project.setProjectTypeAndDesignContext(type, hub);
+        project.open(null);
 
         var perProjectInfo = JavaModelManager.getJavaModelManager()
                 .getPerProjectInfo(project, true);
@@ -464,23 +477,25 @@ public final class JdtLanguageServer {
         var fileName = file.getName();
         fileName = fileName.substring(0, fileName.length() - 5); //去掉扩展名
 
-        var project = file.getProject();
-        if (project.equals(modelsProject)) {
-            var typeFolder = file.getParent();
-            var appFolder  = typeFolder.getParent();
-            var appNode    = hub.designTree.findApplicationNodeByName(appFolder.getName());
-            var modelType  = CodeHelper.getModelTypeFromLCC(typeFolder.getName());
+        final var project = (ModelProject) file.getProject();
+        if (project.getProjectType() == ModelProject.ModelProjectType.Models) {
+            final var typeFolder = file.getParent();
+            final var appFolder  = typeFolder.getParent();
+            final var appNode    = hub.designTree.findApplicationNodeByName(appFolder.getName());
+            final var modelType  = CodeHelper.getModelTypeFromLCC(typeFolder.getName());
             return hub.designTree.findModelNodeByName(appNode.model.id(), modelType, fileName);
+        } else if (project.getProjectType() == ModelProject.ModelProjectType.DesigntimeService) {
+            final var modelId = getModelIdFromServiceProjectName(project.getName());
+            return hub.designTree.findModelNode(modelId);
         } else {
-            var projectName = project.getName();
-            return hub.designTree.findModelNode(Long.parseUnsignedLong(projectName));
+            throw new RuntimeException("Not supported");
         }
     }
 
     /** 找到服务模型对应的虚拟文件 */
     public ModelFile findFileForServiceModel(ModelNode serviceNode) {
         final var fileName    = String.format("%s.java", serviceNode.model().name());
-        final var projectName = JdtLanguageServer.makeServiceProjectName(serviceNode);
+        final var projectName = makeServiceProjectName(serviceNode);
         final var project     = jdtWorkspace.getRoot().getProject(projectName);
         return (ModelFile) project.findMember(fileName);
     }

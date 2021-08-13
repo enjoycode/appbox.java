@@ -15,6 +15,8 @@ public final class HackRegistryProvider implements IRegistryProvider {
     }
 
     public static class HackExtensionRegistry implements IExtensionRegistry {
+        private final IExtensionPoint _extensionPoint = new HackExtensionPoint();
+
         @Override
         public void addRegistryChangeListener(IRegistryChangeListener iRegistryChangeListener, String s) {
 
@@ -62,8 +64,8 @@ public final class HackRegistryProvider implements IRegistryProvider {
 
         @Override
         public IExtensionPoint getExtensionPoint(String s, String s1) {
-            //if (s.equals("org.eclipse.core.resources") && s1.equals("markers")) {
-            //    return new TestExtensionPoint();
+            if (s.equals("org.eclipse.core.resources") && s1.equals("markers"))
+                return _extensionPoint;
             //} else if (s.equals("org.eclipse.core.filesystem") && s1.equals("filesystems")) {
             //    return new TestExtensionPoint();
             //} else if (s.equals("org.eclipse.core.resources") && s1.equals("variableResolvers")) {
@@ -144,6 +146,68 @@ public final class HackRegistryProvider implements IRegistryProvider {
 
         @Override
         public boolean isMultiLanguage() {
+            return false;
+        }
+    }
+
+    public static class HackExtensionPoint implements IExtensionPoint {
+        @Override
+        public IConfigurationElement[] getConfigurationElements() throws InvalidRegistryObjectException {
+            return new IConfigurationElement[0];
+        }
+
+        @Override
+        public String getNamespace() throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public String getNamespaceIdentifier() throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public IContributor getContributor() throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public IExtension getExtension(String s) throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public IExtension[] getExtensions() throws InvalidRegistryObjectException {
+            return new IExtension[0];
+        }
+
+        @Override
+        public String getLabel() throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public String getLabel(String s) throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public String getSchemaReference() throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public String getSimpleIdentifier() throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public String getUniqueIdentifier() throws InvalidRegistryObjectException {
+            return null;
+        }
+
+        @Override
+        public boolean isValid() {
             return false;
         }
     }

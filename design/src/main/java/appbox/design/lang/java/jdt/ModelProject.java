@@ -1,60 +1,39 @@
 package appbox.design.lang.java.jdt;
 
+import appbox.design.DesignHub;
 import appbox.design.utils.PathUtil;
 import org.eclipse.core.internal.resources.*;
 import org.eclipse.core.internal.utils.Messages;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
-import org.eclipse.core.runtime.content.IContentTypeMatcher;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.jdt.core.JavaCore;
 
-import java.net.URI;
-import java.util.Map;
+public final class ModelProject extends Project {
+    private ModelProjectType _projectType;
+    private DesignHub        _designHub;
 
-public class ModelProject extends ModelContainer implements IProject {
-
-    public ModelProject(IPath path, ModelWorkspace workspace) {
-        super(path, workspace);
+    ModelProject(IPath path, Workspace container) {
+        super(path, container);
     }
 
-    @Override
-    public void build(int i, String s, Map<String, String> map, IProgressMonitor iProgressMonitor) throws CoreException {
-        throw new UnsupportedOperationException();
+    public void setProjectTypeAndDesignContext(ModelProjectType type, DesignHub hub) {
+        _projectType = type;
+        _designHub   = hub;
     }
 
-    @Override
-    public void build(int i, IProgressMonitor iProgressMonitor) throws CoreException {
-        throw new UnsupportedOperationException();
-    }
+    public ModelProjectType getProjectType() {return _projectType;}
 
-    @Override
-    public void build(IBuildConfiguration iBuildConfiguration, int i, IProgressMonitor iProgressMonitor) throws CoreException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void close(IProgressMonitor iProgressMonitor) throws CoreException {
-
-    }
-
-    @Override
-    public void create(IProjectDescription description, IProgressMonitor monitor) throws CoreException {
-        create(description, IResource.NONE, monitor);
-    }
-
-    @Override
-    public void create(IProgressMonitor monitor) throws CoreException {
-        create(null, monitor);
-    }
+    public DesignHub getDesignHub() {return _designHub;}
 
     @Override
     public void create(IProjectDescription description, int updateFlags, IProgressMonitor monitor) throws CoreException {
+        final var  workspace  = (Workspace) getWorkspace();
         SubMonitor subMonitor = SubMonitor.convert(monitor, Messages.resources_create, 100);
         //checkValidPath(path, PROJECT, false);
         final ISchedulingRule rule = workspace.getRuleFactory().createRule(this);
         try {
-            //workspace.prepareOperation(rule, subMonitor);
+            workspace.prepareOperation(rule, subMonitor);
             if (description == null) {
                 description = new ProjectDescription();
                 description.setNatureIds(new String[]{JavaCore.NATURE_ID}); //Rick 直接设置
@@ -62,7 +41,7 @@ public class ModelProject extends ModelContainer implements IProject {
             }
             //assertCreateRequirements(description);
             //workspace.broadcastEvent(LifecycleEvent.newEvent(LifecycleEvent.PRE_PROJECT_CREATE, this));
-            //workspace.beginOperation(true);
+            workspace.beginOperation(true);
             workspace.createResource(this, updateFlags);
             //workspace.getMetaArea().create(this);
             ProjectInfo info = (ProjectInfo) getResourceInfo(false, true);
@@ -102,11 +81,109 @@ public class ModelProject extends ModelContainer implements IProject {
             //    info.set(ICoreConstants.M_CHILDREN_UNKNOWN);
             //workspace.getSaveManager().requestSnapshot();
         } catch (OperationCanceledException e) {
-            //workspace.getWorkManager().operationCanceled();
+            workspace.getWorkManager().operationCanceled();
             throw e;
         } finally {
             subMonitor.done();
-            //workspace.endOperation(rule, true);
+            workspace.endOperation(rule, true);
+        }
+    }
+
+    @Override
+    public void open(int updateFlags, IProgressMonitor monitor) throws CoreException {
+        final var workspace = (Workspace) getWorkspace();
+
+        try {
+            ISchedulingRule rule = workspace.getRuleFactory().modifyRule(this);
+
+            try {
+                workspace.prepareOperation(rule, monitor);
+                ProjectInfo info  = (ProjectInfo) this.getResourceInfo(false, false);
+                int         flags = this.getFlags(info);
+                this.checkExists(flags, true);
+                if (!this.isOpen(flags)) {
+                    workspace.beginOperation(true);
+                    //workspace.flushBuildOrder();
+                    info = (ProjectInfo) this.getResourceInfo(false, true);
+                    info.set(ICoreConstants.M_OPEN);
+                    boolean unknownChildren = info.isSet(ICoreConstants.M_CHILDREN_UNKNOWN);
+                    if (unknownChildren) {
+                        info.clear(ICoreConstants.M_CHILDREN_UNKNOWN);
+                    }
+
+                    boolean used = info.isSet(ICoreConstants.M_USED);
+                    //boolean snapshotLoaded = false;
+                    //boolean minorIssuesDuringRestore;
+                    //if (!used && !workspace.getMetaArea().getRefreshLocationFor(this).toFile().exists()) {
+                    //    minorIssuesDuringRestore = this.getLocalManager().hasSavedDescription(this);
+                    //    if (minorIssuesDuringRestore) {
+                    //        ProjectDescription updatedDesc = info.getDescription();
+                    //        if (updatedDesc != null) {
+                    //            URI autoloadURI = updatedDesc.getSnapshotLocationURI();
+                    //            if (autoloadURI != null) {
+                    //                try {
+                    //                    autoloadURI = this.getPathVariableManager().resolveURI(autoloadURI);
+                    //                    this.internalLoadSnapshot(1, autoloadURI, Policy.subMonitorFor(monitor, Policy.opWork * 5 / 100));
+                    //                    snapshotLoaded = true;
+                    //                } catch (CoreException var25) {
+                    //                    String msgerr = NLS.bind(Messages.projRead_cannotReadSnapshot, this.getName(), var25.getLocalizedMessage());
+                    //                    Policy.log(new Status(2, "org.eclipse.core.resources", msgerr));
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+                    //}
+
+                    //minorIssuesDuringRestore = false;
+                    if (used) {
+                        //    minorIssuesDuringRestore = workspace.getSaveManager().restore(this, Policy.subMonitorFor(monitor, Policy.opWork * 20 / 100));
+                    } else {
+                        info.set(ICoreConstants.M_USED);
+                        //    IStatus result = this.reconcileLinksAndGroups(info.getDescription());
+                        //    if (!result.isOK()) {
+                        //        throw new CoreException(result);
+                        //    }
+                        //
+                        workspace.updateModificationStamp(info);
+                        //    monitor.worked(Policy.opWork * (snapshotLoaded ? 15 : 20) / 100);
+                    }
+                    //
+                    //this.startup();
+                    //if ((used || !unknownChildren) && minorIssuesDuringRestore) {
+                    //    if ((updateFlags & 128) != 0) {
+                    //        workspace.refreshManager.refresh(this);
+                    //        monitor.worked(Policy.opWork * 60 / 100);
+                    //    }
+                    //} else {
+                    //    boolean refreshed = false;
+                    //    if (!used) {
+                    //        refreshed = this.workspace.getSaveManager().restoreFromRefreshSnapshot(this, Policy.subMonitorFor(monitor, Policy.opWork * 20 / 100));
+                    //        if (refreshed) {
+                    //            monitor.worked(Policy.opWork * 60 / 100);
+                    //        }
+                    //    }
+                    //
+                    //    if (!refreshed) {
+                    //        if ((updateFlags & 128) != 0) {
+                    //            this.workspace.refreshManager.refresh(this);
+                    //            monitor.worked(Policy.opWork * 60 / 100);
+                    //        } else {
+                    //            this.refreshLocal(2, Policy.subMonitorFor(monitor, Policy.opWork * 60 / 100));
+                    //        }
+                    //    }
+                    //}
+                    //
+                    //workspace.getAliasManager().updateAliases(this, this.getStore(), 2, monitor);
+                }
+            } catch (OperationCanceledException ex) {
+                workspace.getWorkManager().operationCanceled();
+                throw ex;
+            } finally {
+                workspace.endOperation(rule, true);
+            }
+        } finally {
+            if (monitor != null)
+                monitor.done();
         }
     }
 
@@ -116,7 +193,7 @@ public class ModelProject extends ModelContainer implements IProject {
      * during workspace restore (i.e., when you cannot do an operation)
      */
     void internalSetDescription(IProjectDescription value, boolean incrementContentId) {
-        //TODO:
+        //TODO:check
         //// Project has been added / removed. Build order is out-of-step
         //workspace.flushBuildOrder();
 
@@ -127,212 +204,29 @@ public class ModelProject extends ModelContainer implements IProject {
             info.incrementContentId();
             //if the project is not accessible, stamp will be null and should remain null
             if (info.getModificationStamp() != NULL_STAMP)
-                workspace.updateModificationStamp(info);
-        }
-    }
-
-    /**
-     * This is an internal helper method. This implementation is different from the API
-     * method getDescription(). This one does not check the project accessibility. It exists
-     * in order to prevent "chicken and egg" problems in places like the project creation.
-     * It may return null.
-     */
-    public ProjectDescription internalGetDescription() {
-        ProjectInfo info = (ProjectInfo) getResourceInfo(false, false);
-        if (info == null)
-            return null;
-        return info.getDescription();
-    }
-
-    @Override
-    public void delete(boolean b, boolean b1, IProgressMonitor iProgressMonitor) throws CoreException {
-
-    }
-
-    @Override
-    public IBuildConfiguration getActiveBuildConfig() throws CoreException {
-        return null;
-    }
-
-    @Override
-    public IBuildConfiguration getBuildConfig(String s) throws CoreException {
-        return null;
-    }
-
-    @Override
-    public IBuildConfiguration[] getBuildConfigs() throws CoreException {
-        return new IBuildConfiguration[0];
-    }
-
-    @Override
-    public IContentTypeMatcher getContentTypeMatcher() throws CoreException {
-        return null;
-    }
-
-    @Override
-    public IProjectDescription getDescription() throws CoreException {
-        ResourceInfo info = getResourceInfo(false, false);
-        //checkAccessible(getFlags(info));
-        ProjectDescription description = ((ProjectInfo) info).getDescription();
-        //if the project is currently in the middle of being created, the description might not be available yet
-        if (description == null)
-            checkAccessible(ICoreConstants.NULL_FLAG);
-        return (IProjectDescription) description.clone();
-    }
-
-    @Override
-    public IContainer getParent() {
-        return workspace.getRoot();
-    }
-
-    @Override
-    public IProjectNature getNature(String s) throws CoreException {
-        return null;
-    }
-
-    @Override
-    public IPath getWorkingLocation(String id) {
-        if (id != null && this.exists()) {
-            //注意暂指向临时目录,eg:/tmp/appbox/workspace/sessionid/
-            IPath result = PathUtil.getWorkingLocation(workspace.languageServer.hub.session.sessionId());
-            result.toFile().mkdirs();
-            return result;
-        } else {
-            return null;
+                ((Workspace) getWorkspace()).updateModificationStamp(info);
         }
     }
 
     @Override
-    public IProject[] getReferencedProjects() throws CoreException {
-        ResourceInfo info = this.getResourceInfo(false, false);
-        this.checkAccessible(this.getFlags(info));
-        ProjectDescription description = ((ProjectInfo) info).getDescription();
-        if (description == null) {
-            this.checkAccessible(-1);
-        }
-
-        return description.getAllReferences(this, true);
+    public String getDefaultCharset(boolean checkImplicit) {
+        return "UTF8";
     }
 
     @Override
-    public void clearCachedDynamicReferences() {
-
+    public IPath getLocation() {
+        return PathUtil.WORKSPACE_PATH.append(getFullPath());
     }
 
     @Override
-    public IProject[] getReferencingProjects() {
-        return new IProject[0];
+    public IMarker[] findMarkers(String type, boolean includeSubtypes, int depth) throws CoreException {
+        return new IMarker[0]; //return super.findMarkers(type, includeSubtypes, depth);
     }
 
-    @Override
-    public IBuildConfiguration[] getReferencedBuildConfigs(String s, boolean b) throws CoreException {
-        return new IBuildConfiguration[0];
-    }
-
-    @Override
-    public boolean hasBuildConfig(String s) throws CoreException {
-        return false;
-    }
-
-    @Override
-    public boolean hasNature(String natureID) throws CoreException {
-        checkAccessible(getFlags(getResourceInfo(false, false)));
-        // use #internal method to avoid copy but still throw an
-        // exception if the resource doesn't exist.
-        IProjectDescription desc = internalGetDescription();
-        if (desc == null)
-            checkAccessible(ICoreConstants.NULL_FLAG);
-        return desc.hasNature(natureID);
-    }
-
-    @Override
-    public boolean isNatureEnabled(String s) throws CoreException {
-        return false;
-    }
-
-    @Override
-    public boolean isOpen() {
-        ResourceInfo info = getResourceInfo(false, false);
-        return isOpen(getFlags(info));
-    }
-
-    public boolean isOpen(int flags) {
-        //TODO:
-        //return flags != ICoreConstants.NULL_FLAG && ResourceInfo.isSet(flags, ICoreConstants.M_OPEN);
-        return flags != ICoreConstants.NULL_FLAG;
-    }
-
-    @Override
-    public void loadSnapshot(int i, URI uri, IProgressMonitor iProgressMonitor) throws CoreException {
-
-    }
-
-    @Override
-    public void move(IProjectDescription iProjectDescription, boolean b, IProgressMonitor iProgressMonitor) throws CoreException {
-
-    }
-
-    @Override
-    public void open(int updateFlags, IProgressMonitor monitor) throws CoreException {
-        //TODO:
-        ProjectInfo info  = (ProjectInfo) getResourceInfo(false, false);
-        int         flags = getFlags(info);
-        checkExists(flags, true);
-        if (isOpen(flags))
-            return;
-
-        info = (ProjectInfo) getResourceInfo(false, true);
-        info.set(ICoreConstants.M_OPEN);
-        //clear the unknown children immediately to avoid background refresh
-        boolean unknownChildren = info.isSet(ICoreConstants.M_CHILDREN_UNKNOWN);
-        if (unknownChildren)
-            info.clear(ICoreConstants.M_CHILDREN_UNKNOWN);
-
-        workspace.updateModificationStamp(info);
-    }
-
-    @Override
-    public void open(IProgressMonitor monitor) throws CoreException {
-        open(IResource.NONE, monitor);
-    }
-
-    @Override
-    public void saveSnapshot(int i, URI uri, IProgressMonitor iProgressMonitor) throws CoreException {
-
-    }
-
-    @Override
-    public void setDescription(IProjectDescription iProjectDescription, IProgressMonitor iProgressMonitor) throws CoreException {
-
-    }
-
-    @Override
-    public void setDescription(IProjectDescription iProjectDescription, int i, IProgressMonitor iProgressMonitor) throws CoreException {
-
-    }
-
-    @Override
-    public IProject getProject() {
-        return this;
-    }
-
-    @Override
-    public int getType() {
-        return IResource.PROJECT;
-    }
-
-    /**
-     * Checks that this resource is accessible.  Typically this means that it
-     * exists.  In the case of projects, they must also be open.
-     * If phantom is true, phantom resources are considered.
-     * @throws CoreException if this resource is not accessible
-     */
-    @Override
-    public void checkAccessible(int flags) throws CoreException {
-        super.checkAccessible(flags);
-        //if (!isOpen(flags)) {
-        //    String message = Messages.resources_mustBeOpen + ":" + getName());
-        //    throw new ResourceException(IResourceStatus.PROJECT_NOT_OPEN, getFullPath(), message, null);
-        //}
+    public enum ModelProjectType {
+        Models,
+        DesigntimeService,
+        RuntimeService,
+        Test
     }
 }
