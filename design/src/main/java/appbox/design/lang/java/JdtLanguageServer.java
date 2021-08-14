@@ -492,6 +492,23 @@ public final class JdtLanguageServer {
         }
     }
 
+    public ModelNode findModelNodeByUri(String uri) {
+        //eg: file://Admin_models/sys/entities/Employee.java
+        //or  file://Admin_[ServiceId]/OrderService.java
+        final var segements = uri.split("/");
+        if (segements.length == 6) { //from models project
+            final var appNode   = hub.designTree.findApplicationNodeByName(segements[3]);
+            final var modelType = ModelTypeUtil.fromLowercaseType(segements[4]);
+            final var modelName = segements[5].replace(".java", "");
+            return hub.designTree.findModelNodeByName(appNode.model.id(), modelType, modelName);
+        } else if (segements.length == 4) { //from design service
+            final var modelId = getModelIdFromServiceProjectName(segements[2]);
+            return hub.designTree.findModelNode(modelId);
+        } else {
+            throw new RuntimeException("Unknown uri: " + uri);
+        }
+    }
+
     /** 找到服务模型对应的虚拟文件 */
     public ModelFile findFileForServiceModel(ModelNode serviceNode) {
         final var fileName    = String.format("%s.java", serviceNode.model().name());

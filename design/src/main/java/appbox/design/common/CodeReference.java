@@ -2,33 +2,40 @@ package appbox.design.common;
 
 import appbox.design.tree.ModelNode;
 import appbox.serialization.IJsonWriter;
+import org.eclipse.lsp4j.Range;
 
 /** 模型虚拟代码的引用 */
 public final class CodeReference extends Reference {
 
-    private final int offset;
-    private final int length;
+    private final Range range;
 
-    public CodeReference(ModelNode modelNode, int offset, int length) {
+    public CodeReference(ModelNode modelNode, Range range) {
         super(modelNode);
 
-        this.offset = offset;
-        this.length = length;
+        this.range = range;
     }
 
     @Override
     public String location() {
-        return String.format("[%d - %d]", offset, length);
+        return String.format("[%d:%d] - [%d:%d]",
+                range.getStart().getLine() + 1, range.getStart().getCharacter() + 1,
+                range.getEnd().getLine() + 1, range.getEnd().getCharacter() + 1);
     }
 
     @Override
     protected void writeMember(IJsonWriter writer) {
-        writer.writeKeyValue("Offset", offset);
-        writer.writeKeyValue("Length", length);
+        writer.writeKeyValue("StartLine", range.getStart().getLine() + 1);
+        writer.writeKeyValue("StartColumn", range.getStart().getCharacter() + 1);
+        writer.writeKeyValue("EndLine", range.getEnd().getLine() + 1);
+        writer.writeKeyValue("EndColumn", range.getEnd().getCharacter() + 1);
     }
 
     @Override
     protected int compareSameModel(Reference other) {
-        return Integer.compare(offset, ((CodeReference) other).offset);
+        final var o = (CodeReference) other;
+
+        if (range.getStart().getLine() != o.range.getStart().getLine())
+            return Integer.compare(range.getStart().getLine(), o.range.getStart().getLine());
+        return Integer.compare(range.getStart().getCharacter(), o.range.getStart().getCharacter());
     }
 }

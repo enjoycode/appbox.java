@@ -1,8 +1,12 @@
 package appbox.design.lang.java.lsp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import appbox.design.IDeveloperSession;
+import appbox.design.lang.java.jdt.ModelProject;
+import appbox.runtime.RuntimeContext;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -81,9 +85,17 @@ public final class ReferencesHandler {
     }
 
     private static IJavaSearchScope createSearchScope() throws JavaModelException {
-        //TODO:忽略不需要搜索的项目
-        IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot()).getJavaProjects();
-        int            scope    = IJavaSearchScope.SOURCES;
+        //TODO:暂在这里直接忽略无关项目,即只搜索设计时服务项目
+        final var hub         = ((IDeveloperSession) RuntimeContext.current().currentSession()).getDesignHub();
+        final var allProjects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot()).getJavaProjects();
+        final var projects = Arrays.stream(allProjects).filter(p -> {
+            var modelProject = (ModelProject) p.getProject();
+            return modelProject.getDesignHub() == hub &&
+                    modelProject.getProjectType() == ModelProject.ModelProjectType.DesigntimeService;
+        }).toArray(IJavaProject[]::new);
+
+        //IJavaProject[] projects = JavaCore.create(ResourcesPlugin.getWorkspace().getRoot()).getJavaProjects();
+        int scope = IJavaSearchScope.SOURCES;
         //if (preferenceManager.isClientSupportsClassFileContent()) {
         //    scope |= IJavaSearchScope.APPLICATION_LIBRARIES;
         //}
@@ -134,6 +146,7 @@ public final class ReferencesHandler {
                             ICompilationUnit compilationUnit = (ICompilationUnit) element.getAncestor(IJavaElement.COMPILATION_UNIT);
                             Location         location        = null;
                             if (compilationUnit != null) {
+                                //TODO:考虑在这里获取范围文本并设置给Location
                                 location = Utils.toLocation(compilationUnit, match.getOffset(), match.getLength());
                             } else if (includeClassFiles) {
                                 IClassFile cf = (IClassFile) element.getAncestor(IJavaElement.CLASS_FILE);

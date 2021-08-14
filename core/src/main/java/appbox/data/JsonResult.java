@@ -8,6 +8,7 @@ import com.alibaba.fastjson.serializer.SerializeConfig;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * 用于包装服务端返回给前端的Json序列化后的结果
@@ -24,27 +25,36 @@ public final class JsonResult implements IBinSerializable {
 
 
     static {
-        registerType(SysEntityKVO.class, customeSerializer);
-        registerType(SqlEntityKVO.class, customeSerializer);
-        registerType(PermissionNode.class, customeSerializer);
-        registerType(BlobObject.class, customeSerializer);
+        registerType(SysEntityKVO.class);
+        registerType(SqlEntityKVO.class);
+        registerType(PermissionNode.class);
+        registerType(BlobObject.class);
+    }
+
+    private static void registerType(Class<? extends IJsonSerializable> clazz) {
+        config.put(clazz, customeSerializer);
     }
 
     public static void registerType(Class<?> clazz, ObjectSerializer serializer) {
         config.put(clazz, serializer);
     }
 
-    private final Object  result;
-    private final boolean isRawJson;
+    private final Object result;
+    private final int    resultType;
 
     public JsonResult(Object result) {
-        this.result    = result;
-        this.isRawJson = false;
+        this.result     = result;
+        this.resultType = 0;
     }
 
     public JsonResult(Object result, boolean isRaw) {
-        this.isRawJson = isRaw;
-        this.result    = result;
+        this.result     = result;
+        this.resultType = 1;
+    }
+
+    public JsonResult(List<? extends IJsonSerializable> result) {
+        this.result     = result;
+        this.resultType = 2;
     }
 
     @Override
@@ -54,7 +64,7 @@ public final class JsonResult implements IBinSerializable {
             return;
         }
 
-        if (isRawJson) {
+        if (resultType == 1) {
             if (result instanceof byte[]) {
                 var rawdata = (byte[]) result;
                 bs.write(rawdata, 0, rawdata.length);
@@ -67,6 +77,19 @@ public final class JsonResult implements IBinSerializable {
         }
 
         try {
+            if (resultType == 2) {
+                final var list       = (List<? extends IJsonSerializable>) result;
+                final var out        = new OutputStreamWriter((OutputStream) bs);
+                final var jsonWriter = new FastJsonWriter(out);
+                jsonWriter.startArray();
+                for (var item : list) {
+                    item.writeToJson(jsonWriter);
+                }
+                jsonWriter.endArray();
+                jsonWriter.close();
+                return;
+            }
+
             //TODO:fast for primitive types
 
             //fast for IJSonSerializable

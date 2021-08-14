@@ -1,5 +1,6 @@
 package appbox.design.handlers.code;
 
+import appbox.data.JsonResult;
 import appbox.design.DesignHub;
 import appbox.design.handlers.IDesignHandler;
 import appbox.design.services.RefactoringService;
@@ -23,7 +24,7 @@ public final class FindUsages implements IDesignHandler {
 
         final var list = RefactoringService.findUsages(hub, refType,
                 modelNode.appNode.model.name(), modelNode.model().name(), memberName);
-        return CompletableFuture.completedFuture(list);
+        return CompletableFuture.completedFuture(new JsonResult(list));
     }
 
 }

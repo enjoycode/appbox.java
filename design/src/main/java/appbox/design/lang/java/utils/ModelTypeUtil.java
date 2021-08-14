@@ -26,4 +26,27 @@ public final class ModelTypeUtil {
                 return "unknown";
         }
     }
+
+    public static ModelType fromLowercaseType(String typeName) {
+        switch (typeName) {
+            case "enums":
+                return ModelType.Enum;
+            case "entities":
+                return ModelType.Entity;
+            case "events":
+                return ModelType.Event;
+            case "services":
+                return ModelType.Service;
+            case "views":
+                return ModelType.View;
+            case "workflows":
+                return ModelType.Workflow;
+            case "reports":
+                return ModelType.Report;
+            case "permissions":
+                return ModelType.Permission;
+            default:
+                throw new RuntimeException("Unknown ModelType: " + typeName);
+        }
+    }
 }
