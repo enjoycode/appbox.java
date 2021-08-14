@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 import java.io.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -49,6 +50,12 @@ public final class ModelFile extends File {
         } else {
             return PathUtil.WORKSPACE_PATH.append(getFullPath());
         }
+    }
+
+    @Override
+    public URI getLocationURI() {
+        //简单返回, CompletionProposalRequestor.toCompleteItem需要
+        return null;//return URI.create("model:" + path.toString());
     }
 
     @Override
