@@ -131,8 +131,7 @@ public final class PublishService {
         //6.获取并压缩编译好的.class
         final var classData = compressClassesData(runtimeProject, model, appName, asyncTransformer);
 
-        //7.删除用于编译的临时Project及运行时服务代码
-        runtimeServiceFile.delete(true, null);
+        //7.删除用于编译的临时Project
         runtimeProject.delete(true, null);
 
         return classData;

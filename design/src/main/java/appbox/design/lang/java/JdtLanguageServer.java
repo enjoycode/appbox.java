@@ -78,7 +78,7 @@ public final class JdtLanguageServer {
     IProject modelsProject;
 
     public JdtLanguageServer(DesignHub hub) {
-        this.hub = hub;
+        this.hub     = hub;
         filesManager = new ModelFilesManager(this);
         symbolFinder = new ModelSymbolFinder(this);
     }
@@ -146,7 +146,7 @@ public final class JdtLanguageServer {
         final var project = (ModelProject) jdtWorkspace.getRoot().getProject(name);
         project.create(null);
         project.setProjectTypeAndDesignContext(type, hub);
-        project.open(null);
+        project.open(null); //always open it
 
         var perProjectInfo = JavaModelManager.getJavaModelManager()
                 .getPerProjectInfo(project, true);

@@ -1,6 +1,7 @@
 package appbox.design.lang.java.jdt;
 
 import appbox.design.MockDeveloperSession;
+import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.services.CodeGenService;
 import appbox.design.services.StagedService;
 import appbox.design.utils.PathUtil;
@@ -11,10 +12,7 @@ import appbox.store.ModelStore;
 import org.eclipse.core.internal.resources.File;
 import org.eclipse.core.internal.resources.ResourceStatus;
 import org.eclipse.core.internal.resources.Workspace;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 import java.io.*;
@@ -41,7 +39,16 @@ public final class ModelFile extends File {
 
     @Override
     public IPath getLocation() {
-        return PathUtil.WORKSPACE_PATH.append(getFullPath());
+        //如果是编译输出的class文件,统一放在bin目录内以方便打包
+        if ("class".equals(getFileExtension())) {
+            final var fp = getFullPath();
+            final var rp = fp.removeFirstSegments(2);
+            return PathUtil.WORKSPACE_PATH.append(fp.segment(0))
+                    .append(JdtLanguageServer.BUILD_OUTPUT)
+                    .append(String.join(".", rp.segments()));
+        } else {
+            return PathUtil.WORKSPACE_PATH.append(getFullPath());
+        }
     }
 
     @Override
@@ -80,6 +87,17 @@ public final class ModelFile extends File {
         } finally {
             workspace.endOperation(rule, true);
         }
+    }
+
+    @Override
+    public void delete(int updateFlags, IProgressMonitor monitor) throws CoreException {
+        ModelWorkspace.overrideResourceDelete(this, updateFlags, monitor);
+    }
+
+    @Override
+    public void deleteResource(boolean convertToPhantom, MultiStatus status) throws CoreException {
+        final var workspace = (ModelWorkspace) getWorkspace();
+        workspace.overrideResourceDeleteResource(this, convertToPhantom, status);
     }
 
     @Override

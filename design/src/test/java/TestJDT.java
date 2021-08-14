@@ -4,6 +4,7 @@ import appbox.design.lang.java.jdt.ProgressMonitor;
 import appbox.design.lang.java.lsp.ReferencesHandler;
 import appbox.model.ModelType;
 import org.eclipse.core.internal.resources.BuildConfiguration;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaModelMarker;
@@ -24,13 +25,27 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestJDT {
 
+    private IProject createTestProject() throws Exception {
+        var hub = TestHelper.makeDesignHub(null, false);
+        var ls  = hub.typeSystem.javaLanguageServer;
+        return ls.createProject(ModelProject.ModelProjectType.Test, "testProject", null);
+    }
+
     @Test
     public void testCreateProject() throws Exception {
-        var hub     = TestHelper.makeDesignHub(null, false);
-        var ls      = hub.typeSystem.javaLanguageServer;
-        var project = ls.createProject(ModelProject.ModelProjectType.Test, "testbuild", null);
+        var project = createTestProject();
         assertTrue(project.exists());
         assertTrue(project.isOpen());
+    }
+
+    @Test
+    public void testDeleteProject() throws Exception {
+        var project = createTestProject();
+        var file = project.getFile("TestFile.txt");
+        file.create(null, true, null);
+        project.delete(true, null);
+        assertFalse(file.exists());
+        assertFalse(project.exists());
     }
 
     @Test
@@ -79,7 +94,7 @@ public class TestJDT {
                 IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER/*null*/, true, IResource.DEPTH_INFINITE);
         assertNotNull(markers);
         assertTrue(markers.length > 0);
-        for(var mark : markers) {
+        for (var mark : markers) {
             System.out.println(mark);
         }
     }

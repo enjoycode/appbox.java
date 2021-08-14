@@ -3,10 +3,7 @@ package appbox.design.lang.java.jdt;
 import appbox.design.utils.PathUtil;
 import org.eclipse.core.internal.resources.Folder;
 import org.eclipse.core.internal.resources.Workspace;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 public final class ModelFolder extends Folder {
@@ -34,6 +31,17 @@ public final class ModelFolder extends Folder {
         } finally {
             workspace.endOperation(rule, true);
         }
+    }
+
+    @Override
+    public void delete(int updateFlags, IProgressMonitor monitor) throws CoreException {
+        ModelWorkspace.overrideResourceDelete(this, updateFlags, monitor);
+    }
+
+    @Override
+    public void deleteResource(boolean convertToPhantom, MultiStatus status) throws CoreException {
+        final var workspace = (ModelWorkspace) getWorkspace();
+        workspace.overrideResourceDeleteResource(this, convertToPhantom, status);
     }
 
     @Override

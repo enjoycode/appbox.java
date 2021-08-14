@@ -187,6 +187,27 @@ public final class ModelProject extends Project {
         }
     }
 
+    @Override
+    public void delete(boolean deleteContent, boolean force, IProgressMonitor monitor) throws CoreException {
+        int updateFlags = force ? IResource.FORCE : IResource.NONE;
+        updateFlags |= deleteContent ? IResource.ALWAYS_DELETE_PROJECT_CONTENT : IResource.NEVER_DELETE_PROJECT_CONTENT;
+        ModelWorkspace.overrideResourceDelete(this, updateFlags, monitor);
+    }
+
+    @Override
+    public void delete(boolean force, IProgressMonitor monitor) throws CoreException {
+        int updateFlags = force ? IResource.FORCE : IResource.NONE;
+        ModelWorkspace.overrideResourceDelete(this, updateFlags, monitor);
+    }
+
+    @Override
+    public void deleteResource(boolean convertToPhantom, MultiStatus status) throws CoreException {
+        final var workspace = (ModelWorkspace) getWorkspace();
+        workspace.overrideResourceDeleteResource(this, convertToPhantom, status);
+        //this.clearHistory((IProgressMonitor)null);
+        //workspace.getMetaArea().delete(this);
+    }
+
     /**
      * Sets this project's description to the given value.  This is the body of the
      * corresponding API method but is needed separately since it is used
