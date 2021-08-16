@@ -146,7 +146,7 @@ public final class ReferencesHandler {
                             ICompilationUnit compilationUnit = (ICompilationUnit) element.getAncestor(IJavaElement.COMPILATION_UNIT);
                             Location         location        = null;
                             if (compilationUnit != null) {
-                                //TODO:考虑在这里获取范围文本并设置给Location
+                                //TODO:考虑在这里获取范围文本并设置给Location,另分析语义(如读或写值等)
                                 location = Utils.toLocation(compilationUnit, match.getOffset(), match.getLength());
                             } else if (includeClassFiles) {
                                 IClassFile cf = (IClassFile) element.getAncestor(IJavaElement.CLASS_FILE);
