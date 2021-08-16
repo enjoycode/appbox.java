@@ -48,6 +48,8 @@ public final class DesignHub implements IDesignContext { //TODO: rename to Desig
     public void dispose() {
         //TODO:清理调试服务
 
+        typeSystem.javaLanguageServer.dispose();
+
         if (_isFlutterIDE && typeSystem.dartLanguageServer != null)
             typeSystem.dartLanguageServer.stop();
     }

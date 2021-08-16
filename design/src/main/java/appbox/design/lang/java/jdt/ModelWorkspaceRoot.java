@@ -1,5 +1,6 @@
 package appbox.design.lang.java.jdt;
 
+import appbox.design.DesignHub;
 import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.internal.resources.WorkspaceRoot;
 import org.eclipse.core.resources.*;
@@ -27,6 +28,12 @@ public final class ModelWorkspaceRoot extends WorkspaceRoot {
             projectTable.put(name, result);
         }
         return result;
+    }
+
+    /** 获取指定开发者的所有项目 */
+    public IProject[] getSessionProjects(DesignHub hub) {
+        return projectTable.values().stream().filter(p -> ((ModelProject) p).getDesignHub() == hub)
+                .toArray(IProject[]::new);
     }
 
 }

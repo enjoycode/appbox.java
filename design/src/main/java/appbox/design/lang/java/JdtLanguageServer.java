@@ -104,7 +104,17 @@ public final class JdtLanguageServer {
         }
     }
 
-    public IProject getModelsProject() {return modelsProject;}
+    public void dispose() {
+        //移除所有项目
+        final var projects = ((ModelWorkspaceRoot) jdtWorkspace.getRoot()).getSessionProjects(hub);
+        try {
+            for(var project: projects) {
+                project.delete(true, null);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
     //region ====Project Management====
     private String makeModelsProjectName() {
