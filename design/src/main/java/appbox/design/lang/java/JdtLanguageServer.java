@@ -1,10 +1,12 @@
 package appbox.design.lang.java;
 
+import appbox.data.PersistentState;
 import appbox.design.DesignHub;
 import appbox.design.lang.java.jdt.*;
 import appbox.design.lang.java.lsp.*;
 import appbox.design.lang.java.code.ServiceMethodInfo;
 import appbox.design.lang.java.utils.ModelTypeUtil;
+import appbox.design.tree.DesignNodeType;
 import appbox.design.tree.ModelNode;
 import appbox.design.utils.CodeHelper;
 import appbox.design.utils.PathUtil;
@@ -25,6 +27,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.internal.core.*;
+import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.launching.JREContainerInitializer;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ls.core.internal.*;
@@ -108,7 +112,7 @@ public final class JdtLanguageServer {
         //移除所有项目
         final var projects = ((ModelWorkspaceRoot) jdtWorkspace.getRoot()).getSessionProjects(hub);
         try {
-            for(var project: projects) {
+            for (var project : projects) {
                 project.delete(true, null);
             }
         } catch (Exception ex) {
@@ -226,7 +230,7 @@ public final class JdtLanguageServer {
     //endregion
 
     //region ====open/close/change Document====
-    public Document openDocument(ModelNode node) throws JavaModelException {
+    public Document openDocument(ModelNode node) {
         //TODO:仅允许打开特定类型的
 
         //先判断是否已打开，如果已打开可能是前端签出时发现变更要求重新从存储加载
@@ -242,9 +246,13 @@ public final class JdtLanguageServer {
         var project = jdtWorkspace.getRoot().getProject(projectName);
         var file    = (IFile) project.findMember(fileName);
         var cu      = JDTUtils.resolveCompilationUnit(file);
-        cu.becomeWorkingCopy(null); //must call
-        doc = (Document) cu.getBuffer();
-        openedFiles.put(node.model().id(), doc);
+        try {
+            cu.becomeWorkingCopy(null); //must call
+            doc = (Document) cu.getBuffer();
+            openedFiles.put(node.model().id(), doc);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
         return doc;
     }
 
@@ -254,14 +262,14 @@ public final class JdtLanguageServer {
 
     public void changeDocument(Document doc, int offset, int length, String newText) {
         doc.changeText(offset, length, newText);
-        //TODO:检查是否需要同步结构
+        //不需要同步结构,Document改变内容是已激发事件通知
         //CompliationUnit.makeConsistent(null);
     }
 
     public void changeDocument(Document doc, int startLine, int startColumn,
                                int endLine, int endColumn, String newText) {
         doc.changeText(startLine, startColumn, endLine, endColumn, newText);
-        //TODO:检查是否需要同步结构
+        //不需要同步结构,Document改变内容是已激发事件通知
         //CompliationUnit.makeConsistent(null);
     }
 
@@ -281,6 +289,50 @@ public final class JdtLanguageServer {
                 openedFiles.remove(modelId);
             }
         }
+    }
+
+    /** 保存模型时更新JDT的索引 */
+    public void updateIndex(ModelNode node) {
+        //参考DeltaProcessor.updateIndex()
+        final var indexManager = JavaModelManager.getIndexManager();
+        final var model        = node.model();
+        final var isDelete     = model.persistentState() == PersistentState.Deleted;
+
+        //先更新通用模型的索引, TODO:特殊模型如Permission的处理
+        var file = findFileFromModelsProject(model.modelType(), node.appNode.model.name(), model.name());
+        if (isDelete)
+            removeFileIndex(indexManager, file);
+        else
+            updateFileIndex(indexManager, file);
+
+        //如果是服务模型再更新设计时代码索引
+        if (node.nodeType() == DesignNodeType.ServiceModelNode) {
+            file = findFileForServiceModel(node);
+            if (isDelete)
+                removeFileIndex(indexManager, file);
+            else
+                updateFileIndex(indexManager, file);
+        }
+    }
+
+    private void updateFileIndex(IndexManager indexManager, ModelFile file) {
+        final var javaProject   = JavaCore.create(file.getProject());
+        final var elementParser = indexManager.getSourceElementParser(javaProject, null);
+
+        indexManager.addSource(file, file.getProject().getFullPath(), elementParser);
+        // Clean file from secondary types cache but do not update indexing secondary type cache
+        // as it will be updated through indexing itself
+        JavaModelManager.getJavaModelManager().secondaryTypesRemoving(file, false);
+        Log.debug("Update file index: " + file.getName());
+    }
+
+    private void removeFileIndex(IndexManager indexManager, ModelFile file) {
+        indexManager.remove(Util.relativePath(file.getFullPath(), 1/*remove project segment*/),
+                file.getProject().getFullPath());
+        // Clean file from secondary types cache and update indexing secondary type cache
+        // as indexing cannot remove secondary types from cache
+        JavaModelManager.getJavaModelManager().secondaryTypesRemoving(file, true);
+        Log.debug("Remove file index: " + file.getName());
     }
     //endregion
 

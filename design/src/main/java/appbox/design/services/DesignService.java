@@ -57,6 +57,7 @@ public final class DesignService implements IService {
         put("CloseDesigner", new CloseDesigner());
         put("SaveModel", new SaveModel());
         put("DeleteNode", new DeleteNode());
+        put("Rename", new Rename());
         put("GetPendingChanges", new GetPendingChanges());
         put("Publish", new Publish());
         put("NewApplication", new NewApplication());

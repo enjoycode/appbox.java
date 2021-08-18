@@ -7,7 +7,7 @@ import org.eclipse.lsp4j.Range;
 /** 模型虚拟代码的引用 */
 public final class CodeReference extends Reference {
 
-    private final Range range;
+    public final Range range;
 
     //TODO:加入语句类型,如读写属性/创建实例等
 

@@ -91,6 +91,15 @@ public abstract class EntityMemberModel implements IBinSerializable, IJsonSerial
         }
     }
 
+    public final void renameTo(String newName) {
+        //如果已经重命名过，不要再修改_originalName
+        if (_originalName == null && _persistentState != PersistentState.Detached) {
+            _originalName = _name;
+        }
+        _name = newName;
+        onPropertyChanged();
+    }
+
     public final void acceptChanges() {
         _persistentState = PersistentState.Unchnaged;
         _originalName    = null;
@@ -165,10 +174,10 @@ public abstract class EntityMemberModel implements IBinSerializable, IJsonSerial
         writer.startObject();
 
         writer.writeKeyValue("ID", _memberId);
-        writer.writeKeyValue("AllowNull",_allowNull);
-        writer.writeKeyValue("Comment",_comment);
-        writer.writeKeyValue("Name",_name);
-        writer.writeKeyValue("Type",type().value);
+        writer.writeKeyValue("AllowNull", _allowNull);
+        writer.writeKeyValue("Comment", _comment);
+        writer.writeKeyValue("Name", _name);
+        writer.writeKeyValue("Type", type().value);
         //写入子类成员
         writeJsonMembers(writer);
 

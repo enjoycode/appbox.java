@@ -31,6 +31,9 @@ public final class ModelWorkspace extends Workspace {
     public IStatus open(IProgressMonitor monitor) throws CoreException {
         //this.description =
         startup(monitor);
+
+        //// restart the notification manager so it is initialized with the right tree
+        //notificationManager.startup(null);
         this.openFlag = true;
         return Status.OK_STATUS;
     }

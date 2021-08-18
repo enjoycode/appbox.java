@@ -51,6 +51,6 @@ public final class ModelFolder extends Folder {
 
     @Override
     public String getDefaultCharset(boolean checkImplicit) {
-        return "UTF8";
+        return "UTF-8";
     }
 }

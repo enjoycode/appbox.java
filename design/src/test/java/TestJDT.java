@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.SourceMethod;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.lsp4j.Location;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -41,7 +43,7 @@ public class TestJDT {
     @Test
     public void testDeleteProject() throws Exception {
         var project = createTestProject();
-        var file = project.getFile("TestFile.txt");
+        var file    = project.getFile("TestFile.txt");
         file.create(null, true, null);
         project.delete(true, null);
         assertFalse(file.exists());
@@ -162,6 +164,38 @@ public class TestJDT {
         }
 
         assertTrue(locations.size() > 4);
+    }
+
+    @Test
+    public void testIndex() throws Exception {
+        final var hub       = TestHelper.makeDesignHub(null, false);
+        final var ls        = hub.typeSystem.javaLanguageServer;
+        final var project   = ls.createProject(ModelProject.ModelProjectType.Test, "testIndex", null);
+        var       src       = "class Order {String name;}";
+        var       srcStream = new ByteArrayInputStream(src.getBytes(StandardCharsets.UTF_8));
+        var       file      = project.getFile("Order.java");
+        file.create(srcStream, true, null);
+
+        var indexManager  = JavaModelManager.getIndexManager();
+        var cu = JDTUtils.resolveCompilationUnit(file);
+        //cu.becomeWorkingCopy(null);
+        var elementParser = indexManager.getSourceElementParser(cu.getJavaProject(), null);
+        indexManager.addSource(file, file.getProject().getFullPath(), elementParser);
+        Thread.sleep(5000); //wait for build index
+
+        //测试更新
+        var newSrc = "class Order2 {String Name2;}";
+        Files.write(file.getLocation().toFile().toPath(), newSrc.getBytes(StandardCharsets.UTF_8));
+        cu = JDTUtils.resolveCompilationUnit(file);
+        elementParser = indexManager.getSourceElementParser(cu.getJavaProject(), null);
+        indexManager.addSource(file, file.getProject().getFullPath(), elementParser);
+
+        Thread.sleep(5000); //wait for build index
+        //cu.discardWorkingCopy();
+
+        //project.delete(true, null);
+        //Thread.sleep(5000);
+        System.out.println("Done.");
     }
 
 }

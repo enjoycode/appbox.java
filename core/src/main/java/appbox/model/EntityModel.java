@@ -1,6 +1,7 @@
 package appbox.model;
 
 import appbox.data.PersistentState;
+import appbox.logging.Log;
 import appbox.model.entity.*;
 import appbox.serialization.*;
 import appbox.utils.IdUtil;
@@ -213,6 +214,18 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
 
         changeSchemaVersion();
         onPropertyChanged();
+    }
+
+    public void renameMember(String oldName, String newName) {
+        checkDesignMode();
+
+        if (oldName.equals(newName)) {
+            Log.warn("Name is same");
+            return;
+        }
+
+        final var m = getMember(oldName);
+        m.renameTo(newName);
     }
 
     /**

@@ -197,12 +197,11 @@ public final class ModelFilesManager {
         }
     }
 
-    private static void updateFileContent(IFile file, String newContent) throws JavaModelException {
+    public static void updateFileContent(IFile file, String newContent) throws JavaModelException {
         var cu = (CompilationUnit) JDTUtils.resolveCompilationUnit(file);
         if (cu.getBuffer() != null) {
             cu.getBuffer().setContents(newContent);
             cu.makeConsistent(null);
-            //Log.debug(cu.getBuffer().getContents());
         } else {
             Log.warn("Can't get buffer from file: " + file.getName());
         }

@@ -116,6 +116,10 @@ public final class ModelNode extends DesignNode {
             } else {
                 return CompletableFuture.completedFuture(null);
             }
+        }).thenAccept(r -> {
+            //保存成功后更新虚拟文件的索引
+            final var hub = designTree().designHub;
+            hub.typeSystem.javaLanguageServer.updateIndex(this);
         });
     }
 
@@ -140,7 +144,7 @@ public final class ModelNode extends DesignNode {
                         .thenAccept(re -> designTree().designHub.typeSystem.dartLanguageServer.updateViewModelCode(this, code));
             } else {
                 return StagedService.saveViewCodeAsync(_model.id(),
-                        (String) modelInfos[0], (String) modelInfos[1], (String) modelInfos[2])
+                                (String) modelInfos[0], (String) modelInfos[1], (String) modelInfos[2])
                         .thenCompose(re -> StagedService.saveViewRuntimeCodeAsync(_model.id(), (String) modelInfos[3]));
             }
         }

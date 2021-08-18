@@ -53,6 +53,11 @@ public final class ModelFile extends File {
     }
 
     @Override
+    public String getCharset(boolean checkImplicit) throws CoreException {
+        return "UTF-8";
+    }
+
+    @Override
     public URI getLocationURI() {
         //简单返回, CompletionProposalRequestor.toCompleteItem需要
         return null;//return URI.create("model:" + path.toString());
@@ -130,6 +135,16 @@ public final class ModelFile extends File {
         //通过代理加载(仅用于单元测试)
         if (fileType == TEST_FILE ||
                 (fileType == DESIGNTIME_SERVICE_FILE && hub.session instanceof MockDeveloperSession)) {
+            //如果物理文件存在则加载
+            final var file = this.getLocation().toFile();
+            if (file.exists()) {
+                try {
+                    return new FileInputStream(file);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
             final var mockSession = (MockDeveloperSession) hub.session;
             if (mockSession.loadFileDelegate != null) {
                 final var stream = mockSession.loadFileDelegate.apply(getFullPath());

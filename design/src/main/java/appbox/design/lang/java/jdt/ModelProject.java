@@ -231,7 +231,7 @@ public final class ModelProject extends Project {
 
     @Override
     public String getDefaultCharset(boolean checkImplicit) {
-        return "UTF8";
+        return "UTF-8";
     }
 
     @Override

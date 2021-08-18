@@ -9,12 +9,14 @@ import org.eclipse.core.internal.preferences.EclipsePreferences;
 import org.eclipse.core.internal.preferences.InstancePreferences;
 import org.eclipse.core.internal.preferences.PreferencesService;
 import org.eclipse.core.internal.resources.ProjectPreferences;
+import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.internal.runtime.DataArea;
 import org.eclipse.core.internal.runtime.InternalPlatform;
 import org.eclipse.core.internal.runtime.MetaDataKeeper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.RegistryFactory;
 import org.eclipse.core.runtime.preferences.DefaultScope;
@@ -101,20 +103,22 @@ public final class JdtHacker {
         }};
         ReflectUtil.setField(EclipsePreferences.class, "children", defaultNode, dmap);
 
-        //hack JavaModelManager //TODO:*** 暂共用JavaModelManager
-        final var indexManager = new IndexManager();
+        //hack JavaModelManager
+        final var indexManager     = new IndexManager();
+        final var javaModelManager = JavaModelManager.getJavaModelManager();
         //ReflectUtil.setField(IndexManager.class, "javaPluginLocation", indexManager, PathUtil.PLUGIN);
-        ReflectUtil.setField(JavaModelManager.class, "indexManager", JavaModelManager.getJavaModelManager(), indexManager);
-        ReflectUtil.setField(JavaModelManager.class, "cache", JavaModelManager.getJavaModelManager(), new JavaModelCache());
+        ReflectUtil.setField(JavaModelManager.class, "indexManager", javaModelManager, indexManager);
+        ReflectUtil.setField(JavaModelManager.class, "cache", javaModelManager, new JavaModelCache());
+        ReflectUtil.setField(JavaModelManager.class, "assumedExternalFiles", javaModelManager, new HashSet<IPath>());
         var NO_PARTICIPANTS = ReflectUtil.getField(JavaModelManager.class, "NO_PARTICIPANTS", null);
         ReflectUtil.setField(JavaModelManager.CompilationParticipants.class, "registeredParticipants",
                 JavaModelManager.getJavaModelManager().compilationParticipants, NO_PARTICIPANTS);
         ReflectUtil.setField(JavaModelManager.CompilationParticipants.class, "managedMarkerTypes",
                 JavaModelManager.getJavaModelManager().compilationParticipants, new HashSet<String>());
-        //JavaModelManager.getJavaModelManager().initializePreferences(); 等同于以下3句
-        JavaModelManager.getJavaModelManager().preferencesLookup[0] = instancePreferences;
-        JavaModelManager.getJavaModelManager().preferencesLookup[1] = defaultPreferences;
-        JavaModelManager.getJavaModelManager().containerInitializersCache.put(JavaRuntime.JRE_CONTAINER, jreContainerInitializer);
+        //javaModelManager.initializePreferences(); 等同于以下3句
+        javaModelManager.preferencesLookup[0] = instancePreferences;
+        javaModelManager.preferencesLookup[1] = defaultPreferences;
+        javaModelManager.containerInitializersCache.put(JavaRuntime.JRE_CONTAINER, jreContainerInitializer);
         //var jreInitializer = JavaCore.getClasspathContainerInitializer(JavaRuntime.JRE_CONTAINER);
 
         //hack JavaLanguageServerPlugin & TypeFilter
@@ -161,8 +165,23 @@ public final class JdtHacker {
 
         //finally
         workspace.open(null);
-        indexManager.reset(); //start indexing
+        startupJavaModelManager(workspace);
 
         return lsPreferenceManager;
     }
+
+    private static void startupJavaModelManager(Workspace workspace) {
+        //// listen for resource changes
+        //final var deltaState = JavaModelManager.getDeltaState();
+        ////ReflectUtil.invokeMethod(DeltaProcessingState.class, "initializeRootsWithPreviousSession", deltaState);
+        //workspace.addResourceChangeListener(deltaState,
+        //        IResourceChangeEvent.POST_CHANGE
+        //                | IResourceChangeEvent.PRE_DELETE
+        //                | IResourceChangeEvent.PRE_CLOSE
+        //                | IResourceChangeEvent.PRE_REFRESH);
+
+        //start indexing
+        JavaModelManager.getIndexManager().reset();
+    }
+
 }

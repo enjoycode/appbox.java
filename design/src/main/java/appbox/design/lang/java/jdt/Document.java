@@ -21,12 +21,13 @@ public final class Document implements IBuffer { //TODO: 实现IDocument
         }
     }
 
-    private       IOpenable                    owner;
-    private       IFile                        file;
+    private final IOpenable                    owner;
+    private final IFile                        file;
     private       StringBuffer                 buffer;
-    private       List<IBufferChangedListener> changeListeners;
-    private final Object                       lock     = new Object();
-    private       boolean                      isClosed = false;
+    private final List<IBufferChangedListener> changeListeners;
+    private final Object                       lock      = new Object();
+    private       boolean                      isClosed  = false;
+    private       boolean                      isChanged = false;
 
     public Document(IOpenable owner, IFile file) {
         this.owner           = owner;
@@ -139,7 +140,7 @@ public final class Document implements IBuffer { //TODO: 实现IDocument
 
     @Override
     public boolean hasUnsavedChanges() {
-        return false; //TODO:
+        return isChanged;
     }
 
     //region ====buffer change event====
@@ -160,7 +161,9 @@ public final class Document implements IBuffer { //TODO: 实现IDocument
     }
 
     private void fireBufferChanged(BufferChangedEvent event) {
-        IBufferChangedListener[] listeners = null;
+        isChanged = true;
+
+        IBufferChangedListener[] listeners;
         synchronized (lock) {
             listeners = changeListeners.toArray(new IBufferChangedListener[changeListeners.size()]);
         }
@@ -194,7 +197,7 @@ public final class Document implements IBuffer { //TODO: 实现IDocument
 
     @Override
     public void save(IProgressMonitor monitor, boolean force) throws JavaModelException {
-
+        isChanged = false;
     }
 
     private List<TextLine> getLineMap() {

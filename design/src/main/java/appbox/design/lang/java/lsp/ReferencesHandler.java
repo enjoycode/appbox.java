@@ -6,6 +6,7 @@ import java.util.List;
 
 import appbox.design.IDeveloperSession;
 import appbox.design.lang.java.jdt.ModelProject;
+import appbox.logging.Log;
 import appbox.runtime.RuntimeContext;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -157,6 +158,8 @@ public final class ReferencesHandler {
                             if (location != null) {
                                 locations.add(location);
                             }
+                        } else {
+                            Log.debug("None IJavaElement: " + o.getClass());
                         }
                     }
                 },
