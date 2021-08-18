@@ -113,6 +113,8 @@ public final class JdtLanguageServer {
         final var projects = ((ModelWorkspaceRoot) jdtWorkspace.getRoot()).getSessionProjects(hub);
         try {
             for (var project : projects) {
+                //暂直接移除索引
+                JavaModelManager.getIndexManager().removeIndexFamily(project.getFullPath());
                 project.delete(true, null);
             }
         } catch (Exception ex) {
