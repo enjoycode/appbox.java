@@ -91,9 +91,9 @@ public final class ModelFilesManager {
 
     /** 用于加载设计树后创建模型相应的虚拟文件 */
     public void createModelDocument(ModelNode node) {
-        var appName  = node.appNode.model.name();
-        var model    = node.model();
-        var fileName = String.format("%s.java", model.name());
+        final var appName  = node.appNode.model.name();
+        final var model    = node.model();
+        final var fileName = String.format("%s.java", model.name());
 
         //TODO:其他类型模型
         try {
@@ -140,16 +140,16 @@ public final class ModelFilesManager {
     }
 
     public void removeModelDocument(ModelNode node) {
-        var appName  = node.appNode.model.name();
-        var model    = node.model();
-        var fileName = String.format("%s.java", model.name());
+        final var appName  = node.appNode.model.name();
+        final var model    = node.model();
+        final var fileName = String.format("%s.java", model.name());
 
         try {
             if (model.modelType() == ModelType.Entity) {
-                var appFolder  = languageServer.modelsProject.getFolder(appName);
-                var typeFolder = appFolder.getFolder("entities");
-                var file       = typeFolder.getFile(fileName);
-                var cu         = JDTUtils.resolveCompilationUnit(file);
+                final var appFolder  = languageServer.modelsProject.getFolder(appName);
+                final var typeFolder = appFolder.getFolder("entities");
+                final var file       = typeFolder.getFile(fileName);
+                final var cu         = JDTUtils.resolveCompilationUnit(file);
                 cu.delete(true, null);
                 //不需要file.delete(),上一步会调用
             } else {

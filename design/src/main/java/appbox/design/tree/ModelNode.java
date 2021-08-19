@@ -8,9 +8,7 @@ import appbox.serialization.IJsonWriter;
 
 import java.util.concurrent.CompletableFuture;
 
-/**
- * 模型节点
- */
+/** 模型节点 */
 public final class ModelNode extends DesignNode {
     private      ModelBase       _model;
     public final ApplicationNode appNode;
@@ -26,8 +24,10 @@ public final class ModelNode extends DesignNode {
         return _model;
     }
 
+    /** 用于签出时或加载树时设为新的模型 */
     void setModel(ModelBase newModel) {
         _model = newModel;
+        text = newModel.name(); //可能已经改名,需要重新设置
     }
 
     @Override
@@ -119,7 +119,7 @@ public final class ModelNode extends DesignNode {
         }).thenAccept(r -> {
             //保存成功后更新虚拟文件的索引
             final var hub = designTree().designHub;
-            hub.typeSystem.javaLanguageServer.updateIndex(this);
+            hub.typeSystem.javaLanguageServer.updateIndex(this, false);
         });
     }
 

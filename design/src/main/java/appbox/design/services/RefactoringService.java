@@ -24,11 +24,29 @@ public final class RefactoringService {
 
     public static List<Reference> findUsages(DesignHub hub, ModelReferenceType referenceType,
                                              String appName, String modelName, String memberName) {
-        if (referenceType == ModelReferenceType.EntityMemberName) {
-            return findEntityMemberReferences(hub, appName, modelName, memberName);
-        } else {
-            throw new RuntimeException("暂未实现");
+        switch (referenceType) {
+            case EntityModelId:
+                return findEntityReferences(hub, appName, modelName);
+            case EntityMemberName:
+                return findEntityMemberReferences(hub, appName, modelName, memberName);
+            default:
+                throw new RuntimeException("暂未实现");
         }
+    }
+
+    /** 查找实体模型的所有引用 */
+    private static List<Reference> findEntityReferences(DesignHub hub, String appName, String modelName) {
+        final var list = new ArrayList<Reference>();
+
+        //TODO:查找实体模型本身及所有其他实体模型的相关表达式（组织策略、编辑策略等）的引用
+        //TODO:查找视图模型的虚拟代码引用
+
+        //查找服务模型的虚拟代码引用
+        final var entitySymbol = hub.typeSystem.javaLanguageServer.symbolFinder
+                .getModelSymbol(ModelType.Entity, appName, modelName);
+        addJavaCodeReferences(hub, list, entitySymbol);
+
+        return list;
     }
 
     /** 查找实体模型成员的所有引用 */
@@ -47,7 +65,7 @@ public final class RefactoringService {
         return list;
     }
 
-
+    /** 添加所有服务模型的虚拟代码引用 */
     private static void addJavaCodeReferences(DesignHub hub, List<Reference> list, IJavaElement symbol) {
         final List<Location> locations = new ArrayList<>();
         try {
@@ -67,6 +85,7 @@ public final class RefactoringService {
         //1.先判断当前模型是否已签出
         ModelNode sourceNode = null;
         switch (referenceType) {
+            case EntityModelId:
             case EntityMemberName:
                 sourceNode = hub.designTree.findModelNode(ModelType.Entity, modelId);
                 break;
@@ -100,18 +119,16 @@ public final class RefactoringService {
             }
         }
 
-        //4.保存并关闭相关
-        final var affects = references.stream().map(v -> v.modelNode)
-                .distinct().collect(Collectors.toList());
-        for (var node : affects) {
-            node.saveAsync(null).join();
-        }
-        for (var id : needClose.keySet()) {
-            hub.typeSystem.javaLanguageServer.closeDocument(id);
-        }
-
-        //5.处理源模型的重命名
+        //4.处理源模型的重命名
         switch (referenceType) {
+            case EntityModelId:
+                //TODO:暂简单删除并重建对应的虚拟文件
+                hub.typeSystem.javaLanguageServer.updateIndex(sourceNode, true);
+                hub.typeSystem.removeModelDocument(sourceNode);
+                sourceNode.model().renameTo(newName);
+                sourceNode.saveAsync(null).join();
+                hub.typeSystem.createModelDocument(sourceNode);
+                break;
             case EntityMemberName:
                 ((EntityModel) sourceNode.model()).renameMember(oldName, newName);
                 sourceNode.saveAsync(null).join();
@@ -121,7 +138,17 @@ public final class RefactoringService {
                 throw new RuntimeException("暂未实现");
         }
 
-        //最后返回处理结果,暂简单返回受影响的节点标识集合(暂不包括源),由前端刷新
+        //5.保存并关闭相关
+        final var affects = references.stream().map(v -> v.modelNode)
+                .distinct().collect(Collectors.toList());
+        for (var node : affects) {
+            node.saveAsync(null).join();
+        }
+        for (var id : needClose.keySet()) {
+            hub.typeSystem.javaLanguageServer.closeDocument(id);
+        }
+
+        //最后返回处理结果,暂简单返回受影响的节点标识集合(不包括源),由前端刷新
         return affects.stream()
                 .map(v -> Long.toUnsignedString(v.model().id()))
                 .toArray(String[]::new);

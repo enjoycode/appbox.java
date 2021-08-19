@@ -72,7 +72,7 @@ public final class JdtLanguageServer {
     }
     //endregion
 
-    public static final ModelWorkspace jdtWorkspace = (ModelWorkspace) ResourcesPlugin.getWorkspace();
+    public static final ModelWorkspace workspace = (ModelWorkspace) ResourcesPlugin.getWorkspace();
 
     public final  DesignHub               hub;
     public final  ModelFilesManager       filesManager;
@@ -110,7 +110,7 @@ public final class JdtLanguageServer {
 
     public void dispose() {
         //移除所有项目
-        final var projects = ((ModelWorkspaceRoot) jdtWorkspace.getRoot()).getSessionProjects(hub);
+        final var projects = ((ModelWorkspaceRoot) workspace.getRoot()).getSessionProjects(hub);
         try {
             for (var project : projects) {
                 //暂直接移除索引
@@ -159,7 +159,7 @@ public final class JdtLanguageServer {
      * @param deps 所依赖的内部项目列表，可为null
      */
     public IProject createProject(ModelProject.ModelProjectType type, String name, IClasspathEntry[] deps) throws Exception {
-        final var project = (ModelProject) jdtWorkspace.getRoot().getProject(name);
+        final var project = (ModelProject) workspace.getRoot().getProject(name);
         project.create(null);
         project.setProjectTypeAndDesignContext(type, hub);
         project.open(null); //always open it
@@ -182,7 +182,7 @@ public final class JdtLanguageServer {
     /** 更新服务模型的第三方依赖(引用的jar包) */
     private void updateServiceReferences(ModelNode node, IClasspathEntry[] deps) {
         final var prjName = makeServiceProjectName(node);
-        final var project = jdtWorkspace.getRoot().getProject(prjName);
+        final var project = workspace.getRoot().getProject(prjName);
         final var perProjectInfo = JavaModelManager.getJavaModelManager()
                 .getPerProjectInfo(project, false);
         final var buildPath = makeBuildPaths(project, deps);
@@ -245,7 +245,7 @@ public final class JdtLanguageServer {
         var fileName    = String.format("%s.java", node.model().name());
         var projectName = makeServiceProjectName(node);
 
-        var project = jdtWorkspace.getRoot().getProject(projectName);
+        var project = workspace.getRoot().getProject(projectName);
         var file    = (IFile) project.findMember(fileName);
         var cu      = JDTUtils.resolveCompilationUnit(file);
         try {
@@ -294,11 +294,11 @@ public final class JdtLanguageServer {
     }
 
     /** 保存模型时更新JDT的索引 */
-    public void updateIndex(ModelNode node) {
+    public void updateIndex(ModelNode node, /* 仅用于重命前 */ boolean forceRemove) {
         //参考DeltaProcessor.updateIndex()
         final var indexManager = JavaModelManager.getIndexManager();
         final var model        = node.model();
-        final var isDelete     = model.persistentState() == PersistentState.Deleted;
+        final var isDelete     = forceRemove || model.persistentState() == PersistentState.Deleted;
 
         //先更新通用模型的索引, TODO:特殊模型如Permission的处理
         var file = findFileFromModelsProject(model.modelType(), node.appNode.model.name(), model.name());
@@ -317,7 +317,7 @@ public final class JdtLanguageServer {
         }
     }
 
-    private void updateFileIndex(IndexManager indexManager, ModelFile file) {
+    private static void updateFileIndex(IndexManager indexManager, ModelFile file) {
         final var javaProject   = JavaCore.create(file.getProject());
         final var elementParser = indexManager.getSourceElementParser(javaProject, null);
 
@@ -325,16 +325,16 @@ public final class JdtLanguageServer {
         // Clean file from secondary types cache but do not update indexing secondary type cache
         // as it will be updated through indexing itself
         JavaModelManager.getJavaModelManager().secondaryTypesRemoving(file, false);
-        Log.debug("Update file index: " + file.getName());
+        Log.debug("Update file index: " + file.getFullPath());
     }
 
-    private void removeFileIndex(IndexManager indexManager, ModelFile file) {
+    private static void removeFileIndex(IndexManager indexManager, ModelFile file) {
         indexManager.remove(Util.relativePath(file.getFullPath(), 1/*remove project segment*/),
                 file.getProject().getFullPath());
         // Clean file from secondary types cache and update indexing secondary type cache
         // as indexing cannot remove secondary types from cache
         JavaModelManager.getJavaModelManager().secondaryTypesRemoving(file, true);
-        Log.debug("Remove file index: " + file.getName());
+        Log.debug("Remove file index: " + file.getFullPath());
     }
     //endregion
 
@@ -468,7 +468,7 @@ public final class JdtLanguageServer {
     /** 根据行号列号找到服务方法相关信息,找不到返回null */
     public ServiceMethodInfo findServiceMethod(ModelNode serviceNode, int line, int column) {
         var     projectName = makeServiceProjectName(serviceNode);
-        var     project     = jdtWorkspace.getRoot().getProject(projectName);
+        var     project     = workspace.getRoot().getProject(projectName);
         var     file        = project.getFile(String.format("%s.java", serviceNode.model().name()));
         var     cu          = JDTUtils.resolveCompilationUnit(file);
         IBuffer buffer      = null;
@@ -491,7 +491,7 @@ public final class JdtLanguageServer {
     /** 根据方法名称找到服务方法相关信息,找不到返回null */
     public ServiceMethodInfo findServiceMethod(ModelNode serviceNode, String methodName) {
         var projectName = makeServiceProjectName(serviceNode);
-        var project     = jdtWorkspace.getRoot().getProject(projectName);
+        var project     = workspace.getRoot().getProject(projectName);
         var file        = project.getFile(String.format("%s.java", serviceNode.model().name()));
         var cu          = JDTUtils.resolveCompilationUnit(file);
         try {
@@ -577,7 +577,7 @@ public final class JdtLanguageServer {
     public ModelFile findFileForServiceModel(ModelNode serviceNode) {
         final var fileName    = String.format("%s.java", serviceNode.model().name());
         final var projectName = makeServiceProjectName(serviceNode);
-        final var project     = jdtWorkspace.getRoot().getProject(projectName);
+        final var project     = workspace.getRoot().getProject(projectName);
         return (ModelFile) project.findMember(fileName);
     }
 

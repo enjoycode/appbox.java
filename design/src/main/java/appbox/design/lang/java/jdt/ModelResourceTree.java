@@ -145,13 +145,29 @@ final class ModelResourceTree implements IResourceTree {
     }
 
     @Override
-    public void standardDeleteFile(IFile iFile, int i, IProgressMonitor monitor) {
-
+    public void standardDeleteFile(IFile file, int flags, IProgressMonitor monitor) {
+        Assert.isLegal(isValid);
+        try {
+            lock.acquire();
+            internalDeleteFile(file, flags, monitor);
+        } finally {
+            lock.release();
+        }
     }
 
     @Override
-    public void standardDeleteFolder(IFolder iFolder, int i, IProgressMonitor monitor) {
-
+    public void standardDeleteFolder(IFolder folder, int flags, IProgressMonitor monitor) {
+        Assert.isLegal(isValid);
+        try {
+            lock.acquire();
+            internalDeleteFolder(folder, flags, monitor);
+        } catch (OperationCanceledException oce) {
+            safeRefresh(folder);
+            throw oce;
+        } finally {
+            lock.release();
+            monitor.done();
+        }
     }
 
     @Override
@@ -298,5 +314,19 @@ final class ModelResourceTree implements IResourceTree {
     @Override
     public void standardMoveProject(IProject project, IProjectDescription description, int i, IProgressMonitor monitor) {
         throw new RuntimeException("Not supported.");
+    }
+
+    /**
+     * Refreshes the resource hierarchy with its children. In case of failure
+     * adds an appropriate status to the resource tree's status.
+     */
+    private void safeRefresh(IResource resource) {
+        try {
+            resource.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+        } catch (CoreException ce) {
+            IStatus status = new ResourceStatus(IStatus.ERROR, IResourceStatus.FAILED_DELETE_LOCAL,
+                    resource.getFullPath(), "Resource.refreshLocal error", ce);
+            failed(status);
+        }
     }
 }

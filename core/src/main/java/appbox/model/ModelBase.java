@@ -8,9 +8,7 @@ import appbox.utils.IdUtil;
 
 import java.util.UUID;
 
-/**
- * 模型基类，实例分为设计时与运行时
- */
+/** 模型基类，实例分为设计时与运行时 */
 public abstract class ModelBase implements IBinSerializable {
     protected long            _id;
     private   String          _name;
@@ -20,9 +18,7 @@ public abstract class ModelBase implements IBinSerializable {
     private   PersistentState _persistentState;
     private   UUID            _folderId;
 
-    /**
-     * only for Serialization
-     */
+    /** only for Serialization */
     public ModelBase() {}
 
     public ModelBase(long id, String name) {
@@ -79,6 +75,17 @@ public abstract class ModelBase implements IBinSerializable {
     //region ====Design Methods====
     public final boolean isNameChanged() {
         return _originalName != null && !_originalName.equals(_name);
+    }
+
+    public final void renameTo(String newName) {
+        checkDesignMode();
+
+        //如果已经重命名过，不要再修改_originalName
+        if (_originalName == null && _persistentState != PersistentState.Detached) {
+            _originalName = _name;
+        }
+        _name = newName;
+        onPropertyChanged();
     }
 
     public final void increaseVersion() {

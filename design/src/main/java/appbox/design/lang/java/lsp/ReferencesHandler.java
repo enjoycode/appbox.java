@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 import org.eclipse.jdt.internal.corext.codemanipulation.GetterSetterUtil;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
@@ -130,7 +131,7 @@ public final class ReferencesHandler {
     public static void search(IJavaElement elementToSearch,
                               final List<Location> locations,
                               IProgressMonitor monitor) throws CoreException {
-        boolean includeClassFiles = false; //preferenceManager.isClientSupportsClassFileContent();
+        //boolean includeClassFiles = false; //preferenceManager.isClientSupportsClassFileContent();
 
         SearchEngine  engine  = new SearchEngine();
         SearchPattern pattern = SearchPattern.createPattern(elementToSearch, IJavaSearchConstants.REFERENCES);
@@ -147,14 +148,26 @@ public final class ReferencesHandler {
                             ICompilationUnit compilationUnit = (ICompilationUnit) element.getAncestor(IJavaElement.COMPILATION_UNIT);
                             Location         location        = null;
                             if (compilationUnit != null) {
-                                //TODO:考虑在这里获取范围文本并设置给Location,另分析语义(如读或写值等)
-                                location = Utils.toLocation(compilationUnit, match.getOffset(), match.getLength());
-                            } else if (includeClassFiles) {
-                                IClassFile cf = (IClassFile) element.getAncestor(IJavaElement.CLASS_FILE);
-                                if (cf != null && cf.getSourceRange() != null) {
-                                    location = JDTUtils.toLocation(cf, match.getOffset(), match.getLength());
+                                //TODO:考虑在这里获取范围文本并设置给Location,另根据match类型分析语义(如读或写值等)
+                                //TODO:以下临时解决全名称的问题,eg:sys.entities.Person
+                                int offset = match.getOffset();
+                                int length = match.getLength();
+                                if (pattern instanceof TypeReferencePattern) {
+                                    var tp = (TypeReferencePattern)pattern;
+                                    var simpleNameLength = tp.getIndexKey().length;
+                                    if (length != simpleNameLength) {
+                                        offset += length - simpleNameLength;
+                                        length = simpleNameLength;
+                                    }
                                 }
+                                location = Utils.toLocation(compilationUnit, offset, length);
                             }
+                            //else if (includeClassFiles) {
+                            //    IClassFile cf = (IClassFile) element.getAncestor(IJavaElement.CLASS_FILE);
+                            //    if (cf != null && cf.getSourceRange() != null) {
+                            //        location = JDTUtils.toLocation(cf, match.getOffset(), match.getLength());
+                            //    }
+                            //}
                             if (location != null) {
                                 locations.add(location);
                             }

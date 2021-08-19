@@ -22,9 +22,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     //region ====Properties====
 
-    /**
-     * 用于前端回传时识别是哪个节点
-     */
+    /** 用于前端回传时识别是哪个节点 */
     public String id() {
         return text();
     }
@@ -33,7 +31,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         return text;
     }
 
-    public int version() { return 0; }
+    public int version() {return 0;}
 
     public final DesignNode getParent() {
         return parent;
@@ -174,8 +172,7 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         writer.endObject();
     }
 
-    protected void writeJsonMembers(IJsonWriter writer) {
-    }
+    protected void writeJsonMembers(IJsonWriter writer) {}
     //endregion
 
 }

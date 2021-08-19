@@ -157,7 +157,7 @@ public final class ModelFile extends File {
 
         //虚拟基础代码从资源文件加载
         if (fileType == RESOURCE_FILE) {
-            Log.debug("Load dummy code: " + getName());
+            //Log.debug("Load dummy code: " + getName());
             return ModelFile.class.getResourceAsStream("/dummy/" + getName());
         }
 
@@ -206,8 +206,7 @@ public final class ModelFile extends File {
                 throw new RuntimeException("未实现加载ModelFile: " + getFullPath().toString());
             }
         } catch (Exception ex) {
-            Log.warn(String.format("Can't load model's source code: %s", this.getFullPath().toString()));
-            ex.printStackTrace();
+            Log.error(String.format("Can't load model's source code: %s", this.getFullPath().toString()));
             throw new CoreException(new ResourceStatus(ResourceStatus.FAILED_READ_LOCAL, ex.getMessage()));
         }
     }

@@ -1,3 +1,4 @@
+import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.jdt.ModelProject;
 import appbox.design.lang.java.jdt.ProgressMonitor;
@@ -164,6 +165,28 @@ public class TestJDT {
         }
 
         assertTrue(locations.size() > 4);
+    }
+
+    @Test
+    public void testRemoveDocument() throws Exception {
+        final var hub = TestHelper.makeDesignHub(TestHelper::loadTestServiceCode, true);
+        //准备测试模型
+        final var dataStoreModel   = TestHelper.makeSqlDataStoreModel();
+        final var entityModel      = TestHelper.makeEmployeeModel(dataStoreModel);
+        final var testServiceModel = TestHelper.makeServiceModel(10, "TestService");
+        TestHelper.injectAndLoadTree(dataStoreModel, List.of(entityModel, testServiceModel));
+
+        final var workspace = JdtLanguageServer.workspace;
+        final var modelsProject = workspace.getRoot().getProject("MockUser_models");
+
+        final var modelNode = hub.designTree.findModelNode(entityModel.id());
+        hub.typeSystem.javaLanguageServer.filesManager.removeModelDocument(modelNode);
+
+        final var folder = modelsProject.getFolder("sys").getFolder("entities");
+        assertTrue(folder.exists());
+        assertEquals(0, folder.members().length);
+        final var file = folder.getFile("Employee.java");
+        assertFalse(file.exists());
     }
 
     @Test
