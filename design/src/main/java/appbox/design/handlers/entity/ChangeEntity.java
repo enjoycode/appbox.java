@@ -59,8 +59,8 @@ public final class ChangeEntity implements IDesignHandler {
             entityModel.sqlStoreOptions().setPrimaryKeys(null);
         } else {
             var pks = new ArrayList<FieldWithOrder>(array.size());
-            for (int i = 0; i < array.size(); i++) {
-                var jobj = ((JSONObject) array.get(i));
+            for (var o : array) {
+                var jobj = ((JSONObject) o);
                 //注意如果选择的是EntityRef，则加入所有外键成员作为主键
                 var memberId    = jobj.getShortValue("MemberId");
                 var memberModel = entityModel.getMember(memberId);

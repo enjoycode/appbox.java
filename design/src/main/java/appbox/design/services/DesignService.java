@@ -73,6 +73,7 @@ public final class DesignService implements IService {
         put("NewEntityModel", new NewEntityModel());
         put("NewEntityMember", new NewEntityMember());
         put("ChangeEntity", new ChangeEntity());
+        put("ChangeEntityMember", new ChangeEntityMember());
         put("DeleteEntityMember", new DeleteEntityMember());
         put("GetEntityModel", new GetEntityModel());
         put("GetEntityRefModels", new GetEntityRefModels());

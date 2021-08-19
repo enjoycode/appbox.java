@@ -92,8 +92,10 @@ public final class SqlStoreOptions implements IEntityStoreOption {
         _primaryKeys = fields;
 
         //同时设置成员的AllowNull = false
-        for (var pk : fields) {
-            owner.getMember(pk.memberId).setAllowNull(false);
+        if (fields != null) {
+            for (var pk : fields) {
+                owner.getMember(pk.memberId).setAllowNull(false);
+            }
         }
 
         _primaryKeysHasChanged = true;

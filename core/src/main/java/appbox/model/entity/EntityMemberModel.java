@@ -28,9 +28,7 @@ public abstract class EntityMemberModel implements IBinSerializable, IJsonSerial
     private   PersistentState _persistentState;
     private   String          _comment;
 
-    /**
-     * Only for serialization
-     */
+    /** Only for serialization */
     public EntityMemberModel(EntityModel owner) {
         this.owner = owner;
     }
@@ -70,6 +68,11 @@ public abstract class EntityMemberModel implements IBinSerializable, IJsonSerial
     }
 
     public abstract void setAllowNull(boolean value);
+
+    public final void setComment(String value) {
+        _comment = value;
+        onPropertyChanged();
+    }
     //endregion
 
     //region ====Runtime Methods====
