@@ -38,7 +38,7 @@ public final class TestHelper {
 
     public static void injectAndLoadTree(DataStoreModel dataStoreModel, List<ModelBase> models) {
         final var appModel = makeApplicationModel();
-        final var ctx = (MockRuntimeContext) RuntimeContext.current();
+        final var ctx      = (MockRuntimeContext) RuntimeContext.current();
         //注入测试模型
         ctx.injectApplicationModel(appModel);
         ctx.injectModels(models);
@@ -82,8 +82,12 @@ public final class TestHelper {
         return entityModel;
     }
 
+    public static EntityModel makeEntityModel(long idIndex, String name) {
+        return new EntityModel(makeModelId(ModelType.Entity, idIndex), name);
+    }
+
     public static ServiceModel makeServiceModel(long idIndex, String name) {
-        return new ServiceModel(makeServiceModelId(idIndex), name);
+        return new ServiceModel(makeModelId(ModelType.Service, idIndex), name);
     }
 
     public static PermissionModel makeAdminPermissionModel() {
@@ -92,9 +96,9 @@ public final class TestHelper {
         return adminPermissionModel;
     }
 
-    private static long makeServiceModelId(long idIndex) {
+    private static long makeModelId(ModelType type, long idIndex) {
         return ((long) IdUtil.SYS_APP_ID << IdUtil.MODELID_APPID_OFFSET)
-                | ((long) ModelType.Service.value << IdUtil.MODELID_TYPE_OFFSET)
+                | ((long) type.value << IdUtil.MODELID_TYPE_OFFSET)
                 | (idIndex << IdUtil.MODELID_SEQ_OFFSET);
     }
 

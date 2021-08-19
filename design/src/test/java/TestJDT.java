@@ -3,6 +3,7 @@ import appbox.design.lang.java.jdt.JavaBuilderWrapper;
 import appbox.design.lang.java.jdt.ModelProject;
 import appbox.design.lang.java.jdt.ProgressMonitor;
 import appbox.design.lang.java.lsp.ReferencesHandler;
+import appbox.design.tree.ModelNode;
 import appbox.model.ModelType;
 import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.resources.IProject;
@@ -11,6 +12,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.SourceMethod;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 import org.eclipse.lsp4j.Location;
@@ -168,6 +170,34 @@ public class TestJDT {
     }
 
     @Test
+    public void testCreateDocument() throws Exception {
+        final var hub = TestHelper.makeDesignHub(TestHelper::loadTestServiceCode, true);
+        //准备测试模型
+        final var dataStoreModel   = TestHelper.makeSqlDataStoreModel();
+        final var entityModel      = TestHelper.makeEmployeeModel(dataStoreModel);
+        final var testServiceModel = TestHelper.makeServiceModel(10, "TestService");
+        TestHelper.injectAndLoadTree(dataStoreModel, List.of(entityModel, testServiceModel));
+
+        final var workspace     = JdtLanguageServer.workspace;
+        final var modelsProject = workspace.getRoot().getProject("MockUser_models");
+
+        final var folder    = modelsProject.getFolder("sys").getFolder("entities");
+        assertTrue(folder.exists());
+        assertEquals(1, folder.members().length);
+        final var file = folder.getFile("Employee.java");
+        assertTrue(file.exists());
+        final var cu  = JDTUtils.resolveCompilationUnit(file);
+        final var pkg = (PackageFragment) cu.getParent();
+        assertEquals(1, pkg.getChildren().length);
+
+        //模拟新建实体
+        final var newModel = TestHelper.makeEntityModel(100, "Order");
+        final var newNode = new ModelNode(newModel, hub);
+        hub.typeSystem.javaLanguageServer.filesManager.createModelDocument(newNode);
+        assertEquals(2, pkg.getChildren().length);
+    }
+
+    @Test
     public void testRemoveDocument() throws Exception {
         final var hub = TestHelper.makeDesignHub(TestHelper::loadTestServiceCode, true);
         //准备测试模型
@@ -176,17 +206,24 @@ public class TestJDT {
         final var testServiceModel = TestHelper.makeServiceModel(10, "TestService");
         TestHelper.injectAndLoadTree(dataStoreModel, List.of(entityModel, testServiceModel));
 
-        final var workspace = JdtLanguageServer.workspace;
+        final var workspace     = JdtLanguageServer.workspace;
         final var modelsProject = workspace.getRoot().getProject("MockUser_models");
 
         final var modelNode = hub.designTree.findModelNode(entityModel.id());
+        final var folder    = modelsProject.getFolder("sys").getFolder("entities");
+        assertTrue(folder.exists());
+        assertEquals(1, folder.members().length);
+        final var file = folder.getFile("Employee.java");
+        assertTrue(file.exists());
+        final var cu  = JDTUtils.resolveCompilationUnit(file);
+        final var pkg = (PackageFragment) cu.getParent();
+        assertEquals(1, pkg.getChildren().length);
+
         hub.typeSystem.javaLanguageServer.filesManager.removeModelDocument(modelNode);
 
-        final var folder = modelsProject.getFolder("sys").getFolder("entities");
-        assertTrue(folder.exists());
         assertEquals(0, folder.members().length);
-        final var file = folder.getFile("Employee.java");
         assertFalse(file.exists());
+        assertEquals(0, pkg.getChildren().length);
     }
 
     @Test
@@ -199,8 +236,8 @@ public class TestJDT {
         var       file      = project.getFile("Order.java");
         file.create(srcStream, true, null);
 
-        var indexManager  = JavaModelManager.getIndexManager();
-        var cu = JDTUtils.resolveCompilationUnit(file);
+        var indexManager = JavaModelManager.getIndexManager();
+        var cu           = JDTUtils.resolveCompilationUnit(file);
         //cu.becomeWorkingCopy(null);
         var elementParser = indexManager.getSourceElementParser(cu.getJavaProject(), null);
         indexManager.addSource(file, file.getProject().getFullPath(), elementParser);
@@ -209,7 +246,7 @@ public class TestJDT {
         //测试更新
         var newSrc = "class Order2 {String Name2;}";
         Files.write(file.getLocation().toFile().toPath(), newSrc.getBytes(StandardCharsets.UTF_8));
-        cu = JDTUtils.resolveCompilationUnit(file);
+        cu            = JDTUtils.resolveCompilationUnit(file);
         elementParser = indexManager.getSourceElementParser(cu.getJavaProject(), null);
         indexManager.addSource(file, file.getProject().getFullPath(), elementParser);
 

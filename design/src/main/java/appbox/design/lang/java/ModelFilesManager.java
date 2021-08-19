@@ -1,5 +1,6 @@
 package appbox.design.lang.java;
 
+import appbox.data.PersistentState;
 import appbox.design.lang.java.jdt.ModelProject;
 import appbox.design.services.CodeGenService;
 import appbox.design.tree.ApplicationNode;
@@ -13,6 +14,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.eclipse.jdt.internal.core.Openable;
+import org.eclipse.jdt.internal.core.OpenableElementInfo;
 import org.eclipse.jdt.ls.core.internal.JDTUtils;
 
 /** 管理所有虚拟文件 */
@@ -66,7 +69,7 @@ public final class ModelFilesManager {
         }
     }
 
-    private void createModelFile(String appName, String type, String fileName) throws CoreException {
+    private IFile createModelFile(String appName, String type, String fileName) throws CoreException {
         final var appFolder = languageServer.modelsProject.getFolder(appName);
         if (!appFolder.exists()) {
             appFolder.create(true, true, null);
@@ -75,6 +78,7 @@ public final class ModelFilesManager {
         if (type == null) { //only for Permissions.java
             final var file = appFolder.getFile(fileName);
             file.create(null, true, null);
+            return file;
         } else {
             final var typeFolder = appFolder.getFolder(type);
             if (!typeFolder.exists()) {
@@ -82,6 +86,7 @@ public final class ModelFilesManager {
             }
             final var file = typeFolder.getFile(fileName);
             file.create(null, true, null);
+            return file;
         }
     }
 
@@ -89,11 +94,13 @@ public final class ModelFilesManager {
 
     //region ====Model Files====
 
-    /** 用于加载设计树后创建模型相应的虚拟文件 */
+    /** 用于加载设计树后或新建模型时创建相应的虚拟文件 */
     public void createModelDocument(ModelNode node) {
         final var appName  = node.appNode.model.name();
         final var model    = node.model();
         final var fileName = String.format("%s.java", model.name());
+        //如果是新建的或重命名的(临时用),则需要添加至JavaModel缓存
+        final var addToCache = model.persistentState() == PersistentState.Detached || model.isNameChanged();
 
         //TODO:其他类型模型
         try {
@@ -104,13 +111,19 @@ public final class ModelFilesManager {
                 final var project = languageServer.createProject(
                         ModelProject.ModelProjectType.DesigntimeService, projectName, libs);
 
-                final var file = project.getFile(fileName);
+                var file = project.getFile(fileName);
                 file.create(null, true, null);
                 //创建服务模型的虚拟代理(暂放在modelsProject内)
-                createModelFile(appName, "services", fileName);
+                file = createModelFile(appName, "services", fileName);
+                if(addToCache) {
+                    addToParentInfo((Openable) JDTUtils.resolveCompilationUnit(file));
+                }
             } else if (model.modelType() == ModelType.Entity) {
                 //需要包含目录,如sys/entities/Order.java
-                createModelFile(appName, "entities", fileName);
+                var file = createModelFile(appName, "entities", fileName);
+                if (addToCache) {
+                    addToParentInfo((Openable) JDTUtils.resolveCompilationUnit(file));
+                }
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -151,7 +164,9 @@ public final class ModelFilesManager {
                 final var file       = typeFolder.getFile(fileName);
                 final var cu         = JDTUtils.resolveCompilationUnit(file);
                 cu.delete(true, null);
-                //不需要file.delete(),上一步会调用
+                //不需要file.delete(),上一步会调用并且call JavaProject.resetCaches()
+                //但需要从JavaModel cache中移除
+                removeFromParentInfo((Openable) cu);
             } else {
                 Log.warn("removeModelDocument 未实现");
             }
@@ -209,4 +224,35 @@ public final class ModelFilesManager {
 
     //endregion
 
+    //region ====Java ModelUpdater====
+    /** Adds the given child handle to its parent's cache of children. */
+    private static void addToParentInfo(Openable child) {
+        Openable parent = (Openable) child.getParent();
+        if (parent != null && parent.isOpen()) {
+            try {
+                OpenableElementInfo info = (OpenableElementInfo) parent.getElementInfo();
+                info.addChild(child);
+            } catch (JavaModelException e) {
+                // do nothing - we already checked if open
+            }
+        }
+    }
+
+    /**
+     * Removes the given element from its parents cache of children. If the
+     * element does not have a parent, or the parent is not currently open,
+     * this has no effect.
+     */
+    private static void removeFromParentInfo(Openable child) {
+        Openable parent = (Openable) child.getParent();
+        if (parent != null && parent.isOpen()) {
+            try {
+                OpenableElementInfo info = (OpenableElementInfo) parent.getElementInfo();
+                info.removeChild(child);
+            } catch (JavaModelException e) {
+                // do nothing - we already checked if open
+            }
+        }
+    }
+    //endregion
 }

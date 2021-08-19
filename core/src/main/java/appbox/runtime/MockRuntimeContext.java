@@ -24,6 +24,7 @@ public final class MockRuntimeContext implements IRuntimeContext, IDesignContext
 
     public void injectModels(List<ModelBase> models) {
         for (var m : models) {
+            m.acceptChanges();
             this.models.putIfAbsent(m.id(), m);
         }
     }

@@ -21,9 +21,7 @@ public final class EntityModel extends ModelBase implements IJsonSerializable {
     private final ArrayList<EntityMemberModel> _members = new ArrayList<>(); //注意已按memberId排序
     private       IEntityStoreOption           _storeOptions; //null表示DTO
 
-    /**
-     * only for Serialization
-     */
+    /** only for Serialization */
     public EntityModel() {}
 
     public EntityModel(long id, String name) {
