@@ -4,6 +4,7 @@ import appbox.design.DesignHub;
 import appbox.design.lang.dart.DartLanguageServer;
 import appbox.design.lang.java.JdtLanguageServer;
 import appbox.design.tree.ModelNode;
+import appbox.model.ModelType;
 
 public final class TypeSystem {
 
@@ -22,8 +23,16 @@ public final class TypeSystem {
     }
 
     //region ====Model Document====
-    public void createModelDocument(ModelNode node) {
-        javaLanguageServer.filesManager.createModelDocument(node);
+    public void createModelDocument(ModelNode node, boolean forLoadTree) {
+        final var modelType = node.model().modelType();
+        //特殊处理加载树时的权限虚拟文件创建
+        if (modelType == ModelType.Permission && forLoadTree) {
+            javaLanguageServer.filesManager.tryCreatePermissionsFile(node.appNode.model.name());
+            return;
+        }
+
+        if (node.model().modelType() != ModelType.View)
+            javaLanguageServer.filesManager.createModelDocument(node);
     }
 
     public void updateModelDocument(ModelNode node) {
@@ -32,18 +41,6 @@ public final class TypeSystem {
 
     public void removeModelDocument(ModelNode node) {
         javaLanguageServer.filesManager.removeModelDocument(node);
-    }
-
-    public void createPermissionsDocuments() {
-        javaLanguageServer.filesManager.createPermissionsDocuments();
-    }
-
-    public void updatePermissionsDocument(String appName) {
-        javaLanguageServer.filesManager.updatePermissionsDocument(appName);
-    }
-
-    public void updateStoresDocument() {
-        javaLanguageServer.filesManager.updateStoresDocument();
     }
     //endregion
 

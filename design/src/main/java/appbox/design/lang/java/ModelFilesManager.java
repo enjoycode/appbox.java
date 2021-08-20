@@ -104,29 +104,47 @@ public final class ModelFilesManager {
 
         //TODO:其他类型模型
         try {
-            if (model.modelType() == ModelType.Service) {
-                //创建服务模型的虚拟工程及代码
-                final var projectName = languageServer.makeServiceProjectName(node);
-                final var libs        = languageServer.makeServiceProjectDeps(node, false);
-                final var project = languageServer.createProject(
-                        ModelProject.ModelProjectType.DesigntimeService, projectName, libs);
-
-                var file = project.getFile(fileName);
-                file.create(null, true, null);
-                //创建服务模型的虚拟代理(暂放在modelsProject内)
-                file = createModelFile(appName, "services", fileName);
-                if(addToCache) {
-                    addToParentInfo((Openable) JDTUtils.resolveCompilationUnit(file));
-                }
-            } else if (model.modelType() == ModelType.Entity) {
-                //需要包含目录,如sys/entities/Order.java
-                var file = createModelFile(appName, "entities", fileName);
-                if (addToCache) {
-                    addToParentInfo((Openable) JDTUtils.resolveCompilationUnit(file));
-                }
+            switch (model.modelType()) {
+                case Service:
+                    createServiceModelDocument(node, appName, fileName, addToCache);
+                    break;
+                case Entity:
+                    createEntityModelDocument(appName, fileName, addToCache);
+                    break;
+                case Permission:
+                    updatePermissionsDocument(appName);
+                    break;
+                default:
+                    Log.warn("暂未实现: " + model.modelType().toString());
+                    break;
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    private void createServiceModelDocument(ModelNode node, String appName,
+                                            String fileName, boolean addToCache) throws Exception {
+        //创建服务模型的虚拟工程及代码
+        final var projectName = languageServer.makeServiceProjectName(node);
+        final var libs        = languageServer.makeServiceProjectDeps(node, false);
+        final var project = languageServer.createProject(
+                ModelProject.ModelProjectType.DesigntimeService, projectName, libs);
+
+        var file = project.getFile(fileName);
+        file.create(null, true, null);
+        //创建服务模型的虚拟代理(暂放在modelsProject内)
+        file = createModelFile(appName, "services", fileName);
+        if (addToCache) {
+            addToParentInfo((Openable) JDTUtils.resolveCompilationUnit(file));
+        }
+    }
+
+    private void createEntityModelDocument(String appName, String fileName, boolean addToCache) throws Exception {
+        //需要包含目录,如sys/entities/Order.java
+        var file = createModelFile(appName, "entities", fileName);
+        if (addToCache) {
+            addToParentInfo((Openable) JDTUtils.resolveCompilationUnit(file));
         }
     }
 
@@ -167,6 +185,8 @@ public final class ModelFilesManager {
                 //不需要file.delete(),上一步会调用并且call JavaProject.resetCaches()
                 //但需要从JavaModel cache中移除
                 removeFromParentInfo((Openable) cu);
+            } else if (model.modelType() == ModelType.Permission) {
+                updatePermissionsDocument(appName);
             } else {
                 Log.warn("removeModelDocument 未实现");
             }
@@ -180,26 +200,20 @@ public final class ModelFilesManager {
         //TODO:*****
     }
 
-    /** 用于加载设计树后创建所有权限的虚拟文件，一个应用对应一个权限文件 */
-    public void createPermissionsDocuments() {
-        var appRootNode = languageServer.hub.designTree.appRootNode();
-        for (int i = 0; i < appRootNode.nodes.size(); i++) {
-            var appNode        = (ApplicationNode) appRootNode.nodes.get(i);
-            var permissionRoot = appNode.findModelRootNode(ModelType.Permission);
-            if (!permissionRoot.hasAnyModel())
-                continue;
-
-            try {
-                createModelFile(appNode.model.name(), null, "Permissions.java");
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+    /** 尝试创建Permissions虚拟文件,已存在则忽略 */
+    public void tryCreatePermissionsFile(String appName) {
+        final var file = languageServer.modelsProject.getFolder(appName).getFile("Permissions.java");
+        try {
+            if (!file.exists())
+                file.create(null, true, null);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 
     /** 仅用于添加或删除权限模型后更新指定应用的Permissions.java */
     public void updatePermissionsDocument(String appName) {
-        var file = languageServer.modelsProject.getFolder(appName).getFile("Permissions.java");
+        final var file = languageServer.modelsProject.getFolder(appName).getFile("Permissions.java");
         try {
             if (file.exists()) {
                 var newContent = CodeGenService.genPermissionsDummyCode(languageServer.hub.designTree, appName);
@@ -225,6 +239,7 @@ public final class ModelFilesManager {
     //endregion
 
     //region ====Java ModelUpdater====
+
     /** Adds the given child handle to its parent's cache of children. */
     private static void addToParentInfo(Openable child) {
         Openable parent = (Openable) child.getParent();

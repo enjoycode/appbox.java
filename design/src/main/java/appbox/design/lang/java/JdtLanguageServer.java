@@ -298,9 +298,10 @@ public final class JdtLanguageServer {
         //参考DeltaProcessor.updateIndex()
         final var indexManager = JavaModelManager.getIndexManager();
         final var model        = node.model();
-        final var isDelete     = forceRemove || model.persistentState() == PersistentState.Deleted;
+        final var isDelete = model.modelType() != ModelType.Permission && //权限模型始终更新
+                (forceRemove || model.persistentState() == PersistentState.Deleted);
 
-        //先更新通用模型的索引, TODO:特殊模型如Permission的处理
+        //先更新通用模型的索引, 注意特殊模型如Permission
         var file = findFileFromModelsProject(model.modelType(), node.appNode.model.name(), model.name());
         if (isDelete)
             removeFileIndex(indexManager, file);
@@ -588,6 +589,11 @@ public final class JdtLanguageServer {
 
     /** 从通用项目内查找模型对应的虚拟文件 */
     public ModelFile findFileFromModelsProject(ModelType type, String appName, String modelName) {
+        //特殊处理权限模型,统一指向Permissions.java
+        if (type == ModelType.Permission) {
+            return (ModelFile) modelsProject.getFolder(appName).getFile("Permissions.java");
+        }
+
         final var typeName = ModelTypeUtil.toLowercaseTypeName(type);
         final var fileName = String.format("%s.java", modelName);
         return (ModelFile) modelsProject.getFolder(appName).getFolder(typeName).getFile(fileName);

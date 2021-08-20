@@ -63,11 +63,8 @@ public final class ModelCreator {
 
             //保存至Staged
             return node.saveAsync(initCodes).thenApply(re -> {
-                //根据类型创建虚拟文件
-                if (modelType == ModelType.Permission) //权限模型特殊处理
-                    hub.typeSystem.updatePermissionsDocument(appNode.model.name());
-                else if (modelType != ModelType.View)
-                    hub.typeSystem.createModelDocument(node);
+                //创建虚拟文件
+                hub.typeSystem.createModelDocument(node, false);
 
                 return new NewNodeResult(parentNode.nodeType().value, parentNode.id(), node
                         , rootNodeHasCheckout ? null : rootNode.id(), insertIndex);

@@ -30,7 +30,7 @@ public final class NewDataStore implements IDesignHandler {
 
         //以下第三方存储的处理
         return node.saveAsync(true).thenApply(r -> {
-            hub.typeSystem.updateStoresDocument();
+            hub.typeSystem.javaLanguageServer.filesManager.updateStoresDocument();
             return new JsonResult(node);
         });
     }

@@ -127,7 +127,7 @@ public final class RefactoringService {
                 hub.typeSystem.removeModelDocument(sourceNode);
                 sourceNode.model().renameTo(newName);
                 sourceNode.saveAsync(null).join();
-                hub.typeSystem.createModelDocument(sourceNode);
+                hub.typeSystem.createModelDocument(sourceNode, false);
                 break;
             case EntityMemberName:
                 ((EntityModel) sourceNode.model()).renameMember(oldName, newName);
