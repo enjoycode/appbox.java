@@ -101,11 +101,10 @@ public final class DesignTree {
             mergedModels.addAll(Arrays.asList(staged.findNewModels()));
             //4.2加入Models
             staged.removeDeletedModels(mergedModels);  //先移除已删除的
-            var allModelNodes = new ArrayList<ModelNode>(); //需要延迟创建虚拟代码的模型(排除Permission)
+            var allModelNodes = new ArrayList<ModelNode>(); //需要延迟创建虚拟代码的模型
             for (ModelBase m : mergedModels) {
                 var modelNode = findModelRootNode(m.appId(), m.modelType()).addModel(m);
-                if (m.modelType() != ModelType.Permission)
-                    allModelNodes.add(modelNode);
+                allModelNodes.add(modelNode);
             }
 
             //5.在所有节点加载完后创建模型对应的虚拟文件
@@ -161,6 +160,8 @@ public final class DesignTree {
                 return findModelNode(ModelType.Service, Long.parseUnsignedLong(id));
             case ViewModelNode:
                 return findModelNode(ModelType.View, Long.parseUnsignedLong(id));
+            case PermissionModelNode:
+                return findModelNode(ModelType.Permission, Long.parseUnsignedLong(id));
             case FolderNode:
                 return findFolderNode(id);
             case DataStoreNode:
