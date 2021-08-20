@@ -378,6 +378,11 @@ public final class JdtLanguageServer {
         return NavigateToDefinitionHandler.definition(cu, line, column, lsPreferenceManager, new ProgressMonitor());
     }
 
+    public List<Location> references(Document doc, int line, int column) {
+        final var cu = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
+        return ReferencesHandler.findReferences(cu, line, column, lsPreferenceManager, new ProgressMonitor());
+    }
+
     public List<DiagnosticsHandler.Diagnostic> diagnostics(Document doc) {
         var cu = JDTUtils.resolveCompilationUnit((IFile) doc.getUnderlyingResource());
 

@@ -14,7 +14,9 @@ public enum ModelReferenceType {
     ReportModelId((byte) 9),
     WorkflowModelId((byte) 10),
     PermissionModelId((byte) 11),
-    EventModelId((byte) 12);
+    EventModelId((byte) 12),
+    /** 根据代码编辑器的行列位置来查找引用 */
+    CodeEditor((byte) 13);
 
     public final byte value;
 
