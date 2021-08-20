@@ -9,7 +9,6 @@ public final class DataStoreRootNode extends DesignNode implements ITopNode {
 
     public DataStoreRootNode(DesignTree tree) {
         designTree = tree;
-        text       = "DataStore";
     }
 
     @Override
@@ -21,6 +20,9 @@ public final class DataStoreRootNode extends DesignNode implements ITopNode {
     public DesignNodeType nodeType() {
         return DesignNodeType.DataStoreRootNode;
     }
+
+    @Override
+    public String text() {return "DataStore";}
 
     public DataStoreNode addModel(DataStoreModel model, DesignHub hub, boolean isNew)
     {

@@ -16,7 +16,6 @@ public final class ModelNode extends DesignNode {
     public ModelNode(ModelBase targetModel, DesignHub hub) { //注意：新建时尚未加入树，无法获取TreeView实例
         appNode = hub.designTree.findApplicationNode(targetModel.appId());
         _model  = targetModel;
-        text    = targetModel.name();
     }
 
     //region ====Properties====
@@ -27,13 +26,15 @@ public final class ModelNode extends DesignNode {
     /** 用于签出时或加载树时设为新的模型 */
     void setModel(ModelBase newModel) {
         _model = newModel;
-        text = newModel.name(); //可能已经改名,需要重新设置
     }
 
     @Override
     public String id() {
         return Long.toUnsignedString(_model.id());
     }
+
+    @Override
+    public String text() {return _model.name();}
 
     @Override
     public int version() {

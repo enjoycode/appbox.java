@@ -12,23 +12,19 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class DesignNode implements Comparable<DesignNode>, IJsonSerializable {
 
-    private   DesignNode   parent;
-    protected String       text; //TODO: remove it，改为抽象
-    private   CheckoutInfo _checkoutInfo;
+    private DesignNode   parent;
+    private CheckoutInfo _checkoutInfo;
 
     public final NodeCollection nodes = new NodeCollection(this);
 
+    //region ====Properties====
     public abstract DesignNodeType nodeType();
 
-    //region ====Properties====
+    public abstract String text();
 
     /** 用于前端回传时识别是哪个节点 */
     public String id() {
         return text();
-    }
-
-    public String text() {
-        return text;
     }
 
     public int version() {return 0;}
@@ -52,22 +48,14 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
 
     //region ====Checkout相关属性====
 
-    /**
-     * 是否允许签出
-     */
+    /** 是否允许签出 */
     public boolean allowCheckout() {
-        if (nodeType() == DesignNodeType.ModelRootNode
+        return nodeType() == DesignNodeType.ModelRootNode
                 || nodeType().value >= DesignNodeType.EntityModelNode.value
-                || nodeType() == DesignNodeType.DataStoreNode) {
-            return true;
-        }
-        //TODO:根据证书判断
-        return false;
+                || nodeType() == DesignNodeType.DataStoreNode;
     }
 
-    /**
-     * 节点的签出信息
-     */
+    /** 节点的签出信息 */
     public CheckoutInfo getCheckoutInfo() {
         return _checkoutInfo;
     }
@@ -76,16 +64,12 @@ public abstract class DesignNode implements Comparable<DesignNode>, IJsonSeriali
         _checkoutInfo = value;
     }
 
-    /**
-     * 节点签出信息的标识
-     */
+    /** 节点签出信息的标识 */
     public String checkoutInfoTargetID() {
         return text();
     }
 
-    /**
-     * 设计节点是否被当前用户签出
-     */
+    /** 设计节点是否被当前用户签出 */
     public final boolean isCheckoutByMe() {
         return _checkoutInfo != null
                 && _checkoutInfo.developerOuid.equals(

@@ -18,7 +18,6 @@ public final class ModelRootNode extends DesignNode {
 
     public ModelRootNode(ModelType targetType) {
         this.targetType = targetType;
-        text            = CodeHelper.getPluralStringOfModelType(targetType);
     }
 
     public String fullName() {
@@ -29,6 +28,11 @@ public final class ModelRootNode extends DesignNode {
     public String id() {
         var appIdString = Integer.toUnsignedString(((ApplicationNode) getParent()).model.id());
         return String.format("%s-%s", appIdString, targetType.value);
+    }
+
+    @Override
+    public String text() {
+        return CodeHelper.getPluralStringOfModelType(targetType);
     }
 
     @Override

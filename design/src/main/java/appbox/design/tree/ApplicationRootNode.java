@@ -6,7 +6,6 @@ public final class ApplicationRootNode extends DesignNode implements ITopNode {
 
     public ApplicationRootNode(DesignTree tree) {
         designTree = tree;
-        text       = "Applications";
     }
 
     @Override
@@ -19,4 +18,6 @@ public final class ApplicationRootNode extends DesignNode implements ITopNode {
         return DesignNodeType.ApplicationRoot;
     }
 
+    @Override
+    public String text() {return "Applications";}
 }

@@ -11,7 +11,6 @@ public final class ApplicationNode extends DesignNode {
 
     public ApplicationNode(DesignTree tree, ApplicationModel model) {
         this.model = model;
-        text       = model.name();
 
         //添加各类模型的根节点
         var modelRoot = new ModelRootNode(ModelType.Entity);
@@ -51,6 +50,9 @@ public final class ApplicationNode extends DesignNode {
     public DesignNodeType nodeType() {
         return DesignNodeType.ApplicationNode;
     }
+
+    @Override
+    public String text() {return model.name();}
 
     public ModelRootNode findModelRootNode(ModelType modelType) {
         for (DesignNode node : nodes.list) {

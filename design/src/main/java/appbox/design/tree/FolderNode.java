@@ -12,13 +12,15 @@ public final class FolderNode extends DesignNode {
 
     public FolderNode(ModelFolder folder) {
         this.folder = folder;
-        text        = folder.name();
     }
 
     @Override
     public DesignNodeType nodeType() {
         return DesignNodeType.FolderNode;
     }
+
+    @Override
+    public String text() {return folder.name();}
 
     @Override
     public String id() {
