@@ -2,6 +2,7 @@ package appbox.design.handlers.code;
 
 import appbox.data.JsonResult;
 import appbox.design.DesignHub;
+import appbox.design.common.CodeReference;
 import appbox.design.handlers.IDesignHandler;
 import appbox.design.services.RefactoringService;
 import appbox.design.tree.DesignNodeType;
@@ -9,6 +10,7 @@ import appbox.model.ModelReferenceType;
 import appbox.runtime.InvokeArgs;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /** 查找模型或模型成员的引用项 */
 public final class FindUsages implements IDesignHandler {
@@ -33,7 +35,12 @@ public final class FindUsages implements IDesignHandler {
                 }
 
                 final var locations = hub.typeSystem.javaLanguageServer.references(doc, line, column);
-                return CompletableFuture.completedFuture(new JsonResult(locations));
+                //暂转换为CodeReference以适配前端
+                final var resList = locations.stream().map(loc -> {
+                    var node = hub.typeSystem.javaLanguageServer.findModelNodeByUri(loc.getUri());
+                    return new CodeReference(modelNode, loc.getRange());
+                }).collect(Collectors.toList());
+                return CompletableFuture.completedFuture(new JsonResult(resList));
             } else {
                 return CompletableFuture.failedFuture(new RuntimeException("暂未实现"));
             }
