@@ -29,13 +29,13 @@ public final class KVUtil {
     public static final byte METACF_VIEW_ROUTE_PREFIX       = (byte) 0xB2;
     public static final byte METACF_APP_ASSEMBLY_PREFIX     = (byte) 0xB3;
 
-    public static final byte PARTCF_INDEX             = 4;
+    public static final byte PARTCF_INDEX             = 3;
     public static final byte PARTCF_GLOBAL_TABLE_FLAG = 0x01;
     public static final byte PARTCF_PART_TABLE_FLAG   = 0x02;
     public static final byte PARTCF_GLOBAL_INDEX_FLAG = 0x11;
     public static final byte PARTCF_PART_INDEX_FLAG   = 0x12;
 
-    public static final byte INDEXCF_INDEX = 6;
+    public static final byte INDEXCF_INDEX = 5;
 
     public static final int ENTITY_KEY_SIZE = 16;
 
